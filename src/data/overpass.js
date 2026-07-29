@@ -1,13 +1,29 @@
 /* Echte Betriebe aus OpenStreetMap über die Overpass-API.
-   Daten © OpenStreetMap-Mitwirkende, Lizenz ODbL. */
+   Daten © OpenStreetMap-Mitwirkende, Lizenz ODbL.
+
+   Der öffentliche Dienst ist oft ausgelastet. Deshalb werden mehrere
+   Spiegelserver nacheinander probiert, danach eine kleinere Abfrage,
+   und ganz zuletzt greift die mitgelieferte Ersatzliste. */
 
 import { RULES } from '../config.js';
 import { haversine } from '../util.js';
+import { fallbackFirms } from './fallback.js';
 
-const ENDPOINT = 'https://overpass-api.de/api/interpreter';
+const MIRRORS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
+  'https://overpass.osm.jp/api/interpreter',
+];
 
-/* Welche Objekte als Kundschaft taugen */
-const FILTERS = [
+/* Große Abfrage zuerst, danach immer sparsamer. */
+const ATTEMPTS = [
+  { radius: RULES.FIRM_RADIUS, timeout: 40, full: true  },
+  { radius: 25000,             timeout: 25, full: false },
+  { radius: 15000,             timeout: 20, full: false },
+];
+
+const FULL_FILTERS = [
   '["landuse"="industrial"]',
   '["building"="warehouse"]',
   '["man_made"="works"]',
@@ -16,10 +32,16 @@ const FILTERS = [
   '["shop"="furniture"]',
 ];
 
-function buildQuery(depot) {
-  const around = `(around:${RULES.FIRM_RADIUS},${depot.lat},${depot.lon})`;
-  const body = FILTERS.map(f => `  nwr["name"]${f}${around};`).join('\n');
-  return `[out:json][timeout:40];\n(\n${body}\n);\nout center 400;`;
+const CORE_FILTERS = [
+  '["landuse"="industrial"]',
+  '["man_made"="works"]',
+];
+
+function buildQuery(depot, { radius, timeout, full }) {
+  const around = `(around:${radius},${depot.lat},${depot.lon})`;
+  const filters = full ? FULL_FILTERS : CORE_FILTERS;
+  const body = filters.map(f => `  nwr["name"]${f}${around};`).join('\n');
+  return `[out:json][timeout:${timeout}];\n(\n${body}\n);\nout center 300;`;
 }
 
 export function firmKind(tags = {}) {
@@ -31,15 +53,24 @@ export function firmKind(tags = {}) {
   return 'Gewerbegebiet';
 }
 
-export async function loadFirms(depot) {
-  const res = await fetch(ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'data=' + encodeURIComponent(buildQuery(depot)),
-  });
-  if (!res.ok) throw new Error('Overpass ' + res.status);
+async function askServer(url, query, timeoutSec) {
+  const controller = new AbortController();
+  const bail = setTimeout(() => controller.abort(), (timeoutSec + 15) * 1000);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(query),
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } finally {
+    clearTimeout(bail);
+  }
+}
 
-  const json = await res.json();
+function toFirms(json, depot) {
   const seen = new Set();
   const firms = [];
 
@@ -50,11 +81,38 @@ export async function loadFirms(depot) {
     if (!name || !isFinite(lat) || !isFinite(lon) || seen.has(name)) continue;
 
     const km = haversine(depot, { lat, lon });
-    if (km < 8) continue;               // direkt vor der Tür ist kein Auftrag
+    if (km < 5) continue;
 
     seen.add(name);
     firms.push({ name, lat, lon, km, tags: el.tags, kind: firmKind(el.tags) });
   }
-
   return firms;
+}
+
+/* onNote meldet den Fortschritt an den Ladebildschirm.
+   Liefert immer eine brauchbare Liste, notfalls die Reserve. */
+export async function loadFirms(depot, onNote = () => {}) {
+  for (const attempt of ATTEMPTS) {
+    const query = buildQuery(depot, attempt);
+
+    for (const url of MIRRORS) {
+      const host = new URL(url).hostname;
+      onNote(`  ${host}, Radius ${attempt.radius / 1000} km …`);
+      try {
+        const json = await askServer(url, query, attempt.timeout);
+        const firms = toFirms(json, depot);
+        if (firms.length >= 5) {
+          onNote(`  ${firms.length} Betriebe von ${host}.`);
+          return { firms, source: host };
+        }
+        onNote(`  ${host}: nur ${firms.length} Treffer, weiter.`);
+      } catch (err) {
+        onNote(`  ${host}: ${err.name === 'AbortError' ? 'Zeitüberschreitung' : 'nicht erreichbar'}.`);
+      }
+    }
+  }
+
+  const firms = fallbackFirms(depot);
+  onNote(`  Kein Server erreichbar. Ersatzliste mit ${firms.length} Betrieben.`);
+  return { firms, source: 'Ersatzliste' };
 }

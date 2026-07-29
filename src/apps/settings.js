@@ -4,6 +4,11 @@ import { TIME, AUTOBAHNEN, RULES } from '../config.js';
 import { S, dateText } from '../state.js';
 import { esc } from '../util.js';
 import { setSpeed, setRatio, realMinutesPerGameDay } from '../sim/clock.js';
+import { loadFirms } from '../data/overpass.js';
+import { refillOffers } from '../sim/orders.js';
+import { drawFirms } from '../ui/map.js';
+import { toast } from '../ui/toast.js';
+import { log } from '../state.js';
 import { onTick } from '../ui/wm.js';
 
 export const SettingsApp = {
@@ -44,6 +49,10 @@ export const SettingsApp = {
           Baustellen: Autobahn GmbH des Bundes.<br>
           <span class="muted" id="stTraffic">—</span>
         </div>
+        <div class="flex-row" style="margin-top:8px;">
+          <button class="btn btn-sm" id="stReload">Betriebe neu laden</button>
+          <span class="muted" style="font-size:10px;" id="stReloadNote"></span>
+        </div>
       </div>
     </div>`,
 
@@ -52,7 +61,8 @@ export const SettingsApp = {
       const speed = e.target.closest('button[data-speed]');
       if (speed) { setSpeed(Number(speed.dataset.speed)); onTick(); return; }
       const ratio = e.target.closest('button[data-ratio]');
-      if (ratio) { setRatio(Number(ratio.dataset.ratio)); onTick(); }
+      if (ratio) { setRatio(Number(ratio.dataset.ratio)); onTick(); return; }
+      if (e.target.closest('#stReload')) reload(el);
     });
   },
 
@@ -72,10 +82,31 @@ export const SettingsApp = {
       + ' echter Zeit.';
 
     el.querySelector('#stFirms').textContent =
-      `${S.firms.length} Betriebe im Umkreis von ${RULES.FIRM_RADIUS / 1000} km um ${S.depot.name}.`;
+      `${S.firms.length} Betriebe um ${S.depot.name} · Quelle: ${S.dataInfo.firms}`;
     el.querySelector('#stRouter').textContent = esc(S.dataInfo.router);
     el.querySelector('#stTraffic').textContent =
       `${S.traffic.length} Einträge auf ${AUTOBAHNEN.length} Autobahnen, `
       + `${S.stats.jams} Stellen bisher auf euren Strecken.`;
   },
 };
+
+/* Betriebe erneut abfragen, ohne das Spiel zu unterbrechen. */
+async function reload(el) {
+  const button = el.querySelector('#stReload');
+  const note   = el.querySelector('#stReloadNote');
+  button.disabled = true;
+
+  const { firms, source } = await loadFirms(S.depot, text => { note.textContent = text.trim(); });
+  S.firms = firms;
+  S.dataInfo.firms = source;
+  S.offers = [];
+  refillOffers();
+  drawFirms();
+
+  note.textContent = `${firms.length} Betriebe · ${source}`;
+  log(`Betriebe neu geladen: ${firms.length} aus ${source}.`);
+  toast('🔄', `<strong>${firms.length} Betriebe</strong> geladen.`,
+        `<span class="muted">Quelle: ${source}</span>`);
+  button.disabled = false;
+  onTick();
+}

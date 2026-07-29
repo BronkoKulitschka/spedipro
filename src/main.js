@@ -73,14 +73,9 @@ async function runBoot() {
 
   bootLine('');
   bootLine('Betriebe aus OpenStreetMap …');
-  bootLine('  Overpass-Abfrage läuft, das dauert einen Moment.');
-  try {
-    S.firms = await loadFirms(S.depot);
-    bootLine(`  ${S.firms.length} Betriebe im Umkreis gefunden.`);
-  } catch {
-    bootLine('  Overpass nicht erreichbar.');
-    bootLine('  Ohne Kundschaft geht es nicht — bitte später erneut versuchen.');
-  }
+  const { firms, source } = await loadFirms(S.depot, bootLine);
+  S.firms = firms;
+  S.dataInfo.firms = source;
   bootProgress(90);
 
   refillOffers();

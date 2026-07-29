@@ -54,7 +54,7 @@ export function resetState(depot) {
     offers: [],
     log: [],
     stats: { tours: 0, km: 0, revenue: 0, jams: 0 },
-    dataInfo: { router: 'noch nicht benutzt' },
+    dataInfo: { router: 'noch nicht benutzt', firms: '—' },
   };
   return S;
 }
