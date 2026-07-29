@@ -40,7 +40,7 @@ export const ReportApp = {
         <div class="section-title">Lage im Hof</div>
         ${r.rolling} LKW unterwegs, ${r.inWorkshop} in der Werkstatt.
         ${r.tours === 0
-          ? '<div class="muted" style="margin-top:6px;">Nichts gefahren — vermutlich stand alles im Depot. Ein Dauerauftrag im Fuhrpark sorgt dafür, dass weitergefahren wird.</div>'
+          ? '<div class="muted" style="margin-top:6px;">Nichts gefahren — ohne Automatik warten die Fahrzeuge auf deine Disposition. Das Häkchen steht im Fuhrpark.</div>'
           : ''}
       </div>
     </div>`;

@@ -17,16 +17,18 @@ export function newDriver() {
   };
 }
 
-export function newTruck(nr) {
+export function newTruck(nr, pos = null) {
   return {
     nr,
     driver: newDriver(),
     order: null,
     route: null,
-    progress: 0,       // gefahrene km auf dem aktuellen Abschnitt
-    phase: 'idle',     // idle | planning | out | back
-    repeat: false,
+    progress: 0,       // gefahrene km auf der laufenden Fahrt
+    phase: 'idle',     // idle | planning | driving
+    auto: false,       // sucht sich selbst den nächsten Auftrag
     shopMin: 0,        // verbleibende Werkstattminuten
+    pos,               // aktueller Standort, null bedeutet Depot
+    place: 'Depot',    // Klartext für die Anzeige
     marker: null,
     line: null,
   };
@@ -48,7 +50,7 @@ export function resetState(depot) {
     running: false,
     prevSpeed: 1,
 
-    trucks: [newTruck(1)],
+    trucks: [newTruck(1, { lat: depot.lat, lon: depot.lon })],
     firms: [],
     traffic: [],
     offers: [],
@@ -79,6 +81,11 @@ export const idleTrucks = () => S.trucks.filter(t => t.phase === 'idle' && !t.sh
 export const freePoints = () => S.trucks.reduce((sum, t) => sum + t.driver.points, 0);
 export const findTruck  = nr => S.trucks.find(t => t.nr === nr);
 
+/* Wo ein LKW gerade steht. Ohne Angabe gilt das Depot. */
+export const truckPos = t => t.pos || { lat: S.depot.lat, lon: S.depot.lon };
+export const atDepot  = t => !t.pos
+  || (Math.abs(t.pos.lat - S.depot.lat) < 1e-6 && Math.abs(t.pos.lon - S.depot.lon) < 1e-6);
+
 /* ── Wirkung der Fertigkeiten ── */
 export const xpNeeded = lvl => 100 + (lvl - 1) * 70;
 export const kmh      = d => RULES.BASE_KMH + 5 * d.skills.route;
@@ -94,7 +101,14 @@ export function hydrate(saved) {
     screen: 'desktop',
     silent: false,
     lastReport: null,
-    trucks: saved.trucks.map(t => ({ ...t, marker: null, line: null })),
+    trucks: saved.trucks.map(t => ({
+      ...t,
+      marker: null, line: null,
+      pos: t.pos || { lat: saved.depot.lat, lon: saved.depot.lon },
+      place: t.place || 'Depot',
+      auto: !!t.auto,
+      phase: t.phase === 'out' || t.phase === 'back' ? 'idle' : t.phase,
+    })),
   });
   return S;
 }

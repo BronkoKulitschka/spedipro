@@ -145,7 +145,13 @@ function buildWindow(key, app, params) {
   el.querySelector('[data-act=max]').onclick   = e => { e.stopPropagation(); toggleMaximize(key); };
   el.querySelector('[data-act=close]').onclick = e => { e.stopPropagation(); closeWindow(key); };
 
-  makeDraggable(el, el.querySelector('.win-drag'), key);
+  const titleBar = el.querySelector('.win-drag');
+  titleBar.addEventListener('dblclick', e => {
+    if (e.target.closest('.tb-btn')) return;
+    toggleMaximize(key);
+  });
+
+  makeDraggable(el, titleBar, key);
   makeResizable(el, el.querySelector('.win-grip'), key);
   return el;
 }
@@ -220,16 +226,23 @@ export function renderTaskbar() {
   if (!bar) return;
 
   bar.innerHTML = [...open.values()].map(e => `
-    <button class="btn taskbar-app ${e.minimized ? '' : 'pressed'}" data-key="${e.key}">
-      ${e.app.icon} <span class="tb-label">${esc(e.app.title(e.params))}</span>
-    </button>`).join('');
+    <span class="tb-entry">
+      <button class="btn taskbar-app ${e.minimized ? '' : 'pressed'}" data-key="${e.key}">
+        ${e.app.icon} <span class="tb-label">${esc(e.app.title(e.params))}</span>
+      </button>
+      <button class="btn tb-close" data-close="${e.key}" title="Schließen">✕</button>
+    </span>`).join('');
 
-  bar.querySelectorAll('button').forEach(b => {
+  bar.querySelectorAll('[data-key]').forEach(b => {
     b.onclick = () => {
       const entry = open.get(b.dataset.key);
       if (!entry) return;
       entry.minimized ? restore(entry.key) : minimize(entry.key);
     };
+  });
+
+  bar.querySelectorAll('[data-close]').forEach(b => {
+    b.onclick = e => { e.stopPropagation(); closeWindow(b.dataset.close); };
   });
 }
 

@@ -42,7 +42,7 @@ export const MapApp = {
   update(el) {
     el.querySelector('#mapNote').textContent =
       `${S.firms.length} Betriebe · ${S.traffic.length} Meldungen · `
-      + `${S.trucks.filter(t => t.phase === 'out' || t.phase === 'back').length} unterwegs`;
+      + `${S.trucks.filter(t => t.phase === 'driving').length} unterwegs`;
   },
 
   unmount() { /* Kartenknoten bleibt im Speicher, siehe mapHost() */ },

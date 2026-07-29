@@ -77,8 +77,8 @@ Grenzen:
 * Höchstens fünf Spieltage werden aufgeholt, damit eine lange Pause nicht in
   einer Endlosschleife endet.
 * War die Uhr beim Verlassen angehalten, ruht auch der Betrieb.
-* Nur LKW mit **Dauerauftrag** fahren in der Abwesenheit weiter. Alles andere
-  steht nach der laufenden Tour im Depot.
+* Nur LKW auf **Automatik** fahren in der Abwesenheit weiter. Alles andere
+  steht nach der laufenden Fahrt am Zielort.
 
 Für die spätere Android-App gilt dasselbe Muster. Ein echter Hintergrunddienst
 über WorkManager wäre möglich, lohnt sich für ein ruhiges Spiel aber kaum —
@@ -144,6 +144,16 @@ export const MeinApp = {
 
 ## Spielprinzip
 
+* Ein LKW fährt von dort los, wo er gerade steht, und **bleibt am Ziel**.
+  Es gibt keine Zwangsrückfahrt — wer geschickt disponiert, kettet Aufträge
+  aneinander und spart Leerkilometer. Zurück ins Depot geht es nur auf
+  Anweisung.
+* Der Frachtpreis hängt am Betrieb, der Dieselverbrauch an der tatsächlich
+  gefahrenen Strecke. Ein Fahrzeug in der Nähe verdient an derselben Fracht
+  also mehr.
+* **Automatik** je LKW: sucht sich selbst den Auftrag mit dem besten
+  Verhältnis von Fracht zu Anfahrt. Nötig, damit in der Abwesenheit
+  weitergefahren wird.
 * Jeder LKW hat einen Fahrer mit Namen. Zustellungen bringen Erfahrung,
   längere Strecken mehr.
 * Jede Stufe gibt einen Schulungspunkt für fünf Fertigkeiten: Spritsparen,

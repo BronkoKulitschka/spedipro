@@ -135,3 +135,43 @@ html, body { height: 100%; overflow: hidden; }
   .start-list { flex: 1; }
   .start-item { padding: 10px 12px; }
 }
+
+
+/* ── Fensterknöpfe für Finger ──────────────────────────────────────
+   Auf Geräten ohne Maus werden Titelleiste und Knöpfe größer, damit
+   Schließen und Verkleinern sicher zu treffen sind. */
+@media (pointer: coarse) {
+  .win > .title-bar { height: 30px; padding: 3px 4px; }
+  .win .title-bar-text { font-size: 12px; }
+  .win .title-bar-controls { gap: 4px; }
+  .win .tb-btn {
+    width: 30px; height: 24px; font-size: 12px;
+    border-width: 2px;
+  }
+  .win .tb-btn:active {
+    border-top: 2px solid #404040; border-left: 2px solid #404040;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+  }
+  .win-grip { width: 26px; height: 26px; }
+  .btn { padding: 6px 12px; }
+  .btn-sm { padding: 4px 9px; font-size: 11px; }
+  .start-item { padding: 11px 14px; }
+  input[type=checkbox] { width: 18px; height: 18px; }
+  select { padding: 5px; }
+}
+
+/* Taskleisteneintrag mit eigenem Schließknopf */
+.tb-entry { display: flex; align-items: stretch; gap: 1px; flex: 0 1 165px; min-width: 44px; }
+.tb-entry .taskbar-app { flex: 1; min-width: 0; }
+.tb-close {
+  width: 24px; padding: 0; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: bold;
+}
+@media (pointer: coarse) {
+  .tb-close { width: 30px; font-size: 13px; }
+  .tb-entry { flex-basis: 190px; }
+}
+@media (max-width: 820px) {
+  .tb-entry { flex: 1 1 0; }
+}

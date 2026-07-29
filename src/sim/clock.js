@@ -100,7 +100,7 @@ function newDay() {
   log(`Tagesfixkosten für ${S.trucks.length} LKW: ${fmt(-cost)}`);
 
   for (const truck of S.trucks) {
-    const rolling = truck.phase === 'out' || truck.phase === 'back';
+    const rolling = truck.phase === 'driving';
     if (!rolling || truck.shopMin) continue;
     if (Math.random() >= RULES.BREAKDOWN * riskMul(truck.driver)) continue;
 

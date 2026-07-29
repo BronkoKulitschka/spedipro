@@ -116,8 +116,7 @@ function positionAt(route, km) {
 export function updateTruckMarker(truck) {
   if (!map || !truck.route) return;
 
-  const km = truck.phase === 'back' ? truck.route.km - truck.progress : truck.progress;
-  const pos = positionAt(truck.route, km);
+  const pos = positionAt(truck.route, truck.progress);
 
   if (!truck.marker) {
     truck.marker = L.marker(pos, {
@@ -128,11 +127,12 @@ export function updateTruckMarker(truck) {
     truck.marker.setLatLng(pos);
   }
 
+  const ziel = truck.job?.kind === 'return' ? 'Depot' : (truck.job?.firm?.name || 'unterwegs');
   truck.marker.bindPopup(
     `<strong>LKW ${truck.nr} · ${esc(truck.driver.name)}</strong><br>`
-    + `${truck.phase === 'out' ? 'unterwegs zu' : 'Rückfahrt von'} ${esc(truck.order.firm.name)}<br>`
+    + `unterwegs nach ${esc(ziel)}<br>`
     + `${truck.progress.toFixed(0)} / ${truck.route.km.toFixed(0)} km`
-    + (truck.order.jams ? `<br>🚧 ${truck.order.jams} gemeldete Stellen` : ''));
+    + (truck.job?.jams ? `<br>🚧 ${truck.job.jams} gemeldete Stellen` : ''));
 }
 
 export function removeTruckLayers(truck) {

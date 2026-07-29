@@ -53,6 +53,6 @@ export function catchUp(gameMinutes) {
     balance: S.money - before.money,
     moneyNow: S.money,
     inWorkshop: S.trucks.filter(t => t.shopMin > 0).length,
-    rolling: S.trucks.filter(t => t.phase === 'out' || t.phase === 'back').length,
+    rolling: S.trucks.filter(t => t.phase === 'driving').length,
   };
 }

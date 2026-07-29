@@ -1,7 +1,11 @@
-/* Alles, was mit LKWs passiert: fahren, disponieren, kaufen, verkaufen. */
+/* Alles, was mit LKWs passiert: fahren, disponieren, kaufen, verkaufen.
+
+   Ein LKW fährt vom Ort, an dem er gerade steht, zum Ziel — und bleibt
+   dort. Die Rückfahrt ins Depot ist eine eigene Entscheidung, keine
+   Zwangsleerfahrt. Wer geschickt disponiert, kettet Aufträge aneinander. */
 
 import { RULES } from '../config.js';
-import { S, log, newTruck, findTruck, idleTrucks,
+import { S, log, newTruck, findTruck, idleTrucks, truckPos, atDepot,
          kmh, fuelRate, feeMul, calmMul } from '../state.js';
 import { haversine, fmt, esc } from '../util.js';
 import { osrmRoute, straightRoute } from '../data/osrm.js';
@@ -24,54 +28,84 @@ export function trafficOnRoute(coords) {
   return hits;
 }
 
-/* Gemeldete Stellen bremsen, Gelassenheit federt das ab. */
 export function effectiveKmh(truck) {
   const d = truck.driver;
-  const jams = truck.order?.jams || 0;
+  const jams = truck.job?.jams || 0;
   const slowdown = Math.min(0.55, 0.05 * jams * calmMul(d));
   return kmh(d) * (1 - slowdown);
 }
 
+/* Luftlinie vom Standort eines LKW zu einem Ziel, für die Vorschau. */
+export const distanceFrom = (truck, target) => haversine(truckPos(truck), target);
+
+/* ── Fahrt beginnen ──────────────────────────────────────────────
+   job beschreibt, was gefahren wird:
+     { kind: 'delivery', firm, fee }  oder  { kind: 'return' } */
+async function startDrive(truck, job, target, { sync = false } = {}) {
+  truck.phase = 'planning';
+
+  let route;
+  if (sync) {
+    route = straightRoute(truckPos(truck), target);
+  } else {
+    try {
+      route = await osrmRoute(truckPos(truck), target);
+      S.dataInfo.router = 'OSRM, echte Straßenführung';
+    } catch {
+      route = straightRoute(truckPos(truck), target);
+      S.dataInfo.router = 'Luftlinie, Router nicht erreichbar';
+    }
+  }
+
+  const hits = trafficOnRoute(route.coords);
+  job.jams = hits.length;
+  job.target = target;
+  S.stats.jams += hits.length;
+
+  truck.job = job;
+  truck.route = route;
+  truck.progress = 0;
+  truck.phase = 'driving';
+
+  drawRoute(truck);
+  updateTruckMarker(truck);
+  return { route, hits };
+}
+
 /* ── Auftrag annehmen ── */
-export async function dispatch(offerId) {
-  const truck = S.trucks.find(t => t.phase === 'idle' && !t.shopMin);
-  if (!truck) return;
+export async function dispatch(offerId, truckNr = null, opts = {}) {
+  const truck = truckNr
+    ? findTruck(truckNr)
+    : S.trucks.find(t => t.phase === 'idle' && !t.shopMin);
+
+  if (!truck || truck.phase !== 'idle' || truck.shopMin) return;
 
   const offer = takeOffer(offerId);
   if (!offer) return;
 
-  truck.phase = 'planning';
+  const { route, hits } = await startDrive(
+    truck, { kind: 'delivery', firm: offer.firm, fee: offer.fee }, offer.firm, opts);
 
-  let route;
-  try {
-    route = await osrmRoute(S.depot, offer.firm);
-    S.dataInfo.router = 'OSRM, echte Straßenführung';
-  } catch {
-    route = straightRoute(S.depot, offer.firm);
-    S.dataInfo.router = 'Luftlinie, Router nicht erreichbar';
-  }
+  log(`${truck.driver.name} fährt von ${truck.place} nach ${offer.firm.name}`
+    + ` · ${route.km.toFixed(0)} km`
+    + (hits.length ? ` · ${hits.length} gemeldete Stellen` : ''));
 
-  const hits = trafficOnRoute(route.coords);
-  offer.jams = hits.length;
-  offer.realKm = route.km;
-  S.stats.jams += hits.length;
-
-  truck.order = offer;
-  truck.route = route;
-  truck.progress = 0;
-  truck.phase = 'out';
-
-  drawRoute(truck);
-  updateTruckMarker(truck);
-
-  log(`${truck.driver.name} fährt zu ${offer.firm.name} · ${route.km.toFixed(0)} km`
-      + (hits.length ? ` · ${hits.length} gemeldete Stellen unterwegs` : ' · freie Fahrt'));
-
-  if (hits.length) {
+  if (hits.length && !S.silent) {
     toast('🚧',
       `Auf der Strecke nach <strong>${esc(offer.firm.name)}</strong> liegen ${hits.length} gemeldete Stellen.`,
       `<span class="muted">${esc(hits[0].road)}: ${esc(hits[0].title)}</span>`);
   }
+}
+
+/* ── Leerfahrt zurück ins Depot ── */
+export async function returnToDepot(nr, opts = {}) {
+  const truck = findTruck(nr);
+  if (!truck || truck.phase !== 'idle' || truck.shopMin || atDepot(truck)) return;
+
+  const { route } = await startDrive(
+    truck, { kind: 'return' }, { lat: S.depot.lat, lon: S.depot.lon }, opts);
+
+  log(`${truck.driver.name} fährt leer zurück ins Depot · ${route.km.toFixed(0)} km`);
 }
 
 /* ── Ein Takt Bewegung ── */
@@ -81,50 +115,63 @@ export function moveTrucks(minutes) {
       truck.shopMin = Math.max(0, truck.shopMin - minutes);
       continue;
     }
-    if (truck.phase === 'idle' || truck.phase === 'planning' || !truck.route) continue;
+
+    if (truck.phase === 'idle') { maybeAuto(truck); continue; }
+    if (truck.phase === 'planning' || !truck.route) continue;
 
     truck.progress += effectiveKmh(truck) * (minutes / 60);
     updateTruckMarker(truck);
-    if (truck.progress < truck.route.km) continue;
-
-    truck.phase === 'out' ? arrive(truck) : comeHome(truck);
+    if (truck.progress >= truck.route.km) finish(truck);
   }
 }
 
-function arrive(truck) {
+function finish(truck) {
   const d = truck.driver;
-  const fee  = truck.order.fee * feeMul(d);
-  const fuel = truck.route.km * fuelRate(d);
+  const km = truck.route.km;
+  const fuel = km * fuelRate(d);
 
-  S.money += fee - fuel;
-  S.stats.tours++;
-  S.stats.km += truck.route.km;
-  S.stats.revenue += fee;
-  d.tours++;
-
-  log(`✔ ${d.name} hat bei ${truck.order.firm.name} entladen. `
-    + `Fracht ${fmt(fee)}, Diesel ${fmt(-fuel)}.`);
-
-  gainXp(d, 40 + Math.round(truck.route.km / 8));
-  truck.phase = 'back';
-  truck.progress = 0;
-}
-
-function comeHome(truck) {
-  const d = truck.driver;
-  S.money -= truck.route.km * fuelRate(d) * 0.55;   // Leerfahrt
-  S.stats.km += truck.route.km;
-  truck.progress = 0;
-
-  if (truck.repeat) {
-    truck.phase = 'out';
-    return;
+  if (truck.job.kind === 'delivery') {
+    const fee = truck.job.fee * feeMul(d);
+    S.money += fee - fuel;
+    S.stats.tours++;
+    S.stats.revenue += fee;
+    d.tours++;
+    log(`✔ ${d.name} hat bei ${truck.job.firm.name} entladen. `
+      + `Fracht ${fmt(fee)}, Diesel ${fmt(-fuel)}.`);
+    gainXp(d, 40 + Math.round(km / 8));
+    truck.place = truck.job.firm.name;
+  } else {
+    S.money -= fuel;
+    log(`${d.name} ist zurück im Depot. Diesel ${fmt(-fuel)}.`);
+    truck.place = 'Depot';
   }
+
+  S.stats.km += km;
+  truck.pos = { lat: truck.job.target.lat, lon: truck.job.target.lon };
+  truck.progress = 0;
   truck.phase = 'idle';
-  truck.order = null;
+  truck.job = null;
   truck.route = null;
   removeTruckLayers(truck);
-  log(`${d.name} ist zurück im Depot.`);
+}
+
+/* ── Selbstdisposition ──────────────────────────────────────────
+   Ein LKW auf Automatik sucht sich den Auftrag mit dem besten
+   Verhältnis von Fracht zu Anfahrt und fährt sonst heim. */
+function maybeAuto(truck) {
+  if (!truck.auto || truck.phase !== 'idle' || truck.shopMin) return;
+  if (!S.offers.length) return;
+
+  let best = null, bestScore = -Infinity;
+  for (const offer of S.offers) {
+    const anfahrt = distanceFrom(truck, offer.firm);
+    const score = offer.fee / Math.max(12, anfahrt);
+    if (score > bestScore) { bestScore = score; best = offer; }
+  }
+  if (!best) return;
+
+  /* Beim Nachrechnen ohne Netz die Luftlinie nehmen. */
+  dispatch(best.id, truck.nr, { sync: !!S.silent });
 }
 
 /* ── Kaufen und verkaufen ── */
@@ -133,7 +180,7 @@ export function buyTruck() {
   S.money -= RULES.TRUCK_BUY;
 
   const last = S.trucks[S.trucks.length - 1];
-  const truck = newTruck((last ? last.nr : 0) + 1);
+  const truck = newTruck((last ? last.nr : 0) + 1, { lat: S.depot.lat, lon: S.depot.lon });
   S.trucks.push(truck);
 
   log(`Neuer LKW ${truck.nr} gekauft, ${truck.driver.name} übernimmt ihn: ${fmt(-RULES.TRUCK_BUY)}`);
@@ -151,7 +198,7 @@ export function sellTruck() {
   log(`LKW ${truck.nr} verkauft, ${truck.driver.name} verabschiedet sich: ${fmt(RULES.TRUCK_SELL)}`);
 }
 
-export function setRepeat(nr, value) {
+export function setAuto(nr, value) {
   const truck = findTruck(nr);
-  if (truck) truck.repeat = value;
+  if (truck) truck.auto = value;
 }
