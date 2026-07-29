@@ -197,7 +197,8 @@ export function drawOffers() {
     const marker = L.marker([firm.lat, firm.lon], {
       icon: L.divIcon({
         className: '',
-        html: '<div class="offer-pin">📦</div>',
+        html: `<div class="offer-pin pin-${offer.kind || 'spot'}">`
+            + `${offer.kind === 'vertrag' ? '📜' : offer.kind === 'partner' ? '🤝' : '📦'}</div>`,
         iconSize: [22, 22], iconAnchor: [11, 11],
       }),
     });
@@ -205,7 +206,10 @@ export function drawOffers() {
     const html = `
       <div style="min-width:190px;">
         <strong>${esc(firm.name)}</strong><br>
-        <span class="muted">${esc(firm.kind)}${firm.invented ? ' · erfunden' : ''}</span><br>
+        <span class="muted">${
+          offer.kind === 'vertrag' ? '📜 Vertragssendung'
+          : offer.kind === 'partner' ? '🤝 ' + esc(offer.partnerName || 'Partnerfracht')
+          : '🏷️ Spotmarkt'}</span><br>
         Fracht: <strong>${fmt(offer.fee)}</strong><br>
         ${near
           ? `Anfahrt ${near.km.toFixed(0)} km ab ${esc(near.truck.place)}<br>

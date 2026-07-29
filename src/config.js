@@ -105,6 +105,51 @@ export const DRIVE = {
 /* Fahrzeuge unter 7,5 Tonnen sind vom Sonntagsfahrverbot ausgenommen. */
 export const BAN_EXEMPT = ['kurier'];
 
+/* ── Markt, Verträge, Branche ───────────────────────────────────
+   Der Spotmarkt schwankt, Rahmenverträge sind planbar. Die anderen
+   Speditionen sind keine Gegner: sie vergeben Aufträge weiter, an die
+   man mit wachsendem Ansehen leichter herankommt.                    */
+export const MARKET = {
+  MIN: 0.78, MAX: 1.32,      // Spanne des Spotpreisindex
+  DRIFT: 0.06,               // Bewegung je Tag
+  WEEKDAY: {                 // Wochentagseinfluss auf das Angebot
+    1: 1.10, 2: 1.05, 3: 1.00, 4: 1.05, 5: 1.12, 6: 0.80, 0: 0.55,
+  },
+};
+
+export const CONTRACTS = {
+  OFFERS: 3,                 // gleichzeitig ausliegende Ausschreibungen
+  WEEKS: [2, 3, 4, 6],       // mögliche Laufzeiten
+  PER_WEEK: [3, 4, 5, 6, 8], // Sendungen je Woche
+  RATE: 0.88,                // Preis je Sendung gegenüber dem Spotmarkt
+  BONUS: 0.35,               // Abschlussprämie, Anteil am Vertragswert
+  FLOATER: 0.4,              // wie stark der Dieselindex durchschlägt
+  PART_OK: 0.6,              // ab dieser Erfüllung gibt es die halbe Prämie
+};
+
+/* Befreundete Speditionen. Sie geben Aufträge an Subunternehmer weiter. */
+export const PARTNERS = [
+  { key: 'nordfracht', name: 'Nordfracht Logistik',  ort: 'Bremen'     },
+  { key: 'hellweg',    name: 'Hellweg Spedition',    ort: 'Dortmund'   },
+  { key: 'donau',      name: 'Donau Transport AG',   ort: 'Regensburg' },
+  { key: 'kranich',    name: 'Kranich Verkehr KG',   ort: 'Kassel'     },
+];
+
+export const PARTNER_LEVELS = [
+  { ab: 0,  name: 'unbekannt',      rate: 1.05, chance: 0.20 },
+  { ab: 4,  name: 'gelegentlich',   rate: 1.12, chance: 0.35 },
+  { ab: 12, name: 'fest im Boot',   rate: 1.20, chance: 0.55 },
+  { ab: 28, name: 'Haussubunternehmer', rate: 1.30, chance: 0.75 },
+];
+
+export const REP = {
+  START: 50, MAX: 100,
+  PER_LOAD: 0.4,             // Ansehen je Zustellung
+  PER_CONTRACT: 3,           // bei vollständig erfülltem Vertrag
+  PER_PARTIAL: 1,
+  MIN_MUL: 0.90, MAX_MUL: 1.20,   // Wirkung auf die Preise
+};
+
 /* ── Zeit ──
    Der Takt läuft in Realzeit fest mit TICK_MS. Wie viel Spielzeit dabei
    vergeht, bestimmt RATIO: Spielminuten je echter Minute bei Stufe 1×.

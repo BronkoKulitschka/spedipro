@@ -4,7 +4,7 @@
    dort. Die Rückfahrt ins Depot ist eine eigene Entscheidung, keine
    Zwangsleerfahrt. Wer geschickt disponiert, kettet Aufträge aneinander. */
 
-import { RULES, TRUCK_MODELS, USED, DRIVE } from '../config.js';
+import { RULES, TRUCK_MODELS, USED, DRIVE, REP } from '../config.js';
 import { S, log, book, newTruck, findTruck, idleTrucks, truckPos, atDepot,
          modelOf, resaleValue, truckKmh, truckFuel, truckLoad,
          feeMul, calmMul, canDrive, driveStatus, bannedFor } from '../state.js';
@@ -12,6 +12,9 @@ import { haversine, fmt, esc } from '../util.js';
 import { osrmRoute, straightRoute } from '../data/osrm.js';
 import { takeOffer } from './orders.js';
 import { gainXp } from './drivers.js';
+import { addRep } from './market.js';
+import { registerDelivery } from './contracts.js';
+import { registerPartnerLoad } from './partners.js';
 import { toast } from '../ui/toast.js';
 import { drawRoute, removeTruckLayers, updateTruckMarker } from '../ui/map.js';
 
@@ -92,8 +95,14 @@ export async function dispatch(offerId, truckNr = null, opts = {}) {
   const offer = takeOffer(offerId);
   if (!offer) return;
 
-  const { route, hits } = await startDrive(
-    truck, { kind: 'delivery', firm: offer.firm, fee: offer.fee }, offer.firm, opts);
+  const { route, hits } = await startDrive(truck, {
+    kind: 'delivery',
+    firm: offer.firm,
+    fee: offer.fee,
+    art: offer.kind,
+    contractId: offer.contractId || null,
+    partnerKey: offer.partnerKey || null,
+  }, offer.firm, opts);
 
   log(`${truck.driver.name} fährt von ${truck.place} nach ${offer.firm.name}`
     + ` · ${route.km.toFixed(0)} km`
@@ -183,7 +192,14 @@ function finish(truck) {
 
   if (truck.job.kind === 'delivery') {
     const fee = truck.job.fee * feeMul(d) * truckLoad(truck);
-    book('Fracht', `${truck.job.firm.name} · ${d.name}`, fee);
+    const art = truck.job.art || 'spot';
+    const label = art === 'vertrag' ? 'Vertragsfracht'
+                : art === 'partner' ? 'Partnerfracht' : 'Fracht';
+    book(label, `${truck.job.firm.name} · ${d.name}`, fee);
+
+    if (truck.job.contractId) registerDelivery(truck.job.contractId);
+    if (truck.job.partnerKey) registerPartnerLoad(truck.job.partnerKey);
+    addRep(REP.PER_LOAD);
     book('Diesel', `${km.toFixed(0)} km · LKW ${truck.nr}`, -fuel);
     S.stats.tours++;
     S.stats.revenue += fee;

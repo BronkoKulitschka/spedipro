@@ -10,7 +10,10 @@ import { S, log, book, day, truckRisk, todayText, holidayNow, weekendNow } from 
 import { fmt } from '../util.js';
 import { moveTrucks } from './fleet.js';
 import { fireEvent } from './events.js';
-import { refillOffers } from './orders.js';
+import { refillOffers, refreshSpot } from './orders.js';
+import { driftMarket } from './market.js';
+import { settleContracts, refillContractOffers } from './contracts.js';
+import { growIndustry } from './partners.js';
 import { onTick } from '../ui/wm.js';
 import { saveGame } from './save.js';
 
@@ -115,7 +118,11 @@ function newDay() {
     log(`🔧 LKW ${truck.nr} (${truck.driver.name}) steht in der Werkstatt: ${fmt(-bill)}.`);
   }
 
-  refillOffers();
+  driftMarket();
+  settleContracts();
+  refillContractOffers();
+  growIndustry();
+  refreshSpot();
 
   /* Neue Anfragen auch auf der Karte sichtbar machen */
   if (!S.silent) import('../ui/map.js').then(m => m.drawOffers());

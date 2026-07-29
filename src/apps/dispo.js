@@ -9,6 +9,7 @@ import { fmt, esc } from '../util.js';
 import { dispatch, distanceFrom } from '../sim/fleet.js';
 import { onTick } from '../ui/wm.js';
 import { empty } from './shared.js';
+import { KIND_LABEL } from '../sim/orders.js';
 
 export const DispoApp = {
   id: 'dispo', icon: '📋', title: () => 'Disposition',
@@ -80,17 +81,21 @@ export const DispoApp = {
       .map(o => ({ o, km: truck ? distanceFrom(truck, o.firm) : o.estKm }))
       .sort((a, b) => a.km - b.km);
 
-    box.innerHTML = list.map(({ o, km }) => `
-      <div class="offer">
+    box.innerHTML = list.map(({ o, km }) => {
+      const art = KIND_LABEL[o.kind || 'spot'];
+      return `
+      <div class="offer offer-${o.kind || 'spot'}">
         <div class="flex-row" style="justify-content:space-between;">
-          <strong>${esc(o.firm.name)}</strong>
+          <span><span class="art-tag">${art.icon} ${art.text}</span>
+            <strong>${esc(o.firm.name)}</strong></span>
           <span class="money">${fmt(o.fee)}</span>
         </div>
         <div class="flex-row" style="justify-content:space-between;font-size:10px;">
-          <span class="muted">${esc(o.firm.kind)}${o.firm.invented ? ' · erfunden' : ''}
+          <span class="muted">${o.partnerName ? esc(o.partnerName) + ' · ' : ''}${esc(o.firm.kind)}
             · ${km.toFixed(0)} km Anfahrt</span>
           <button class="btn btn-sm" data-offer="${o.id}" ${truck ? '' : 'disabled'}>annehmen</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   },
 };

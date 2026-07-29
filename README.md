@@ -105,7 +105,10 @@ src/
     clock.js            Betriebsuhr, Zeitverhältnis, Tagesabrechnung
     fleet.js            fahren, disponieren, kaufen, verkaufen
     drivers.js          Erfahrung und Schulung
-    orders.js           Auftragsbörse
+    orders.js           Auftragsbörse mit drei Auftragsarten
+    market.js           Marktlage und Ansehen
+    contracts.js        Rahmenverträge
+    partners.js         befreundete Speditionen
     events.js           kleine Ereignisse aus dem Alltag
     save.js             Sichern und Laden im Browser
     offline.js          Nachrechnen der Abwesenheit
@@ -123,6 +126,8 @@ src/
     finance.js          Kasse
     logbook.js          Betriebsbuch
     dealer.js           Fahrzeughandel
+    contracts.js        Verträge, Marktlage, Ansehen
+    industry.js         Branche
     settings.js         Einstellungen, Spielstand, Datenquellen
     report.js           Bericht über die Abwesenheit
 ```
@@ -163,6 +168,40 @@ export const MeinApp = {
   auf dem Konto ist kein Spielende, nur eine Zahl.
 * Aufträge führen zu echten Betrieben aus OpenStreetMap. Beim Annehmen wird die
   Route berechnet und geprüft, welche gemeldeten Baustellen darauf liegen.
+
+## Auftragsvergabe: Spotmarkt, Verträge, Partner
+
+Nachempfunden, wie Speditionen tatsächlich an Fracht kommen. Drei Arten
+liegen gemischt in der Disposition, jede mit eigener Kennzeichnung.
+
+**🏷️ Spotmarkt** — der freie Markt. Der Preis schwankt täglich zwischen 78 und
+132 % des Grundwerts. Bei knappem Laderaum lohnt sich Warten, bei Überkapazität
+fährt man knapp. Am Wochenende kommt deutlich weniger herein, sonntags fast
+nichts.
+
+**📜 Rahmenverträge** — ein Verlader schreibt eine Relation über zwei bis sechs
+Wochen aus: feste Sendungszahl, fester Preis je Fahrt, Abschlussprämie. Der
+Satz liegt rund 12 % unter dem Spotdurchschnitt, dafür ist er planbar. Ein
+**Dieselfloater** hebt oder senkt ihn anteilig mit der Marktlage.
+
+Wird ein Vertrag nicht erfüllt, passiert nichts Schlimmes: ab 60 % Erfüllung
+gibt es die halbe Prämie, darunter keine. Eine Strafe gibt es nie.
+
+**🤝 Partneraufträge** — befreundete Speditionen geben eigene Fracht an
+Subunternehmer weiter. Sie zahlen 5 bis 30 % über dem Grundwert, je nachdem,
+wie oft man schon für sie gefahren ist. Vier Stufen von „unbekannt" bis
+„Haussubunternehmer".
+
+**Ansehen** wächst mit jeder Zustellung und mit erfüllten Verträgen. Es sinkt
+nie. Zwischen 0 und 100 hebt es alle Erlöse um 10 bis 20 % und verbessert die
+Ausschreibungen.
+
+### Die anderen Speditionen
+
+Sie konkurrieren nicht. Sie nehmen keine Aufträge weg, unterbieten nicht und
+setzen den Spieler unter keinen Zeitdruck. Ihre einzige Rolle ist die eines
+zusätzlichen Auftraggebers, dessen Sätze mit der Beziehung steigen. Das
+Programm **Branche** zeigt ihre Größe und den Stand der Zusammenarbeit.
 
 ## Kalender, Fahrverbote und Lenkzeiten
 
@@ -221,8 +260,6 @@ Die Wirtschaftsebene, angelehnt an klassische Aufbausimulationen:
 * **Produktionsketten**: eigene Betriebe, die Rohstoffe annehmen und
   Fertigwaren ausgeben. Der eigene Fuhrpark beliefert sich selbst, und der
   Gewinn entsteht aus der Kette statt aus der einzelnen Fahrt.
-* **Verträge über mehrere Tage** mit festen Mengen, wie die Frachtaufträge in
-  großen Speditionsspielen: planbares Einkommen gegen Bindung.
 * **Werkstatt und Zustand** je Fahrzeug, Reifen, Inspektionsintervalle.
 
 Reihenfolge und Umfang sind offen — vermerkt, nicht beschlossen.

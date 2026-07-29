@@ -111,3 +111,18 @@
   position: absolute; top: 0; bottom: 0; width: 2px;
   background: #c00000;
 }
+
+
+/* Auftragsarten */
+.art-tag {
+  display: inline-block; font-size: 9px; font-weight: bold;
+  padding: 0 4px; margin-right: 4px;
+  background: #606060; color: #fff;
+}
+.offer-vertrag { border-left: 3px solid #000080; padding-left: 5px; }
+.offer-vertrag .art-tag { background: #000080; }
+.offer-partner { border-left: 3px solid #2e8b57; padding-left: 5px; }
+.offer-partner .art-tag { background: #2e8b57; }
+.pin-vertrag { background: #000080; border-top-color: #6a8ede; border-left-color: #6a8ede;
+               border-right-color: #000040; border-bottom-color: #000040; }
+.pin-partner { background: #2e8b57; }

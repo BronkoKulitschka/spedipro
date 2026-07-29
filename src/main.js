@@ -7,6 +7,8 @@ import { VERSION, BUILD } from './version.js';
 import { loadTraffic } from './data/autobahn.js';
 import { loadFirmsFast } from './data/overpass.js';
 import { refillOffers } from './sim/orders.js';
+import { refillContractOffers } from './sim/contracts.js';
+import { initPartners } from './sim/partners.js';
 import { setSpeed, togglePause, restartTimer, stopClock, syncDay } from './sim/clock.js';
 import { saveGame, readSave, clearSave, saveInfo } from './sim/save.js';
 import { catchUp, offlineMinutes } from './sim/offline.js';
@@ -115,9 +117,12 @@ async function runBoot() {
   S.dataInfo.firms = source;
   bootProgress(90);
 
+  S.partners = initPartners();
+  refillContractOffers();
   refillOffers();
   bootLine('');
-  bootLine(`Auftragsbörse: ${S.offers.length} Anfragen.`);
+  bootLine(`Auftragsbörse: ${S.offers.length} Anfragen, `
+         + `${S.contractOffers.length} Ausschreibungen.`);
   bootLine('Bereit.');
   bootProgress(100);
 

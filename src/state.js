@@ -1,6 +1,7 @@
 /* Der gesamte Spielzustand. Alles andere liest und schreibt hier hinein. */
 
 import { RULES, TIME, DRIVE, BAN_EXEMPT, DRIVER_NAMES, TRUCK_MODELS, USED } from './config.js';
+import { MARKET, REP } from './config.js';
 import { dateOf, dateShort, dateLong, timeText, drivingBan,
          isWeekend, holidayName, weekday } from './calendar.js';
 import { pick, pad } from './util.js';
@@ -180,6 +181,11 @@ export function hydrate(saved) {
   resetState(saved.depot);
   Object.assign(S, saved, {
     ledger: saved.ledger || [],
+    market: saved.market || { index: 1, trend: 0 },
+    rep: saved.rep ?? REP.START,
+    contracts: saved.contracts || [],
+    contractOffers: saved.contractOffers || [],
+    partners: saved.partners || [],
     screen: 'desktop',
     silent: false,
     lastReport: null,
