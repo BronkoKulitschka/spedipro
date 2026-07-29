@@ -64,3 +64,17 @@
 
 /* Karte füllt ihren Rahmen */
 .map-frame { min-height: 120px; }
+
+
+/* Auftragsmarke auf der Karte */
+.offer-pin {
+  font-size: 15px; line-height: 20px; text-align: center;
+  width: 22px; height: 22px;
+  background: #2e8b57;
+  border-top: 2px solid #7fd7a4; border-left: 2px solid #7fd7a4;
+  border-right: 2px solid #14512f; border-bottom: 2px solid #14512f;
+  box-shadow: 1px 1px 0 rgba(0,0,0,.4);
+}
+@media (pointer: coarse) {
+  .offer-pin { font-size: 17px; }
+}

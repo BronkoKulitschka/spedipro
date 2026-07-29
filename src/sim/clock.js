@@ -111,4 +111,7 @@ function newDay() {
   }
 
   refillOffers();
+
+  /* Neue Anfragen auch auf der Karte sichtbar machen */
+  if (!S.silent) import('../ui/map.js').then(m => m.drawOffers());
 }

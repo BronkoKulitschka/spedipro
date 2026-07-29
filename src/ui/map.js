@@ -5,12 +5,18 @@
    geschlossen und wieder geöffnet, wandert derselbe Knoten zurück
    ins neue Fenster und Leaflet behält Zoom und Position. */
 
-import { S } from '../state.js';
-import { esc, haversine } from '../util.js';
+import { S, truckPos } from '../state.js';
+import { esc, haversine, fmt } from '../util.js';
 
 let map = null;
 let host = null;
-const layers = { depot: null, firms: null, traffic: null, routes: null, trucks: null };
+const layers = { depot: null, firms: null, offers: null, traffic: null,
+                 routes: null, trucks: null, preview: null };
+
+/* Wird von der Routenplanung gesetzt, damit die Karte einen Auftrag
+   annehmen kann, ohne die Simulation direkt zu kennen. */
+let acceptHandler = null;
+export function onOfferAccept(fn) { acceptHandler = fn; }
 
 export function mapHost() {
   if (!host) {
@@ -31,9 +37,22 @@ export function initMap() {
                + ' · Routing: OSRM · Verkehr: Autobahn GmbH',
   }).addTo(map);
 
-  for (const key of ['routes', 'firms', 'traffic', 'trucks', 'depot']) {
+  for (const key of ['routes', 'preview', 'firms', 'traffic', 'offers', 'trucks', 'depot']) {
     layers[key] = L.layerGroup().addTo(map);
   }
+
+  /* Vorschaulinie vom nächsten freien LKW zum angeklickten Auftrag */
+  map.on('popupopen', e => {
+    const from = e.popup._spediFrom;
+    const to   = e.popup._spediTo;
+    layers.preview.clearLayers();
+    if (from && to) {
+      L.polyline([[from.lat, from.lon], [to.lat, to.lon]], {
+        color: '#800000', weight: 2, opacity: .8, dashArray: '5 5',
+      }).addTo(layers.preview);
+    }
+  });
+  map.on('popupclose', () => layers.preview.clearLayers());
 
   L.marker([S.depot.lat, S.depot.lon], {
     icon: L.divIcon({ className: '', html: '<div class="depot-icon">🏠</div>',
@@ -42,6 +61,7 @@ export function initMap() {
 
   drawFirms();
   drawTraffic();
+  drawOffers();
   for (const truck of S.trucks) if (truck.route) { drawRoute(truck); updateTruckMarker(truck); }
   ensureMapSize();
 }
@@ -152,3 +172,63 @@ export function toggleLayer(name, visible) {
   if (!map || !layers[name]) return;
   visible ? map.addLayer(layers[name]) : map.removeLayer(layers[name]);
 }
+
+
+/* ── Offene Aufträge auf der Karte ──────────────────────────────
+   Größere grüne Marken mit Frachtwert, Anfahrt und Annahmeknopf. */
+export function nearestIdle(target) {
+  let best = null, bestKm = Infinity;
+  for (const t of S.trucks) {
+    if (t.phase !== 'idle' || t.shopMin) continue;
+    const km = haversine(truckPos(t), target);
+    if (km < bestKm) { bestKm = km; best = t; }
+  }
+  return best ? { truck: best, km: bestKm } : null;
+}
+
+export function drawOffers() {
+  if (!map || !layers.offers) return;
+  layers.offers.clearLayers();
+
+  for (const offer of S.offers) {
+    const firm = offer.firm;
+    const near = nearestIdle(firm);
+
+    const marker = L.marker([firm.lat, firm.lon], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div class="offer-pin">📦</div>',
+        iconSize: [22, 22], iconAnchor: [11, 11],
+      }),
+    });
+
+    const html = `
+      <div style="min-width:190px;">
+        <strong>${esc(firm.name)}</strong><br>
+        <span class="muted">${esc(firm.kind)}${firm.invented ? ' · erfunden' : ''}</span><br>
+        Fracht: <strong>${fmt(offer.fee)}</strong><br>
+        ${near
+          ? `Anfahrt ${near.km.toFixed(0)} km ab ${esc(near.truck.place)}<br>
+             <span class="muted">${esc(near.truck.driver.name)} · LKW ${near.truck.nr}</span><br>
+             <button class="btn btn-sm" style="margin-top:6px;"
+                     data-map-offer="${offer.id}" data-map-truck="${near.truck.nr}">
+               annehmen</button>`
+          : '<span class="warn">Kein Fahrzeug frei</span>'}
+      </div>`;
+
+    const popup = L.popup({ closeButton: true }).setContent(html);
+    popup._spediTo = { lat: firm.lat, lon: firm.lon };
+    if (near) popup._spediFrom = truckPos(near.truck);
+
+    marker.bindPopup(popup).addTo(layers.offers);
+  }
+}
+
+/* Klicks im Popup abfangen. Popups liegen außerhalb der Fenster,
+   deshalb wird am Dokument gelauscht. */
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-map-offer]');
+  if (!btn || !acceptHandler) return;
+  acceptHandler(btn.dataset.mapOffer, Number(btn.dataset.mapTruck));
+  map?.closePopup();
+});

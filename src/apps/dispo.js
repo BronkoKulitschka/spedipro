@@ -36,7 +36,11 @@ export const DispoApp = {
       const btn = e.target.closest('button[data-offer]');
       if (!btn) return;
       const nr = Number(el.querySelector('#dTruck').value) || null;
-      dispatch(btn.dataset.offer, nr).then(onTick);
+      dispatch(btn.dataset.offer, nr).then(async () => {
+        const { drawOffers } = await import('../ui/map.js');
+        drawOffers();
+        onTick();
+      });
       onTick();
     });
   },
