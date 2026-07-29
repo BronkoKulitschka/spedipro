@@ -84,10 +84,24 @@ Für die spätere Android-App gilt dasselbe Muster. Ein echter Hintergrunddienst
 über WorkManager wäre möglich, lohnt sich für ein ruhiges Spiel aber kaum —
 Nachrechnen beim Öffnen ist genauer, sparsamer und einfacher.
 
+## Testlauf
+
+Ein Rauchtest spielt zehn Spieltage ohne Browser durch und prüft, dass
+Zustand, Auftragsbörse, Verträge, Fahrten und Kassenbuch zusammenpassen:
+
+```bash
+node test/smoke.mjs
+```
+
+Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und
+eine Bilanz, die auseinanderlief, weil alte Buchungen aus der begrenzten
+Liste fielen. Vor jeder Auslieferung einmal laufen lassen.
+
 ## Aufbau
 
 ```
 index.html              Gerüst, lädt Leaflet, Stile und main.js
+test/smoke.mjs          Rauchtest für die Simulation
 styles/
   win95.css             Fenster, Rahmen, Schaltflächen, Balken
   app.css               Karte, Meldungen, Farben, Hilfsklassen

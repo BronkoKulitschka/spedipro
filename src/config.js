@@ -84,7 +84,8 @@ export const RULES = {
   RESALE_USED:  0.45,
   TRAIN_COST:   3000,
   RATE_PER_KM:  1.55,
-  BASE_FEE:     380,
+  BASE_FEE:     180,    // Grundbetrag je Auftrag
+  LOAD_MIN:      60,    // Zeit an der Rampe je Zustellung, in Minuten
   EVENT_PER_DAY: 1.4,    // erwartete Ereignisse je Spieltag
   BREAKDOWN:    0.035,
   START_MONEY:  50000,
@@ -144,7 +145,7 @@ export const PARTNER_LEVELS = [
 
 export const REP = {
   START: 50, MAX: 100,
-  PER_LOAD: 0.4,             // Ansehen je Zustellung
+  PER_LOAD: 0.15,            // Ansehen je Zustellung
   PER_CONTRACT: 3,           // bei vollständig erfülltem Vertrag
   PER_PARTIAL: 1,
   MIN_MUL: 0.90, MAX_MUL: 1.20,   // Wirkung auf die Preise

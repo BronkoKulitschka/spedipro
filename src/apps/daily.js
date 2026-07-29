@@ -65,7 +65,7 @@ export const DailyApp = {
       const bisPause = Math.max(0, DRIVE.MAX_STINT - truck.stint);
 
       const farbe = {
-        frei: 'ok', pause: 'warn', ruhe: 'warn',
+        frei: 'ok', pause: 'warn', ruhe: 'warn', rampe: 'muted',
         verbot: 'bad', werkstatt: 'bad', ausgefahren: 'warn',
       }[status.code] || 'muted';
 

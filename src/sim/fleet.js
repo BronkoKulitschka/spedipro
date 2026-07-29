@@ -208,6 +208,11 @@ function finish(truck) {
       + `Fracht ${fmt(fee)}, Diesel ${fmt(-fuel)}.`);
     gainXp(d, 40 + Math.round(km / 8));
     truck.place = truck.job.firm.name;
+
+    /* Be- und Entladen kostet Zeit. Ohne Rampenzeit ließe sich ein
+       Fahrzeug beliebig oft am Tag einsetzen. */
+    truck.restMin = RULES.LOAD_MIN;
+    truck.restKind = 'rampe';
   } else {
     book('Diesel', `Leerfahrt ins Depot · LKW ${truck.nr}`, -fuel);
     log(`${d.name} ist zurück im Depot. Diesel ${fmt(-fuel)}.`);

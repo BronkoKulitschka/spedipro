@@ -34,6 +34,7 @@ function serialize() {
       log: S.log.slice(0, 40),
       stats: S.stats,
       ledger: S.ledger.slice(0, 200),
+      books: S.books,
       dataInfo: S.dataInfo,
       trucks: S.trucks.map(t => ({
         nr: t.nr,

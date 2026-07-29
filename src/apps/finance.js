@@ -76,8 +76,9 @@ function paint(el) {
   saldo.innerHTML = `<strong>${fmt(sums.saldo)}</strong>`;
   saldo.className = sums.saldo >= 0 ? 'money' : 'debt';
 
-  el.querySelector('#fScope').textContent =
-    `${num(sums.count)} Buchungen · Startkapital nicht enthalten`;
+  el.querySelector('#fScope').textContent = sums.teil
+    ? `Bilanz über alle Buchungen · Liste zeigt die letzten ${num(sums.count)}`
+    : `${num(sums.count)} Buchungen · Startkapital nicht enthalten`;
 
   /* Bereiche nach Betrag sortiert, Einnahmen zuerst */
   const cats = Object.entries(sums.cats).sort((a, b) => b[1] - a[1]);

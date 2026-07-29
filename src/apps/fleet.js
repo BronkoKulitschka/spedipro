@@ -81,6 +81,9 @@ export const FleetApp = {
         status.innerHTML = `<span class="warn">🔧 Werkstatt, ${Math.ceil(truck.shopMin / 60)} h</span>`;
         bar.classList.add('shop');
         bar.style.width = '100%';
+      } else if (truck.restMin > 0 && truck.restKind === 'rampe') {
+        status.innerHTML = `<span class="muted">📦 ${esc(driveStatus(truck).text)}</span>`;
+        bar.style.width = '100%';
       } else if (truck.restMin > 0) {
         status.innerHTML = `<span class="warn">${esc(driveStatus(truck).text)}</span>`;
         bar.classList.add('shop');

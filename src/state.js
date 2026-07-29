@@ -64,10 +64,19 @@ export function resetState(depot) {
     trucks: [newTruck(1, { lat: depot.lat, lon: depot.lon }, 'verteiler', false)],
     firms: [],
     traffic: [],
+
+    /* Markt, Ruf, Verträge, Branche */
     offers: [],
+    market: { index: 1.0, trend: 0 },
+    rep: REP.START,
+    contracts: [],
+    contractOffers: [],
+    partners: [],
+
     log: [],
     stats: { tours: 0, km: 0, revenue: 0, jams: 0 },
     ledger: [],
+    books: { ein: 0, aus: 0 },
     silent: false,
     lastReport: null,
     dataInfo: { router: 'noch nicht benutzt', firms: '—' },
@@ -99,9 +108,9 @@ export function driveStatus(truck) {
   if (truck.shopMin > 0)  return { code: 'werkstatt', text: `Werkstatt, ${Math.ceil(truck.shopMin / 60)} h` };
   if (truck.restMin > 0)  return {
     code: truck.restKind,
-    text: truck.restKind === 'ruhe'
-      ? `Ruhezeit, noch ${Math.ceil(truck.restMin / 60)} h`
-      : `Pause, noch ${Math.ceil(truck.restMin)} min`,
+    text: truck.restKind === 'ruhe'  ? `Ruhezeit, noch ${Math.ceil(truck.restMin / 60)} h`
+        : truck.restKind === 'rampe' ? `an der Rampe, noch ${Math.ceil(truck.restMin)} min`
+        : `Pause, noch ${Math.ceil(truck.restMin)} min`,
   };
   const ban = bannedFor(truck);
   if (ban)                return { code: 'verbot', text: `Fahrverbot (${ban})` };
@@ -124,6 +133,7 @@ export const LEDGER_MAX = 300;
 
 export function book(cat, text, amount) {
   S.money += amount;
+  if (amount >= 0) S.books.ein += amount; else S.books.aus += amount;
   S.ledger.unshift({
     day: day(), time: clockText(),
     cat, text, amount,
@@ -134,13 +144,20 @@ export function book(cat, text, amount) {
 
 export function ledgerSums(sinceDay = null) {
   const rows = sinceDay ? S.ledger.filter(e => e.day >= sinceDay) : S.ledger;
-  let ein = 0, aus = 0;
   const cats = {};
+  let ein = 0, aus = 0;
   for (const e of rows) {
     if (e.amount >= 0) ein += e.amount; else aus += e.amount;
     cats[e.cat] = (cats[e.cat] || 0) + e.amount;
   }
-  return { ein, aus, saldo: ein + aus, cats, count: rows.length };
+
+  /* Für einen Zeitraum zählen die Zeilen, für das Ganze die laufenden
+     Summen — die Liste selbst ist auf die letzten Buchungen begrenzt. */
+  if (sinceDay) return { ein, aus, saldo: ein + aus, cats, count: rows.length, teil: true };
+  return {
+    ein: S.books.ein, aus: S.books.aus, saldo: S.books.ein + S.books.aus,
+    cats, count: rows.length, teil: S.ledger.length >= LEDGER_MAX,
+  };
 }
 
 /* ── Abgeleitete Werte ── */
@@ -181,6 +198,7 @@ export function hydrate(saved) {
   resetState(saved.depot);
   Object.assign(S, saved, {
     ledger: saved.ledger || [],
+    books: saved.books || { ein: 0, aus: 0 },
     market: saved.market || { index: 1, trend: 0 },
     rep: saved.rep ?? REP.START,
     contracts: saved.contracts || [],
