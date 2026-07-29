@@ -3,6 +3,7 @@
 
 import { DEPOTS, AUTOBAHNEN } from './config.js';
 import { S, resetState, log } from './state.js';
+import { VERSION, BUILD } from './version.js';
 import { loadTraffic } from './data/autobahn.js';
 import { loadFirmsFast } from './data/overpass.js';
 import { refillOffers } from './sim/orders.js';
@@ -52,7 +53,7 @@ function beginBoot() {
 }
 
 async function runBoot() {
-  bootLine('SpeditionsPro 95 — Datendienst');
+  bootLine(`SpeditionsPro 95 — Version ${VERSION} (${BUILD})`);
   bootLine('');
   bootLine(`Depot: ${S.depot.name}`);
   bootLine('');
@@ -135,6 +136,7 @@ function enterDesktop() {
   root().innerHTML = desktopShell();
   wireDesktop();
 
+  log(`SpeditionsPro 95, Version ${VERSION} gestartet.`);
   log(`Betrieb aufgenommen. Depot ${S.depot.name}, ${S.firms.length} Betriebe im Umkreis.`);
 
   /* Auf schmalen Geräten nur ein Fenster öffnen, sonst wird es unübersichtlich. */

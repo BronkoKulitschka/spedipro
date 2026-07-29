@@ -9,6 +9,7 @@ import { refillOffers } from '../sim/orders.js';
 import { drawFirms } from '../ui/map.js';
 import { toast } from '../ui/toast.js';
 import { log } from '../state.js';
+import { VERSION, BUILD, CODENAME } from '../version.js';
 import { onTick } from '../ui/wm.js';
 
 export const SettingsApp = {
@@ -37,6 +38,20 @@ export const SettingsApp = {
           ${TIME.RATIOS.map(r => `<button class="btn btn-sm" data-ratio="${r}">1 : ${r}</button>`).join('')}
         </div>
         <div class="muted" style="font-size:10px;margin-top:6px;" id="stRatioNote">—</div>
+      </div>
+
+      <div class="raised-box" style="margin-bottom:8px;">
+        <div class="section-title">Programmstand</div>
+        <table class="win-table">
+          <tr><td>Version</td><td style="text-align:right"><strong>${VERSION}</strong></td></tr>
+          <tr><td>Ausgabe</td><td style="text-align:right">${CODENAME}</td></tr>
+          <tr><td>Stand</td><td style="text-align:right">${BUILD}</td></tr>
+        </table>
+        <div class="muted" style="font-size:10px;margin-top:6px;">
+          Stimmt die Nummer nicht mit der erwarteten überein, hat der Browser
+          noch den alten Stand. Seite mit gedrückter Umschalttaste neu laden
+          oder den Verlauf für diese Seite löschen.
+        </div>
       </div>
 
       <div class="raised-box">

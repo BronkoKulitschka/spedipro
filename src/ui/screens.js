@@ -5,6 +5,7 @@ import { DESKTOP_APPS } from '../apps/index.js';
 import { S, dateText } from '../state.js';
 import { esc } from '../util.js';
 import { startMenuHtml } from './wm.js';
+import { VERSION, BUILD, CODENAME } from '../version.js';
 
 export function startScreen() {
   return `
@@ -21,6 +22,9 @@ export function startScreen() {
           <div style="font-size:44px;line-height:1;">🚛</div>
           <div style="font-size:16px;font-weight:bold;margin:8px 0 2px;">SpeditionsPro 95</div>
           <div>Echte Karte, echte Baustellen, echte Kundschaft</div>
+          <div class="muted" style="margin-top:8px;font-size:10px;">
+            Version ${VERSION} „${CODENAME}“ · Stand ${BUILD}
+          </div>
         </div>
 
         <div class="raised-box" style="margin-bottom:10px;line-height:1.6;">
@@ -80,6 +84,7 @@ export function desktopShell() {
       <div class="desk-brand">
         <div>${esc(S.name)}</div>
         <div class="muted">Depot ${esc(S.depot.name)}</div>
+        <div class="muted">Version ${VERSION}</div>
       </div>
     </div>
 
@@ -94,6 +99,6 @@ export function desktopShell() {
       <button class="btn btn-sm" id="tbSpeedBtn" title="Leertaste">
         <span id="tbSpeed">▶ 1×</span>
       </button>
-      <div class="clock" id="tbClock">${dateText()}</div>
+      <div class="clock" id="tbClock" title="SpeditionsPro 95 · Version ${VERSION}">${dateText()}</div>
     </div>`;
 }

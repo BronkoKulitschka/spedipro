@@ -10,6 +10,25 @@ lernen dazu, gefahren wird auf einer echten Karte.
 Web-Prototyp für eine spätere Android-App. Inspiriert von *Trans World*
 (Starbyte, 1990) für den C64.
 
+## Version
+
+Die aktuelle Fassung steht in `src/version.js` und wird an vier Stellen
+angezeigt: im Startbildschirm, im Ladeprotokoll, unten rechts auf der
+Arbeitsfläche und im Programm **Einstellungen** unter „Programmstand".
+
+Stimmt die angezeigte Nummer nicht mit der erwarteten überein, hat der
+Browser noch den alten Stand zwischengespeichert. Dann die Seite mit
+gedrückter Umschalttaste neu laden.
+
+Beim Ausliefern einer neuen Fassung:
+
+```bash
+./bump-version.sh 0.5.1
+```
+
+Das setzt Nummer und Datum in `src/version.js` und zieht die `?v=`-Angaben
+in `index.html` nach, damit der Browser die Dateien wirklich neu holt.
+
 ## Starten
 
 Das Projekt nutzt ES-Module. Ein Doppelklick auf `index.html` reicht deshalb
