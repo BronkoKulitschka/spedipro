@@ -1,26 +1,22 @@
-/* Einstiegspunkt. Verdrahtet Module, steuert den Ablauf und stellt die
-   Handler bereit, die in den HTML-Vorlagen als App.… angesprochen werden. */
+/* Einstiegspunkt: Ablauf vom Startbildschirm über das Laden der Daten
+   bis zum Desktop, auf dem die Programme in Fenstern laufen. */
 
 import { DEPOTS, AUTOBAHNEN } from './config.js';
-import { S, resetState, log, findTruck } from './state.js';
+import { S, resetState, log } from './state.js';
 import { loadTraffic } from './data/autobahn.js';
 import { loadFirms } from './data/overpass.js';
 import { refillOffers } from './sim/orders.js';
-import { dispatch, buyTruck, sellTruck, setRepeat } from './sim/fleet.js';
-import { learn } from './sim/drivers.js';
 import { setSpeed, togglePause, restartTimer, stopClock } from './sim/clock.js';
-import { startScreen, bootScreen, gameScreen } from './ui/screens.js';
-import { paint, resetPaintCache } from './ui/paint.js';
-import { invalidateFleet } from './ui/fleet.js';
-import { initMap, drawFirms, drawTraffic, focusTruck, toggleLayer } from './ui/map.js';
+import { startScreen, bootScreen, desktopShell } from './ui/screens.js';
+import { openApp, onTick, renderTaskbar, toggleStartMenu, closeAll, isNarrow } from './ui/wm.js';
 
-/* ── Bildschirmwechsel ── */
-function render() {
-  const root = document.getElementById('root');
-  if (S.screen === 'start')     root.innerHTML = startScreen();
-  else if (S.screen === 'boot') root.innerHTML = bootScreen();
-  else { root.innerHTML = gameScreen(); paint(); }
-  restartTimer();
+const root = () => document.getElementById('root');
+
+/* ── Startbildschirm ── */
+function showStart() {
+  S.screen = 'start';
+  root().innerHTML = startScreen();
+  document.getElementById('startBtnGo').onclick = beginBoot;
 }
 
 /* ── Ladebildschirm ── */
@@ -49,9 +45,9 @@ function beginBoot() {
 
   resetState(DEPOTS.find(d => d.key === key) || DEPOTS[0]);
   if (name) S.name = name;
-  S.screen = 'boot';
 
-  render();
+  S.screen = 'boot';
+  root().innerHTML = bootScreen();
   runBoot();
 }
 
@@ -97,50 +93,72 @@ async function runBoot() {
   if (button) {
     button.disabled = false;
     button.classList.add('btn-default');
+    button.onclick = enterDesktop;
     button.focus();
   }
 }
 
-function enterGame() {
-  S.screen = 'game';
-  invalidateFleet();
-  resetPaintCache();
-  render();
-
-  initMap();
-  drawFirms();
-  drawTraffic();
+/* ── Desktop ── */
+function enterDesktop() {
+  S.screen = 'desktop';
+  root().innerHTML = desktopShell();
+  wireDesktop();
 
   log(`Betrieb aufgenommen. Depot ${S.depot.name}, ${S.firms.length} Betriebe im Umkreis.`);
+
+  /* Auf schmalen Geräten nur ein Fenster öffnen, sonst wird es unübersichtlich. */
+  if (isNarrow()) {
+    openApp('dispo');
+  } else {
+    openApp('map');
+    openApp('dispo');
+    openApp('fleet');
+  }
+
   setSpeed(1);
+  renderTaskbar();
+  onTick();
 }
 
-/* ── Handler für die HTML-Vorlagen ── */
-window.App = {
-  beginBoot,
-  enterGame,
-  setSpeed,
-  buyTruck:  () => { buyTruck();  paint(); },
-  sellTruck: () => { sellTruck(); paint(); },
-  dispatch:  id => { dispatch(id).then(paint); paint(); },
-  setRepeat,
-  learn:     (nr, key) => { learn(nr, key); paint(); },
-  focusTruck: nr => focusTruck(findTruck(nr)),
-  toggleLayer,
-  openTraining: nr => { S.modal = { type: 'training', nr }; paint(); },
-  openAbout:    ()  => { S.modal = { type: 'about' };       paint(); },
-  closeModal:   ()  => { S.modal = null;                    paint(); },
-};
+function wireDesktop() {
+  const desktop = document.getElementById('desktop');
+
+  /* Symbole auf dem Desktop */
+  desktop.addEventListener('click', e => {
+    const icon = e.target.closest('.desk-icon');
+    if (icon) { openApp(icon.dataset.app); toggleStartMenu(false); return; }
+    toggleStartMenu(false);
+  });
+
+  /* Startmenü */
+  document.getElementById('startBtn').onclick = e => {
+    e.stopPropagation();
+    toggleStartMenu();
+  };
+
+  document.getElementById('startMenu').addEventListener('click', e => {
+    const item = e.target.closest('.start-item');
+    if (!item) return;
+    toggleStartMenu(false);
+    if (item.dataset.app === '__closeall') closeAll();
+    else openApp(item.dataset.app);
+  });
+
+  document.getElementById('tbSpeedBtn').onclick = () => { togglePause(); onTick(); };
+
+  restartTimer();
+}
 
 /* ── Tastatur ── */
 document.addEventListener('keydown', e => {
-  if (S.screen !== 'game') return;
-  if (e.code === 'Space' && !S.modal) { e.preventDefault(); togglePause(); }
-  if (e.code === 'Escape' && S.modal) { S.modal = null; paint(); }
+  if (S.screen !== 'desktop') return;
+  const typing = /input|textarea|select/i.test(document.activeElement?.tagName || '');
+  if (e.code === 'Space' && !typing) { e.preventDefault(); togglePause(); onTick(); }
+  if (e.code === 'Escape') toggleStartMenu(false);
 });
 
 window.addEventListener('beforeunload', stopClock);
 
 /* ── Los geht es ── */
 resetState(DEPOTS[0]);
-render();
+showStart();

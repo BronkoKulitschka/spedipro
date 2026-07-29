@@ -1,8 +1,11 @@
 # SpeditionsPro 95
 
-Eine ruhige Speditionssimulation in einer Windows-95-Oberfläche. Kein Zeitlimit,
-keine Konkurrenz, kein Verlieren — der Betrieb läuft, Fahrer lernen dazu, und
-gefahren wird auf einer echten Karte.
+Eine ruhige Speditionssimulation als Windows-95-Desktop. Jeder Arbeitsbereich
+ist ein eigenes Programm in einem eigenen Fenster: Routenplanung, Disposition,
+Fuhrpark, Kasse, Betriebsbuch, Einstellungen.
+
+Kein Zeitlimit, keine Konkurrenz, kein Verlieren. Der Betrieb läuft, Fahrer
+lernen dazu, gefahren wird auf einer echten Karte.
 
 Web-Prototyp für eine spätere Android-App. Inspiriert von *Trans World*
 (Starbyte, 1990) für den C64.
@@ -10,8 +13,7 @@ Web-Prototyp für eine spätere Android-App. Inspiriert von *Trans World*
 ## Starten
 
 Das Projekt nutzt ES-Module. Ein Doppelklick auf `index.html` reicht deshalb
-nicht — der Browser blockiert Module über `file://`. Ein beliebiger lokaler
-Server genügt:
+nicht — der Browser blockiert Module über `file://`. Ein lokaler Server genügt:
 
 ```bash
 python3 -m http.server 8000
@@ -20,39 +22,80 @@ python3 -m http.server 8000
 
 Auf GitHub Pages läuft es ohne weitere Einrichtung.
 
+## Bedienung
+
+* **Symbole auf dem Desktop** oder das **Startmenü** öffnen die Programme.
+* Fenster lassen sich verschieben, in der Größe ändern, minimieren und
+  bildfüllend schalten. Die Taskleiste zeigt alles Offene.
+* **Leertaste** hält die Betriebsuhr an und lässt sie weiterlaufen.
+* Unter 820 Pixeln Breite öffnen Fenster bildfüllend und werden über die
+  Taskleiste gewechselt — so bleibt es auf dem Telefon bedienbar.
+
+## Zeit
+
+Die Uhr läuft in Realzeit. Wie viel Spielzeit dabei vergeht, steht in
+`config.js` unter `TIME.DEFAULT_RATIO` und lässt sich im Programm
+**Einstellungen** jederzeit ändern.
+
+Voreinstellung ist **1 : 3** — eine echte Minute sind drei Spielminuten. Ein
+Spieltag dauert damit bei 1× rund acht Stunden echter Zeit. Die Stufen 2× und
+4× multiplizieren das, ohne die Häufigkeit von Ereignissen zu verändern: die
+hängt an der Spielzeit, nicht am Takt.
+
 ## Aufbau
 
 ```
 index.html              Gerüst, lädt Leaflet, Stile und main.js
 styles/
   win95.css             Fenster, Rahmen, Schaltflächen, Balken
-  app.css               Layout, Karte, Meldungen, Farben
+  app.css               Karte, Meldungen, Farben, Hilfsklassen
+  desktop.css           Arbeitsfläche, Fensterrahmen, Startmenü, Taskleiste
 src/
-  config.js             alle Stellschrauben: Depots, Regeln, Fertigkeiten, Ereignisse
+  config.js             alle Stellschrauben: Depots, Regeln, Zeit, Fertigkeiten
   util.js               Formatierung, Zufall, Entfernungsrechnung
   state.js              Spielzustand, Fahrer, LKWs, Wirkung der Fertigkeiten
-  main.js               Ablauf, Ladevorgang, Verdrahtung der Handler
+  main.js               Ablauf: Start, Laden, Desktop
   data/
     autobahn.js         Baustellen und Meldungen der Autobahn GmbH
     overpass.js         echte Betriebe aus OpenStreetMap
     osrm.js             Straßenführung, mit Luftlinie als Rückfallebene
   sim/
-    clock.js            Betriebsuhr, Tagesabrechnung, Pannen
+    clock.js            Betriebsuhr, Zeitverhältnis, Tagesabrechnung
     fleet.js            fahren, disponieren, kaufen, verkaufen
     drivers.js          Erfahrung und Schulung
     orders.js           Auftragsbörse
     events.js           kleine Ereignisse aus dem Alltag
   ui/
-    screens.js          Vorlagen für Start-, Lade- und Spielbildschirm
-    paint.js            aktualisiert das laufende Fenster
-    fleet.js            Fuhrparkliste mit Balken und Fertigkeiten
+    wm.js               Fensterverwaltung, Taskleiste, Startmenü
+    screens.js          Start-, Lade- und Desktopgerüst
     map.js              Leaflet: Kacheln, Betriebe, Meldungen, rollende LKWs
-    modals.js           Schulungs- und Datenquellenfenster
     toast.js            Meldungen unten rechts
+  apps/
+    index.js            Verzeichnis aller Programme
+    map.js              Routenplanung
+    dispo.js            Disposition
+    fleet.js            Fuhrpark
+    training.js         Schulung, ein Fenster je Fahrer
+    finance.js          Kasse
+    logbook.js          Betriebsbuch
+    settings.js         Einstellungen und Datenquellen
 ```
 
-Die HTML-Vorlagen sprechen Handler über `App.…` an. `main.js` legt dieses Objekt
-an; damit bleiben die Vorlagen frei von Importen.
+### Ein Programm hinzufügen
+
+Eine Datei in `src/apps/` anlegen und in `index.js` eintragen. Mehr braucht es
+nicht — Fenster, Symbol, Startmenüeintrag und Taskleiste entstehen daraus
+von selbst.
+
+```js
+export const MeinApp = {
+  id: 'meins', icon: '📌', title: () => 'Mein Programm',
+  width: 360, height: 300, desktop: true,
+  body: () => '<div class="pad">Inhalt</div>',
+  mount(el) {},     // einmal beim Öffnen
+  update(el) {},    // bei jedem Takt, nur wenn sichtbar
+};
+```
 
 ## Spielprinzip
 
@@ -83,8 +126,8 @@ mit Schlüssel.
 
 ## Nächste Schritte
 
+* Speicherstand im Browser, damit ein Betrieb über Tage weiterläuft
 * Aufträge zwischen zwei Betrieben statt immer ab Depot
-* Mehrere Depots, LKW-Typen, Ladungsarten
-* Speicherstand im Browser
-* Portierung nach Android mit MapLibre oder osmdroid; die Module unter `data/`
-  und `sim/` lassen sich fast unverändert nach Kotlin übertragen
+* Fensterpositionen merken
+* Portierung nach Android mit MapLibre oder osmdroid; `data/` und `sim/` lassen
+  sich fast unverändert nach Kotlin übertragen

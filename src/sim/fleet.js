@@ -9,7 +9,6 @@ import { takeOffer } from './orders.js';
 import { gainXp } from './drivers.js';
 import { toast } from '../ui/toast.js';
 import { drawRoute, removeTruckLayers, updateTruckMarker } from '../ui/map.js';
-import { invalidateFleet } from '../ui/fleet.js';
 
 /* ── Baustellen und Meldungen entlang einer Strecke ── */
 export function trafficOnRoute(coords) {
@@ -42,7 +41,6 @@ export async function dispatch(offerId) {
   if (!offer) return;
 
   truck.phase = 'planning';
-  invalidateFleet();
 
   let route;
   try {
@@ -74,20 +72,18 @@ export async function dispatch(offerId) {
       `Auf der Strecke nach <strong>${esc(offer.firm.name)}</strong> liegen ${hits.length} gemeldete Stellen.`,
       `<span class="muted">${esc(hits[0].road)}: ${esc(hits[0].title)}</span>`);
   }
-  invalidateFleet();
 }
 
 /* ── Ein Takt Bewegung ── */
-export function moveTrucks() {
+export function moveTrucks(minutes) {
   for (const truck of S.trucks) {
     if (truck.shopMin > 0) {
-      truck.shopMin = Math.max(0, truck.shopMin - RULES.MIN_PER_TICK);
-      if (truck.shopMin === 0) invalidateFleet();
+      truck.shopMin = Math.max(0, truck.shopMin - minutes);
       continue;
     }
     if (truck.phase === 'idle' || truck.phase === 'planning' || !truck.route) continue;
 
-    truck.progress += effectiveKmh(truck) * (RULES.MIN_PER_TICK / 60);
+    truck.progress += effectiveKmh(truck) * (minutes / 60);
     updateTruckMarker(truck);
     if (truck.progress < truck.route.km) continue;
 
@@ -129,7 +125,6 @@ function comeHome(truck) {
   truck.route = null;
   removeTruckLayers(truck);
   log(`${d.name} ist zurück im Depot.`);
-  invalidateFleet();
 }
 
 /* ── Kaufen und verkaufen ── */
@@ -143,7 +138,6 @@ export function buyTruck() {
 
   log(`Neuer LKW ${truck.nr} gekauft, ${truck.driver.name} übernimmt ihn: ${fmt(-RULES.TRUCK_BUY)}`);
   toast('🚛', `<strong>${esc(truck.driver.name)}</strong> fängt bei euch an und übernimmt LKW ${truck.nr}.`);
-  invalidateFleet();
 }
 
 export function sellTruck() {
@@ -155,7 +149,6 @@ export function sellTruck() {
   S.money += RULES.TRUCK_SELL;
 
   log(`LKW ${truck.nr} verkauft, ${truck.driver.name} verabschiedet sich: ${fmt(RULES.TRUCK_SELL)}`);
-  invalidateFleet();
 }
 
 export function setRepeat(nr, value) {

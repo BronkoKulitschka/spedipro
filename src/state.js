@@ -1,6 +1,6 @@
 /* Der gesamte Spielzustand. Alles andere liest und schreibt hier hinein. */
 
-import { RULES, DRIVER_NAMES } from './config.js';
+import { RULES, TIME, DRIVER_NAMES } from './config.js';
 import { pick, pad } from './util.js';
 
 export let S = null;
@@ -21,14 +21,14 @@ export function newTruck(nr) {
   return {
     nr,
     driver: newDriver(),
-    order: null,      // angenommener Auftrag
-    route: null,      // { km, coords, real, cum }
-    progress: 0,      // gefahrene km auf dem aktuellen Abschnitt
-    phase: 'idle',    // idle | planning | out | back
-    repeat: false,    // Dauerauftrag
-    shopMin: 0,       // verbleibende Werkstattminuten
-    marker: null,     // Leaflet
-    line: null,       // Leaflet
+    order: null,
+    route: null,
+    progress: 0,       // gefahrene km auf dem aktuellen Abschnitt
+    phase: 'idle',     // idle | planning | out | back
+    repeat: false,
+    shopMin: 0,        // verbleibende Werkstattminuten
+    marker: null,
+    line: null,
   };
 }
 
@@ -39,29 +39,42 @@ export function resetState(depot) {
     name: 'Meine Spedition',
     depot,
     money: RULES.START_MONEY,
-    day: 1, hour: 6, minute: 0,
-    speed: 1, running: false, prevSpeed: 1,
+
+    /* Zeit wird in Minuten seit Spielbeginn geführt, als Kommazahl.
+       Tag, Stunde und Minute werden daraus abgeleitet. */
+    minutes: 6 * 60,
+    ratio: TIME.DEFAULT_RATIO,
+    speed: 1,
+    running: false,
+    prevSpeed: 1,
+
     trucks: [newTruck(1)],
-    firms: [],        // aus OpenStreetMap
-    traffic: [],      // aus der Autobahn-API
-    offers: [],       // Auftragsbörse
+    firms: [],
+    traffic: [],
+    offers: [],
     log: [],
-    modal: null,
     stats: { tours: 0, km: 0, revenue: 0, jams: 0 },
     dataInfo: { router: 'noch nicht benutzt' },
   };
   return S;
 }
 
+/* ── Zeit ── */
+export const day    = () => Math.floor(S.minutes / 1440) + 1;
+export const hour   = () => Math.floor(S.minutes % 1440 / 60);
+export const minute = () => Math.floor(S.minutes % 60);
+export const clockText = () => `${pad(hour())}:${pad(minute())}`;
+export const dateText  = () => `Tag ${day()} · ${clockText()}`;
+
 export function log(msg) {
-  S.log.unshift(`${pad(S.hour)}:${pad(S.minute)} · Tag ${S.day} — ${msg}`);
-  if (S.log.length > 90) S.log.pop();
+  S.log.unshift(`${clockText()} · Tag ${day()} — ${msg}`);
+  if (S.log.length > 120) S.log.pop();
 }
 
 /* ── Abgeleitete Werte ── */
 export const idleTrucks = () => S.trucks.filter(t => t.phase === 'idle' && !t.shopMin).length;
 export const freePoints = () => S.trucks.reduce((sum, t) => sum + t.driver.points, 0);
-export const findTruck = nr => S.trucks.find(t => t.nr === nr);
+export const findTruck  = nr => S.trucks.find(t => t.nr === nr);
 
 /* ── Wirkung der Fertigkeiten ── */
 export const xpNeeded = lvl => 100 + (lvl - 1) * 70;

@@ -8,8 +8,6 @@ export const DEPOTS = [
   { key: 'M',  name: 'München',   lat: 48.1372, lon: 11.5755 },
 ];
 
-/* Welche Autobahnen beim Start abgefragt werden.
-   Mehr Einträge bedeuten mehr Meldungen, aber längere Ladezeit. */
 export const AUTOBAHNEN = [
   'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','A24','A31','A45','A61','A81','A99',
 ];
@@ -27,7 +25,6 @@ export const DRIVER_NAMES = [
   'Fatma','Uwe','Nadine','Piet','Karin','Manfred','Ayla','Detlef','Svenja',
 ];
 
-/* Ruhige Ereignisse. Vieles ist reine Stimmung ohne Geldwirkung. */
 export const EVENTS = [
   { icon: '📦', text: 'Ein Stammkunde legt spontan eine Palette drauf.',      delta:  4000 },
   { icon: '☕', text: 'Die Fahrer treffen sich zum Kaffee an der Raststätte.', delta:     0 },
@@ -45,22 +42,29 @@ export const EVENTS = [
 
 /* ── Wirtschaft und Fahrphysik ── */
 export const RULES = {
-  BASE_KMH:     62,     // Schnitt eines ungeschulten Fahrers
-  FUEL_PER_KM:  1.15,   // Euro je Kilometer
-  DAILY_COST:   1400,   // Euro je LKW und Tag
+  BASE_KMH:     62,
+  FUEL_PER_KM:  1.15,
+  DAILY_COST:   1400,
   TRUCK_BUY:    20000,
   TRUCK_SELL:   12000,
-  TRAIN_COST:   3000,   // Kursgebühr je Schulungsstufe
-  RATE_PER_KM:  1.55,   // Frachtpreis je Kilometer
-  BASE_FEE:     380,    // Grundbetrag je Auftrag
-  MIN_PER_TICK: 15,     // Spielminuten je Takt
-  EVENT_CHANCE: 0.004,  // je Takt
-  BREAKDOWN:    0.035,  // je LKW und Tag, vor Fertigkeiten
+  TRAIN_COST:   3000,
+  RATE_PER_KM:  1.55,
+  BASE_FEE:     380,
+  EVENT_PER_DAY: 1.4,    // erwartete Ereignisse je Spieltag
+  BREAKDOWN:    0.035,
   START_MONEY:  50000,
-  OFFER_COUNT:  8,      // Größe der Auftragsbörse
-  FIRM_RADIUS:  45000,  // Suchradius um das Depot in Metern
-  JAM_RADIUS:   2.5,    // km: so nah muss eine Meldung an der Route liegen
+  OFFER_COUNT:  8,
+  FIRM_RADIUS:  45000,
+  JAM_RADIUS:   2.5,
 };
 
-/* Realzeit je Takt, je Geschwindigkeitsstufe */
-export const TICK_MS = { 1: 260, 2: 130, 4: 55 };
+/* ── Zeit ──
+   Der Takt läuft in Realzeit fest mit TICK_MS. Wie viel Spielzeit dabei
+   vergeht, bestimmt RATIO: Spielminuten je echter Minute bei Stufe 1×.
+   Voreinstellung 3 bedeutet: eine echte Minute sind drei Spielminuten. */
+export const TIME = {
+  TICK_MS: 1000,
+  DEFAULT_RATIO: 3,
+  RATIOS: [1, 3, 10, 30, 60],   // in den Einstellungen wählbar
+  SPEEDS: [0, 1, 2, 4],         // Multiplikator auf das Verhältnis
+};

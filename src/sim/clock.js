@@ -1,22 +1,43 @@
-/* Die Betriebsuhr. Sie treibt alles andere an. */
+/* Die Betriebsuhr. Sie treibt alles andere an.
 
-import { RULES, TICK_MS } from '../config.js';
-import { S, log, riskMul } from '../state.js';
+   Der Takt kommt in fester Realzeit (TIME.TICK_MS). Wie viel Spielzeit
+   dabei vergeht, ergibt sich aus dem eingestellten Verhältnis und der
+   Geschwindigkeitsstufe. Bei Verhältnis 3 und Stufe 1× sind das drei
+   Spielminuten je echter Minute. */
+
+import { RULES, TIME } from '../config.js';
+import { S, log, day, riskMul } from '../state.js';
 import { fmt } from '../util.js';
 import { moveTrucks } from './fleet.js';
 import { fireEvent } from './events.js';
 import { refillOffers } from './orders.js';
-import { paint } from '../ui/paint.js';
-import { invalidateFleet } from '../ui/fleet.js';
+import { onTick } from '../ui/wm.js';
 
 let timer = null;
+let lastDay = 1;
+
+/* Spielminuten je Takt */
+export function minutesPerTick() {
+  return S.ratio * S.speed * (TIME.TICK_MS / 60000);
+}
+
+/* Wie viele echte Minuten ein Spieltag dauert */
+export function realMinutesPerGameDay() {
+  const perRealMinute = S.ratio * (S.speed || 1);
+  return 1440 / perRealMinute;
+}
 
 export function setSpeed(speed) {
   if (speed > 0) S.prevSpeed = speed;
   S.speed = speed;
   S.running = speed > 0;
   restartTimer();
-  paint();
+  onTick();
+}
+
+export function setRatio(ratio) {
+  S.ratio = ratio;
+  onTick();
 }
 
 export function togglePause() {
@@ -26,8 +47,8 @@ export function togglePause() {
 export function restartTimer() {
   clearInterval(timer);
   timer = null;
-  if (S.running && S.screen === 'game') {
-    timer = setInterval(tick, TICK_MS[S.speed]);
+  if (S.running && S.screen === 'desktop') {
+    timer = setInterval(tick, TIME.TICK_MS);
   }
 }
 
@@ -37,13 +58,18 @@ export function stopClock() {
 }
 
 function tick() {
-  S.minute += RULES.MIN_PER_TICK;
-  while (S.minute >= 60) { S.minute -= 60; S.hour++; }
-  if (S.hour >= 24) { S.hour -= 24; S.day++; newDay(); }
+  const mins = minutesPerTick();
+  S.minutes += mins;
 
-  moveTrucks();
-  if (Math.random() < RULES.EVENT_CHANCE) fireEvent();
-  paint();
+  if (day() !== lastDay) { lastDay = day(); newDay(); }
+
+  moveTrucks(mins);
+
+  /* Ereignisse hängen an der Spielzeit, nicht am Takt.
+     So bleibt die Häufigkeit gleich, egal wie schnell die Uhr läuft. */
+  if (Math.random() < RULES.EVENT_PER_DAY * mins / 1440) fireEvent();
+
+  onTick();
 }
 
 /* Mitternacht: Fixkosten, Pannenwurf, frische Aufträge. */
@@ -61,7 +87,6 @@ function newDay() {
     S.money -= bill;
     truck.shopMin = 180 + Math.floor(Math.random() * 300);
     log(`🔧 LKW ${truck.nr} (${truck.driver.name}) steht in der Werkstatt: ${fmt(-bill)}.`);
-    invalidateFleet();
   }
 
   refillOffers();
