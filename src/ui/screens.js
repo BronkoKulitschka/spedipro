@@ -79,7 +79,8 @@ export function bootScreen() {
       <div class="pad">
         <div class="inset-box scroll" style="height:min(240px, 50vh);" id="bootLog"></div>
         <div class="prog" style="margin-top:8px;"><div class="prog-fill" id="bootProg"></div></div>
-        <div class="flex-end" style="margin-top:10px;">
+        <div class="flex-row" style="margin-top:10px;justify-content:space-between;">
+          <button class="btn btn-sm" id="bootSkip">überspringen</button>
           <button class="btn" id="bootBtn" disabled>Weiter</button>
         </div>
       </div>

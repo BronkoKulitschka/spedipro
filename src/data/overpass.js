@@ -19,10 +19,14 @@ const MIRRORS = [
 
 /* Große Abfrage zuerst, danach immer sparsamer. */
 const ATTEMPTS = [
-  { radius: RULES.FIRM_RADIUS, timeout: 40, full: true  },
-  { radius: 25000,             timeout: 25, full: false },
-  { radius: 15000,             timeout: 20, full: false },
+  { radius: RULES.FIRM_RADIUS, timeout: 12, full: true  },
+  { radius: 25000,             timeout: 10, full: false },
+  { radius: 15000,             timeout:  8, full: false },
 ];
+
+/* Nach dieser Zeit wird die Suche endgültig aufgegeben. Ohne diese
+   Grenze klappert der Hintergrund alle Spiegelserver stundenlang ab. */
+const TOTAL_BUDGET_MS = 45000;
 
 /* So lange wartet der Start höchstens auf Overpass. Danach wird mit
    erfundenen Betrieben weitergespielt und im Hintergrund nachgeladen. */
@@ -60,7 +64,7 @@ export function firmKind(tags = {}) {
 
 async function askServer(url, query, timeoutSec) {
   const controller = new AbortController();
-  const bail = setTimeout(() => controller.abort(), (timeoutSec + 15) * 1000);
+  const bail = setTimeout(() => controller.abort(), (timeoutSec + 3) * 1000);
   try {
     const res = await fetch(url, {
       method: 'POST',
@@ -97,10 +101,17 @@ function toFirms(json, depot) {
 /* onNote meldet den Fortschritt an den Ladebildschirm.
    Liefert immer eine brauchbare Liste, notfalls die Reserve. */
 export async function loadFirms(depot, onNote = () => {}) {
+  const bis = Date.now() + TOTAL_BUDGET_MS;
+
   for (const attempt of ATTEMPTS) {
     const query = buildQuery(depot, attempt);
 
     for (const url of MIRRORS) {
+      if (Date.now() > bis) {
+        onNote('  Zeitbudget aufgebraucht, Suche beendet.');
+        const firms = fallbackFirms(depot);
+        return { firms, source: 'Ersatzliste' };
+      }
       const host = new URL(url).hostname;
       onNote(`  ${host}, Radius ${attempt.radius / 1000} km …`);
       try {
@@ -128,7 +139,11 @@ export async function loadFirms(depot, onNote = () => {}) {
 export function loadFirmsFast(depot, onNote = () => {}, onLate = () => {}) {
   let settled = false;
 
-  const background = loadFirms(depot, onNote)
+  /* Sobald der Start durch ist, schweigt die Hintergrundsuche.
+     Sonst schreibt sie weiter in einen Bildschirm, den niemand mehr sieht. */
+  const note = text => { if (!settled) onNote(text); };
+
+  const background = loadFirms(depot, note)
     .then(result => {
       if (settled && result.firms.length >= 5) onLate(result);
       return result;

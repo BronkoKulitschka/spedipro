@@ -6,6 +6,7 @@ import { S, resetState, hydrate, log } from './state.js';
 import { VERSION, BUILD } from './version.js';
 import { loadTraffic } from './data/autobahn.js';
 import { loadFirmsFast } from './data/overpass.js';
+import { inventFirms } from './data/invent.js';
 import { refillOffers } from './sim/orders.js';
 import { refillContractOffers } from './sim/contracts.js';
 import { initPartners } from './sim/partners.js';
@@ -50,7 +51,11 @@ function continueGame() {
 }
 
 /* ── Ladebildschirm ── */
+let bootOffen = true;
+function quiet() { bootOffen = false; }
+
 function bootLine(text, replaceLast = false) {
+  if (!bootOffen) return;
   const box = document.getElementById('bootLog');
   if (!box) return;
   if (replaceLast && box.lastChild) {
@@ -70,6 +75,7 @@ function bootProgress(percent) {
 }
 
 function beginBoot() {
+  bootOffen = true;
   const key  = document.getElementById('depotSel').value;
   const name = document.getElementById('pname').value.trim();
 
@@ -78,10 +84,35 @@ function beginBoot() {
 
   S.screen = 'boot';
   root().innerHTML = bootScreen();
+
+  /* Notausgang: führt immer ins Spiel, egal was die Server treiben. */
+  document.getElementById('bootSkip').onclick = () => {
+    quiet();
+    if (!S.firms.length) {
+      S.firms = inventFirms(S.depot);
+      S.dataInfo.firms = 'erfunden';
+    }
+    if (!S.partners.length) S.partners = initPartners();
+    refillContractOffers();
+    refillOffers();
+    enterDesktop();
+  };
+
   runBoot();
 }
 
 async function runBoot() {
+  try {
+    await bootSteps();
+  } catch (err) {
+    bootLine('');
+    bootLine('Ein Fehler ist aufgetreten: ' + (err?.message || err));
+    bootLine('Es wird mit dem gestartet, was da ist.');
+  }
+  finishBoot();
+}
+
+async function bootSteps() {
   bootLine(`SpeditionsPro 95 — Version ${VERSION} (${BUILD})`);
   bootLine('');
   bootLine(`Depot: ${S.depot.name}`);
@@ -91,6 +122,7 @@ async function runBoot() {
   bootProgress(10);
   let started = false;
   const trafficJob = loadTraffic((done, total, road) => {
+    if (!bootOffen) return;
     bootLine(`  ${road} … ${done}/${total}`, started);
     started = true;
   }).catch(() => []);
@@ -125,12 +157,24 @@ async function runBoot() {
          + `${S.contractOffers.length} Ausschreibungen.`);
   bootLine('Bereit.');
   bootProgress(100);
+}
+
+/* Immer erreichbar, auch wenn oben etwas schiefgeht. */
+function finishBoot() {
+  quiet();
+  bootProgress(100);
+
+  /* Von selbst weitergehen. Wer schneller ist, drückt den Knopf. */
+  const autoStart = setTimeout(() => {
+    if (S.screen === 'boot') enterDesktop();
+  }, 1200);
 
   const button = document.getElementById('bootBtn');
   if (button) {
     button.disabled = false;
     button.classList.add('btn-default');
-    button.onclick = enterDesktop;
+    button.textContent = 'Los geht es';
+    button.onclick = () => { clearTimeout(autoStart); enterDesktop(); };
     button.focus();
   }
 }
