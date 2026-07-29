@@ -1,6 +1,6 @@
 /* Der gesamte Spielzustand. Alles andere liest und schreibt hier hinein. */
 
-import { RULES, TIME, DRIVER_NAMES } from './config.js';
+import { RULES, TIME, DRIVER_NAMES, TRUCK_MODELS, USED } from './config.js';
 import { pick, pad } from './util.js';
 
 export let S = null;
@@ -17,9 +17,12 @@ export function newDriver() {
   };
 }
 
-export function newTruck(nr, pos = null) {
+export function newTruck(nr, pos = null, model = 'verteiler', used = false) {
   return {
     nr,
+    model,
+    used,
+    odo: used ? USED.odo : 0,      // Kilometerstand
     driver: newDriver(),
     order: null,
     route: null,
@@ -50,12 +53,13 @@ export function resetState(depot) {
     running: false,
     prevSpeed: 1,
 
-    trucks: [newTruck(1, { lat: depot.lat, lon: depot.lon })],
+    trucks: [newTruck(1, { lat: depot.lat, lon: depot.lon }, 'verteiler', false)],
     firms: [],
     traffic: [],
     offers: [],
     log: [],
     stats: { tours: 0, km: 0, revenue: 0, jams: 0 },
+    ledger: [],
     silent: false,
     lastReport: null,
     dataInfo: { router: 'noch nicht benutzt', firms: '—' },
@@ -76,6 +80,32 @@ export function log(msg) {
   if (S.log.length > 120) S.log.pop();
 }
 
+/* ── Kassenbuch ─────────────────────────────────────────────────
+   Jede Geldbewegung läuft hierdurch. So lässt sich später jede Zahl
+   in der Kasse belegen. */
+export const LEDGER_MAX = 300;
+
+export function book(cat, text, amount) {
+  S.money += amount;
+  S.ledger.unshift({
+    day: day(), time: clockText(),
+    cat, text, amount,
+  });
+  if (S.ledger.length > LEDGER_MAX) S.ledger.pop();
+  return amount;
+}
+
+export function ledgerSums(sinceDay = null) {
+  const rows = sinceDay ? S.ledger.filter(e => e.day >= sinceDay) : S.ledger;
+  let ein = 0, aus = 0;
+  const cats = {};
+  for (const e of rows) {
+    if (e.amount >= 0) ein += e.amount; else aus += e.amount;
+    cats[e.cat] = (cats[e.cat] || 0) + e.amount;
+  }
+  return { ein, aus, saldo: ein + aus, cats, count: rows.length };
+}
+
 /* ── Abgeleitete Werte ── */
 export const idleTrucks = () => S.trucks.filter(t => t.phase === 'idle' && !t.shopMin).length;
 export const freePoints = () => S.trucks.reduce((sum, t) => sum + t.driver.points, 0);
@@ -83,6 +113,15 @@ export const findTruck  = nr => S.trucks.find(t => t.nr === nr);
 
 /* Wo ein LKW gerade steht. Ohne Angabe gilt das Depot. */
 export const truckPos = t => t.pos || { lat: S.depot.lat, lon: S.depot.lon };
+export const modelOf  = t => TRUCK_MODELS[t.model] || TRUCK_MODELS.verteiler;
+
+/* Wiederverkaufswert: Zustand und Laufleistung drücken den Preis. */
+export function resaleValue(truck) {
+  const m = modelOf(truck);
+  const base = m.price * (truck.used ? RULES.RESALE_USED : RULES.RESALE_NEW);
+  const wear = Math.max(0.35, 1 - (truck.odo || 0) / 500000);
+  return Math.round(base * wear / 100) * 100;
+}
 export const atDepot  = t => !t.pos
   || (Math.abs(t.pos.lat - S.depot.lat) < 1e-6 && Math.abs(t.pos.lon - S.depot.lon) < 1e-6);
 
@@ -90,6 +129,12 @@ export const atDepot  = t => !t.pos
 export const xpNeeded = lvl => 100 + (lvl - 1) * 70;
 export const kmh      = d => RULES.BASE_KMH + 5 * d.skills.route;
 export const fuelRate = d => RULES.FUEL_PER_KM * (1 - 0.07 * d.skills.eco);
+
+/* Dieselben Werte, aber mit dem Fahrzeug verrechnet. */
+export const truckKmh  = t => Math.max(35, kmh(t.driver) + modelOf(t).speed);
+export const truckFuel = t => fuelRate(t.driver) * modelOf(t).fuel;
+export const truckLoad = t => modelOf(t).load;
+export const truckRisk = t => riskMul(t.driver) * modelOf(t).risk * (t.used ? USED.risk : 1);
 export const feeMul   = d => 1 + 0.06 * d.skills.deal;
 export const riskMul  = d => Math.pow(0.75, d.skills.care);
 export const calmMul  = d => Math.pow(0.85, d.skills.calm);
@@ -98,6 +143,7 @@ export const calmMul  = d => Math.pow(0.85, d.skills.calm);
 export function hydrate(saved) {
   resetState(saved.depot);
   Object.assign(S, saved, {
+    ledger: saved.ledger || [],
     screen: 'desktop',
     silent: false,
     lastReport: null,
@@ -105,6 +151,9 @@ export function hydrate(saved) {
       ...t,
       marker: null, line: null,
       pos: t.pos || { lat: saved.depot.lat, lon: saved.depot.lon },
+      model: t.model || 'verteiler',
+      used: !!t.used,
+      odo: t.odo || 0,
       place: t.place || 'Depot',
       auto: !!t.auto,
       phase: t.phase === 'out' || t.phase === 'back' ? 'idle' : t.phase,

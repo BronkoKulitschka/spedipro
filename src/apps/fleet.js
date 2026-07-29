@@ -1,9 +1,9 @@
 /* Fuhrpark: Standort und Zustand aller LKW. */
 
 import { SKILLS } from '../config.js';
-import { S, xpNeeded, findTruck, atDepot } from '../state.js';
-import { esc, pips } from '../util.js';
-import { setAuto, returnToDepot } from '../sim/fleet.js';
+import { S, xpNeeded, findTruck, atDepot, modelOf, resaleValue } from '../state.js';
+import { esc, pips, fmt, num } from '../util.js';
+import { setAuto, returnToDepot, sellTruck } from '../sim/fleet.js';
 import { openApp, onTick } from '../ui/wm.js';
 import { focusTruck } from '../ui/map.js';
 
@@ -13,12 +13,16 @@ export const FleetApp = {
 
   body: () => `
     <div class="col fill">
-      <div class="bar-note" id="flNote">—</div>
+      <div class="bar-note flex-row" style="justify-content:space-between;gap:6px;">
+        <span id="flNote">—</span>
+        <button class="btn btn-sm" id="flDealer">🏷️ Fahrzeughandel</button>
+      </div>
       <div class="inset-box scroll fill" id="fleetBox" style="padding:4px;"></div>
     </div>`,
 
   mount(el) {
     const box = el.querySelector('#fleetBox');
+    el.querySelector('#flDealer').onclick = () => openApp('dealer');
 
     box.addEventListener('click', e => {
       const btn = e.target.closest('button[data-act]');
@@ -27,6 +31,13 @@ export const FleetApp = {
       if (btn.dataset.act === 'show')   focusTruck(findTruck(nr));
       if (btn.dataset.act === 'train')  openApp('training', { nr });
       if (btn.dataset.act === 'home')   returnToDepot(nr).then(onTick);
+      if (btn.dataset.act === 'sell') {
+        const truck = findTruck(nr);
+        if (truck && confirm(`LKW ${nr} (${modelOf(truck).name}) für ${fmt(resaleValue(truck))} verkaufen?`)) {
+          sellTruck(nr);
+          box.dataset.sig = '';
+        }
+      }
       onTick();
     });
 
@@ -46,8 +57,9 @@ export const FleetApp = {
       `${S.trucks.length} LKW · ${free} verfügbar · ${auto} auf Automatik`;
 
     const sig = S.trucks.map(t =>
-      [t.nr, t.driver.level, t.driver.points, Object.values(t.driver.skills).join(''),
-       t.phase, t.auto ? 1 : 0, t.place, t.shopMin > 0 ? 1 : 0].join(':')).join('|');
+      [t.nr, t.model, t.driver.level, t.driver.points, Object.values(t.driver.skills).join(''),
+       t.phase, t.auto ? 1 : 0, t.place, t.shopMin > 0 ? 1 : 0,
+       Math.floor((t.odo || 0) / 1000)].join(':')).join('|');
 
     if (box.dataset.sig !== sig) {
       box.dataset.sig = sig;
@@ -89,6 +101,7 @@ function row(truck) {
     .map(([key, s]) => `<span title="${s.name}">${s.icon}${pips(d.skills[key], s.max)}</span>`)
     .join(' ');
 
+  const m = modelOf(truck);
   const stehtWo = truck.phase === 'idle'
     ? `<span class="muted">bei ${esc(truck.place)}</span>`
     : '<span class="muted">unterwegs</span>';
@@ -100,7 +113,10 @@ function row(truck) {
         <span class="muted">· LKW ${truck.nr} · St. ${d.level}</span></span>
       <span style="font-size:10px;" id="tst${truck.nr}"></span>
     </div>
-    <div style="font-size:10px;margin:2px 0;">${stehtWo}</div>
+    <div style="font-size:10px;margin:2px 0;">
+      ${esc(m.name)}${truck.used ? ' <span class="muted">· gebraucht</span>' : ''}
+      <span class="muted">· ${num(truck.odo || 0)} km</span> · ${stehtWo}
+    </div>
     <div class="xpbar" style="margin:3px 0;"><div class="xpfill" id="xp${truck.nr}"></div></div>
     <div class="prog" style="margin:3px 0;"><div class="prog-fill" id="tpg${truck.nr}"></div></div>
     <div style="font-size:10px;margin:2px 0 4px;">${skills}</div>
@@ -115,6 +131,9 @@ function row(truck) {
           ${truck.phase === 'idle' && !truck.shopMin && !atDepot(truck) ? '' : 'disabled'}>ins Depot</button>
         <button class="btn btn-sm" data-act="show"  data-nr="${truck.nr}">zeigen</button>
         <button class="btn btn-sm" data-act="train" data-nr="${truck.nr}">Schulung</button>
+        <button class="btn btn-sm" data-act="sell" data-nr="${truck.nr}"
+          title="Wiederverkaufswert ${fmt(resaleValue(truck))}"
+          ${truck.phase === 'idle' && !truck.shopMin && S.trucks.length > 1 ? '' : 'disabled'}>verkaufen</button>
       </span>
     </div>
   </div>`;

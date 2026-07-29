@@ -78,3 +78,18 @@
 @media (pointer: coarse) {
   .offer-pin { font-size: 17px; }
 }
+
+
+/* Kassenbuch */
+.book-line {
+  display: flex; justify-content: space-between; gap: 8px;
+  padding: 3px 4px; border-bottom: 1px solid #eee;
+}
+.book-main { min-width: 0; }
+.book-cat {
+  display: inline-block; font-size: 9px; font-weight: bold;
+  background: #000080; color: #fff; padding: 0 4px; margin-right: 4px;
+}
+.book-text { font-size: 10px; }
+.book-side { text-align: right; white-space: nowrap; font-size: 10px; }
+.book-time { display: block; font-size: 9px; }

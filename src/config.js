@@ -40,13 +40,48 @@ export const EVENTS = [
   { icon: '📻', text: 'Neues Radio in der Werkstatt.',                        delta:  -600 },
 ];
 
+/* ── Fahrzeugtypen ──────────────────────────────────────────────
+   Angelehnt an den Aufbau von Aufbausimulationen wie dem Euro Truck
+   Simulator: unterschiedliche Klassen mit Anschaffungspreis, Verbrauch,
+   Reisegeschwindigkeit und Ladefähigkeit. Die Ladefähigkeit wirkt als
+   Faktor auf den Frachterlös — ein schwerer Zug verdient an derselben
+   Strecke mehr, verbraucht dafür deutlich mehr Diesel.                */
+export const TRUCK_MODELS = {
+  kurier: {
+    key: 'kurier', name: 'Kurier 3.5', klasse: 'Sprinter',
+    price: 12000, speed: +8, fuel: 0.55, load: 0.60, risk: 0.8,
+    text: 'Wendig und sparsam. Rechnet sich auf kurzen Strecken.',
+  },
+  verteiler: {
+    key: 'verteiler', name: 'Verteiler 12', klasse: 'Verteilerverkehr',
+    price: 20000, speed: 0, fuel: 1.00, load: 1.00, risk: 1.0,
+    text: 'Der Allrounder. Nichts herausragend, nichts falsch.',
+  },
+  fern: {
+    key: 'fern', name: 'Fernverkehr 400', klasse: 'Sattelzug',
+    price: 34000, speed: +6, fuel: 1.20, load: 1.40, risk: 1.0,
+    text: 'Für lange Läufe. Hält den Schnitt auch nach Stunden.',
+  },
+  schwer: {
+    key: 'schwer', name: 'Schwerlast 620', klasse: 'Schwertransport',
+    price: 52000, speed: -4, fuel: 1.55, load: 1.90, risk: 1.2,
+    text: 'Zieht alles, säuft alles. Lohnt erst bei hohen Frachtwerten.',
+  },
+};
+
+export const USED = {
+  factor: 0.62,      // Anteil vom Neupreis
+  risk: 1.7,         // Pannenrisiko gegenüber neu
+  odo: 180000,       // Kilometerstand beim Kauf
+};
+
 /* ── Wirtschaft und Fahrphysik ── */
 export const RULES = {
   BASE_KMH:     62,
   FUEL_PER_KM:  1.15,
   DAILY_COST:   1400,
-  TRUCK_BUY:    20000,
-  TRUCK_SELL:   12000,
+  RESALE_NEW:   0.55,   // Anteil vom Neupreis beim Verkauf
+  RESALE_USED:  0.45,
   TRAIN_COST:   3000,
   RATE_PER_KM:  1.55,
   BASE_FEE:     380,

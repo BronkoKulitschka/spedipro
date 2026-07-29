@@ -1,13 +1,13 @@
 /* Kleine Ereignisse aus dem Betriebsalltag. Nichts davon ist bedrohlich. */
 
 import { EVENTS } from '../config.js';
-import { S, log } from '../state.js';
+import { S, log, book } from '../state.js';
 import { pick, fmt, esc } from '../util.js';
 import { toast } from '../ui/toast.js';
 
 export function fireEvent() {
   const ev = pick(EVENTS);
-  S.money += ev.delta;
+  if (ev.delta) book('Sonstiges', ev.text, ev.delta);
 
   const sign = ev.delta > 0 ? '+' : '';
   log(`${ev.icon} ${ev.text}${ev.delta ? ' ' + sign + fmt(ev.delta) : ''}`);

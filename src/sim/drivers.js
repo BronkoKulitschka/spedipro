@@ -1,7 +1,7 @@
 /* Erfahrung und Schulung der Fahrer. */
 
 import { SKILLS, RULES } from '../config.js';
-import { S, log, findTruck, xpNeeded } from '../state.js';
+import { S, log, book, findTruck, xpNeeded } from '../state.js';
 import { fmt, esc } from '../util.js';
 import { toast } from '../ui/toast.js';
 
@@ -31,7 +31,7 @@ export function learn(nr, key) {
 
   d.points--;
   d.skills[key]++;
-  S.money -= RULES.TRAIN_COST;
+  book('Schulung', `${d.name} · ${SKILLS[key].name} Stufe ${d.skills[key]}`, -RULES.TRAIN_COST);
   log(`🎓 ${d.name} lernt ${SKILLS[key].name} (Stufe ${d.skills[key]}) für ${fmt(RULES.TRAIN_COST)}.`);
   return true;
 }

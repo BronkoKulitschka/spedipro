@@ -6,7 +6,7 @@
    Spielminuten je echter Minute. */
 
 import { RULES, TIME } from '../config.js';
-import { S, log, day, riskMul } from '../state.js';
+import { S, log, book, day, truckRisk } from '../state.js';
 import { fmt } from '../util.js';
 import { moveTrucks } from './fleet.js';
 import { fireEvent } from './events.js';
@@ -96,16 +96,16 @@ function tick() {
 /* Mitternacht: Fixkosten, Pannenwurf, frische Aufträge. */
 function newDay() {
   const cost = S.trucks.length * RULES.DAILY_COST;
-  S.money -= cost;
+  book('Fixkosten', `${S.trucks.length} LKW · Fahrer, Versicherung, Wartung`, -cost);
   log(`Tagesfixkosten für ${S.trucks.length} LKW: ${fmt(-cost)}`);
 
   for (const truck of S.trucks) {
     const rolling = truck.phase === 'driving';
     if (!rolling || truck.shopMin) continue;
-    if (Math.random() >= RULES.BREAKDOWN * riskMul(truck.driver)) continue;
+    if (Math.random() >= RULES.BREAKDOWN * truckRisk(truck)) continue;
 
     const bill = 800 + Math.floor(Math.random() * 2200);
-    S.money -= bill;
+    book('Werkstatt', `LKW ${truck.nr} · ${truck.driver.name}`, -bill);
     truck.shopMin = 180 + Math.floor(Math.random() * 300);
     log(`🔧 LKW ${truck.nr} (${truck.driver.name}) steht in der Werkstatt: ${fmt(-bill)}.`);
   }

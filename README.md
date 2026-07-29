@@ -122,6 +122,7 @@ src/
     training.js         Schulung, ein Fenster je Fahrer
     finance.js          Kasse
     logbook.js          Betriebsbuch
+    dealer.js           Fahrzeughandel
     settings.js         Einstellungen, Spielstand, Datenquellen
     report.js           Bericht über die Abwesenheit
 ```
@@ -162,6 +163,48 @@ export const MeinApp = {
   auf dem Konto ist kein Spielende, nur eine Zahl.
 * Aufträge führen zu echten Betrieben aus OpenStreetMap. Beim Annehmen wird die
   Route berechnet und geprüft, welche gemeldeten Baustellen darauf liegen.
+
+## Fahrzeuge und Kasse
+
+Vier Klassen stehen zur Wahl, jeweils neu oder gebraucht. Sie unterscheiden
+sich in Anschaffung, Verbrauch, Reisegeschwindigkeit, Ladefähigkeit und
+Pannenanfälligkeit — die Frage ist nicht, welcher der beste ist, sondern
+welcher zu den gefahrenen Strecken passt.
+
+| Klasse | Preis | Fracht | Diesel | Schnitt |
+|---|---|---|---|---|
+| Kurier 3.5 | 12.000 € | ×0,60 | sparsam | +8 km/h |
+| Verteiler 12 | 20.000 € | ×1,00 | normal | ±0 |
+| Fernverkehr 400 | 34.000 € | ×1,40 | hoch | +6 km/h |
+| Schwerlast 620 | 52.000 € | ×1,90 | sehr hoch | −4 km/h |
+
+Gebrauchte kosten rund 38 % weniger, kommen mit Laufleistung und gehen
+deutlich häufiger in die Werkstatt. Der Wiederverkaufswert sinkt mit den
+gefahrenen Kilometern.
+
+Jede Geldbewegung läuft über `book()` in `state.js` und landet im Kassenbuch:
+Bereich, Text, Betrag, Spieltag und Uhrzeit. Die Kasse zeigt daraus Einnahmen,
+Ausgaben, Saldo und eine Aufschlüsselung nach Bereichen — Fracht, Diesel,
+Fixkosten, Werkstatt, Schulung, Fahrzeugkauf, Fahrzeugverkauf, Sonstiges.
+
+## Für später vorgemerkt
+
+Die Wirtschaftsebene, angelehnt an klassische Aufbausimulationen:
+
+* **Eigene Lager** an strategisch günstigen Orten bauen. Ein Lager wäre ein
+  zweites Depot: Fahrzeuge starten dort, Leerfahrten verkürzen sich, und es
+  entstehen laufende Kosten, die sich erst ab einer gewissen Auslastung tragen.
+* **Warenarten** statt namenloser Fracht — Schüttgut, Paletten, Kühlware,
+  Schwerlast. Jede Ware passt nur zu bestimmten Fahrzeugklassen und bringt
+  eigene Preise mit.
+* **Produktionsketten**: eigene Betriebe, die Rohstoffe annehmen und
+  Fertigwaren ausgeben. Der eigene Fuhrpark beliefert sich selbst, und der
+  Gewinn entsteht aus der Kette statt aus der einzelnen Fahrt.
+* **Verträge über mehrere Tage** mit festen Mengen, wie die Frachtaufträge in
+  großen Speditionsspielen: planbares Einkommen gegen Bindung.
+* **Werkstatt und Zustand** je Fahrzeug, Reifen, Inspektionsintervalle.
+
+Reihenfolge und Umfang sind offen — vermerkt, nicht beschlossen.
 
 ## Datenquellen
 

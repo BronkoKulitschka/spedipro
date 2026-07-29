@@ -4,9 +4,10 @@
    dort. Die Rückfahrt ins Depot ist eine eigene Entscheidung, keine
    Zwangsleerfahrt. Wer geschickt disponiert, kettet Aufträge aneinander. */
 
-import { RULES } from '../config.js';
-import { S, log, newTruck, findTruck, idleTrucks, truckPos, atDepot,
-         kmh, fuelRate, feeMul, calmMul } from '../state.js';
+import { RULES, TRUCK_MODELS, USED } from '../config.js';
+import { S, log, book, newTruck, findTruck, idleTrucks, truckPos, atDepot,
+         modelOf, resaleValue, truckKmh, truckFuel, truckLoad,
+         feeMul, calmMul } from '../state.js';
 import { haversine, fmt, esc } from '../util.js';
 import { osrmRoute, straightRoute } from '../data/osrm.js';
 import { takeOffer } from './orders.js';
@@ -29,10 +30,9 @@ export function trafficOnRoute(coords) {
 }
 
 export function effectiveKmh(truck) {
-  const d = truck.driver;
   const jams = truck.job?.jams || 0;
-  const slowdown = Math.min(0.55, 0.05 * jams * calmMul(d));
-  return kmh(d) * (1 - slowdown);
+  const slowdown = Math.min(0.55, 0.05 * jams * calmMul(truck.driver));
+  return truckKmh(truck) * (1 - slowdown);
 }
 
 /* Luftlinie vom Standort eines LKW zu einem Ziel, für die Vorschau. */
@@ -128,11 +128,12 @@ export function moveTrucks(minutes) {
 function finish(truck) {
   const d = truck.driver;
   const km = truck.route.km;
-  const fuel = km * fuelRate(d);
+  const fuel = km * truckFuel(truck);
 
   if (truck.job.kind === 'delivery') {
-    const fee = truck.job.fee * feeMul(d);
-    S.money += fee - fuel;
+    const fee = truck.job.fee * feeMul(d) * truckLoad(truck);
+    book('Fracht', `${truck.job.firm.name} · ${d.name}`, fee);
+    book('Diesel', `${km.toFixed(0)} km · LKW ${truck.nr}`, -fuel);
     S.stats.tours++;
     S.stats.revenue += fee;
     d.tours++;
@@ -141,11 +142,12 @@ function finish(truck) {
     gainXp(d, 40 + Math.round(km / 8));
     truck.place = truck.job.firm.name;
   } else {
-    S.money -= fuel;
+    book('Diesel', `Leerfahrt ins Depot · LKW ${truck.nr}`, -fuel);
     log(`${d.name} ist zurück im Depot. Diesel ${fmt(-fuel)}.`);
     truck.place = 'Depot';
   }
 
+  truck.odo = (truck.odo || 0) + km;
   S.stats.km += km;
   truck.pos = { lat: truck.job.target.lat, lon: truck.job.target.lon };
   truck.progress = 0;
@@ -175,27 +177,48 @@ function maybeAuto(truck) {
 }
 
 /* ── Kaufen und verkaufen ── */
-export function buyTruck() {
-  if (S.money < RULES.TRUCK_BUY) return;
-  S.money -= RULES.TRUCK_BUY;
+/* ── Fahrzeughandel ── */
+export const priceOf = (modelKey, used) => {
+  const m = TRUCK_MODELS[modelKey];
+  if (!m) return 0;
+  return Math.round(m.price * (used ? USED.factor : 1) / 100) * 100;
+};
+
+export function buyTruck(modelKey = 'verteiler', used = false) {
+  const model = TRUCK_MODELS[modelKey];
+  if (!model) return false;
+
+  const price = priceOf(modelKey, used);
+  if (S.money < price) return false;
 
   const last = S.trucks[S.trucks.length - 1];
-  const truck = newTruck((last ? last.nr : 0) + 1, { lat: S.depot.lat, lon: S.depot.lon });
+  const truck = newTruck((last ? last.nr : 0) + 1,
+                         { lat: S.depot.lat, lon: S.depot.lon }, modelKey, used);
   S.trucks.push(truck);
 
-  log(`Neuer LKW ${truck.nr} gekauft, ${truck.driver.name} übernimmt ihn: ${fmt(-RULES.TRUCK_BUY)}`);
-  toast('🚛', `<strong>${esc(truck.driver.name)}</strong> fängt bei euch an und übernimmt LKW ${truck.nr}.`);
+  book('Fahrzeugkauf', `${model.name}${used ? ', gebraucht' : ''} · LKW ${truck.nr}`, -price);
+  log(`${model.name}${used ? ' (gebraucht)' : ''} gekauft, ${truck.driver.name} übernimmt LKW ${truck.nr}: ${fmt(-price)}`);
+  toast('🚛', `<strong>${esc(truck.driver.name)}</strong> übernimmt den ${esc(model.name)}.`,
+              `<span class="muted">LKW ${truck.nr} steht im Depot bereit.</span>`);
+  return true;
 }
 
-export function sellTruck() {
-  if (S.trucks.length <= 1 || idleTrucks() === 0) return;
+export function sellTruck(nr = null) {
+  if (S.trucks.length <= 1) return false;
 
-  const i = S.trucks.findIndex(t => t.phase === 'idle' && !t.shopMin);
+  const i = nr
+    ? S.trucks.findIndex(t => t.nr === nr && t.phase === 'idle' && !t.shopMin)
+    : S.trucks.findIndex(t => t.phase === 'idle' && !t.shopMin);
+  if (i === -1) return false;
+
   const [truck] = S.trucks.splice(i, 1);
   removeTruckLayers(truck);
-  S.money += RULES.TRUCK_SELL;
 
-  log(`LKW ${truck.nr} verkauft, ${truck.driver.name} verabschiedet sich: ${fmt(RULES.TRUCK_SELL)}`);
+  const value = resaleValue(truck);
+  book('Fahrzeugverkauf', `${modelOf(truck).name} · LKW ${truck.nr}`, value);
+  log(`LKW ${truck.nr} verkauft, ${truck.driver.name} verabschiedet sich: ${fmt(value)}`);
+  toast('🤝', `LKW ${truck.nr} verkauft.`, `<span class="money">${fmt(value)}</span>`);
+  return true;
 }
 
 export function setAuto(nr, value) {

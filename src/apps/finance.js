@@ -1,65 +1,114 @@
-/* Kasse: Kontostand, Fuhrpark kaufen und verkaufen, Statistik. */
+/* Kassenbuch: jede Geldbewegung, Einnahmen grün, Ausgaben rot,
+   darunter die Bilanz nach Bereichen. */
 
-import { RULES } from '../config.js';
-import { S, idleTrucks } from '../state.js';
-import { fmt, num } from '../util.js';
-import { buyTruck, sellTruck } from '../sim/fleet.js';
-import { onTick } from '../ui/wm.js';
+import { S, ledgerSums, day } from '../state.js';
+import { fmt, num, esc } from '../util.js';
+import { empty } from './shared.js';
+
+const FILTERS = {
+  alle:  { label: 'alle',      test: () => true },
+  ein:   { label: 'Einnahmen', test: e => e.amount >= 0 },
+  aus:   { label: 'Ausgaben',  test: e => e.amount < 0 },
+  heute: { label: 'heute',     test: e => e.day === day() },
+};
 
 export const FinanceApp = {
-  id: 'finance', icon: '💰', title: () => 'Kasse',
-  width: 320, height: 330, desktop: true,
+  id: 'finance', icon: '💰', title: () => 'Kasse', desktop: true,
+  width: 440, height: 470,
 
   body: () => `
-    <div class="pad">
-      <div class="inset-box" style="text-align:center;padding:10px;margin-bottom:8px;">
-        <div class="muted">Kontostand</div>
-        <div style="font-size:19px;font-weight:bold;" id="fMoney">—</div>
-      </div>
+    <div class="col fill">
+      <div class="pad" style="padding-bottom:0;">
+        <div class="inset-box" style="text-align:center;padding:8px;margin-bottom:6px;">
+          <div class="muted">Kontostand</div>
+          <div style="font-size:19px;font-weight:bold;" id="fMoney">—</div>
+        </div>
 
-      <div class="raised-box" style="margin-bottom:8px;">
-        <div class="section-title">Fuhrpark</div>
-        <table class="win-table" style="margin-bottom:6px;">
-          <tr><td>LKW gesamt</td><td style="text-align:right" id="fTrucks">—</td></tr>
-          <tr><td>im Depot</td><td style="text-align:right" id="fIdle">—</td></tr>
-          <tr><td>Fixkosten je Tag</td><td style="text-align:right" id="fCost">—</td></tr>
-        </table>
-        <div class="flex-row">
-          <button class="btn" id="fBuy">LKW kaufen · ${fmt(RULES.TRUCK_BUY)}</button>
-          <button class="btn" id="fSell">verkaufen · ${fmt(RULES.TRUCK_SELL)}</button>
+        <div class="raised-box" style="margin-bottom:6px;">
+          <div class="section-title">Bilanz</div>
+          <table class="win-table">
+            <tr><td>Einnahmen</td><td style="text-align:right" class="money" id="fIn">—</td></tr>
+            <tr><td>Ausgaben</td><td style="text-align:right" class="debt" id="fOut">—</td></tr>
+            <tr><td><strong>Saldo</strong></td>
+                <td style="text-align:right" id="fSaldo"><strong>—</strong></td></tr>
+          </table>
+          <div class="muted" style="font-size:10px;margin-top:4px;" id="fScope">—</div>
+        </div>
+
+        <div class="raised-box" style="margin-bottom:6px;">
+          <div class="section-title">Nach Bereichen</div>
+          <table class="win-table" id="fCats"></table>
         </div>
       </div>
 
-      <div class="raised-box">
-        <div class="section-title">Seit dem ersten Tag</div>
-        <table class="win-table">
-          <tr><td>Zustellungen</td><td style="text-align:right" id="fTours">—</td></tr>
-          <tr><td>gefahrene km</td><td style="text-align:right" id="fKm">—</td></tr>
-          <tr><td>Frachterlöse</td><td style="text-align:right" id="fRev">—</td></tr>
-          <tr><td>Ø je Zustellung</td><td style="text-align:right" id="fAvg">—</td></tr>
-        </table>
+      <div class="bar-note flex-row" style="gap:4px;flex-wrap:wrap;" id="fFilters">
+        ${Object.entries(FILTERS).map(([k, f]) =>
+          `<button class="btn btn-sm" data-filter="${k}">${f.label}</button>`).join('')}
       </div>
+      <div class="inset-box scroll fill" id="fList"></div>
     </div>`,
 
   mount(el) {
-    el.querySelector('#fBuy').onclick  = () => { buyTruck();  onTick(); };
-    el.querySelector('#fSell').onclick = () => { sellTruck(); onTick(); };
+    el.dataset.filter = 'alle';
+    el.querySelector('#fFilters').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-filter]');
+      if (!btn) return;
+      el.dataset.filter = btn.dataset.filter;
+      el.querySelector('#fList').dataset.sig = '';
+      paint(el);
+    });
+    paint(el);
   },
 
-  update(el) {
-    const money = el.querySelector('#fMoney');
-    money.textContent = fmt(S.money);
-    money.className = S.money >= 0 ? 'money' : 'debt';
-
-    el.querySelector('#fTrucks').textContent = S.trucks.length;
-    el.querySelector('#fIdle').textContent   = idleTrucks();
-    el.querySelector('#fCost').textContent   = fmt(S.trucks.length * RULES.DAILY_COST);
-    el.querySelector('#fBuy').disabled  = S.money < RULES.TRUCK_BUY;
-    el.querySelector('#fSell').disabled = S.trucks.length <= 1 || idleTrucks() === 0;
-
-    el.querySelector('#fTours').textContent = num(S.stats.tours);
-    el.querySelector('#fKm').textContent    = num(S.stats.km) + ' km';
-    el.querySelector('#fRev').textContent   = fmt(S.stats.revenue);
-    el.querySelector('#fAvg').textContent   = S.stats.tours ? fmt(S.stats.revenue / S.stats.tours) : '—';
-  },
+  update(el) { paint(el); },
 };
+
+function paint(el) {
+  const money = el.querySelector('#fMoney');
+  money.textContent = fmt(S.money);
+  money.className = S.money >= 0 ? 'money' : 'debt';
+
+  const sums = ledgerSums();
+  el.querySelector('#fIn').textContent  = fmt(sums.ein);
+  el.querySelector('#fOut').textContent = fmt(sums.aus);
+
+  const saldo = el.querySelector('#fSaldo');
+  saldo.innerHTML = `<strong>${fmt(sums.saldo)}</strong>`;
+  saldo.className = sums.saldo >= 0 ? 'money' : 'debt';
+
+  el.querySelector('#fScope').textContent =
+    `${num(sums.count)} Buchungen · Startkapital nicht enthalten`;
+
+  /* Bereiche nach Betrag sortiert, Einnahmen zuerst */
+  const cats = Object.entries(sums.cats).sort((a, b) => b[1] - a[1]);
+  el.querySelector('#fCats').innerHTML = cats.length
+    ? cats.map(([cat, sum]) => `
+      <tr><td>${esc(cat)}</td>
+          <td style="text-align:right" class="${sum >= 0 ? 'money' : 'debt'}">${fmt(sum)}</td></tr>`).join('')
+    : '<tr><td class="muted">Noch keine Buchungen.</td></tr>';
+
+  /* Filterknöpfe */
+  const active = el.dataset.filter || 'alle';
+  el.querySelectorAll('[data-filter]').forEach(b =>
+    b.classList.toggle('pressed', b.dataset.filter === active));
+
+  /* Buchungsliste */
+  const list = el.querySelector('#fList');
+  const rows = S.ledger.filter(FILTERS[active].test);
+  const sig = `${active}|${S.ledger.length}`;
+  if (list.dataset.sig === sig) return;
+  list.dataset.sig = sig;
+
+  list.innerHTML = rows.length ? rows.map(e => `
+    <div class="book-line">
+      <div class="book-main">
+        <span class="book-cat">${esc(e.cat)}</span>
+        <span class="book-text">${esc(e.text)}</span>
+      </div>
+      <div class="book-side">
+        <span class="${e.amount >= 0 ? 'money' : 'debt'}">${e.amount >= 0 ? '+' : ''}${fmt(e.amount)}</span>
+        <span class="muted book-time">Tag ${e.day} · ${e.time}</span>
+      </div>
+    </div>`).join('')
+    : empty('Keine Buchungen in dieser Auswahl.');
+}
