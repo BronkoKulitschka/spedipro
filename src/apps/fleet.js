@@ -1,7 +1,8 @@
 /* Fuhrpark: Standort und Zustand aller LKW. */
 
 import { SKILLS } from '../config.js';
-import { S, xpNeeded, findTruck, atDepot, modelOf, resaleValue } from '../state.js';
+import { S, xpNeeded, findTruck, atDepot, modelOf, resaleValue,
+         driveStatus, canDrive } from '../state.js';
 import { esc, pips, fmt, num } from '../util.js';
 import { setAuto, returnToDepot, sellTruck } from '../sim/fleet.js';
 import { openApp, onTick } from '../ui/wm.js';
@@ -59,6 +60,7 @@ export const FleetApp = {
     const sig = S.trucks.map(t =>
       [t.nr, t.model, t.driver.level, t.driver.points, Object.values(t.driver.skills).join(''),
        t.phase, t.auto ? 1 : 0, t.place, t.shopMin > 0 ? 1 : 0,
+       t.restMin > 0 ? 1 : 0,
        Math.floor((t.odo || 0) / 1000)].join(':')).join('|');
 
     if (box.dataset.sig !== sig) {
@@ -79,6 +81,11 @@ export const FleetApp = {
         status.innerHTML = `<span class="warn">🔧 Werkstatt, ${Math.ceil(truck.shopMin / 60)} h</span>`;
         bar.classList.add('shop');
         bar.style.width = '100%';
+      } else if (truck.restMin > 0) {
+        status.innerHTML = `<span class="warn">${esc(driveStatus(truck).text)}</span>`;
+        bar.classList.add('shop');
+        bar.style.width = truck.route
+          ? Math.min(100, truck.progress / truck.route.km * 100) + '%' : '0';
       } else if (truck.phase === 'planning') {
         status.innerHTML = '<span class="muted">Route wird geplant …</span>';
         bar.style.width = '0';
@@ -88,7 +95,10 @@ export const FleetApp = {
         if (truck.job?.kind === 'return') bar.classList.add('back');
         bar.style.width = Math.min(100, truck.progress / truck.route.km * 100) + '%';
       } else {
-        status.innerHTML = `<span class="muted">steht</span>`;
+        const st = driveStatus(truck);
+        status.innerHTML = st.code === 'frei'
+          ? '<span class="muted">steht</span>'
+          : `<span class="warn">${esc(st.text)}</span>`;
         bar.style.width = '0';
       }
     }

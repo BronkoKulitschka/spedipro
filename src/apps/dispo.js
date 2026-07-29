@@ -4,7 +4,7 @@
    auf das Depot. Ein Fahrzeug, das schon in der Nähe steht, fährt die
    Fracht also günstiger. */
 
-import { S, idleTrucks, findTruck } from '../state.js';
+import { S, findTruck, canDrive, banReason } from '../state.js';
 import { fmt, esc } from '../util.js';
 import { dispatch, distanceFrom } from '../sim/fleet.js';
 import { onTick } from '../ui/wm.js';
@@ -47,7 +47,7 @@ export const DispoApp = {
 
   update(el) {
     const select = el.querySelector('#dTruck');
-    const free = S.trucks.filter(t => t.phase === 'idle' && !t.shopMin);
+    const free = S.trucks.filter(t => t.phase === 'idle' && canDrive(t));
 
     /* Auswahlliste nur neu aufbauen, wenn sich die freien LKW ändern */
     const listSig = free.map(t => `${t.nr}@${t.place}`).join(',');
@@ -61,9 +61,12 @@ export const DispoApp = {
     }
 
     const truck = findTruck(Number(select.value));
-    el.querySelector('#dNote').textContent = truck
-      ? `Steht bei ${truck.place}. Entfernungen gelten ab dort.`
-      : `Alle ${S.trucks.length} LKW sind unterwegs oder in der Werkstatt.`;
+    const ban = banReason();
+    el.querySelector('#dNote').innerHTML = truck
+      ? `Steht bei ${esc(truck.place)}. Entfernungen gelten ab dort.`
+      : ban
+        ? `<span class="warn">Fahrverbot (${esc(ban)}) bis 22 Uhr.</span>`
+        : `Kein Fahrzeug einsatzbereit — unterwegs, in Pause oder Werkstatt.`;
 
     const box = el.querySelector('#offerBox');
     const sig = S.offers.map(o => o.id).join(',') + '|' + (truck?.nr ?? '-');

@@ -164,6 +164,27 @@ export const MeinApp = {
 * Aufträge führen zu echten Betrieben aus OpenStreetMap. Beim Annehmen wird die
   Route berechnet und geprüft, welche gemeldeten Baustellen darauf liegen.
 
+## Kalender, Fahrverbote und Lenkzeiten
+
+Der Betrieb beginnt am **Montag, 3. August 2026**. Aus der verstrichenen
+Spielzeit wird ein echtes Datum berechnet, inklusive Wochentag und der
+bundesweiten Feiertage — die beweglichen über die Osterformel von Gauß.
+
+* **Sonn- und Feiertagsfahrverbot** von 0 bis 22 Uhr. Schwere Fahrzeuge
+  bleiben stehen, wo sie sind. Der Kurier 3.5 ist als Fahrzeug unter
+  7,5 Tonnen ausgenommen und fährt weiter.
+* **Lenkzeiten**, vereinfacht nach den europäischen Regeln: 4,5 Stunden am
+  Stück, dann 45 Minuten Pause. 9 Stunden am Tag, dann 11 Stunden Ruhezeit.
+  Die Pause wird unterwegs eingelegt, der Zug steht dann auf der Strecke.
+* Ein Fahrzeug, das lange genug steht, hat seine Ruhezeit ohnehin genommen —
+  gerechnet wird über tatsächlichen Stillstand, nicht über Mitternacht.
+
+Das Programm **Tagesansicht** zeigt Datum, Art des Tages, ein etwaiges
+Fahrverbot und für jeden Fahrer einen Tagesbalken: gefüllt die verbrauchte
+Lenkzeit, der rote Strich die aktuelle Uhrzeit.
+
+Die Werte stehen in `config.js` unter `DRIVE` und lassen sich frei ändern.
+
 ## Fahrzeuge und Kasse
 
 Vier Klassen stehen zur Wahl, jeweils neu oder gebraucht. Sie unterscheiden

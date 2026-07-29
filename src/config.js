@@ -93,6 +93,18 @@ export const RULES = {
   JAM_RADIUS:   2.5,
 };
 
+/* ── Lenk- und Ruhezeiten ──────────────────────────────────────
+   Vereinfacht nach den europäischen Regeln. Alle Angaben in Minuten. */
+export const DRIVE = {
+  MAX_STINT:  270,   // 4,5 Stunden am Stück
+  BREAK:       45,   // danach Pause
+  MAX_DAY:    540,   // 9 Stunden Tageslenkzeit
+  DAILY_REST: 660,   // 11 Stunden Ruhezeit
+};
+
+/* Fahrzeuge unter 7,5 Tonnen sind vom Sonntagsfahrverbot ausgenommen. */
+export const BAN_EXEMPT = ['kurier'];
+
 /* ── Zeit ──
    Der Takt läuft in Realzeit fest mit TICK_MS. Wie viel Spielzeit dabei
    vergeht, bestimmt RATIO: Spielminuten je echter Minute bei Stufe 1×.

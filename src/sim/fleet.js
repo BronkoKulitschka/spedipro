@@ -4,10 +4,10 @@
    dort. Die Rückfahrt ins Depot ist eine eigene Entscheidung, keine
    Zwangsleerfahrt. Wer geschickt disponiert, kettet Aufträge aneinander. */
 
-import { RULES, TRUCK_MODELS, USED } from '../config.js';
+import { RULES, TRUCK_MODELS, USED, DRIVE } from '../config.js';
 import { S, log, book, newTruck, findTruck, idleTrucks, truckPos, atDepot,
          modelOf, resaleValue, truckKmh, truckFuel, truckLoad,
-         feeMul, calmMul } from '../state.js';
+         feeMul, calmMul, canDrive, driveStatus, bannedFor } from '../state.js';
 import { haversine, fmt, esc } from '../util.js';
 import { osrmRoute, straightRoute } from '../data/osrm.js';
 import { takeOffer } from './orders.js';
@@ -76,9 +76,18 @@ async function startDrive(truck, job, target, { sync = false } = {}) {
 export async function dispatch(offerId, truckNr = null, opts = {}) {
   const truck = truckNr
     ? findTruck(truckNr)
-    : S.trucks.find(t => t.phase === 'idle' && !t.shopMin);
+    : S.trucks.find(t => t.phase === 'idle' && canDrive(t));
 
-  if (!truck || truck.phase !== 'idle' || truck.shopMin) return;
+  if (!truck || truck.phase !== 'idle') return;
+
+  if (!canDrive(truck)) {
+    const status = driveStatus(truck);
+    if (!S.silent) {
+      toast('⏳', `<strong>${esc(truck.driver.name)}</strong> kann nicht losfahren.`,
+                  `<span class="muted">${esc(status.text)}</span>`);
+    }
+    return;
+  }
 
   const offer = takeOffer(offerId);
   if (!offer) return;
@@ -100,7 +109,8 @@ export async function dispatch(offerId, truckNr = null, opts = {}) {
 /* ── Leerfahrt zurück ins Depot ── */
 export async function returnToDepot(nr, opts = {}) {
   const truck = findTruck(nr);
-  if (!truck || truck.phase !== 'idle' || truck.shopMin || atDepot(truck)) return;
+  if (!truck || truck.phase !== 'idle' || atDepot(truck)) return;
+  if (!canDrive(truck)) return;
 
   const { route } = await startDrive(
     truck, { kind: 'return' }, { lat: S.depot.lat, lon: S.depot.lon }, opts);
@@ -116,12 +126,53 @@ export function moveTrucks(minutes) {
       continue;
     }
 
+    /* Wer lange genug steht, hat seine Ruhezeit ohnehin genommen. */
+    const faehrt = truck.phase === 'driving' && truck.route && !bannedFor(truck) && truck.restMin <= 0;
+    if (!faehrt) {
+      truck.idleMin = (truck.idleMin || 0) + minutes;
+      if (truck.idleMin >= DRIVE.DAILY_REST && truck.today > 0) {
+        truck.today = 0;
+        truck.stint = 0;
+      }
+    } else {
+      truck.idleMin = 0;
+    }
+
+    /* Pause oder Ruhezeit läuft ab */
+    if (truck.restMin > 0) {
+      truck.restMin -= minutes;
+      if (truck.restMin <= 0) {
+        truck.restMin = 0;
+        if (truck.restKind === 'ruhe') { truck.today = 0; truck.stint = 0; }
+        else truck.stint = 0;
+        truck.restKind = null;
+      }
+      continue;
+    }
+
     if (truck.phase === 'idle') { maybeAuto(truck); continue; }
     if (truck.phase === 'planning' || !truck.route) continue;
 
+    /* Sonn- und Feiertagsfahrverbot: der Zug steht, wo er steht. */
+    if (bannedFor(truck)) continue;
+
     truck.progress += effectiveKmh(truck) * (minutes / 60);
+    truck.stint += minutes;
+    truck.today += minutes;
     updateTruckMarker(truck);
-    if (truck.progress >= truck.route.km) finish(truck);
+
+    if (truck.progress >= truck.route.km) { finish(truck); continue; }
+
+    /* Vorgeschriebene Unterbrechungen */
+    if (truck.today >= DRIVE.MAX_DAY) {
+      truck.restMin = DRIVE.DAILY_REST;
+      truck.restKind = 'ruhe';
+      log(`🛏️ ${truck.driver.name} hat die Tageslenkzeit erreicht und legt die Ruhezeit ein.`);
+    } else if (truck.stint >= DRIVE.MAX_STINT) {
+      truck.restMin = DRIVE.BREAK;
+      truck.restKind = 'pause';
+      log(`☕ ${truck.driver.name} macht die vorgeschriebene Pause.`);
+    }
   }
 }
 
@@ -161,7 +212,8 @@ function finish(truck) {
    Ein LKW auf Automatik sucht sich den Auftrag mit dem besten
    Verhältnis von Fracht zu Anfahrt und fährt sonst heim. */
 function maybeAuto(truck) {
-  if (!truck.auto || truck.phase !== 'idle' || truck.shopMin) return;
+  if (!truck.auto || truck.phase !== 'idle') return;
+  if (!canDrive(truck)) return;
   if (!S.offers.length) return;
 
   let best = null, bestScore = -Infinity;
@@ -207,8 +259,8 @@ export function sellTruck(nr = null) {
   if (S.trucks.length <= 1) return false;
 
   const i = nr
-    ? S.trucks.findIndex(t => t.nr === nr && t.phase === 'idle' && !t.shopMin)
-    : S.trucks.findIndex(t => t.phase === 'idle' && !t.shopMin);
+    ? S.trucks.findIndex(t => t.nr === nr && t.phase === 'idle' && !t.shopMin && !t.restMin)
+    : S.trucks.findIndex(t => t.phase === 'idle' && !t.shopMin && !t.restMin);
   if (i === -1) return false;
 
   const [truck] = S.trucks.splice(i, 1);

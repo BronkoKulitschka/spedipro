@@ -2,7 +2,7 @@
 
 import { DEPOTS } from '../config.js';
 import { DESKTOP_APPS } from '../apps/index.js';
-import { S, dateText } from '../state.js';
+import { S, dateText, fullDate } from '../state.js';
 import { esc } from '../util.js';
 import { startMenuHtml } from './wm.js';
 import { VERSION, BUILD, CODENAME } from '../version.js';
@@ -100,6 +100,7 @@ export function desktopShell() {
       <div class="desk-brand">
         <div>${esc(S.name)}</div>
         <div class="muted">Depot ${esc(S.depot.name)}</div>
+        <div class="muted">${fullDate()}</div>
         <div class="muted">Version ${VERSION}</div>
       </div>
     </div>

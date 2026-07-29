@@ -6,7 +6,7 @@
    Spielminuten je echter Minute. */
 
 import { RULES, TIME } from '../config.js';
-import { S, log, book, day, truckRisk } from '../state.js';
+import { S, log, book, day, truckRisk, todayText, holidayNow, weekendNow } from '../state.js';
 import { fmt } from '../util.js';
 import { moveTrucks } from './fleet.js';
 import { fireEvent } from './events.js';
@@ -95,6 +95,11 @@ function tick() {
 
 /* Mitternacht: Fixkosten, Pannenwurf, frische Aufträge. */
 function newDay() {
+  const feiertag = holidayNow();
+  if (feiertag) log(`📅 ${todayText()} — ${feiertag}. Für schwere Fahrzeuge gilt Fahrverbot bis 22 Uhr.`);
+  else if (weekendNow()) log(`📅 ${todayText()} — Wochenende.`);
+  else log(`📅 ${todayText()}`);
+
   const cost = S.trucks.length * RULES.DAILY_COST;
   book('Fixkosten', `${S.trucks.length} LKW · Fahrer, Versicherung, Wartung`, -cost);
   log(`Tagesfixkosten für ${S.trucks.length} LKW: ${fmt(-cost)}`);

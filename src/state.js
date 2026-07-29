@@ -1,6 +1,8 @@
 /* Der gesamte Spielzustand. Alles andere liest und schreibt hier hinein. */
 
-import { RULES, TIME, DRIVER_NAMES, TRUCK_MODELS, USED } from './config.js';
+import { RULES, TIME, DRIVE, BAN_EXEMPT, DRIVER_NAMES, TRUCK_MODELS, USED } from './config.js';
+import { dateOf, dateShort, dateLong, timeText, drivingBan,
+         isWeekend, holidayName, weekday } from './calendar.js';
 import { pick, pad } from './util.js';
 
 export let S = null;
@@ -29,6 +31,11 @@ export function newTruck(nr, pos = null, model = 'verteiler', used = false) {
     progress: 0,       // gefahrene km auf der laufenden Fahrt
     phase: 'idle',     // idle | planning | driving
     auto: false,       // sucht sich selbst den nächsten Auftrag
+    stint: 0,          // Lenkzeit seit der letzten Pause, Minuten
+    today: 0,          // Lenkzeit am laufenden Tag, Minuten
+    restMin: 0,        // verbleibende Pause oder Ruhezeit
+    restKind: null,    // 'pause' | 'ruhe'
+    idleMin: 0,        // wie lange schon nicht gefahren wurde
     shopMin: 0,        // verbleibende Werkstattminuten
     pos,               // aktueller Standort, null bedeutet Depot
     place: 'Depot',    // Klartext für die Anzeige
@@ -67,12 +74,41 @@ export function resetState(depot) {
   return S;
 }
 
-/* ── Zeit ── */
+/* ── Zeit und Kalender ── */
 export const day    = () => Math.floor(S.minutes / 1440) + 1;
 export const hour   = () => Math.floor(S.minutes % 1440 / 60);
 export const minute = () => Math.floor(S.minutes % 60);
 export const clockText = () => `${pad(hour())}:${pad(minute())}`;
-export const dateText  = () => `Tag ${day()} · ${clockText()}`;
+
+export const now       = () => dateOf(S.minutes);
+export const todayText = () => dateShort(now());
+export const fullDate  = () => dateLong(now());
+export const dateText  = () => `${dateShort(now())} · ${clockText()}`;
+
+export const banReason  = () => drivingBan(now());
+export const weekendNow = () => isWeekend(now());
+export const holidayNow = () => holidayName(now());
+
+/* Gilt das Fahrverbot für dieses Fahrzeug? Leichte Fahrzeuge sind frei. */
+export const bannedFor = truck =>
+  BAN_EXEMPT.includes(truck.model) ? null : banReason();
+
+/* Was ein Fahrer gerade darf. */
+export function driveStatus(truck) {
+  if (truck.shopMin > 0)  return { code: 'werkstatt', text: `Werkstatt, ${Math.ceil(truck.shopMin / 60)} h` };
+  if (truck.restMin > 0)  return {
+    code: truck.restKind,
+    text: truck.restKind === 'ruhe'
+      ? `Ruhezeit, noch ${Math.ceil(truck.restMin / 60)} h`
+      : `Pause, noch ${Math.ceil(truck.restMin)} min`,
+  };
+  const ban = bannedFor(truck);
+  if (ban)                return { code: 'verbot', text: `Fahrverbot (${ban})` };
+  if (truck.today >= DRIVE.MAX_DAY) return { code: 'ausgefahren', text: 'Tageslenkzeit erreicht' };
+  return { code: 'frei', text: 'fahrbereit' };
+}
+
+export const canDrive = truck => driveStatus(truck).code === 'frei';
 
 export function log(msg) {
   if (S.silent) return;          // während des Nachrechnens
@@ -154,6 +190,9 @@ export function hydrate(saved) {
       model: t.model || 'verteiler',
       used: !!t.used,
       odo: t.odo || 0,
+      stint: t.stint || 0, today: t.today || 0,
+      restMin: t.restMin || 0, restKind: t.restKind || null,
+      idleMin: t.idleMin || 0,
       place: t.place || 'Depot',
       auto: !!t.auto,
       phase: t.phase === 'out' || t.phase === 'back' ? 'idle' : t.phase,

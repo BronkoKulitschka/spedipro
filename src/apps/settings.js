@@ -1,7 +1,7 @@
 /* Einstellungen: Zeitverhältnis, Geschwindigkeit, Datenquellen. */
 
 import { TIME, AUTOBAHNEN, RULES } from '../config.js';
-import { S, dateText } from '../state.js';
+import { S, dateText, fullDate } from '../state.js';
 import { esc } from '../util.js';
 import { setSpeed, setRatio, realMinutesPerGameDay } from '../sim/clock.js';
 import { loadFirms } from '../data/overpass.js';
@@ -111,7 +111,8 @@ export const SettingsApp = {
 
   update(el) {
     el.querySelector('#stClock').textContent = dateText();
-    el.querySelector('#stState').textContent = S.running ? 'Betrieb läuft' : 'angehalten';
+    el.querySelector('#stState').textContent =
+      (S.running ? 'Betrieb läuft' : 'angehalten') + ' · ' + fullDate();
 
     el.querySelectorAll('[data-speed]').forEach(b =>
       b.classList.toggle('pressed', Number(b.dataset.speed) === S.speed));
