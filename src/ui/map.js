@@ -56,8 +56,11 @@ export function drawFirms() {
   layers.firms.clearLayers();
   for (const f of S.firms.slice(0, 300)) {
     L.circleMarker([f.lat, f.lon], {
-      radius: 3, color: '#000080', weight: 1, fillColor: '#4a90d9', fillOpacity: .85,
-    }).bindPopup(`<strong>${esc(f.name)}</strong><br>${esc(f.kind)}<br>${f.km.toFixed(0)} km Luftlinie`)
+      radius: 3, color: '#000080', weight: 1,
+      fillColor: f.invented ? '#c8a020' : '#4a90d9', fillOpacity: .85,
+    }).bindPopup(`<strong>${esc(f.name)}</strong><br>${esc(f.kind)}`
+               + `${f.invented ? ' <span style="color:#806000">· erfunden</span>' : ''}`
+               + `<br>${f.km.toFixed(0)} km Luftlinie`)
       .addTo(layers.firms);
   }
 }

@@ -45,7 +45,8 @@ export const DispoApp = {
           <span class="money">${fmt(o.fee)}</span>
         </div>
         <div class="flex-row" style="justify-content:space-between;font-size:10px;">
-          <span class="muted">${esc(o.firm.kind)} · ca. ${o.estKm.toFixed(0)} km</span>
+          <span class="muted">${esc(o.firm.kind)}${o.firm.invented ? ' · erfunden' : ''}
+            · ca. ${o.estKm.toFixed(0)} km</span>
           <button class="btn btn-sm" data-offer="${o.id}" ${free ? '' : 'disabled'}>annehmen</button>
         </div>
       </div>`).join('')

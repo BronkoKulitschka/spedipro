@@ -96,6 +96,7 @@ async function reload(el) {
   const note   = el.querySelector('#stReloadNote');
   button.disabled = true;
 
+  note.textContent = 'Abfrage läuft, das kann dauern …';
   const { firms, source } = await loadFirms(S.depot, text => { note.textContent = text.trim(); });
   S.firms = firms;
   S.dataInfo.firms = source;

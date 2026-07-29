@@ -8,6 +8,7 @@
 import { RULES } from '../config.js';
 import { haversine } from '../util.js';
 import { fallbackFirms } from './fallback.js';
+import { inventFirms } from './invent.js';
 
 const MIRRORS = [
   'https://overpass-api.de/api/interpreter',
@@ -22,6 +23,10 @@ const ATTEMPTS = [
   { radius: 25000,             timeout: 25, full: false },
   { radius: 15000,             timeout: 20, full: false },
 ];
+
+/* So lange wartet der Start höchstens auf Overpass. Danach wird mit
+   erfundenen Betrieben weitergespielt und im Hintergrund nachgeladen. */
+const QUICK_MS = 1000;
 
 const FULL_FILTERS = [
   '["landuse"="industrial"]',
@@ -115,4 +120,35 @@ export async function loadFirms(depot, onNote = () => {}) {
   const firms = fallbackFirms(depot);
   onNote(`  Kein Server erreichbar. Ersatzliste mit ${firms.length} Betrieben.`);
   return { firms, source: 'Ersatzliste' };
+}
+
+/* ── Schneller Start ──────────────────────────────────────────────
+   Gibt spätestens nach QUICK_MS eine Liste zurück. Kommt Overpass
+   danach doch noch durch, meldet onLate die echten Betriebe nach. */
+export function loadFirmsFast(depot, onNote = () => {}, onLate = () => {}) {
+  let settled = false;
+
+  const background = loadFirms(depot, onNote)
+    .then(result => {
+      if (settled && result.firms.length >= 5) onLate(result);
+      return result;
+    })
+    .catch(() => null);
+
+  return new Promise(resolve => {
+    const timer = setTimeout(() => {
+      settled = true;
+      const firms = inventFirms(depot);
+      onNote(`  Dauert zu lange. Start mit ${firms.length} erfundenen Betrieben.`);
+      onNote('  Die echten Daten werden im Hintergrund nachgeladen.');
+      resolve({ firms, source: 'erfunden', pending: background });
+    }, QUICK_MS);
+
+    background.then(result => {
+      if (settled || !result || result.firms.length < 5) return;
+      clearTimeout(timer);
+      settled = true;
+      resolve(result);
+    });
+  });
 }

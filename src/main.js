@@ -4,7 +4,7 @@
 import { DEPOTS, AUTOBAHNEN } from './config.js';
 import { S, resetState, log } from './state.js';
 import { loadTraffic } from './data/autobahn.js';
-import { loadFirms } from './data/overpass.js';
+import { loadFirmsFast } from './data/overpass.js';
 import { refillOffers } from './sim/orders.js';
 import { setSpeed, togglePause, restartTimer, stopClock } from './sim/clock.js';
 import { startScreen, bootScreen, desktopShell } from './ui/screens.js';
@@ -60,20 +60,29 @@ async function runBoot() {
   bootLine(`Verkehrslage der Autobahn GmbH (${AUTOBAHNEN.length} Autobahnen) …`);
   bootProgress(10);
   let started = false;
-  try {
-    S.traffic = await loadTraffic((done, total, road) => {
-      bootLine(`  ${road} … ${done}/${total}`, started);
-      started = true;
-    });
+  const trafficJob = loadTraffic((done, total, road) => {
+    bootLine(`  ${road} … ${done}/${total}`, started);
+    started = true;
+  }).catch(() => []);
+
+  /* Höchstens drei Sekunden warten, der Rest kommt im Hintergrund nach. */
+  const early = await Promise.race([
+    trafficJob,
+    new Promise(r => setTimeout(() => r(null), 3000)),
+  ]);
+
+  if (early) {
+    S.traffic = early;
     bootLine(`  ${S.traffic.length} Baustellen und Meldungen geladen.`);
-  } catch {
-    bootLine('  nicht erreichbar — es wird ohne Meldungen gefahren.');
+  } else {
+    bootLine('  Dauert länger, wird im Hintergrund weitergeladen.');
+    trafficJob.then(adoptTraffic);
   }
   bootProgress(50);
 
   bootLine('');
   bootLine('Betriebe aus OpenStreetMap …');
-  const { firms, source } = await loadFirms(S.depot, bootLine);
+  const { firms, source } = await loadFirmsFast(S.depot, bootLine, adoptFirms);
   S.firms = firms;
   S.dataInfo.firms = source;
   bootProgress(90);
@@ -91,6 +100,33 @@ async function runBoot() {
     button.onclick = enterDesktop;
     button.focus();
   }
+}
+
+/* Verkehrsmeldungen treffen verspätet ein. */
+async function adoptTraffic(traffic) {
+  if (!traffic || !traffic.length) return;
+  S.traffic = traffic;
+  const { drawTraffic } = await import('./ui/map.js');
+  drawTraffic();
+  log(`Verkehrsmeldungen nachgeladen: ${traffic.length} Einträge.`);
+  onTick();
+}
+
+/* Echte Betriebe treffen verspätet ein und lösen die erfundenen ab. */
+async function adoptFirms({ firms, source }) {
+  S.firms = firms;
+  S.dataInfo.firms = source;
+  S.offers = [];
+  refillOffers();
+
+  const { drawFirms } = await import('./ui/map.js');
+  drawFirms();
+
+  const { toast } = await import('./ui/toast.js');
+  log(`Echte Betriebe nachgeladen: ${firms.length} aus ${source}.`);
+  toast('🗺️', `<strong>${firms.length} echte Betriebe</strong> sind eingetroffen.`,
+              '<span class="muted">Die Auftragsbörse wurde erneuert.</span>');
+  onTick();
 }
 
 /* ── Desktop ── */
