@@ -54,6 +54,8 @@ export function resetState(depot) {
     offers: [],
     log: [],
     stats: { tours: 0, km: 0, revenue: 0, jams: 0 },
+    silent: false,
+    lastReport: null,
     dataInfo: { router: 'noch nicht benutzt', firms: '—' },
   };
   return S;
@@ -67,6 +69,7 @@ export const clockText = () => `${pad(hour())}:${pad(minute())}`;
 export const dateText  = () => `Tag ${day()} · ${clockText()}`;
 
 export function log(msg) {
+  if (S.silent) return;          // während des Nachrechnens
   S.log.unshift(`${clockText()} · Tag ${day()} — ${msg}`);
   if (S.log.length > 120) S.log.pop();
 }
@@ -83,3 +86,15 @@ export const fuelRate = d => RULES.FUEL_PER_KM * (1 - 0.07 * d.skills.eco);
 export const feeMul   = d => 1 + 0.06 * d.skills.deal;
 export const riskMul  = d => Math.pow(0.75, d.skills.care);
 export const calmMul  = d => Math.pow(0.85, d.skills.calm);
+
+/* Gesicherten Stand übernehmen. Leaflet-Verweise entstehen neu. */
+export function hydrate(saved) {
+  resetState(saved.depot);
+  Object.assign(S, saved, {
+    screen: 'desktop',
+    silent: false,
+    lastReport: null,
+    trucks: saved.trucks.map(t => ({ ...t, marker: null, line: null })),
+  });
+  return S;
+}

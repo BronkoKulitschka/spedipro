@@ -61,6 +61,29 @@ Spieltag dauert damit bei 1× rund acht Stunden echter Zeit. Die Stufen 2× und
 4× multiplizieren das, ohne die Häufigkeit von Ereignissen zu verändern: die
 hängt an der Spielzeit, nicht am Takt.
 
+## Spielstand und Abwesenheit
+
+Der Betrieb wird alle zwanzig Sekunden und beim Verlassen der Seite in
+`localStorage` gesichert, zusammen mit einem Zeitstempel.
+
+Ein Browser kann im Hintergrund nicht dauerhaft weiterrechnen — inaktive Tabs
+werden eingefroren, Timer gedrosselt. Deshalb läuft nichts weiter, sondern wird
+beim nächsten Öffnen **nachgerechnet**: aus der vergangenen Realzeit ergibt sich
+über das eingestellte Verhältnis die fehlende Spielzeit, die in Schritten von
+fünfzehn Minuten nachsimuliert wird. Danach zeigt ein Bericht, was passiert ist.
+
+Grenzen:
+
+* Höchstens fünf Spieltage werden aufgeholt, damit eine lange Pause nicht in
+  einer Endlosschleife endet.
+* War die Uhr beim Verlassen angehalten, ruht auch der Betrieb.
+* Nur LKW mit **Dauerauftrag** fahren in der Abwesenheit weiter. Alles andere
+  steht nach der laufenden Tour im Depot.
+
+Für die spätere Android-App gilt dasselbe Muster. Ein echter Hintergrunddienst
+über WorkManager wäre möglich, lohnt sich für ein ruhiges Spiel aber kaum —
+Nachrechnen beim Öffnen ist genauer, sparsamer und einfacher.
+
 ## Aufbau
 
 ```
@@ -84,6 +107,8 @@ src/
     drivers.js          Erfahrung und Schulung
     orders.js           Auftragsbörse
     events.js           kleine Ereignisse aus dem Alltag
+    save.js             Sichern und Laden im Browser
+    offline.js          Nachrechnen der Abwesenheit
   ui/
     wm.js               Fensterverwaltung, Taskleiste, Startmenü
     screens.js          Start-, Lade- und Desktopgerüst
@@ -97,7 +122,8 @@ src/
     training.js         Schulung, ein Fenster je Fahrer
     finance.js          Kasse
     logbook.js          Betriebsbuch
-    settings.js         Einstellungen und Datenquellen
+    settings.js         Einstellungen, Spielstand, Datenquellen
+    report.js           Bericht über die Abwesenheit
 ```
 
 ### Ein Programm hinzufügen
@@ -145,7 +171,6 @@ mit Schlüssel.
 
 ## Nächste Schritte
 
-* Speicherstand im Browser, damit ein Betrieb über Tage weiterläuft
 * Aufträge zwischen zwei Betrieben statt immer ab Depot
 * Fensterpositionen merken
 * Portierung nach Android mit MapLibre oder osmdroid; `data/` und `sim/` lassen

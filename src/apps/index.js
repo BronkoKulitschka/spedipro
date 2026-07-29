@@ -7,9 +7,10 @@ import { FinanceApp }  from './finance.js';
 import { LogApp }      from './logbook.js';
 import { SettingsApp } from './settings.js';
 import { TrainingApp } from './training.js';
+import { ReportApp }   from './report.js';
 
 export const APPS = Object.fromEntries(
-  [MapApp, DispoApp, FleetApp, FinanceApp, LogApp, SettingsApp, TrainingApp]
+  [MapApp, DispoApp, FleetApp, FinanceApp, LogApp, SettingsApp, TrainingApp, ReportApp]
     .map(app => [app.id, app]));
 
 export const DESKTOP_APPS = Object.values(APPS).filter(a => a.desktop);

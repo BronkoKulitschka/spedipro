@@ -12,9 +12,14 @@ import { moveTrucks } from './fleet.js';
 import { fireEvent } from './events.js';
 import { refillOffers } from './orders.js';
 import { onTick } from '../ui/wm.js';
+import { saveGame } from './save.js';
 
 let timer = null;
 let lastDay = 1;
+let lastTickAt = 0;
+let lastSaveAt = 0;
+
+export function syncDay() { lastDay = day(); lastTickAt = Date.now(); }
 
 /* Spielminuten je Takt */
 export function minutesPerTick() {
@@ -47,6 +52,7 @@ export function togglePause() {
 export function restartTimer() {
   clearInterval(timer);
   timer = null;
+  lastTickAt = Date.now();
   if (S.running && S.screen === 'desktop') {
     timer = setInterval(tick, TIME.TICK_MS);
   }
@@ -57,8 +63,10 @@ export function stopClock() {
   timer = null;
 }
 
-function tick() {
-  const mins = minutesPerTick();
+/* Ein Abschnitt Spielzeit. Wird sowohl vom Takt als auch beim
+   Nachrechnen nach einer Pause benutzt. */
+export function advance(mins) {
+  if (mins <= 0) return;
   S.minutes += mins;
 
   if (day() !== lastDay) { lastDay = day(); newDay(); }
@@ -68,6 +76,19 @@ function tick() {
   /* Ereignisse hängen an der Spielzeit, nicht am Takt.
      So bleibt die Häufigkeit gleich, egal wie schnell die Uhr läuft. */
   if (Math.random() < RULES.EVENT_PER_DAY * mins / 1440) fireEvent();
+}
+
+function tick() {
+  const now = Date.now();
+
+  /* Vergangene Realzeit messen statt feste Schritte anzunehmen.
+     Gedrosselte Tabs holen so von selbst auf. */
+  const elapsed = Math.min(now - (lastTickAt || now), 120000);
+  lastTickAt = now;
+
+  advance(S.ratio * S.speed * (elapsed / 60000));
+
+  if (now - lastSaveAt > 20000) { lastSaveAt = now; saveGame(); }
 
   onTick();
 }

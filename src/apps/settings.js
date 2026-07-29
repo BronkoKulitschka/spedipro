@@ -10,6 +10,7 @@ import { drawFirms } from '../ui/map.js';
 import { toast } from '../ui/toast.js';
 import { log } from '../state.js';
 import { VERSION, BUILD, CODENAME } from '../version.js';
+import { saveGame, clearSave, saveInfo } from '../sim/save.js';
 import { onTick } from '../ui/wm.js';
 
 export const SettingsApp = {
@@ -38,6 +39,19 @@ export const SettingsApp = {
           ${TIME.RATIOS.map(r => `<button class="btn btn-sm" data-ratio="${r}">1 : ${r}</button>`).join('')}
         </div>
         <div class="muted" style="font-size:10px;margin-top:6px;" id="stRatioNote">—</div>
+      </div>
+
+      <div class="raised-box" style="margin-bottom:8px;">
+        <div class="section-title">Spielstand</div>
+        <div class="muted" style="font-size:10px;line-height:1.5;margin-bottom:6px;">
+          Wird alle zwanzig Sekunden und beim Verlassen der Seite im Browser
+          gesichert. Beim nächsten Öffnen wird die fehlende Zeit nachgerechnet.
+        </div>
+        <div id="stSave" style="margin-bottom:6px;">—</div>
+        <div class="flex-row">
+          <button class="btn btn-sm" id="stSaveNow">jetzt sichern</button>
+          <button class="btn btn-sm" id="stSaveDrop">löschen</button>
+        </div>
       </div>
 
       <div class="raised-box" style="margin-bottom:8px;">
@@ -77,7 +91,21 @@ export const SettingsApp = {
       if (speed) { setSpeed(Number(speed.dataset.speed)); onTick(); return; }
       const ratio = e.target.closest('button[data-ratio]');
       if (ratio) { setRatio(Number(ratio.dataset.ratio)); onTick(); return; }
-      if (e.target.closest('#stReload')) reload(el);
+      if (e.target.closest('#stReload')) { reload(el); return; }
+
+      if (e.target.closest('#stSaveNow')) {
+        const done = saveGame();
+        toast(done ? '💾' : '⚠️',
+              done ? 'Spielstand gesichert.' : 'Sichern nicht möglich.',
+              done ? '' : '<span class="muted">Der Browser erlaubt keinen Speicher.</span>');
+        return;
+      }
+
+      if (e.target.closest('#stSaveDrop')) {
+        clearSave();
+        toast('🗑️', 'Gespeicherter Stand gelöscht.',
+              '<span class="muted">Der laufende Betrieb bleibt bestehen.</span>');
+      }
     });
   },
 
@@ -95,6 +123,11 @@ export const SettingsApp = {
       `Ein Spieltag dauert damit bei der gewählten Stufe etwa `
       + (hours >= 1 ? `${hours.toFixed(1)} Stunden` : `${Math.round(hours * 60)} Minuten`)
       + ' echter Zeit.';
+
+    const info = saveInfo();
+    el.querySelector('#stSave').innerHTML = info
+      ? `Zuletzt gesichert: <strong>${info.savedAt.toLocaleString('de-DE')}</strong>`
+      : '<span class="muted">Noch nichts gesichert.</span>';
 
     el.querySelector('#stFirms').textContent =
       `${S.firms.length} Betriebe um ${S.depot.name} · Quelle: ${S.dataInfo.firms}`;

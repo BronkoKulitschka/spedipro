@@ -5,8 +5,8 @@
    und in den Einstellungen, damit sich mit einem Blick prüfen lässt,
    welcher Stand gerade läuft. */
 
-export const VERSION = '0.5.0';
+export const VERSION = '0.6.0';
 export const BUILD   = '2026-07-29';
-export const CODENAME = 'Auftragsbörse';
+export const CODENAME = 'Feierabend';
 
 export const versionLine = () => `Version ${VERSION} · ${BUILD}`;

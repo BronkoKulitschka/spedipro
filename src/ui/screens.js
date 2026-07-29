@@ -7,7 +7,7 @@ import { esc } from '../util.js';
 import { startMenuHtml } from './wm.js';
 import { VERSION, BUILD, CODENAME } from '../version.js';
 
-export function startScreen() {
+export function startScreen(save = null) {
   return `
   <div class="centered">
     <div class="window static" style="width:min(460px, 94vw);">
@@ -44,8 +44,24 @@ export function startScreen() {
           <input type="text" id="pname" value="Meine Spedition" maxlength="28">
         </div>
 
+        ${save ? `
+        <div class="raised-box" style="margin-bottom:12px;">
+          <div class="section-title">Gespeicherter Betrieb</div>
+          <div style="line-height:1.6;">
+            <strong>${esc(save.name)}</strong> · Depot ${esc(save.depot)}<br>
+            Tag ${save.day} · ${save.trucks} LKW · Kasse ${Math.round(save.money).toLocaleString('de-DE')} €<br>
+            <span class="muted">zuletzt ${save.savedAt.toLocaleString('de-DE')}</span>
+          </div>
+          <div class="flex-row" style="margin-top:8px;">
+            <button class="btn btn-default" id="continueBtn">Fortsetzen</button>
+            <button class="btn btn-sm" id="dropSaveBtn">verwerfen</button>
+          </div>
+        </div>` : ''}
+
         <div class="flex-end">
-          <button class="btn btn-default" id="startBtnGo">Betrieb aufnehmen</button>
+          <button class="btn ${save ? '' : 'btn-default'}" id="startBtnGo">
+            ${save ? 'Neuer Betrieb' : 'Betrieb aufnehmen'}
+          </button>
         </div>
       </div>
     </div>

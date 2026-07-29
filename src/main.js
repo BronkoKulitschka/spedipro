@@ -2,12 +2,14 @@
    bis zum Desktop, auf dem die Programme in Fenstern laufen. */
 
 import { DEPOTS, AUTOBAHNEN } from './config.js';
-import { S, resetState, log } from './state.js';
+import { S, resetState, hydrate, log } from './state.js';
 import { VERSION, BUILD } from './version.js';
 import { loadTraffic } from './data/autobahn.js';
 import { loadFirmsFast } from './data/overpass.js';
 import { refillOffers } from './sim/orders.js';
-import { setSpeed, togglePause, restartTimer, stopClock } from './sim/clock.js';
+import { setSpeed, togglePause, restartTimer, stopClock, syncDay } from './sim/clock.js';
+import { saveGame, readSave, clearSave, saveInfo } from './sim/save.js';
+import { catchUp, offlineMinutes } from './sim/offline.js';
 import { startScreen, bootScreen, desktopShell } from './ui/screens.js';
 import { openApp, onTick, renderTaskbar, toggleStartMenu, closeAll, isNarrow } from './ui/wm.js';
 
@@ -16,8 +18,33 @@ const root = () => document.getElementById('root');
 /* ── Startbildschirm ── */
 function showStart() {
   S.screen = 'start';
-  root().innerHTML = startScreen();
+  root().innerHTML = startScreen(saveInfo());
   document.getElementById('startBtnGo').onclick = beginBoot;
+  document.getElementById('continueBtn')?.addEventListener('click', continueGame);
+  document.getElementById('dropSaveBtn')?.addEventListener('click', () => {
+    clearSave();
+    showStart();
+  });
+}
+
+/* ── Gespeicherten Betrieb fortsetzen ── */
+function continueGame() {
+  const saved = readSave();
+  if (!saved) { showStart(); return; }
+
+  hydrate(saved.state);
+  syncDay();
+
+  const minutes = offlineMinutes(saved.savedAt, S.ratio, S.speed, S.running);
+  const report = minutes > 1 ? catchUp(minutes) : null;
+
+  enterDesktop({ resumed: true });
+
+  if (report) {
+    S.lastReport = report;
+    log(`Nachgerechnet: ${report.days} Tag(e), ${report.tours} Zustellungen, ${report.balance >= 0 ? '+' : ''}${Math.round(report.balance)} Euro.`);
+    openApp('report');
+  }
 }
 
 /* ── Ladebildschirm ── */
@@ -131,13 +158,17 @@ async function adoptFirms({ firms, source }) {
 }
 
 /* ── Desktop ── */
-function enterDesktop() {
+function enterDesktop({ resumed = false } = {}) {
   S.screen = 'desktop';
   root().innerHTML = desktopShell();
   wireDesktop();
 
-  log(`SpeditionsPro 95, Version ${VERSION} gestartet.`);
-  log(`Betrieb aufgenommen. Depot ${S.depot.name}, ${S.firms.length} Betriebe im Umkreis.`);
+  if (resumed) {
+    log(`Betrieb fortgesetzt. Version ${VERSION}.`);
+  } else {
+    log(`SpeditionsPro 95, Version ${VERSION} gestartet.`);
+    log(`Betrieb aufgenommen. Depot ${S.depot.name}, ${S.firms.length} Betriebe im Umkreis.`);
+  }
 
   /* Auf schmalen Geräten nur ein Fenster öffnen, sonst wird es unübersichtlich. */
   if (isNarrow()) {
@@ -148,9 +179,10 @@ function enterDesktop() {
     openApp('fleet');
   }
 
-  setSpeed(1);
+  setSpeed(S.speed || 1);
   renderTaskbar();
   onTick();
+  saveGame();
 }
 
 function wireDesktop() {
@@ -190,7 +222,13 @@ document.addEventListener('keydown', e => {
   if (e.code === 'Escape') toggleStartMenu(false);
 });
 
-window.addEventListener('beforeunload', stopClock);
+/* Beim Verlassen und beim Wegschalten sichern. 'pagehide' ist auf
+   Android die verlässlichste Stelle, 'beforeunload' feuert dort oft nicht. */
+window.addEventListener('pagehide', () => { saveGame(); stopClock(); });
+window.addEventListener('beforeunload', () => { saveGame(); stopClock(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') saveGame();
+});
 
 /* ── Los geht es ── */
 resetState(DEPOTS[0]);
