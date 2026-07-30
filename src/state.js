@@ -77,6 +77,7 @@ export function resetState(depot) {
 
     log: [],
     level: 1,
+    tutorial: { schritt: 0, aktiv: true },
     stats: { tours: 0, km: 0, revenue: 0, jams: 0, contractsDone: 0 },
     ledger: [],
     books: { ein: 0, aus: 0 },
@@ -200,6 +201,7 @@ export function hydrate(saved) {
   resetState(saved.depot);
   Object.assign(S, saved, {
     level: saved.level || 1,
+    tutorial: saved.tutorial || { schritt: 0, aktiv: false },
     hubs: saved.hubs?.length ? saved.hubs : [],
     ledger: saved.ledger || [],
     books: saved.books || { ein: 0, aus: 0 },

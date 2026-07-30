@@ -231,6 +231,9 @@ function enterDesktop({ resumed = false } = {}) {
     openApp('fleet');
   }
 
+  /* Beim ersten Betrieb führt die Einführung durch die ersten Schritte. */
+  if (!resumed && S.tutorial?.aktiv) openApp('tutorial');
+
   setSpeed(S.speed || 1);
   renderTaskbar();
   onTick();
@@ -262,6 +265,14 @@ function wireDesktop() {
   });
 
   document.getElementById('tbSpeedBtn').onclick = () => { togglePause(); onTick(); };
+
+  /* F1 öffnet die Hilfe, wie man es gewohnt ist. */
+  document.addEventListener('keydown', async e => {
+    if (e.key !== 'F1') return;
+    e.preventDefault();
+    const { oeffneHilfe } = await import('./apps/help.js');
+    oeffneHilfe('start');
+  });
 
   restartTimer();
 }

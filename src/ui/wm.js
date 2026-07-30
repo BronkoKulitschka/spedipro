@@ -5,6 +5,7 @@
    Auf schmalen Bildschirmen öffnen Fenster grundsätzlich bildfüllend. */
 
 import { APPS } from '../apps/index.js';
+import { HELP_FOR_APP } from '../help/topics.js';
 import { S, dateText } from '../state.js';
 import { esc } from '../util.js';
 
@@ -130,6 +131,7 @@ function buildWindow(key, app, params) {
     <div class="title-bar win-drag">
       <span class="title-bar-text">${app.icon} ${esc(app.title(params))}</span>
       <div class="title-bar-controls">
+        ${HELP_FOR_APP[app.id] ? '<div class="tb-btn tb-help" data-act="help" title="Hilfe zu diesem Programm">?</div>' : ''}
         <div class="tb-btn" data-act="min" title="Minimieren">_</div>
         <div class="tb-btn" data-act="max" title="Vollbild">□</div>
         <div class="tb-btn" data-act="close" title="Schließen">✕</div>
@@ -140,6 +142,13 @@ function buildWindow(key, app, params) {
     <div class="win-grip"></div>`;
 
   el.addEventListener('pointerdown', () => focus(key), true);
+
+  const hilfe = el.querySelector('[data-act=help]');
+  if (hilfe) hilfe.onclick = async e => {
+    e.stopPropagation();
+    const { oeffneHilfe } = await import('../apps/help.js');
+    oeffneHilfe(HELP_FOR_APP[app.id]);
+  };
 
   el.querySelector('[data-act=min]').onclick   = e => { e.stopPropagation(); minimize(key); };
   el.querySelector('[data-act=max]').onclick   = e => { e.stopPropagation(); toggleMaximize(key); };
@@ -266,6 +275,9 @@ export function startMenuHtml() {
     <div class="start-list">
       ${items}
       <div class="start-sep"></div>
+      <div class="start-item" data-app="tutorial">
+        <span class="start-icon">🎓</span><span>Einführung</span>
+      </div>
       <div class="start-item" data-app="__closeall">
         <span class="start-icon">🧹</span><span>Alle Fenster schließen</span>
       </div>

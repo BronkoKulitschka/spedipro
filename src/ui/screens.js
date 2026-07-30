@@ -32,7 +32,10 @@ export function startScreen(save = null) {
           Die Karte ist <strong>OpenStreetMap</strong>, deine Kundschaft sind echte
           Betriebe daraus. Gefahren wird über <strong>OSRM</strong> auf der wirklichen
           Straßenführung. Baustellen kommen von der <strong>Autobahn GmbH</strong>.<br><br>
-          Kein Zeitlimit, kein Gegner, kein Verlieren.
+          Kein Zeitlimit, kein Gegner, kein Verlieren.<br><br>
+          <span class="muted">Beim ersten Betrieb führt eine Einführung durch die
+          wichtigsten Schritte. Jedes Programm hat ein <strong>?</strong> in der
+          Titelleiste, das die passende Hilfeseite öffnet.</span>
         </div>
 
         <div class="raised-box" style="margin-bottom:12px;">

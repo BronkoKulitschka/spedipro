@@ -12,9 +12,11 @@ import { DailyApp }     from './daily.js';
 import { ContractsApp } from './contracts.js';
 import { IndustryApp }  from './industry.js';
 import { ProgressApp }  from './progress.js';
+import { HelpApp }      from './help.js';
+import { TutorialApp }  from './tutorial.js';
 
 export const APPS = Object.fromEntries(
-  [DispoApp, ContractsApp, FleetApp, DailyApp, ProgressApp, IndustryApp, FinanceApp, LogApp, SettingsApp, TrainingApp, ReportApp, DealerApp]
+  [DispoApp, ContractsApp, FleetApp, DailyApp, ProgressApp, IndustryApp, FinanceApp, LogApp, SettingsApp, HelpApp, TrainingApp, ReportApp, DealerApp, TutorialApp]
     .map(app => [app.id, app]));
 
 export const DESKTOP_APPS = Object.values(APPS).filter(a => a.desktop);

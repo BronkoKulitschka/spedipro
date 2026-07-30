@@ -88,6 +88,24 @@ Für die spätere Android-App gilt dasselbe Muster. Ein echter Hintergrunddienst
 über WorkManager wäre möglich, lohnt sich für ein ruhiges Spiel aber kaum —
 Nachrechnen beim Öffnen ist genauer, sparsamer und einfacher.
 
+## Hilfe und Einführung
+
+Beim ersten Betrieb öffnet sich eine **Einführung**, die in acht Schritten durch
+Disposition, Betriebsuhr, Kasse, Ladeliste und Betriebsentwicklung führt. Sie
+prüft selbst, ob ein Schritt erledigt ist, und geht dann weiter. Überspringen
+ist jederzeit möglich, ein Neustart über das Startmenü.
+
+Die **Hilfe** ist der alten Windows-Hilfe nachempfunden: links das
+Inhaltsverzeichnis nach Gruppen, rechts der Artikel, oben Zurück und Inhalt.
+Sechzehn Themen, davon eines je Programm und fünf zu den Grundlagen.
+
+Jedes Fenster hat ein **?** in der Titelleiste, das direkt die Hilfeseite zum
+jeweiligen Programm öffnet. **F1** öffnet die Hilfe allgemein.
+
+Die Texte stehen gesammelt in `src/help/topics.js` in einem einfachen Format aus
+Überschriften, Absätzen, Listen, Tabellen, Hinweiskästen und Querverweisen — ein
+neues Thema ist ein Eintrag mehr in dieser Datei.
+
 ## Testlauf
 
 Ein Rauchtest spielt zehn Spieltage ohne Browser durch und prüft, dass
@@ -115,6 +133,8 @@ src/
   util.js               Formatierung, Zufall, Entfernungsrechnung
   state.js              Spielzustand, Fahrer, LKWs, Wirkung der Fertigkeiten
   main.js               Ablauf: Start, Laden, Desktop
+  help/
+    topics.js           alle Hilfetexte
   data/
     autobahn.js         Baustellen und Meldungen der Autobahn GmbH
     overpass.js         echte Betriebe aus OpenStreetMap
@@ -152,6 +172,8 @@ src/
     progress.js         Betriebsentwicklung
     settings.js         Einstellungen, Spielstand, Datenquellen
     report.js           Bericht über die Abwesenheit
+    help.js             Hilfe im Stil der Windows-Hilfe
+    tutorial.js         Einführung für den ersten Betrieb
 ```
 
 ### Ein Programm hinzufügen
