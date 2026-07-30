@@ -7,6 +7,7 @@ import { VERSION, BUILD } from './version.js';
 import { loadTraffic } from './data/autobahn.js';
 import { loadFirmsFast } from './data/overpass.js';
 import { inventFirms } from './data/invent.js';
+import { hubsFor } from './data/hubs.js';
 import { refillOffers } from './sim/orders.js';
 import { refillContractOffers } from './sim/contracts.js';
 import { initPartners } from './sim/partners.js';
@@ -92,6 +93,7 @@ function beginBoot() {
       S.firms = inventFirms(S.depot);
       S.dataInfo.firms = 'erfunden';
     }
+    if (!S.hubs.length) S.hubs = hubsFor(S.depot);
     if (!S.partners.length) S.partners = initPartners();
     refillContractOffers();
     refillOffers();
@@ -149,6 +151,8 @@ async function bootSteps() {
   S.dataInfo.firms = source;
   bootProgress(90);
 
+  S.hubs = hubsFor(S.depot);
+  bootLine(`  ${S.hubs.length} Umschlagpunkte im Bundesgebiet.`);
   S.partners = initPartners();
   refillContractOffers();
   refillOffers();
@@ -223,7 +227,6 @@ function enterDesktop({ resumed = false } = {}) {
   if (isNarrow()) {
     openApp('dispo');
   } else {
-    openApp('map');
     openApp('dispo');
     openApp('fleet');
   }

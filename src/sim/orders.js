@@ -12,6 +12,7 @@ import { repMul, supplyToday } from './market.js';
 import { currentRate } from './contracts.js';
 import { levelOf, pickPartner } from './partners.js';
 import { current } from './progress.js';
+import { hubsFor } from '../data/hubs.js';
 
 const id = () => Math.random().toString(36).slice(2, 8);
 
@@ -22,12 +23,20 @@ function baseFee(firm) {
 
 /* ── Die drei Auftragsarten ── */
 function spotOffer(firm) {
-  const fee = baseFee(firm) * S.market.index * repMul();
+  const bonus = firm.bonus || 1;
+  const fee = baseFee(firm) * bonus * S.market.index * repMul();
   return {
     id: id(), kind: 'spot', firm,
     estKm: firm.km * 1.28,
     fee: Math.round(fee / 10) * 10,
   };
+}
+
+/* Ziele für den Spotmarkt: Betriebe im Umkreis und Umschlagpunkte im
+   ganzen Land. Etwa jede dritte Anfrage geht in den Fernverkehr. */
+function pickZiel() {
+  if (!S.hubs?.length) return pick(S.firms);
+  return Math.random() < 0.35 ? pick(S.hubs) : pick(S.firms);
 }
 
 function contractOffer(contract) {
@@ -53,7 +62,8 @@ function partnerOffer(firm) {
 
 /* ── Auffüllen ── */
 export function refillOffers() {
-  if (!S.firms.length) return;
+  if (!S.firms.length && !S.hubs?.length) return;
+  if (!S.hubs?.length) S.hubs = hubsFor(S.depot);
 
   /* Jeder laufende Vertrag hält höchstens eine Sendung offen. */
   for (const c of S.contracts) {
@@ -73,8 +83,8 @@ export function refillOffers() {
   const ziel = Math.max(3, Math.round(RULES.OFFER_COUNT * supplyToday()));
   let guard = 0;
   while (S.offers.length < ziel && guard++ < 200) {
-    const firm = pick(S.firms);
-    if (S.offers.some(o => o.firm.name === firm.name)) continue;
+    const firm = pickZiel();
+    if (!firm || S.offers.some(o => o.firm.name === firm.name)) continue;
     S.offers.push(spotOffer(firm));
   }
 }

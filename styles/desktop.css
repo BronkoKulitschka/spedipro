@@ -175,3 +175,16 @@ html, body { height: 100%; overflow: hidden; }
 @media (max-width: 820px) {
   .tb-entry { flex: 1 1 0; }
 }
+
+
+/* Disposition: Karte und Liste nebeneinander */
+.dispo-split { display: flex; gap: 0; min-height: 0; }
+.dispo-map  { flex: 2; min-width: 0; min-height: 0; }
+.dispo-list { flex: 1; min-width: 250px; min-height: 0;
+              border-left: 1px solid #808080; }
+
+@media (max-width: 820px) {
+  .dispo-split { flex-direction: column; }
+  .dispo-map  { flex: 0 0 52%; }
+  .dispo-list { flex: 1; min-width: 0; border-left: none; border-top: 1px solid #808080; }
+}

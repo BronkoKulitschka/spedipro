@@ -44,6 +44,10 @@ Auf GitHub Pages läuft es ohne weitere Einrichtung.
 ## Bedienung
 
 * **Symbole auf dem Desktop** oder das **Startmenü** öffnen die Programme.
+* In der **Disposition** liegen Karte und Auftragsliste nebeneinander. Jedes
+  Fahrzeug ist dort dauerhaft zu sehen, auch wenn es steht — grau, wenn es
+  gerade Pause oder Ruhezeit hat. Ein Tippen auf einen Auftrag in der Liste
+  rückt ihn in den Kartenausschnitt, „Deutschland" zeigt alles auf einmal.
 * Fenster lassen sich verschieben, in der Größe ändern, minimieren und
   bildfüllend schalten. Die Taskleiste zeigt alles Offene.
 * **Leertaste** hält die Betriebsuhr an und lässt sie weiterlaufen.
@@ -114,6 +118,7 @@ src/
   data/
     autobahn.js         Baustellen und Meldungen der Autobahn GmbH
     overpass.js         echte Betriebe aus OpenStreetMap
+    hubs.js             Flughäfen, Häfen und Güterbahnhöfe
     osrm.js             Straßenführung, mit Luftlinie als Rückfallebene
   sim/
     clock.js            Betriebsuhr, Zeitverhältnis, Tagesabrechnung
@@ -134,8 +139,8 @@ src/
     toast.js            Meldungen unten rechts
   apps/
     index.js            Verzeichnis aller Programme
-    map.js              Routenplanung
-    dispo.js            Disposition
+
+    dispo.js            Disposition: Karte und Auftragsliste in einem Fenster
     fleet.js            Fuhrpark
     training.js         Schulung, ein Fenster je Fahrer
     finance.js          Kasse
@@ -214,6 +219,14 @@ kurz vor der nächsten Stufe.
 
 Nachempfunden, wie Speditionen tatsächlich an Fracht kommen. Drei Arten
 liegen gemischt in der Disposition, jede mit eigener Kennzeichnung.
+
+Ziele sind zweierlei: **Betriebe im Umkreis des Depots** aus OpenStreetMap für
+den Nahverkehr, und **Umschlagpunkte im ganzen Bundesgebiet** für den
+Fernverkehr — 30 Frachtflughäfen, See- und Binnenhäfen sowie Güterbahnhöfe von
+Kiel bis München. Etwa jede dritte Anfrage geht in den Fernverkehr.
+
+Umschlagverkehr zahlt 13 bis 30 % Zuschlag, weil die Ladung terminiert ist und
+die Abfertigung Zeit kostet. Hamburger Hafen und Bremerhaven zahlen am besten.
 
 **🏷️ Spotmarkt** — der freie Markt. Der Preis schwankt täglich zwischen 78 und
 132 % des Grundwerts. Bei knappem Laderaum lohnt sich Warten, bei Überkapazität

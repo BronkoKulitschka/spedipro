@@ -1,6 +1,5 @@
 /* Alle Programme des Desktops. Reihenfolge bestimmt Startmenü und Symbole. */
 
-import { MapApp }      from './map.js';
 import { DispoApp }    from './dispo.js';
 import { FleetApp }    from './fleet.js';
 import { FinanceApp }  from './finance.js';
@@ -15,7 +14,7 @@ import { IndustryApp }  from './industry.js';
 import { ProgressApp }  from './progress.js';
 
 export const APPS = Object.fromEntries(
-  [MapApp, DispoApp, ContractsApp, FleetApp, DailyApp, ProgressApp, IndustryApp, FinanceApp, LogApp, SettingsApp, TrainingApp, ReportApp, DealerApp]
+  [DispoApp, ContractsApp, FleetApp, DailyApp, ProgressApp, IndustryApp, FinanceApp, LogApp, SettingsApp, TrainingApp, ReportApp, DealerApp]
     .map(app => [app.id, app]));
 
 export const DESKTOP_APPS = Object.values(APPS).filter(a => a.desktop);

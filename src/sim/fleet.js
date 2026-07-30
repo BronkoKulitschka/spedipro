@@ -17,7 +17,7 @@ import { registerDelivery } from './contracts.js';
 import { registerPartnerLoad } from './partners.js';
 import { checkLevelUp, automatikFrei, modelFrei } from './progress.js';
 import { toast } from '../ui/toast.js';
-import { drawRoute, removeTruckLayers, updateTruckMarker } from '../ui/map.js';
+import { drawRoute, removeTruckLayers, dropTruck, updateTruckMarker } from '../ui/map.js';
 
 /* ── Baustellen und Meldungen entlang einer Strecke ── */
 export function trafficOnRoute(coords) {
@@ -289,7 +289,7 @@ export function sellTruck(nr = null) {
   if (i === -1) return false;
 
   const [truck] = S.trucks.splice(i, 1);
-  removeTruckLayers(truck);
+  dropTruck(truck);
 
   const value = resaleValue(truck);
   book('Fahrzeugverkauf', `${modelOf(truck).name} · LKW ${truck.nr}`, value);

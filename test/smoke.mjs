@@ -45,6 +45,8 @@ console.log('\nAufbau');
 resetState(DEPOTS[0]);
 const S = state.S;
 S.firms = inventFirms(S.depot, 40);
+const { hubsFor } = await import('../src/data/hubs.js');
+S.hubs = hubsFor(S.depot);
 S.partners = initPartners();
 refillContractOffers();
 refillOffers();
@@ -53,6 +55,7 @@ ok(S.market && typeof S.market.index === 'number', 'Marktlage vorhanden');
 ok(typeof S.rep === 'number', 'Ansehen vorhanden');
 ok(Array.isArray(S.ledger), 'Kassenbuch vorhanden');
 ok(S.offers.length > 0, `Auftragsbörse gefüllt (${S.offers.length})`);
+ok(S.hubs.length > 20, `Umschlagpunkte geladen (${S.hubs.length})`);
 ok(S.contractOffers.length > 0, `Ausschreibungen vorhanden (${S.contractOffers.length})`);
 ok(S.trucks.length === 1 && S.trucks[0].pos, 'Ein LKW mit Standort');
 ok(S.level === 1, 'Start auf Stufe 1');
@@ -113,6 +116,7 @@ for (let tag = 0; tag < 10; tag++) {
 S.silent = false;
 
 ok(S.stats.tours > 0, `Zustellungen erfolgt (${S.stats.tours})`);
+ok(S.trucks.every(t => t.pos), 'Alle Fahrzeuge haben einen Standort');
 ok(S.stats.km > 0, `Kilometer gefahren (${Math.round(S.stats.km)})`);
 ok(S.ledger.some(e => e.cat === 'Fracht' || e.cat === 'Vertragsfracht'),
    'Frachterlöse gebucht');

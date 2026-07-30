@@ -63,6 +63,7 @@ export function resetState(depot) {
 
     trucks: [newTruck(1, { lat: depot.lat, lon: depot.lon }, 'verteiler', false)],
     firms: [],
+    hubs: [],          // Flughäfen, Häfen, Güterbahnhöfe
     traffic: [],
 
     /* Markt, Ruf, Verträge, Branche */
@@ -199,6 +200,7 @@ export function hydrate(saved) {
   resetState(saved.depot);
   Object.assign(S, saved, {
     level: saved.level || 1,
+    hubs: saved.hubs?.length ? saved.hubs : [],
     ledger: saved.ledger || [],
     books: saved.books || { ein: 0, aus: 0 },
     market: saved.market || { index: 1, trend: 0 },

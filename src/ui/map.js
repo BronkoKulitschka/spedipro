@@ -5,12 +5,13 @@
    geschlossen und wieder geöffnet, wandert derselbe Knoten zurück
    ins neue Fenster und Leaflet behält Zoom und Position. */
 
-import { S, truckPos } from '../state.js';
-import { esc, haversine, fmt } from '../util.js';
+import { S, truckPos, driveStatus } from '../state.js';
+import { esc, haversine, fmt, num } from '../util.js';
+import { HUB_ICON } from '../data/hubs.js';
 
 let map = null;
 let host = null;
-const layers = { depot: null, firms: null, offers: null, traffic: null,
+const layers = { depot: null, firms: null, hubs: null, offers: null, traffic: null,
                  routes: null, trucks: null, preview: null };
 
 /* Wird von der Routenplanung gesetzt, damit die Karte einen Auftrag
@@ -37,7 +38,7 @@ export function initMap() {
                + ' · Routing: OSRM · Verkehr: Autobahn GmbH',
   }).addTo(map);
 
-  for (const key of ['routes', 'preview', 'firms', 'traffic', 'offers', 'trucks', 'depot']) {
+  for (const key of ['routes', 'preview', 'firms', 'hubs', 'traffic', 'offers', 'trucks', 'depot']) {
     layers[key] = L.layerGroup().addTo(map);
   }
 
@@ -60,8 +61,10 @@ export function initMap() {
   }).bindPopup(`<strong>Depot ${esc(S.depot.name)}</strong>`).addTo(layers.depot);
 
   drawFirms();
+  drawHubs();
   drawTraffic();
   drawOffers();
+  drawTrucks();
   for (const truck of S.trucks) if (truck.route) { drawRoute(truck); updateTruckMarker(truck); }
   ensureMapSize();
 }
@@ -141,10 +144,12 @@ export function updateTruckMarker(truck) {
   if (!truck.marker) {
     truck.marker = L.marker(pos, {
       icon: L.divIcon({ className: '', html: '<div class="truck-icon">🚛</div>',
-                        iconSize: [18, 18], iconAnchor: [9, 9] }),
+                        iconSize: [20, 20], iconAnchor: [10, 10] }),
     }).addTo(layers.trucks);
   } else {
     truck.marker.setLatLng(pos);
+    const el = truck.marker.getElement()?.firstChild;
+    if (el) el.className = 'truck-icon';
   }
 
   const ziel = truck.job?.kind === 'return' ? 'Depot' : (truck.job?.firm?.name || 'unterwegs');
@@ -156,10 +161,79 @@ export function updateTruckMarker(truck) {
 }
 
 export function removeTruckLayers(truck) {
-  if (truck.line   && layers.routes) { layers.routes.removeLayer(truck.line);   }
-  if (truck.marker && layers.trucks) { layers.trucks.removeLayer(truck.marker); }
+  if (truck.line && layers.routes) layers.routes.removeLayer(truck.line);
   truck.line = null;
+}
+
+/* Beim Verkauf verschwindet auch die Marke. */
+export function dropTruck(truck) {
+  removeTruckLayers(truck);
+  if (truck.marker && layers.trucks) layers.trucks.removeLayer(truck.marker);
   truck.marker = null;
+}
+
+/* ── Alle Fahrzeuge, auch die stehenden ──────────────────────────
+   Ein Fahrzeug ist immer irgendwo. Fahrende bewegen sich entlang
+   ihrer Strecke, stehende bleiben an ihrem letzten Ziel. */
+export function drawTrucks() {
+  if (!map) return;
+  for (const truck of S.trucks) {
+    if (truck.phase === 'driving' && truck.route) updateTruckMarker(truck);
+    else parkTruck(truck);
+  }
+}
+
+function parkTruck(truck) {
+  const pos = truckPos(truck);
+  const status = driveStatus(truck);
+  const ruht = status.code !== 'frei';
+
+  if (!truck.marker) {
+    truck.marker = L.marker([pos.lat, pos.lon], {
+      icon: L.divIcon({ className: '', iconSize: [20, 20], iconAnchor: [10, 10],
+        html: `<div class="truck-icon parked${ruht ? ' resting' : ''}">🚛</div>` }),
+    }).addTo(layers.trucks);
+  } else {
+    truck.marker.setLatLng([pos.lat, pos.lon]);
+    const el = truck.marker.getElement()?.firstChild;
+    if (el) el.className = `truck-icon parked${ruht ? ' resting' : ''}`;
+  }
+
+  truck.marker.bindPopup(
+    `<strong>LKW ${truck.nr} · ${esc(truck.driver.name)}</strong><br>`
+    + `steht bei ${esc(truck.place)}<br>`
+    + `<span style="color:${status.code === 'frei' ? '#006400' : '#806000'}">${esc(status.text)}</span><br>`
+    + `<span class="muted">${num(truck.odo || 0)} km auf der Uhr</span>`);
+}
+
+/* ── Umschlagpunkte ── */
+export function drawHubs() {
+  if (!map || !layers.hubs) return;
+  layers.hubs.clearLayers();
+
+  for (const h of S.hubs || []) {
+    L.marker([h.lat, h.lon], {
+      icon: L.divIcon({ className: '', iconSize: [18, 18], iconAnchor: [9, 9],
+        html: `<div class="hub-pin">${HUB_ICON[h.art] || '📍'}</div>` }),
+    }).bindPopup(
+      `<strong>${esc(h.name)}</strong><br>${esc(h.art)}<br>`
+      + `${h.km.toFixed(0)} km vom Depot<br>`
+      + `<span class="muted">Umschlagzuschlag +${Math.round((h.bonus - 1) * 100)} %</span>`
+    ).addTo(layers.hubs);
+  }
+}
+
+/* Kartenausschnitt auf alles Wesentliche legen */
+export function fitAll() {
+  if (!map) return;
+  const punkte = [[S.depot.lat, S.depot.lon]];
+  for (const o of S.offers) punkte.push([o.firm.lat, o.firm.lon]);
+  for (const t of S.trucks) { const p = truckPos(t); punkte.push([p.lat, p.lon]); }
+  if (punkte.length > 1) map.fitBounds(punkte, { padding: [30, 30] });
+}
+
+export function focusPoint(lat, lon, zoom = 10) {
+  if (map) map.setView([lat, lon], zoom);
 }
 
 export function focusTruck(truck) {
