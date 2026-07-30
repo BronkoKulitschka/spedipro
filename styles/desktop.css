@@ -219,12 +219,16 @@ html, body { height: 100%; overflow: hidden; }
 }
 .hg-name { line-height: 1.1; }
 
-/* Der gewählte Hintergrund scheint im Fuhrpark durch. */
-.fuhrpark-flaeche { position: relative; }
-.fuhrpark-flaeche::before {
-  content: ''; position: absolute; inset: 0;
-  background-image: var(--wallpaper, none);
-  background-size: cover; background-position: center;
-  opacity: .14; pointer-events: none;
+/* Jede Fahrzeugzeile bekommt den gewählten Hintergrund als eigene
+   Fläche. Eine helle Ebene darüber hält die Schrift lesbar. */
+.truck-row.mit-hintergrund {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .88), rgba(255, 255, 255, .88)),
+    var(--wp-ebene, none);
+  background-size: auto, var(--wp-size, cover);
+  background-repeat: no-repeat, repeat;
+  background-position: center, center;
+  border: 1px solid #b0b0b0;
+  margin-bottom: 4px;
+  padding: 6px;
 }
-.fuhrpark-flaeche > * { position: relative; }

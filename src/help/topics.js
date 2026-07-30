@@ -231,7 +231,7 @@ export const TOPICS = {
       { p: 'Für einen Abend am Stück eignet sich 1:30 oder 1:60. Die Häufigkeit von Ereignissen hängt an der Spielzeit, nicht am Takt — schnellere Einstellungen sind also kein Nachteil.' },
       { h: 'Hintergrund' },
       { p: 'Neun Voreinstellungen im Stil der Zeit, von Türkis über Karo bis Verlauf. Darunter lässt sich ein eigenes Bild wählen — es wird vor dem Speichern auf 1600 Bildpunkte verkleinert und liegt getrennt vom Spielstand im Browser.' },
-      { p: 'Der Hintergrund gilt für die Arbeitsfläche und scheint gedämpft im Fuhrpark durch.' },
+      { p: 'Der Hintergrund gilt für die Arbeitsfläche. Im Fuhrpark bekommt jede Fahrzeugzeile denselben Hintergrund als eigene Fläche, mit einer hellen Ebene darüber, damit die Schrift lesbar bleibt.' },
       { h: 'Spielstand' },
       { p: 'Wird alle zwanzig Sekunden und beim Verlassen der Seite im Browser gesichert. Beim nächsten Öffnen wird die fehlende Zeit nachgerechnet, höchstens fünf Spieltage.' },
       { h: 'Datenquellen' },

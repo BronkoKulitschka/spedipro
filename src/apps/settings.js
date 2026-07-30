@@ -50,7 +50,9 @@ export const SettingsApp = {
         <div class="hg-gitter" id="stHg">
           ${Object.entries(PRESETS).map(([key, p]) => `
             <button class="hg-feld" data-hg="${key}" title="${p.name}">
-              <span class="hg-vorschau" style="background:${p.css}"></span>
+              <span class="hg-vorschau" style="background-image:${
+                 p.css.startsWith('#') ? `linear-gradient(${p.css}, ${p.css})` : p.css
+               };background-size:${p.size || 'auto'};"></span>
               <span class="hg-name">${p.name}</span>
             </button>`).join('')}
         </div>

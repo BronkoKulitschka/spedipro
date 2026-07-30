@@ -112,7 +112,13 @@ Der Hintergrund der Arbeitsfläche lässt sich in den Einstellungen wechseln:
 neun Voreinstellungen von Türkis bis Karomuster, dazu ein eigenes Bild. Das
 Bild wird vor dem Speichern auf 1600 Bildpunkte verkleinert und liegt unter
 `spedipro.wallpaper` im Browserspeicher, getrennt vom Spielstand. Im Fuhrpark
-scheint es gedämpft als Untergrund durch.
+bekommt jede Fahrzeugzeile denselben Hintergrund als eigene Fläche.
+
+Damit derselbe Wert überall verwendbar ist, werden auch einfarbige
+Voreinstellungen als Bildebene ausgedrückt — `linear-gradient(#6a9a9a, #6a9a9a)`
+statt einer Farbe. Muster mit eigener Kachelgröße führen diese getrennt in
+`size`, sonst wäre der Wert als `background-image` ungültig. `node
+test/wallpaper.mjs` prüft das.
 
 Fahrende Fahrzeuge auf der Karte tragen einen pulsierenden Ring, wippen leicht
 und wandern in einer Sekunde zur nächsten Position, statt zu springen. Die

@@ -5,7 +5,7 @@
    und in den Einstellungen, damit sich mit einem Blick prüfen lässt,
    welcher Stand gerade läuft. */
 
-export const VERSION = '0.16.0';
+export const VERSION = '0.16.1';
 export const BUILD   = '2026-07-30';
 export const CODENAME = 'Arbeitsfläche';
 

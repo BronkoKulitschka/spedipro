@@ -7,20 +7,24 @@
 const KEY = 'spedipro.wallpaper';
 
 export const PRESETS = {
-  teal:    { name: 'Türkis',      css: '#6a9a9a' },
-  olive:   { name: 'Olivgrün',    css: '#5f6b3c' },
-  marine:  { name: 'Marineblau',  css: '#2a4a72' },
-  grau:    { name: 'Grau',        css: '#7a7a7a' },
-  wein:    { name: 'Bordeaux',    css: '#6a3a44' },
+  teal:    { name: 'Türkis',     css: '#6a9a9a' },
+  olive:   { name: 'Olivgrün',   css: '#5f6b3c' },
+  marine:  { name: 'Marineblau', css: '#2a4a72' },
+  grau:    { name: 'Grau',       css: '#7a7a7a' },
+  wein:    { name: 'Bordeaux',   css: '#6a3a44' },
 
   kacheln: { name: 'Kacheln',
-    css: 'repeating-conic-gradient(#5f8f8f 0% 25%, #6a9a9a 0% 50%) 50% / 24px 24px' },
+             css: 'repeating-conic-gradient(#5f8f8f 0% 25%, #6a9a9a 0% 50%)',
+             size: '24px 24px' },
   karo:    { name: 'Karo',
-    css: 'repeating-linear-gradient(45deg, #5c8a8a 0 8px, #6a9a9a 8px 16px)' },
+             css: 'repeating-linear-gradient(45deg, #5c8a8a 0 8px, #6a9a9a 8px 16px)',
+             size: 'auto' },
   streifen:{ name: 'Streifen',
-    css: 'repeating-linear-gradient(90deg, #63918f 0 3px, #6a9a9a 3px 12px)' },
+             css: 'repeating-linear-gradient(90deg, #63918f 0 3px, #6a9a9a 3px 12px)',
+             size: 'auto' },
   himmel:  { name: 'Verlauf',
-    css: 'linear-gradient(to bottom, #4a7f9a, #8fb3a8)' },
+             css: 'linear-gradient(to bottom, #4a7f9a, #8fb3a8)',
+             size: 'cover' },
 };
 
 const STANDARD = { art: 'preset', wert: 'teal' };
@@ -39,25 +43,39 @@ export function speichereHintergrund(wahl) {
   catch { return false; }
 }
 
-/* Auf die Arbeitsfläche und alles, was ihn mitbenutzt, anwenden. */
+/* Jede Voreinstellung wird als Bildebene ausgedrückt — auch die
+   einfarbigen. So lässt sich derselbe Wert überall einsetzen, ob als
+   Arbeitsfläche oder als Fläche hinter einer Zeile. */
+function alsEbene(wahl) {
+  if (wahl.art === 'bild' && wahl.wert) {
+    return { bild: `url("${wahl.wert}")`, groesse: 'cover', kachel: false };
+  }
+
+  const preset = PRESETS[wahl.wert] || PRESETS.teal;
+  const css = preset.css.trim();
+
+  /* Reine Farbe in einen Verlauf fassen, damit sie eine Bildebene ist. */
+  const bild = css.startsWith('#') ? `linear-gradient(${css}, ${css})` : css;
+  return { bild, groesse: preset.size || 'auto', kachel: true };
+}
+
 export function wendeAn(wahl = ladeHintergrund()) {
-  const desktop = document.getElementById('desktop');
+  const { bild, groesse, kachel } = alsEbene(wahl);
   const wurzel = document.documentElement;
 
-  if (wahl.art === 'bild' && wahl.wert) {
-    wurzel.style.setProperty('--wallpaper', `url(${wahl.wert})`);
-    wurzel.style.setProperty('--wallpaper-size', 'cover');
-    if (desktop) {
-      desktop.style.background = `#6a9a9a url(${wahl.wert}) center / cover no-repeat`;
-    }
-  } else {
-    const preset = PRESETS[wahl.wert] || PRESETS.teal;
-    wurzel.style.setProperty('--wallpaper', 'none');
-    if (desktop) desktop.style.background = preset.css;
+  wurzel.style.setProperty('--wp-ebene', bild);
+  wurzel.style.setProperty('--wp-size', groesse);
+
+  const desktop = document.getElementById('desktop');
+  if (desktop) {
+    desktop.style.backgroundColor = '#6a9a9a';
+    desktop.style.backgroundImage = bild;
+    desktop.style.backgroundSize = groesse;
+    desktop.style.backgroundPosition = 'center';
+    desktop.style.backgroundRepeat = kachel ? 'repeat' : 'no-repeat';
   }
-  document.body.style.background = wahl.art === 'bild'
-    ? '#6a9a9a'
-    : (PRESETS[wahl.wert] || PRESETS.teal).css;
+
+  document.body.style.background = '#6a9a9a';
 }
 
 /* Eigenes Bild einlesen, verkleinern und sichern. */

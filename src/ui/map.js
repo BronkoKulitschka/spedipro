@@ -62,6 +62,14 @@ export function initMap() {
                       iconSize: [20, 20], iconAnchor: [10, 10] }),
   }).bindPopup(`<strong>Depot ${esc(S.depot.name)}</strong>`).addTo(layers.depot);
 
+  /* Während eines Zoomvorgangs rechnet Leaflet alle Marken um. Läuft
+     dabei die Bewegungsanimation mit, schwimmen die Fahrzeuge über die
+     Karte, statt an ihrem Punkt zu bleiben. */
+  const halt = () => map.getContainer().classList.add('ohne-anim');
+  const weiter = () => setTimeout(() => map.getContainer().classList.remove('ohne-anim'), 80);
+  map.on('zoomstart movestart', halt);
+  map.on('zoomend moveend', weiter);
+
   drawFirms();
   drawHubs();
   drawTraffic();
@@ -162,9 +170,16 @@ export function updateTruckMarker(truck) {
     const wurzel = truck.marker.getElement();
     if (wurzel) {
       wurzel.classList.add('truck-marker', 'fahrend');
-      const icon = wurzel.querySelector('.truck-icon');
-      if (icon) icon.className = `truck-icon fahrt ${richtung}`;
-      else wurzel.innerHTML = `<span class="ring"></span><span class="truck-icon fahrt ${richtung}">🚛</span>`;
+
+      /* Der Ring entsteht beim Losfahren. Stand die Marke vorher im
+         Depot, fehlt er in der Marke — also hier nachziehen. */
+      if (!wurzel.querySelector('.ring')) {
+        wurzel.innerHTML = '<span class="ring"></span>'
+                         + `<span class="truck-icon fahrt ${richtung}">🚛</span>`;
+      } else {
+        const icon = wurzel.querySelector('.truck-icon');
+        if (icon) icon.className = `truck-icon fahrt ${richtung}`;
+      }
     }
   }
 
