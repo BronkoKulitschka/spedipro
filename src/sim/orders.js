@@ -11,6 +11,7 @@ import { pick } from '../util.js';
 import { repMul, supplyToday } from './market.js';
 import { currentRate } from './contracts.js';
 import { levelOf, pickPartner } from './partners.js';
+import { current } from './progress.js';
 
 const id = () => Math.random().toString(36).slice(2, 8);
 
@@ -63,7 +64,8 @@ export function refillOffers() {
 
   /* Partneraufträge: höchstens zwei gleichzeitig. */
   const partnerOffen = S.offers.filter(o => o.kind === 'partner').length;
-  if (partnerOffen < 2 && S.partners.length && Math.random() < 0.5) {
+  const partnerTakt = current().nr >= 4 ? 0.75 : 0.5;
+  if (partnerOffen < 2 && S.partners.length && Math.random() < partnerTakt) {
     S.offers.push(partnerOffer(pick(S.firms)));
   }
 

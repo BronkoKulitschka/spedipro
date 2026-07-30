@@ -25,19 +25,40 @@ export const DRIVER_NAMES = [
   'Fatma','Uwe','Nadine','Piet','Karin','Manfred','Ayla','Detlef','Svenja',
 ];
 
+/* Ereignisse aus dem Betriebsalltag.
+
+   delta ist Geld, rep ist Ansehen. Was ein Lob ist, zahlt auf den Ruf ein
+   und nicht auf das Konto — niemand überweist für Pünktlichkeit mehr, als
+   die Fahrt selbst eingebracht hat. Geldbeträge bleiben klein gegenüber
+   einer durchschnittlichen Fracht. */
 export const EVENTS = [
-  { icon: '📦', text: 'Ein Stammkunde legt spontan eine Palette drauf.',      delta:  4000 },
-  { icon: '☕', text: 'Die Fahrer treffen sich zum Kaffee an der Raststätte.', delta:     0 },
-  { icon: '⛽', text: 'Der Diesel wurde diese Woche etwas teurer eingekauft.', delta: -1500 },
-  { icon: '⭐', text: 'Ein Kunde lobt die Pünktlichkeit und zahlt einen Bonus.', delta: 3000 },
-  { icon: '🌧️', text: 'Landregen. Alle fahren einfach etwas ruhiger.',        delta:     0 },
-  { icon: '💼', text: 'Ein Möbelhaus bucht eine Zusatztour.',                 delta:  6000 },
-  { icon: '🐕', text: 'Der Hofhund vom Nachbarbetrieb hat sich einquartiert.', delta:    0 },
-  { icon: '🔩', text: 'Kleine Reparatur an der Rampe.',                       delta: -1200 },
-  { icon: '🏅', text: 'Die Lokalzeitung schreibt ein freundliches Porträt.',   delta:  2500 },
-  { icon: '🌅', text: 'Klarer Morgen, freie Autobahn.',                       delta:     0 },
-  { icon: '🥨', text: 'Eine Kundin bringt Brezeln in die Disposition.',       delta:     0 },
-  { icon: '📻', text: 'Neues Radio in der Werkstatt.',                        delta:  -600 },
+  /* Ansehen statt Bargeld */
+  { icon: '⭐', text: 'Ein Kunde lobt die Pünktlichkeit in den höchsten Tönen.',      rep: 2.0 },
+  { icon: '🏅', text: 'Die Lokalzeitung schreibt ein freundliches Porträt über euch.', rep: 2.5 },
+  { icon: '🤝', text: 'Ein Disponent empfiehlt euch an einen Kollegen weiter.',        rep: 1.5 },
+  { icon: '📋', text: 'Die Ladungssicherung wird bei einer Kontrolle gelobt.',         rep: 1.2 },
+  { icon: '🧭', text: 'Ein Fahrer hilft an der Rampe aus, ohne dass jemand fragt.',    rep: 0.8 },
+
+  /* Kleine Zusatzerlöse */
+  { icon: '📦', text: 'Ein Stammkunde legt spontan eine Palette drauf.',    delta:  420 },
+  { icon: '💼', text: 'Ein Möbelhaus bucht eine Zusatztour.',               delta:  780 },
+  { icon: '⏱️', text: 'Standgeld an der Rampe wird erstattet.',             delta:  260 },
+  { icon: '♻️', text: 'Rückladung gefunden, die Leerfahrt entfällt.',       delta:  540, rep: 0.4 },
+
+  /* Kleine Kosten */
+  { icon: '⛽', text: 'Der Diesel wurde diese Woche teurer eingekauft.',    delta: -380 },
+  { icon: '🔩', text: 'Kleine Reparatur an der Rampe.',                     delta: -290 },
+  { icon: '📻', text: 'Neues Radio in der Werkstatt.',                      delta: -180 },
+  { icon: '🧾', text: 'Nachzahlung bei der Mautabrechnung.',                delta: -450 },
+  { icon: '🅿️', text: 'Parkgebühren auf der Raststätte.',                   delta: -120 },
+
+  /* Reine Stimmung */
+  { icon: '☕', text: 'Die Fahrer treffen sich zum Kaffee an der Raststätte.' },
+  { icon: '🌧️', text: 'Landregen. Alle fahren einfach etwas ruhiger.' },
+  { icon: '🐕', text: 'Der Hofhund vom Nachbarbetrieb hat sich einquartiert.' },
+  { icon: '🌅', text: 'Klarer Morgen, freie Autobahn.' },
+  { icon: '🥨', text: 'Eine Kundin bringt Brezeln in die Disposition.' },
+  { icon: '📻', text: 'Im Funk läuft den ganzen Tag dieselbe Schlagerplatte.' },
 ];
 
 /* ── Fahrzeugtypen ──────────────────────────────────────────────
@@ -105,6 +126,66 @@ export const DRIVE = {
 
 /* Fahrzeuge unter 7,5 Tonnen sind vom Sonntagsfahrverbot ausgenommen. */
 export const BAN_EXEMPT = ['kurier'];
+
+/* ── Betriebsstufen ─────────────────────────────────────────────
+   Der Bogen des Spiels. Jede Stufe verlangt etwas Konkretes und gibt
+   etwas frei, das vorher nicht ging. Nichts davon kann verloren gehen —
+   erreicht ist erreicht.
+
+   req  · was erfüllt sein muss
+   frei · was danach möglich ist                                        */
+export const LEVELS = [
+  {
+    nr: 1, name: 'Einzelunternehmer',
+    beschreibung: 'Ein Fahrzeug, ein Fahrer, jede Fahrt selbst disponiert.',
+    req: {},
+    frei: { modelle: ['kurier', 'verteiler'], vertraege: 1, automatik: false },
+    text: 'Kurier und Verteiler im Handel · ein Rahmenvertrag',
+  },
+  {
+    nr: 2, name: 'Fuhrbetrieb',
+    beschreibung: 'Der Betrieb läuft, ohne dass jemand danebensteht.',
+    req: { tours: 12, trucks: 2 },
+    frei: { modelle: ['kurier', 'verteiler'], vertraege: 2, automatik: true },
+    text: 'Selbstdisposition der Fahrzeuge · zwei Verträge',
+  },
+  {
+    nr: 3, name: 'Kleinspedition',
+    beschreibung: 'Erste lange Läufe, feste Kundschaft.',
+    req: { tours: 60, trucks: 4, contracts: 1 },
+    frei: { modelle: ['kurier', 'verteiler', 'fern'], vertraege: 3, automatik: true },
+    text: 'Fernverkehr 400 · drei Verträge gleichzeitig',
+  },
+  {
+    nr: 4, name: 'Spedition',
+    beschreibung: 'Schwere Züge, feste Partner, planbares Geschäft.',
+    req: { tours: 150, km: 25000, rep: 60, trucks: 6 },
+    frei: { modelle: ['kurier', 'verteiler', 'fern', 'schwer'], vertraege: 4, automatik: true },
+    text: 'Schwerlast 620 · vier Verträge · Partner fragen häufiger an',
+  },
+  {
+    nr: 5, name: 'Regionalspediteur',
+    beschreibung: 'Über die eigene Region hinaus bekannt.',
+    req: { tours: 300, km: 75000, rep: 75, contracts: 3 },
+    frei: { modelle: ['kurier', 'verteiler', 'fern', 'schwer'], vertraege: 5, automatik: true, depot2: true },
+    text: 'fünf Verträge · zweites Depot vorgemerkt',
+  },
+  {
+    nr: 6, name: 'Logistiker',
+    beschreibung: 'Eine Adresse, die man kennt.',
+    req: { tours: 600, km: 200000, rep: 90, contracts: 8, trucks: 12 },
+    frei: { modelle: ['kurier', 'verteiler', 'fern', 'schwer'], vertraege: 6, automatik: true, depot2: true, lager: true },
+    text: 'sechs Verträge · Lager und Produktion vorgemerkt',
+  },
+];
+
+export const REQ_LABEL = {
+  tours:     { text: 'Zustellungen',        einheit: '' },
+  km:        { text: 'gefahrene Kilometer', einheit: ' km' },
+  rep:       { text: 'Ansehen',             einheit: '' },
+  trucks:    { text: 'Fahrzeuge',           einheit: '' },
+  contracts: { text: 'erfüllte Verträge',   einheit: '' },
+};
 
 /* ── Markt, Verträge, Branche ───────────────────────────────────
    Der Spotmarkt schwankt, Rahmenverträge sind planbar. Die anderen

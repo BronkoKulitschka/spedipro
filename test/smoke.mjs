@@ -35,9 +35,10 @@ const { inventFirms }        = await import('../src/data/invent.js');
 const { refillOffers }       = await import('../src/sim/orders.js');
 const { initPartners }       = await import('../src/sim/partners.js');
 const { refillContractOffers, signContract } = await import('../src/sim/contracts.js');
-const { dispatch, moveTrucks, buyTruck } = await import('../src/sim/fleet.js');
+const { dispatch, moveTrucks, buyTruck, distanceFrom } = await import('../src/sim/fleet.js');
 const { driftMarket }        = await import('../src/sim/market.js');
-const { DEPOTS }             = await import('../src/config.js');
+const { DEPOTS, LEVELS }     = await import('../src/config.js');
+const prog = await import('../src/sim/progress.js');
 
 /* ── Aufbau ── */
 console.log('\nAufbau');
@@ -54,6 +55,9 @@ ok(Array.isArray(S.ledger), 'Kassenbuch vorhanden');
 ok(S.offers.length > 0, `Auftragsbörse gefüllt (${S.offers.length})`);
 ok(S.contractOffers.length > 0, `Ausschreibungen vorhanden (${S.contractOffers.length})`);
 ok(S.trucks.length === 1 && S.trucks[0].pos, 'Ein LKW mit Standort');
+ok(S.level === 1, 'Start auf Stufe 1');
+ok(prog.automatikFrei() === false, 'Automatik anfangs gesperrt');
+ok(prog.modelFrei('schwer') === false, 'Schwerlast anfangs gesperrt');
 
 /* ── Vertrag unterschreiben ── */
 console.log('\nVertrag');
@@ -66,20 +70,41 @@ ok(S.offers.some(o => o.kind === 'vertrag'), 'Vertragssendung in der Börse');
 /* ── Fahrzeug kaufen ── */
 console.log('\nFuhrpark');
 const geld = S.money;
-ok(buyTruck('fern', false) === true, 'Fernverkehr gekauft');
+ok(buyTruck('fern', false) === false, 'Fernverkehr auf Stufe 1 gesperrt');
+ok(buyTruck('verteiler', false) === true, 'Verteiler gekauft');
 ok(S.money < geld, 'Kaufpreis gebucht');
 ok(S.ledger.some(e => e.cat === 'Fahrzeugkauf'), 'Buchung im Kassenbuch');
 
 /* ── Ein paar Tage fahren ── */
 console.log('\nBetrieb über zehn Tage');
 S.silent = true;                       // ohne Netz und ohne Protokollflut
-for (const t of S.trucks) t.auto = true;
 
 const SCHRITT = 15;
+
+/* Bis zur Freischaltung der Automatik wird von Hand disponiert,
+   danach übernimmt der Betrieb selbst. So spielt es sich auch. */
+function disponieren() {
+  if (prog.automatikFrei()) {
+    for (const t of S.trucks) t.auto = true;
+    return;
+  }
+  for (const t of S.trucks) {
+    if (t.phase !== 'idle' || driveStatus(t).code !== 'frei') continue;
+    if (!S.offers.length) break;
+    let best = null, score = -Infinity;
+    for (const o of S.offers) {
+      const wert = o.fee / Math.max(12, distanceFrom(t, o.firm));
+      if (wert > score) { score = wert; best = o; }
+    }
+    if (best) dispatch(best.id, t.nr, { sync: true });
+  }
+}
+
 for (let tag = 0; tag < 10; tag++) {
   const bisher = day();
   while (day() === bisher) {
     S.minutes += SCHRITT;
+    disponieren();
     moveTrucks(SCHRITT);
   }
   driftMarket();
@@ -93,6 +118,9 @@ ok(S.ledger.some(e => e.cat === 'Fracht' || e.cat === 'Vertragsfracht'),
    'Frachterlöse gebucht');
 ok(S.ledger.some(e => e.cat === 'Diesel'), 'Dieselkosten gebucht');
 ok(S.rep > 50, `Ansehen gestiegen (${S.rep.toFixed(1)})`);
+ok(S.level > 1, `Betriebsstufe gestiegen (${S.level}: ${prog.current().name})`);
+ok(prog.progress() === null || prog.progress().punkte.length > 0,
+   'Fortschritt zur nächsten Stufe ablesbar');
 ok(S.trucks.every(t => t.today <= 9 * 60 + SCHRITT),
    'Tageslenkzeit nirgends überschritten');
 ok(S.trucks.every(t => driveStatus(t).code), 'Fahrerstatus lesbar');

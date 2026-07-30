@@ -1,7 +1,9 @@
 /* Bericht über die Zeit, in der nicht gespielt wurde. */
 
-import { S } from '../state.js';
-import { fmt, num } from '../util.js';
+import { S, driveStatus } from '../state.js';
+import { fmt, num, esc } from '../util.js';
+import { progress } from '../sim/progress.js';
+import { xpNeeded } from '../state.js';
 
 function dauer(minuten) {
   const h = minuten / 60;
@@ -36,13 +38,57 @@ export const ReportApp = {
             <td style="text-align:right" class="${r.moneyNow >= 0 ? 'money' : 'debt'}">${fmt(r.moneyNow)}</td></tr>
       </table>
 
-      <div class="raised-box">
+      <div class="raised-box" style="margin-bottom:8px;">
         <div class="section-title">Lage im Hof</div>
         ${r.rolling} LKW unterwegs, ${r.inWorkshop} in der Werkstatt.
         ${r.tours === 0
           ? '<div class="muted" style="margin-top:6px;">Nichts gefahren — ohne Automatik warten die Fahrzeuge auf deine Disposition. Das Häkchen steht im Fuhrpark.</div>'
           : ''}
       </div>
+
+      <div class="raised-box">
+        <div class="section-title">Wartet auf dich</div>
+        ${offeneFaeden()}
+      </div>
     </div>`;
   },
 };
+
+/* Was jetzt eine Entscheidung braucht. Der Grund, warum man zurückkommt. */
+function offeneFaeden() {
+  const zeilen = [];
+
+  for (const c of S.contracts) {
+    const rest = c.total - c.done;
+    const tage = Math.max(0, Math.ceil((c.endMinutes - S.minutes) / 1440));
+    if (rest > 0 && tage <= 7) {
+      zeilen.push(`📜 <strong>${esc(c.firm.name)}</strong>: noch ${rest} Sendungen in ${tage} Tagen`);
+    }
+  }
+
+  const bereit = S.trucks.filter(t => t.phase === 'idle' && driveStatus(t).code === 'frei');
+  if (bereit.length) {
+    zeilen.push(`🚛 ${bereit.length} Fahrzeug${bereit.length > 1 ? 'e stehen' : ' steht'} abfahrbereit`);
+  }
+
+  const punkte = S.trucks.filter(t => t.driver.points > 0);
+  if (punkte.length) {
+    zeilen.push(`🎓 ${punkte.length} Fahrer ${punkte.length > 1 ? 'haben' : 'hat'} einen Schulungspunkt frei`);
+  }
+
+  for (const t of S.trucks) {
+    const fehlt = xpNeeded(t.driver.level) - t.driver.xp;
+    if (fehlt <= 60) {
+      zeilen.push(`⭐ ${esc(t.driver.name)} steht kurz vor Stufe ${t.driver.level + 1}`);
+      break;
+    }
+  }
+
+  const p = progress();
+  if (p && p.gesamt >= 60) {
+    zeilen.push(`🏆 Stufe <strong>${esc(p.level.name)}</strong> zu ${Math.round(p.gesamt)} % erreicht`);
+  }
+
+  if (!zeilen.length) return '<span class="muted">Nichts Dringendes. Alles läuft.</span>';
+  return zeilen.map(z => `<div style="padding:2px 0;">${z}</div>`).join('');
+}

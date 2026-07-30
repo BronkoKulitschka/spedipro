@@ -2,17 +2,25 @@
 
 import { EVENTS } from '../config.js';
 import { S, log, book } from '../state.js';
+import { addRep } from './market.js';
 import { pick, fmt, esc } from '../util.js';
 import { toast } from '../ui/toast.js';
 
 export function fireEvent() {
   const ev = pick(EVENTS);
-  if (ev.delta) book('Sonstiges', ev.text, ev.delta);
+  const geld = ev.delta || 0;
+  const ruf  = ev.rep || 0;
 
-  const sign = ev.delta > 0 ? '+' : '';
-  log(`${ev.icon} ${ev.text}${ev.delta ? ' ' + sign + fmt(ev.delta) : ''}`);
+  if (geld) book('Sonstiges', ev.text, geld);
+  if (ruf)  addRep(ruf);
 
-  const money = ev.delta === 0 ? ''
-    : `<span class="${ev.delta > 0 ? 'ok' : 'warn'}">${sign}${fmt(ev.delta)}</span>`;
-  toast(ev.icon, esc(ev.text), money);
+  const teile = [];
+  if (geld) teile.push(`${geld > 0 ? '+' : ''}${fmt(geld)}`);
+  if (ruf)  teile.push(`+${ruf.toFixed(1)} Ansehen`);
+  log(`${ev.icon} ${ev.text}${teile.length ? ' · ' + teile.join(', ') : ''}`);
+
+  const anzeige = [];
+  if (geld) anzeige.push(`<span class="${geld > 0 ? 'ok' : 'warn'}">${geld > 0 ? '+' : ''}${fmt(geld)}</span>`);
+  if (ruf)  anzeige.push(`<span class="ok">+${ruf.toFixed(1)} Ansehen</span>`);
+  toast(ev.icon, esc(ev.text), anzeige.join(' · '));
 }

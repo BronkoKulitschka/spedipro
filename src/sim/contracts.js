@@ -12,6 +12,7 @@ import { CONTRACTS, RULES, REP } from '../config.js';
 import { S, log, book, day } from '../state.js';
 import { pick, fmt, esc } from '../util.js';
 import { repMul, addRep } from './market.js';
+import { maxVertraege, checkLevelUp } from './progress.js';
 import { toast } from '../ui/toast.js';
 
 const id = () => Math.random().toString(36).slice(2, 8);
@@ -50,7 +51,11 @@ export function refillContractOffers() {
   }
 }
 
+export const vertraegeFrei = () => maxVertraege() - S.contracts.length;
+
 export function signContract(offerId) {
+  if (vertraegeFrei() <= 0) return false;
+
   const i = S.contractOffers.findIndex(o => o.id === offerId);
   if (i === -1) return false;
 
@@ -95,6 +100,8 @@ export function settleContracts() {
     if (quote >= 1) {
       prämie = c.bonus;
       addRep(REP.PER_CONTRACT);
+      S.stats.contractsDone = (S.stats.contractsDone || 0) + 1;
+      checkLevelUp();
     } else if (quote >= CONTRACTS.PART_OK) {
       prämie = Math.round(c.bonus / 2);
       addRep(REP.PER_PARTIAL);

@@ -32,6 +32,7 @@ function serialize() {
       contractOffers: S.contractOffers,
       partners: S.partners,
       log: S.log.slice(0, 40),
+      level: S.level,
       stats: S.stats,
       ledger: S.ledger.slice(0, 200),
       books: S.books,

@@ -15,6 +15,7 @@ import { gainXp } from './drivers.js';
 import { addRep } from './market.js';
 import { registerDelivery } from './contracts.js';
 import { registerPartnerLoad } from './partners.js';
+import { checkLevelUp, automatikFrei, modelFrei } from './progress.js';
 import { toast } from '../ui/toast.js';
 import { drawRoute, removeTruckLayers, updateTruckMarker } from '../ui/map.js';
 
@@ -200,6 +201,7 @@ function finish(truck) {
     if (truck.job.contractId) registerDelivery(truck.job.contractId);
     if (truck.job.partnerKey) registerPartnerLoad(truck.job.partnerKey);
     addRep(REP.PER_LOAD);
+    checkLevelUp();
     book('Diesel', `${km.toFixed(0)} km · LKW ${truck.nr}`, -fuel);
     S.stats.tours++;
     S.stats.revenue += fee;
@@ -233,7 +235,7 @@ function finish(truck) {
    Ein LKW auf Automatik sucht sich den Auftrag mit dem besten
    Verhältnis von Fracht zu Anfahrt und fährt sonst heim. */
 function maybeAuto(truck) {
-  if (!truck.auto || truck.phase !== 'idle') return;
+  if (!truck.auto || !automatikFrei() || truck.phase !== 'idle') return;
   if (!canDrive(truck)) return;
   if (!S.offers.length) return;
 
@@ -260,6 +262,7 @@ export const priceOf = (modelKey, used) => {
 export function buyTruck(modelKey = 'verteiler', used = false) {
   const model = TRUCK_MODELS[modelKey];
   if (!model) return false;
+  if (!modelFrei(modelKey)) return false;
 
   const price = priceOf(modelKey, used);
   if (S.money < price) return false;
@@ -268,6 +271,7 @@ export function buyTruck(modelKey = 'verteiler', used = false) {
   const truck = newTruck((last ? last.nr : 0) + 1,
                          { lat: S.depot.lat, lon: S.depot.lon }, modelKey, used);
   S.trucks.push(truck);
+  checkLevelUp();
 
   book('Fahrzeugkauf', `${model.name}${used ? ', gebraucht' : ''} · LKW ${truck.nr}`, -price);
   log(`${model.name}${used ? ' (gebraucht)' : ''} gekauft, ${truck.driver.name} übernimmt LKW ${truck.nr}: ${fmt(-price)}`);
@@ -295,6 +299,8 @@ export function sellTruck(nr = null) {
 }
 
 export function setAuto(nr, value) {
+  if (value && !automatikFrei()) return false;
   const truck = findTruck(nr);
   if (truck) truck.auto = value;
+  return true;
 }

@@ -123,6 +123,7 @@ src/
     market.js           Marktlage und Ansehen
     contracts.js        Rahmenverträge
     partners.js         befreundete Speditionen
+    progress.js         Betriebsstufen und Freischaltungen
     events.js           kleine Ereignisse aus dem Alltag
     save.js             Sichern und Laden im Browser
     offline.js          Nachrechnen der Abwesenheit
@@ -142,6 +143,7 @@ src/
     dealer.js           Fahrzeughandel
     contracts.js        Verträge, Marktlage, Ansehen
     industry.js         Branche
+    progress.js         Betriebsentwicklung
     settings.js         Einstellungen, Spielstand, Datenquellen
     report.js           Bericht über die Abwesenheit
 ```
@@ -183,6 +185,31 @@ export const MeinApp = {
 * Aufträge führen zu echten Betrieben aus OpenStreetMap. Beim Annehmen wird die
   Route berechnet und geprüft, welche gemeldeten Baustellen darauf liegen.
 
+## Betriebsentwicklung
+
+Der Bogen des Spiels. Sechs Stufen, jede verlangt etwas Konkretes und gibt
+etwas frei, das vorher nicht ging. Nichts kann verloren gehen, es gibt keine
+Frist und keinen Rückfall.
+
+| Stufe | Anforderung | Neu verfügbar |
+|---|---|---|
+| 1 Einzelunternehmer | — | Kurier, Verteiler · 1 Vertrag |
+| 2 Fuhrbetrieb | 12 Zustellungen, 2 LKW | **Selbstdisposition** · 2 Verträge |
+| 3 Kleinspedition | 60 Zustellungen, 4 LKW, 1 erfüllter Vertrag | Fernverkehr 400 · 3 Verträge |
+| 4 Spedition | 150 Zustellungen, 25.000 km, Ansehen 60, 6 LKW | Schwerlast 620 · 4 Verträge · Partner fragen häufiger |
+| 5 Regionalspediteur | 300 Zustellungen, 75.000 km, Ansehen 75, 3 Verträge | 5 Verträge · zweites Depot vorgemerkt |
+| 6 Logistiker | 600 Zustellungen, 200.000 km, Ansehen 90, 8 Verträge, 12 LKW | 6 Verträge · Lager vorgemerkt |
+
+Die **Automatik ist bewusst nicht von Anfang an da**. Die ersten zwölf Fahrten
+disponiert man selbst — danach ist die Selbstdisposition die Belohnung dafür,
+dass man den Betrieb einmal von Hand verstanden hat. Sie kommt früh genug, dass
+der Betrieb schon in der ersten Sitzung anfängt, ohne einen weiterzulaufen.
+
+Das Programm **Betriebsentwicklung** zeigt jede Anforderung einzeln mit
+Fortschrittsbalken. Der Rückkehrbericht nennt zusätzlich, was gerade eine
+Entscheidung braucht: Verträge kurz vor Ablauf, freie Schulungspunkte, Fahrer
+kurz vor der nächsten Stufe.
+
 ## Auftragsvergabe: Spotmarkt, Verträge, Partner
 
 Nachempfunden, wie Speditionen tatsächlich an Fracht kommen. Drei Arten
@@ -206,9 +233,15 @@ Subunternehmer weiter. Sie zahlen 5 bis 30 % über dem Grundwert, je nachdem,
 wie oft man schon für sie gefahren ist. Vier Stufen von „unbekannt" bis
 „Haussubunternehmer".
 
-**Ansehen** wächst mit jeder Zustellung und mit erfüllten Verträgen. Es sinkt
-nie. Zwischen 0 und 100 hebt es alle Erlöse um 10 bis 20 % und verbessert die
+**Ansehen** wächst mit jeder Zustellung, mit erfüllten Verträgen und durch
+Ereignisse wie ein Kundenlob oder eine gelungene Kontrolle. Es sinkt nie.
+Zwischen 0 und 100 hebt es alle Erlöse um 10 bis 20 % und verbessert die
 Ausschreibungen.
+
+Ereignisse zahlen entweder auf die Kasse oder auf den Ruf ein, nie beides in
+großem Umfang. Geldbeträge bleiben unter zwei durchschnittlichen Frachten —
+für Pünktlichkeit überweist niemand ein Vielfaches dessen, was die Fahrt selbst
+eingebracht hat. Lob wird deshalb in Ansehen verbucht.
 
 ### Die anderen Speditionen
 

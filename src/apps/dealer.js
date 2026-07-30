@@ -7,6 +7,7 @@ import { TRUCK_MODELS, USED, RULES } from '../config.js';
 import { S } from '../state.js';
 import { fmt, esc } from '../util.js';
 import { buyTruck, priceOf } from '../sim/fleet.js';
+import { modelFrei, stufeFuerModell } from '../sim/progress.js';
 import { onTick } from '../ui/wm.js';
 
 export const DealerApp = {
@@ -51,13 +52,14 @@ export const DealerApp = {
       `Kasse: <span class="${S.money >= 0 ? 'money' : 'debt'}">${fmt(S.money)}</span>`;
 
     const list = el.querySelector('#dlList');
-    const sig = `${used}|${Math.floor(S.money / 500)}`;
+    const sig = `${used}|${S.level}|${Math.floor(S.money / 500)}`;
     if (list.dataset.sig === sig) return;
     list.dataset.sig = sig;
 
     list.innerHTML = Object.values(TRUCK_MODELS).map(m => {
       const price = priceOf(m.key, used);
-      const kann = S.money >= price;
+      const offen = modelFrei(m.key);
+      const kann = offen && S.money >= price;
       const verbrauch = (RULES.FUEL_PER_KM * m.fuel).toFixed(2);
 
       return `
@@ -80,7 +82,9 @@ export const DealerApp = {
             <td style="text-align:right">×${(m.risk * (used ? USED.risk : 1)).toFixed(1)}</td>
           </tr>
         </table>
-        <div class="flex-end">
+        <div class="flex-row" style="justify-content:space-between;">
+          <span class="muted" style="font-size:10px;">
+            ${offen ? '' : `🔒 ab Stufe ${stufeFuerModell(m.key)}`}</span>
           <button class="btn btn-sm" data-model="${m.key}" ${kann ? '' : 'disabled'}>kaufen</button>
         </div>
       </div>`;

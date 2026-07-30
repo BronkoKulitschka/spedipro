@@ -4,7 +4,8 @@ import { CONTRACTS } from '../config.js';
 import { S, day } from '../state.js';
 import { fmt, esc } from '../util.js';
 import { marketText, repText } from '../sim/market.js';
-import { signContract, currentRate } from '../sim/contracts.js';
+import { signContract, currentRate, vertraegeFrei } from '../sim/contracts.js';
+import { maxVertraege } from '../sim/progress.js';
 import { onTick } from '../ui/wm.js';
 import { empty } from './shared.js';
 
@@ -33,7 +34,7 @@ export const ContractsApp = {
         </div>
       </div>
 
-      <div class="bar-note">Laufende Verträge</div>
+      <div class="bar-note" id="ctRunTitle">Laufende Verträge</div>
       <div class="inset-box scroll" style="flex:1;padding:4px;" id="ctRunning"></div>
 
       <div class="bar-note">Ausschreibungen — Preis unter Spotmarkt, dafür planbar</div>
@@ -61,6 +62,9 @@ export const ContractsApp = {
 
     el.querySelector('#ctRepBar').style.width = S.rep + '%';
     el.querySelector('#ctRep').textContent = `${Math.round(S.rep)} · ${repText()}`;
+
+    el.querySelector('#ctRunTitle').textContent =
+      `Laufende Verträge — ${S.contracts.length} von ${maxVertraege()} Plätzen belegt`;
 
     /* Laufende Verträge */
     const run = el.querySelector('#ctRunning');
@@ -94,7 +98,8 @@ export const ContractsApp = {
 
     /* Ausschreibungen */
     const box = el.querySelector('#ctOffers');
-    const sig = S.contractOffers.map(o => o.id).join(',');
+    const platzFrei = vertraegeFrei() > 0;
+    const sig = S.contractOffers.map(o => o.id).join(',') + '|' + platzFrei;
     if (box.dataset.sig === sig) return;
     box.dataset.sig = sig;
 
@@ -112,7 +117,8 @@ export const ContractsApp = {
         <div class="flex-row" style="justify-content:space-between;">
           <span class="muted" style="font-size:10px;">
             ab ${Math.round(CONTRACTS.PART_OK * 100)} % Erfüllung halbe Prämie</span>
-          <button class="btn btn-sm" data-sign="${o.id}">unterschreiben</button>
+          <button class="btn btn-sm" data-sign="${o.id}" ${platzFrei ? '' : 'disabled'}>
+            ${platzFrei ? 'unterschreiben' : 'kein Platz frei'}</button>
         </div>
       </div>`).join('')
       : empty('Zurzeit keine Ausschreibungen.');

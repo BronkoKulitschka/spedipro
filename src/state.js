@@ -74,7 +74,8 @@ export function resetState(depot) {
     partners: [],
 
     log: [],
-    stats: { tours: 0, km: 0, revenue: 0, jams: 0 },
+    level: 1,
+    stats: { tours: 0, km: 0, revenue: 0, jams: 0, contractsDone: 0 },
     ledger: [],
     books: { ein: 0, aus: 0 },
     silent: false,
@@ -197,6 +198,7 @@ export const calmMul  = d => Math.pow(0.85, d.skills.calm);
 export function hydrate(saved) {
   resetState(saved.depot);
   Object.assign(S, saved, {
+    level: saved.level || 1,
     ledger: saved.ledger || [],
     books: saved.books || { ein: 0, aus: 0 },
     market: saved.market || { index: 1, trend: 0 },

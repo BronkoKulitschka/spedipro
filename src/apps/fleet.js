@@ -6,6 +6,7 @@ import { S, xpNeeded, findTruck, atDepot, modelOf, resaleValue,
 import { esc, pips, fmt, num } from '../util.js';
 import { setAuto, returnToDepot, sellTruck } from '../sim/fleet.js';
 import { openApp, onTick } from '../ui/wm.js';
+import { automatikFrei, stufeFuerAutomatik } from '../sim/progress.js';
 import { focusTruck } from '../ui/map.js';
 
 export const FleetApp = {
@@ -59,7 +60,7 @@ export const FleetApp = {
 
     const sig = S.trucks.map(t =>
       [t.nr, t.model, t.driver.level, t.driver.points, Object.values(t.driver.skills).join(''),
-       t.phase, t.auto ? 1 : 0, t.place, t.shopMin > 0 ? 1 : 0,
+       t.phase, t.auto ? 1 : 0, t.place, t.shopMin > 0 ? 1 : 0, S.level,
        t.restMin > 0 ? 1 : 0,
        Math.floor((t.odo || 0) / 1000)].join(':')).join('|');
 
@@ -134,10 +135,13 @@ function row(truck) {
     <div class="prog" style="margin:3px 0;"><div class="prog-fill" id="tpg${truck.nr}"></div></div>
     <div style="font-size:10px;margin:2px 0 4px;">${skills}</div>
     <div class="flex-row" style="justify-content:space-between;font-size:10px;flex-wrap:wrap;gap:4px;">
-      <label class="flex-row" style="gap:3px;" title="Sucht sich selbst den nächsten Auftrag">
-        <input type="checkbox" data-nr="${truck.nr}" ${truck.auto ? 'checked' : ''}>
-        Automatik
-      </label>
+      ${automatikFrei()
+        ? `<label class="flex-row" style="gap:3px;" title="Sucht sich selbst den nächsten Auftrag">
+             <input type="checkbox" data-nr="${truck.nr}" ${truck.auto ? 'checked' : ''}>
+             Automatik
+           </label>`
+        : `<span class="muted" title="Wird mit der Betriebsstufe frei">
+             🔒 Automatik ab Stufe ${stufeFuerAutomatik()}</span>`}
       <span class="flex-row" style="gap:4px;">
         ${d.points ? `<span class="ok">${d.points} Pkt.</span>` : ''}
         <button class="btn btn-sm" data-act="home" data-nr="${truck.nr}"
