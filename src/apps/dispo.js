@@ -12,8 +12,11 @@ import { KIND_LABEL, takeOffer } from '../sim/orders.js';
 import { kapazitaet, summe, passt, klasseVon } from '../sim/goods.js';
 import { onTick } from '../ui/wm.js';
 import { initMap, ensureMapSize, mapHost, drawOffers, drawTrucks,
-         toggleLayer, onOfferAccept, focusPoint, fitAll } from '../ui/map.js';
+         toggleLayer, onOfferAccept, focusPoint, fitAll, zeigeFahrzeug } from '../ui/map.js';
 import { empty } from './shared.js';
+
+/* Tief genug, dass Straßen und Hausnummern zu erkennen sind. */
+const DETAIL_ZOOM = 14;
 
 export const DispoApp = {
   id: 'dispo', icon: '🗺️', title: () => 'Disposition', desktop: true,
@@ -75,6 +78,8 @@ export const DispoApp = {
       if (cb) { toggleLayer(cb.dataset.layer, cb.checked); return; }
       if (e.target.closest('#dTruck')) {
         el.querySelector('#offerBox').dataset.sig = '';
+        const t = findTruck(Number(el.querySelector('#dTruck').value));
+        if (t) { const p = truckPos(t); focusPoint(p.lat, p.lon, DETAIL_ZOOM); }
         onTick();
       }
     });
@@ -83,22 +88,15 @@ export const DispoApp = {
       const view = e.target.closest('button[data-view]');
       if (view) {
         if (view.dataset.view === 'all') fitAll();
-        else focusPoint(S.depot.lat, S.depot.lon, 9);
+        else focusPoint(S.depot.lat, S.depot.lon, 10);
         return;
       }
 
       if (e.target.closest('#dShow')) {
         const t = findTruck(Number(el.querySelector('#dTruck').value));
         const p = t ? truckPos(t) : S.depot;
-        focusPoint(p.lat, p.lon, 10);
-        return;
-      }
-
-      /* Auftrag in der Liste: erst zeigen, dann annehmen */
-      const zeigen = e.target.closest('[data-zeigen]');
-      if (zeigen) {
-        const o = S.offers.find(x => x.id === zeigen.dataset.zeigen);
-        if (o) focusPoint(o.firm.lat, o.firm.lon, 9);
+        focusPoint(p.lat, p.lon, DETAIL_ZOOM);
+        if (t) zeigeFahrzeug(t);
         return;
       }
 
@@ -141,10 +139,23 @@ export const DispoApp = {
 
       /* Einzelne Sendung sofort losschicken */
       const btn = e.target.closest('button[data-offer]');
-      if (!btn) return;
-      const nr = Number(el.querySelector('#dTruck').value) || null;
-      dispatch(btn.dataset.offer, nr).then(() => { drawOffers(); onTick(); });
-      onTick();
+      if (btn) {
+        const nr = Number(el.querySelector('#dTruck').value) || null;
+        dispatch(btn.dataset.offer, nr).then(() => { drawOffers(); onTick(); });
+        onTick();
+        return;
+      }
+
+      /* Klick irgendwo auf die Kachel: Auftrag auf der Karte zeigen.
+         Muss zuletzt stehen, sonst schluckt die Kachel die Knöpfe. */
+      const zeigen = e.target.closest('[data-zeigen]');
+      if (zeigen) {
+        const o = S.offers.find(x => x.id === zeigen.dataset.zeigen);
+        if (o) {
+          focusPoint(o.firm.lat, o.firm.lon, DETAIL_ZOOM);
+          markiere(el, zeigen);
+        }
+      }
     });
   },
 
@@ -278,4 +289,10 @@ function zeichneLadeliste(el, truck) {
         <button class="btn btn-sm" id="ladeClear">leeren</button>
       </div>
     </div>`;
+}
+
+/* Kachel kurz hervorheben, damit klar ist, was gerade gezeigt wird. */
+function markiere(el, kachel) {
+  el.querySelectorAll('.offer.aktiv').forEach(k => k.classList.remove('aktiv'));
+  kachel.classList.add('aktiv');
 }

@@ -32,7 +32,7 @@ export const FleetApp = {
       const btn = e.target.closest('button[data-act]');
       if (!btn) return;
       const nr = Number(btn.dataset.nr);
-      if (btn.dataset.act === 'show')   focusTruck(findTruck(nr));
+      if (btn.dataset.act === 'show') { openApp('dispo'); focusTruck(findTruck(nr)); }
       if (btn.dataset.act === 'train')  openApp('training', { nr });
       if (btn.dataset.act === 'home')   returnToDepot(nr).then(onTick);
       if (btn.dataset.act === 'sell') {

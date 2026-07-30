@@ -144,3 +144,12 @@
 .lade-kopf { padding: 3px 6px; background: #000080; color: #fff; font-size: 11px; }
 .offer.geladen { background: #ffffd0; }
 .prog-fill.voll { background: repeating-linear-gradient(to right, #806000 0 8px, #fff 8px 10px); }
+
+
+/* Ausgewählte Auftragskachel */
+.offer.aktiv { outline: 2px solid #000080; outline-offset: -2px; }
+
+/* Tabelle in Kartenfenstern */
+.popup-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 10px; }
+.popup-table td { padding: 1px 0; vertical-align: top; }
+.popup-table td:first-child { color: #505050; padding-right: 8px; white-space: nowrap; }

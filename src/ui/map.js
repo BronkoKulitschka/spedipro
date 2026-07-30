@@ -5,9 +5,11 @@
    geschlossen und wieder geöffnet, wandert derselbe Knoten zurück
    ins neue Fenster und Leaflet behält Zoom und Position. */
 
-import { S, truckPos, driveStatus } from '../state.js';
-import { esc, haversine, fmt, num } from '../util.js';
+import { S, truckPos, driveStatus, modelOf, xpNeeded } from '../state.js';
+import { esc, haversine, fmt, num, pips } from '../util.js';
 import { HUB_ICON } from '../data/hubs.js';
+import { SKILLS, EQUIPMENT } from '../config.js';
+import { kapazitaet, klasseVon } from '../sim/goods.js';
 
 let map = null;
 let host = null;
@@ -152,12 +154,7 @@ export function updateTruckMarker(truck) {
     if (el) el.className = 'truck-icon';
   }
 
-  const ziel = truck.job?.kind === 'return' ? 'Depot' : (truck.job?.firm?.name || 'unterwegs');
-  truck.marker.bindPopup(
-    `<strong>LKW ${truck.nr} · ${esc(truck.driver.name)}</strong><br>`
-    + `unterwegs nach ${esc(ziel)}<br>`
-    + `${truck.progress.toFixed(0)} / ${truck.route.km.toFixed(0)} km`
-    + (truck.job?.jams ? `<br>🚧 ${truck.job.jams} gemeldete Stellen` : ''));
+  truck.marker.bindPopup(fahrtPopup(truck), { minWidth: 210 });
 }
 
 export function removeTruckLayers(truck) {
@@ -199,11 +196,51 @@ function parkTruck(truck) {
     if (el) el.className = `truck-icon parked${ruht ? ' resting' : ''}`;
   }
 
-  truck.marker.bindPopup(
-    `<strong>LKW ${truck.nr} · ${esc(truck.driver.name)}</strong><br>`
-    + `steht bei ${esc(truck.place)}<br>`
-    + `<span style="color:${status.code === 'frei' ? '#006400' : '#806000'}">${esc(status.text)}</span><br>`
-    + `<span class="muted">${num(truck.odo || 0)} km auf der Uhr</span>`);
+  truck.marker.bindPopup(truckPopup(truck), { minWidth: 210 });
+}
+
+/* Kurzfassung der Fuhrparkdaten, wie sie im Popup erscheint. */
+function truckPopup(truck) {
+  const m = modelOf(truck);
+  const kap = kapazitaet(truck);
+  const d = truck.driver;
+  const status = driveStatus(truck);
+  const farbe = status.code === 'frei' ? '#006400' : '#806000';
+
+  const skills = Object.entries(SKILLS)
+    .map(([key, s]) => `${s.icon}${pips(d.skills[key], s.max)}`).join(' ');
+
+  const job = truck.job;
+  const ladung = job && job.kind === 'delivery'
+    ? (() => {
+        const g = klasseVon(job.klasse);
+        const voll = Math.max(
+          (job.paletten || 0) / kap.paletten,
+          (job.gewicht || 0) / kap.kg) * 100;
+        return `<tr><td>geladen</td><td>${g.icon} ${esc(g.name)}</td></tr>
+                <tr><td>Ladung</td><td>${job.paletten} Pal. · ${((job.gewicht || 0) / 1000).toFixed(1)} t
+                    <span style="color:#606060">(${Math.round(voll)} %)</span></td></tr>
+                <tr><td>Ziel</td><td>${esc(job.firm?.name || '')}
+                    ${job.stopps > 1 ? `<br><span style="color:#006400">Stopp ${job.stopp} von ${job.stopps}</span>` : ''}</td></tr>`;
+      })()
+    : `<tr><td>Standort</td><td>${esc(truck.place)}</td></tr>`;
+
+  return `
+    <div style="min-width:200px;">
+      <strong>LKW ${truck.nr} · ${esc(d.name)}</strong>
+      <span style="color:#606060">· Stufe ${d.level}</span><br>
+      <span style="color:${farbe}">${esc(status.text)}</span>
+      <table class="popup-table">
+        <tr><td>Fahrzeug</td><td>${esc(m.name)}${truck.used ? ' · gebraucht' : ''}
+            ${(truck.equip || []).map(k => EQUIPMENT[k]?.icon || '').join('')}</td></tr>
+        <tr><td>Nutzlast</td><td>${(kap.kg / 1000).toFixed(1)} t · ${kap.paletten} Stellplätze</td></tr>
+        ${ladung}
+        <tr><td>Laufleistung</td><td>${num(truck.odo || 0)} km</td></tr>
+        <tr><td>Erfahrung</td><td>${Math.round(d.xp)} / ${xpNeeded(d.level)}
+            ${d.points ? `<span style="color:#006400">· ${d.points} Pkt. frei</span>` : ''}</td></tr>
+      </table>
+      <div style="margin-top:3px;font-size:10px;">${skills}</div>
+    </div>`;
 }
 
 /* ── Umschlagpunkte ── */
@@ -236,10 +273,15 @@ export function focusPoint(lat, lon, zoom = 10) {
   if (map) map.setView([lat, lon], zoom);
 }
 
+/* Aus dem Fuhrpark heraus: hinzoomen und die Kurzfassung aufklappen. */
 export function focusTruck(truck) {
   if (!map) return;
-  if (truck?.marker) map.setView(truck.marker.getLatLng(), 10);
-  else map.setView([S.depot.lat, S.depot.lon], 9);
+  if (truck?.marker) {
+    map.setView(truck.marker.getLatLng(), 14);
+    truck.marker.openPopup();
+  } else {
+    map.setView([S.depot.lat, S.depot.lon], 10);
+  }
 }
 
 export function toggleLayer(name, visible) {
@@ -310,3 +352,22 @@ document.addEventListener('click', e => {
   acceptHandler(btn.dataset.mapOffer, Number(btn.dataset.mapTruck));
   map?.closePopup();
 });
+
+/* Dasselbe für ein Fahrzeug in Fahrt, ergänzt um den Streckenstand. */
+function fahrtPopup(truck) {
+  const ziel = truck.job?.kind === 'return' ? 'Depot' : (truck.job?.firm?.name || 'unterwegs');
+  const anteil = truck.route ? Math.round(truck.progress / truck.route.km * 100) : 0;
+
+  return truckPopup(truck).replace('</table>',
+    `<tr><td>unterwegs</td><td>nach ${esc(ziel)}</td></tr>
+     <tr><td>Strecke</td><td>${truck.progress.toFixed(0)} von ${truck.route?.km.toFixed(0) || '?'} km
+         <span style="color:#606060">(${anteil} %)</span></td></tr>
+     ${truck.job?.jams ? `<tr><td>Meldungen</td><td>🚧 ${truck.job.jams} Stellen</td></tr>` : ''}
+     </table>`);
+}
+
+/* Fahrzeug auf der Karte zeigen und die Kurzfassung aufklappen. */
+export function zeigeFahrzeug(truck) {
+  if (!map || !truck?.marker) return;
+  truck.marker.openPopup();
+}
