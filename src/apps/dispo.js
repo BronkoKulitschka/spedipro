@@ -7,8 +7,9 @@
 
 import { S, findTruck, canDrive, banReason, truckPos } from '../state.js';
 import { fmt, esc } from '../util.js';
-import { dispatch, distanceFrom } from '../sim/fleet.js';
-import { KIND_LABEL } from '../sim/orders.js';
+import { dispatch, distanceFrom, startTour, umwegFuer } from '../sim/fleet.js';
+import { KIND_LABEL, takeOffer } from '../sim/orders.js';
+import { kapazitaet, summe, passt, klasseVon } from '../sim/goods.js';
 import { onTick } from '../ui/wm.js';
 import { initMap, ensureMapSize, mapHost, drawOffers, drawTrucks,
          toggleLayer, onOfferAccept, focusPoint, fitAll } from '../ui/map.js';
@@ -47,12 +48,19 @@ export const DispoApp = {
           </div>
           <div id="dNote">—</div>
         </div>
+
+        <div class="lade-box" id="ladeBox"></div>
+
         <div class="inset-box scroll fill" id="offerBox"></div>
       </div>
 
     </div>`,
 
   mount(el) {
+    /* Die Ladeliste lebt im Fenster, nicht im Spielstand — sie ist eine
+       Planung, die erst mit dem Start der Tour wirksam wird. */
+    el._lade = [];
+
     el.querySelector('#mapSlot').appendChild(mapHost());
     initMap();
     ensureMapSize();
@@ -94,6 +102,44 @@ export const DispoApp = {
         return;
       }
 
+      /* Sendung auf die Ladeliste nehmen */
+      const plus = e.target.closest('button[data-add]');
+      if (plus) {
+        const o = S.offers.find(x => x.id === plus.dataset.add);
+        if (o && !el._lade.some(x => x.id === o.id)) el._lade.push(o);
+        el.querySelector('#offerBox').dataset.sig = '';
+        onTick();
+        return;
+      }
+
+      const minus = e.target.closest('button[data-del]');
+      if (minus) {
+        el._lade = el._lade.filter(x => x.id !== minus.dataset.del);
+        el.querySelector('#offerBox').dataset.sig = '';
+        onTick();
+        return;
+      }
+
+      if (e.target.closest('#ladeClear')) {
+        el._lade = [];
+        el.querySelector('#offerBox').dataset.sig = '';
+        onTick();
+        return;
+      }
+
+      /* Tour starten */
+      if (e.target.closest('#ladeGo')) {
+        const nr = Number(el.querySelector('#dTruck').value);
+        const sendungen = el._lade.filter(o => S.offers.some(x => x.id === o.id));
+        if (!nr || !sendungen.length) return;
+        for (const o of sendungen) takeOffer(o.id);
+        el._lade = [];
+        startTour(nr, sendungen).then(() => { drawOffers(); onTick(); });
+        onTick();
+        return;
+      }
+
+      /* Einzelne Sendung sofort losschicken */
       const btn = e.target.closest('button[data-offer]');
       if (!btn) return;
       const nr = Number(el.querySelector('#dTruck').value) || null;
@@ -134,6 +180,10 @@ export const DispoApp = {
         ? `<span class="warn">Fahrverbot (${esc(ban)}) bis 22 Uhr.</span>`
         : 'Kein Fahrzeug einsatzbereit — unterwegs, in Pause oder Werkstatt.';
 
+    /* Ladeliste */
+    el._lade = el._lade.filter(o => S.offers.some(x => x.id === o.id));
+    zeichneLadeliste(el, truck);
+
     /* Auftragsliste, sortiert nach Anfahrt ab dem gewählten Fahrzeug */
     const box = el.querySelector('#offerBox');
     const sig = S.offers.map(o => o.id).join(',') + '|' + (truck?.nr ?? '-');
@@ -148,18 +198,84 @@ export const DispoApp = {
 
     box.innerHTML = list.map(({ o, km }) => {
       const art = KIND_LABEL[o.kind || 'spot'];
+      const g = klasseVon(o.klasse);
+      const drauf = el._lade.some(x => x.id === o.id);
+      const pruef = truck ? passt(truck, el._lade.filter(x => x.id !== o.id), o) : { ok: false, grund: 'kein Fahrzeug' };
+      const umweg = truck && el._lade.length && !drauf ? umwegFuer(truck, el._lade, o) : null;
+
       return `
-      <div class="offer offer-${o.kind || 'spot'}" data-zeigen="${o.id}">
+      <div class="offer offer-${o.kind || 'spot'} ${drauf ? 'geladen' : ''}" data-zeigen="${o.id}">
         <div class="flex-row" style="justify-content:space-between;">
           <span><span class="art-tag">${art.icon} ${art.text}</span>
             <strong>${esc(o.firm.name)}</strong></span>
           <span class="money">${fmt(o.fee)}</span>
         </div>
+        <div style="font-size:10px;margin:2px 0;">
+          ${g.icon} ${esc(g.name)} ·
+          <strong>${o.paletten} Pal.</strong> ·
+          <strong>${(o.gewicht / 1000).toFixed(1)} t</strong>
+        </div>
         <div class="flex-row" style="justify-content:space-between;font-size:10px;">
-          <span class="muted">${o.firm.hub ? esc(o.firm.art) + ' · ' : ''}${o.partnerName ? esc(o.partnerName) + ' · ' : ''}${km.toFixed(0)} km</span>
-          <button class="btn btn-sm" data-offer="${o.id}" ${truck ? '' : 'disabled'}>annehmen</button>
+          <span class="muted">${km.toFixed(0)} km${umweg !== null ? ` · Umweg +${umweg.toFixed(0)} km` : ''}</span>
+          <span class="flex-row" style="gap:4px;">
+            ${drauf
+              ? `<button class="btn btn-sm" data-del="${o.id}">entladen</button>`
+              : pruef.ok
+                ? `<button class="btn btn-sm" data-add="${o.id}">+ laden</button>
+                   <button class="btn btn-sm" data-offer="${o.id}">sofort</button>`
+                : `<span class="warn">${esc(pruef.grund)}</span>`}
+          </span>
         </div>
       </div>`;
     }).join('');
   },
 };
+
+/* Was gerade für die nächste Tour zusammengestellt ist. */
+function zeichneLadeliste(el, truck) {
+  const box = el.querySelector('#ladeBox');
+  const lade = el._lade;
+
+  if (!lade.length || !truck) {
+    box.innerHTML = truck
+      ? '<div class="muted" style="padding:5px 6px;font-size:10px;">'
+        + 'Sendungen mit „+ laden" sammeln und als eine Tour fahren.</div>'
+      : '';
+    return;
+  }
+
+  const kap = kapazitaet(truck);
+  const last = summe(lade);
+  const pal = Math.min(100, last.paletten / kap.paletten * 100);
+  const kg  = Math.min(100, last.kg / kap.kg * 100);
+  const erloes = lade.reduce((s, o) => s + o.fee, 0);
+
+  box.innerHTML = `
+    <div class="lade-kopf flex-row" style="justify-content:space-between;">
+      <strong>Ladeliste · ${lade.length} Stopp${lade.length > 1 ? 's' : ''}</strong>
+      <span class="money">${fmt(erloes)}</span>
+    </div>
+
+    <div style="padding:4px 6px;">
+      <div class="flex-row" style="justify-content:space-between;font-size:10px;">
+        <span>Stellplätze</span>
+        <span>${last.paletten} / ${kap.paletten}</span>
+      </div>
+      <div class="prog" style="height:9px;margin-bottom:4px;">
+        <div class="prog-fill" style="width:${pal}%"></div>
+      </div>
+
+      <div class="flex-row" style="justify-content:space-between;font-size:10px;">
+        <span>Nutzlast</span>
+        <span>${(last.kg / 1000).toFixed(1)} t / ${(kap.kg / 1000).toFixed(1)} t</span>
+      </div>
+      <div class="prog" style="height:9px;">
+        <div class="prog-fill ${kg > 92 ? 'voll' : ''}" style="width:${kg}%"></div>
+      </div>
+
+      <div class="flex-row" style="margin-top:6px;gap:4px;">
+        <button class="btn btn-sm" id="ladeGo"><strong>Tour starten</strong></button>
+        <button class="btn btn-sm" id="ladeClear">leeren</button>
+      </div>
+    </div>`;
+}

@@ -4,6 +4,8 @@ import { SKILLS } from '../config.js';
 import { S, xpNeeded, findTruck, atDepot, modelOf, resaleValue,
          driveStatus, canDrive } from '../state.js';
 import { esc, pips, fmt, num } from '../util.js';
+import { kapazitaet, klasseVon } from '../sim/goods.js';
+import { EQUIPMENT } from '../config.js';
 import { setAuto, returnToDepot, sellTruck } from '../sim/fleet.js';
 import { openApp, onTick } from '../ui/wm.js';
 import { automatikFrei, stufeFuerAutomatik } from '../sim/progress.js';
@@ -61,7 +63,7 @@ export const FleetApp = {
     const sig = S.trucks.map(t =>
       [t.nr, t.model, t.driver.level, t.driver.points, Object.values(t.driver.skills).join(''),
        t.phase, t.auto ? 1 : 0, t.place, t.shopMin > 0 ? 1 : 0, S.level,
-       t.restMin > 0 ? 1 : 0,
+       t.restMin > 0 ? 1 : 0, t.job?.klasse || '', t.job?.stopp || 0,
        Math.floor((t.odo || 0) / 1000)].join(':')).join('|');
 
     if (box.dataset.sig !== sig) {
@@ -116,6 +118,7 @@ function row(truck) {
     .join(' ');
 
   const m = modelOf(truck);
+  const kap = kapazitaet(truck);
   const stehtWo = truck.phase === 'idle'
     ? `<span class="muted">bei ${esc(truck.place)}</span>`
     : '<span class="muted">unterwegs</span>';
@@ -129,8 +132,19 @@ function row(truck) {
     </div>
     <div style="font-size:10px;margin:2px 0;">
       ${esc(m.name)}${truck.used ? ' <span class="muted">· gebraucht</span>' : ''}
+      ${(truck.equip || []).map(k => EQUIPMENT[k]?.icon || '').join('')}
       <span class="muted">· ${num(truck.odo || 0)} km</span> · ${stehtWo}
     </div>
+
+    <table class="win-table" style="font-size:10px;margin:3px 0;">
+      <tr>
+        <td>Nutzlast</td><td style="text-align:right">${(kap.kg / 1000).toFixed(1)} t</td>
+        <td>Stellplätze</td><td style="text-align:right">${kap.paletten}</td>
+        <td>zGG</td><td style="text-align:right">${(m.zgg / 1000).toFixed(1)} t</td>
+      </tr>
+    </table>
+
+    ${ladeZeile(truck, kap)}
     <div class="xpbar" style="margin:3px 0;"><div class="xpfill" id="xp${truck.nr}"></div></div>
     <div class="prog" style="margin:3px 0;"><div class="prog-fill" id="tpg${truck.nr}"></div></div>
     <div style="font-size:10px;margin:2px 0 4px;">${skills}</div>
@@ -154,4 +168,26 @@ function row(truck) {
       </span>
     </div>
   </div>`;
+}
+
+/* Was gerade auf dem Fahrzeug liegt, mit Auslastung. */
+function ladeZeile(truck, kap) {
+  const job = truck.job;
+  if (!job || job.kind !== 'delivery') return '';
+
+  const g = klasseVon(job.klasse);
+  const pal = Math.min(100, (job.paletten || 0) / kap.paletten * 100);
+  const kg  = Math.min(100, (job.gewicht || 0) / kap.kg * 100);
+  const voll = Math.max(pal, kg);
+
+  return `
+    <div style="font-size:10px;margin:2px 0;">
+      geladen: ${g.icon} ${esc(g.name)} ·
+      ${job.paletten} Pal. · ${((job.gewicht || 0) / 1000).toFixed(1)} t
+      <span class="muted">(${Math.round(voll)} % ausgelastet)</span>
+      ${job.stopps > 1 ? `<span class="ok">· Stopp ${job.stopp} von ${job.stopps}</span>` : ''}
+    </div>
+    <div class="prog" style="height:8px;margin-bottom:2px;">
+      <div class="prog-fill ${voll > 92 ? 'voll' : ''}" style="width:${voll}%"></div>
+    </div>`;
 }

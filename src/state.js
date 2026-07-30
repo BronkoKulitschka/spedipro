@@ -20,11 +20,12 @@ export function newDriver() {
   };
 }
 
-export function newTruck(nr, pos = null, model = 'verteiler', used = false) {
+export function newTruck(nr, pos = null, model = 'verteiler', used = false, equip = []) {
   return {
     nr,
     model,
     used,
+    equip,          // ['kuehl', 'adr']
     odo: used ? USED.odo : 0,      // Kilometerstand
     driver: newDriver(),
     order: null,
@@ -189,7 +190,6 @@ export const fuelRate = d => RULES.FUEL_PER_KM * (1 - 0.07 * d.skills.eco);
 /* Dieselben Werte, aber mit dem Fahrzeug verrechnet. */
 export const truckKmh  = t => Math.max(35, kmh(t.driver) + modelOf(t).speed);
 export const truckFuel = t => fuelRate(t.driver) * modelOf(t).fuel;
-export const truckLoad = t => modelOf(t).load;
 export const truckRisk = t => riskMul(t.driver) * modelOf(t).risk * (t.used ? USED.risk : 1);
 export const feeMul   = d => 1 + 0.06 * d.skills.deal;
 export const riskMul  = d => Math.pow(0.75, d.skills.care);
@@ -216,6 +216,7 @@ export function hydrate(saved) {
       marker: null, line: null,
       pos: t.pos || { lat: saved.depot.lat, lon: saved.depot.lon },
       model: t.model || 'verteiler',
+      equip: t.equip || [],
       used: !!t.used,
       odo: t.odo || 0,
       stint: t.stint || 0, today: t.today || 0,

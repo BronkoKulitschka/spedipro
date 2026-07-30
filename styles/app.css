@@ -137,3 +137,10 @@
   border-top: 1px solid #fff; border-left: 1px solid #fff;
   border-right: 1px solid #606060; border-bottom: 1px solid #606060;
 }
+
+
+/* Ladeliste */
+.lade-box { border-bottom: 1px solid #808080; background: #c0c0c0; flex-shrink: 0; }
+.lade-kopf { padding: 3px 6px; background: #000080; color: #fff; font-size: 11px; }
+.offer.geladen { background: #ffffd0; }
+.prog-fill.voll { background: repeating-linear-gradient(to right, #806000 0 8px, #fff 8px 10px); }

@@ -13,6 +13,7 @@ import { currentRate } from './contracts.js';
 import { levelOf, pickPartner } from './partners.js';
 import { current } from './progress.js';
 import { hubsFor } from '../data/hubs.js';
+import { klasseFuer, ladung, flottenGrenze } from './goods.js';
 
 const id = () => Math.random().toString(36).slice(2, 8);
 
@@ -22,13 +23,29 @@ function baseFee(firm) {
 }
 
 /* ── Die drei Auftragsarten ── */
+/* Eine Sendung bekommt Klasse, Menge und Gewicht. Der Preis richtet
+   sich nach Strecke, Klasse und Menge — eine Komplettladung bringt mehr
+   als ein paar Paletten, aber nicht proportional. */
+function mitLadung(basis, firm, faktor = 1) {
+  const klasse = klasseFuer(firm);
+
+  /* Zwei von drei Sendungen sind auf den eigenen Fuhrpark zugeschnitten,
+     die dritte darf größer sein — als Anreiz für ein größeres Fahrzeug. */
+  const grenze = Math.random() < 0.7 ? flottenGrenze(S.trucks) : null;
+  const l = ladung(klasse, grenze);
+  const mengenFaktor = 0.55 + 0.45 * Math.min(1, l.paletten / 33);
+  const fee = basis * klasse.preis * mengenFaktor * faktor;
+
+  return { ...l, fee: Math.round(fee / 10) * 10 };
+}
+
 function spotOffer(firm) {
   const bonus = firm.bonus || 1;
-  const fee = baseFee(firm) * bonus * S.market.index * repMul();
+  const basis = baseFee(firm) * bonus * S.market.index * repMul();
   return {
     id: id(), kind: 'spot', firm,
     estKm: firm.km * 1.28,
-    fee: Math.round(fee / 10) * 10,
+    ...mitLadung(basis, firm),
   };
 }
 
@@ -40,11 +57,13 @@ function pickZiel() {
 }
 
 function contractOffer(contract) {
+  const l = mitLadung(currentRate(contract), contract.firm);
   return {
     id: id(), kind: 'vertrag', firm: contract.firm,
     contractId: contract.id,
     estKm: contract.firm.km * 1.28,
-    fee: currentRate(contract),
+    ...l,
+    fee: currentRate(contract),          // im Vertrag steht ein fester Satz
   };
 }
 
@@ -56,7 +75,7 @@ function partnerOffer(firm) {
     partnerKey: partner.key,
     partnerName: partner.name,
     estKm: firm.km * 1.28,
-    fee: Math.round(baseFee(firm) * rate * repMul() / 10) * 10,
+    ...mitLadung(baseFee(firm) * rate * repMul(), firm),
   };
 }
 

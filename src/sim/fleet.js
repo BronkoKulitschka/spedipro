@@ -4,9 +4,9 @@
    dort. Die Rückfahrt ins Depot ist eine eigene Entscheidung, keine
    Zwangsleerfahrt. Wer geschickt disponiert, kettet Aufträge aneinander. */
 
-import { RULES, TRUCK_MODELS, USED, DRIVE, REP } from '../config.js';
+import { RULES, TRUCK_MODELS, USED, DRIVE, REP, EQUIPMENT } from '../config.js';
 import { S, log, book, newTruck, findTruck, idleTrucks, truckPos, atDepot,
-         modelOf, resaleValue, truckKmh, truckFuel, truckLoad,
+         modelOf, resaleValue, truckKmh, truckFuel,
          feeMul, calmMul, canDrive, driveStatus, bannedFor } from '../state.js';
 import { haversine, fmt, esc } from '../util.js';
 import { osrmRoute, straightRoute } from '../data/osrm.js';
@@ -16,6 +16,7 @@ import { addRep } from './market.js';
 import { registerDelivery } from './contracts.js';
 import { registerPartnerLoad } from './partners.js';
 import { checkLevelUp, automatikFrei, modelFrei } from './progress.js';
+import { kapazitaet, summe, passt } from './goods.js';
 import { toast } from '../ui/toast.js';
 import { drawRoute, removeTruckLayers, dropTruck, updateTruckMarker } from '../ui/map.js';
 
@@ -42,38 +43,113 @@ export function effectiveKmh(truck) {
 /* Luftlinie vom Standort eines LKW zu einem Ziel, für die Vorschau. */
 export const distanceFrom = (truck, target) => haversine(truckPos(truck), target);
 
-/* ── Fahrt beginnen ──────────────────────────────────────────────
-   job beschreibt, was gefahren wird:
-     { kind: 'delivery', firm, fee }  oder  { kind: 'return' } */
-async function startDrive(truck, job, target, { sync = false } = {}) {
-  truck.phase = 'planning';
+/* ── Tour aus mehreren Sendungen ─────────────────────────────────
+   Die Stopps werden nach dem Prinzip des nächsten Nachbarn geordnet:
+   immer weiter zum nächstgelegenen offenen Ziel. Das ist nicht die
+   mathematisch beste Route, aber die, die ein Disponent auch wählt. */
+function ordneStopps(start, sendungen) {
+  const offen = [...sendungen];
+  const folge = [];
+  let hier = start;
 
-  let route;
-  if (sync) {
-    route = straightRoute(truckPos(truck), target);
-  } else {
-    try {
-      route = await osrmRoute(truckPos(truck), target);
-      S.dataInfo.router = 'OSRM, echte Straßenführung';
-    } catch {
-      route = straightRoute(truckPos(truck), target);
-      S.dataInfo.router = 'Luftlinie, Router nicht erreichbar';
+  while (offen.length) {
+    let besterIndex = 0, beste = Infinity;
+    offen.forEach((s, i) => {
+      const d = haversine(hier, s.firm);
+      if (d < beste) { beste = d; besterIndex = i; }
+    });
+    const [naechster] = offen.splice(besterIndex, 1);
+    folge.push(naechster);
+    hier = naechster.firm;
+  }
+  return folge;
+}
+
+/* Umweg, den ein zusätzlicher Stopp kostet */
+export function umwegFuer(truck, bisher, neu) {
+  const start = truckPos(truck);
+  const ohne = strecke(start, ordneStopps(start, bisher));
+  const mit  = strecke(start, ordneStopps(start, [...bisher, neu]));
+  return mit - ohne;
+}
+
+function strecke(start, folge) {
+  let km = 0, hier = start;
+  for (const s of folge) { km += haversine(hier, s.firm); hier = s.firm; }
+  return km * 1.28;
+}
+
+export function kapazitaetsPruefung(truck, bisher, neu) {
+  return passt(truck, bisher, neu);
+}
+
+export async function startTour(truckNr, sendungen, opts = {}) {
+  const truck = findTruck(truckNr);
+  if (!truck || truck.phase !== 'idle' || !canDrive(truck) || !sendungen.length) return false;
+
+  const folge = ordneStopps(truckPos(truck), sendungen);
+
+  /* Alle Teilstrecken vorab berechnen, damit die Tour als Ganzes steht. */
+  const etappen = [];
+  let von = truckPos(truck);
+
+  for (const sendung of folge) {
+    let route;
+    if (opts.sync) {
+      route = straightRoute(von, sendung.firm);
+    } else {
+      try { route = await osrmRoute(von, sendung.firm); }
+      catch { route = straightRoute(von, sendung.firm); }
     }
+    etappen.push({ route, sendung });
+    von = sendung.firm;
   }
 
-  const hits = trafficOnRoute(route.coords);
-  job.jams = hits.length;
-  job.target = target;
-  S.stats.jams += hits.length;
+  const alleHits = etappen.flatMap(e => trafficOnRoute(e.route.coords));
+  S.stats.jams += alleHits.length;
 
-  truck.job = job;
-  truck.route = route;
+  truck.tour = { etappen, index: 0 };
+  starteEtappe(truck);
+
+  const gesamt = etappen.reduce((s, e) => s + e.route.km, 0);
+  const erloes = folge.reduce((s, o) => s + o.fee, 0);
+  const last = summe(folge);
+
+  log(`${truck.driver.name} startet Tour mit ${folge.length} Stopp${folge.length > 1 ? 's' : ''}: `
+    + `${gesamt.toFixed(0)} km, ${last.paletten} Paletten, ${(last.kg / 1000).toFixed(1)} t, ${fmt(erloes)}`);
+
+  if (alleHits.length && !S.silent) {
+    toast('🚧', `${alleHits.length} gemeldete Stellen auf der Tour.`,
+                `<span class="muted">${esc(alleHits[0].road)}: ${esc(alleHits[0].title)}</span>`);
+  }
+  return true;
+}
+
+function starteEtappe(truck) {
+  const e = truck.tour.etappen[truck.tour.index];
+  const sendung = e.sendung;
+
+  truck.route = e.route;
   truck.progress = 0;
   truck.phase = 'driving';
+  truck.job = {
+    kind: 'delivery',
+    firm: sendung.firm,
+    fee: sendung.fee,
+    art: sendung.kind,
+    klasse: sendung.klasse,
+    paletten: sendung.paletten,
+    gewicht: sendung.gewicht,
+    contractId: sendung.contractId || null,
+    partnerKey: sendung.partnerKey || null,
+    jams: trafficOnRoute(e.route.coords).length,
+    target: sendung.firm,
+    stopp: truck.tour.index + 1,
+    stopps: truck.tour.etappen.length,
+  };
 
   drawRoute(truck);
   updateTruckMarker(truck);
-  return { route, hits };
 }
 
 /* ── Auftrag annehmen ── */
@@ -96,24 +172,16 @@ export async function dispatch(offerId, truckNr = null, opts = {}) {
   const offer = takeOffer(offerId);
   if (!offer) return;
 
-  const { route, hits } = await startDrive(truck, {
-    kind: 'delivery',
-    firm: offer.firm,
-    fee: offer.fee,
-    art: offer.kind,
-    contractId: offer.contractId || null,
-    partnerKey: offer.partnerKey || null,
-  }, offer.firm, opts);
-
-  log(`${truck.driver.name} fährt von ${truck.place} nach ${offer.firm.name}`
-    + ` · ${route.km.toFixed(0)} km`
-    + (hits.length ? ` · ${hits.length} gemeldete Stellen` : ''));
-
-  if (hits.length && !S.silent) {
-    toast('🚧',
-      `Auf der Strecke nach <strong>${esc(offer.firm.name)}</strong> liegen ${hits.length} gemeldete Stellen.`,
-      `<span class="muted">${esc(hits[0].road)}: ${esc(hits[0].title)}</span>`);
+  const p = passt(truck, [], offer);
+  if (!p.ok) {
+    S.offers.unshift(offer);          // zurück in die Börse
+    if (!S.silent) {
+      toast('📏', `Passt nicht auf LKW ${truck.nr}.`, `<span class="muted">${esc(p.grund)}</span>`);
+    }
+    return;
   }
+
+  await startTour(truck.nr, [offer], opts);
 }
 
 /* ── Leerfahrt zurück ins Depot ── */
@@ -122,9 +190,22 @@ export async function returnToDepot(nr, opts = {}) {
   if (!truck || truck.phase !== 'idle' || atDepot(truck)) return;
   if (!canDrive(truck)) return;
 
-  const { route } = await startDrive(
-    truck, { kind: 'return' }, { lat: S.depot.lat, lon: S.depot.lon }, opts);
+  const ziel = { lat: S.depot.lat, lon: S.depot.lon, name: 'Depot' };
+  let route;
+  if (opts.sync) route = straightRoute(truckPos(truck), ziel);
+  else {
+    try { route = await osrmRoute(truckPos(truck), ziel); }
+    catch { route = straightRoute(truckPos(truck), ziel); }
+  }
 
+  truck.tour = null;
+  truck.route = route;
+  truck.progress = 0;
+  truck.phase = 'driving';
+  truck.job = { kind: 'return', target: ziel, jams: trafficOnRoute(route.coords).length };
+
+  drawRoute(truck);
+  updateTruckMarker(truck);
   log(`${truck.driver.name} fährt leer zurück ins Depot · ${route.km.toFixed(0)} km`);
 }
 
@@ -192,7 +273,7 @@ function finish(truck) {
   const fuel = km * truckFuel(truck);
 
   if (truck.job.kind === 'delivery') {
-    const fee = truck.job.fee * feeMul(d) * truckLoad(truck);
+    const fee = truck.job.fee * feeMul(d);
     const art = truck.job.art || 'spot';
     const label = art === 'vertrag' ? 'Vertragsfracht'
                 : art === 'partner' ? 'Partnerfracht' : 'Fracht';
@@ -213,7 +294,8 @@ function finish(truck) {
 
     /* Be- und Entladen kostet Zeit. Ohne Rampenzeit ließe sich ein
        Fahrzeug beliebig oft am Tag einsetzen. */
-    truck.restMin = RULES.LOAD_MIN;
+    const stopps = truck.job.stopps || 1;
+    truck.restMin = stopps > 1 ? Math.round(RULES.LOAD_MIN * 0.55) : RULES.LOAD_MIN;
     truck.restKind = 'rampe';
   } else {
     book('Diesel', `Leerfahrt ins Depot · LKW ${truck.nr}`, -fuel);
@@ -225,10 +307,20 @@ function finish(truck) {
   S.stats.km += km;
   truck.pos = { lat: truck.job.target.lat, lon: truck.job.target.lon };
   truck.progress = 0;
-  truck.phase = 'idle';
-  truck.job = null;
   truck.route = null;
   removeTruckLayers(truck);
+
+  /* Weiter zur nächsten Entladestelle, falls die Tour noch läuft. */
+  if (truck.tour && truck.tour.index + 1 < truck.tour.etappen.length) {
+    truck.tour.index++;
+    truck.job = null;
+    starteEtappe(truck);
+    return;
+  }
+
+  truck.tour = null;
+  truck.job = null;
+  truck.phase = 'idle';
 }
 
 /* ── Selbstdisposition ──────────────────────────────────────────
@@ -239,16 +331,26 @@ function maybeAuto(truck) {
   if (!canDrive(truck)) return;
   if (!S.offers.length) return;
 
-  let best = null, bestScore = -Infinity;
-  for (const offer of S.offers) {
-    const anfahrt = distanceFrom(truck, offer.firm);
-    const score = offer.fee / Math.max(12, anfahrt);
-    if (score > bestScore) { bestScore = score; best = offer; }
-  }
-  if (!best) return;
+  /* Die beste Sendung suchen und danach auffüllen, was noch dazupasst
+     und keinen großen Umweg bedeutet — so, wie ein Disponent lädt. */
+  const bewertet = S.offers
+    .map(o => ({ o, wert: o.fee / Math.max(12, distanceFrom(truck, o.firm)) }))
+    .sort((a, b) => b.wert - a.wert);
 
-  /* Beim Nachrechnen ohne Netz die Luftlinie nehmen. */
-  dispatch(best.id, truck.nr, { sync: !!S.silent });
+  const geladen = [];
+  for (const { o } of bewertet) {
+    if (!passt(truck, geladen, o).ok) continue;
+    if (geladen.length) {
+      const umweg = umwegFuer(truck, geladen, o);
+      if (umweg > 120) continue;              // zu weit ab vom Weg
+    }
+    geladen.push(o);
+    if (geladen.length >= 4) break;
+  }
+  if (!geladen.length) return;
+
+  for (const o of geladen) takeOffer(o.id);
+  startTour(truck.nr, geladen, { sync: !!S.silent });
 }
 
 /* ── Kaufen und verkaufen ── */
@@ -259,17 +361,21 @@ export const priceOf = (modelKey, used) => {
   return Math.round(m.price * (used ? USED.factor : 1) / 100) * 100;
 };
 
-export function buyTruck(modelKey = 'verteiler', used = false) {
+export function buyTruck(modelKey = 'verteiler', used = false, equip = []) {
   const model = TRUCK_MODELS[modelKey];
   if (!model) return false;
   if (!modelFrei(modelKey)) return false;
 
-  const price = priceOf(modelKey, used);
+  const brauchbar = equip.filter(k =>
+    (k === 'kuehl' && model.kuehlbar) || (k === 'adr' && model.adrfaehig));
+  const zusatz = brauchbar.reduce((s, k) => s + EQUIPMENT[k].preis, 0);
+
+  const price = priceOf(modelKey, used) + zusatz;
   if (S.money < price) return false;
 
   const last = S.trucks[S.trucks.length - 1];
   const truck = newTruck((last ? last.nr : 0) + 1,
-                         { lat: S.depot.lat, lon: S.depot.lon }, modelKey, used);
+                         { lat: S.depot.lat, lon: S.depot.lon }, modelKey, used, brauchbar);
   S.trucks.push(truck);
   checkLevelUp();
 

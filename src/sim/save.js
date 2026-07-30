@@ -7,7 +7,7 @@ import { VERSION } from '../version.js';
 import { S } from '../state.js';
 
 const KEY = 'spedipro.save';
-const FORMAT = 6;
+const FORMAT = 7;
 
 /* Leaflet-Objekte lassen sich nicht sichern und werden neu aufgebaut. */
 function serialize() {
@@ -41,6 +41,7 @@ function serialize() {
         nr: t.nr,
         model: t.model,
         used: t.used,
+        equip: t.equip,
         odo: t.odo,
         driver: t.driver,
         job: t.job,

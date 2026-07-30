@@ -69,24 +69,99 @@ export const EVENTS = [
    Strecke mehr, verbraucht dafür deutlich mehr Diesel.                */
 export const TRUCK_MODELS = {
   kurier: {
-    key: 'kurier', name: 'Kurier 3.5', klasse: 'Sprinter',
-    price: 12000, speed: +8, fuel: 0.55, load: 0.60, risk: 0.8,
-    text: 'Wendig und sparsam. Rechnet sich auf kurzen Strecken.',
+    key: 'kurier', name: 'Kurier 3.5', klasse: 'Transporter',
+    price: 12000, speed: +8, fuel: 0.55, risk: 0.8,
+    zgg: 3500, leer: 2300, nutzlast: 1200, paletten: 4, volumen: 14,
+    aufbau: 'Kofferaufbau', kuehlbar: true, adrfaehig: false,
+    text: 'Wendig und sparsam. Für Stückgut und eilige Kleinsendungen.',
   },
   verteiler: {
     key: 'verteiler', name: 'Verteiler 12', klasse: 'Verteilerverkehr',
-    price: 20000, speed: 0, fuel: 1.00, load: 1.00, risk: 1.0,
-    text: 'Der Allrounder. Nichts herausragend, nichts falsch.',
+    price: 20000, speed: 0, fuel: 1.00, risk: 1.0,
+    zgg: 12000, leer: 6500, nutzlast: 5500, paletten: 17, volumen: 45,
+    aufbau: 'Pritsche mit Plane', kuehlbar: true, adrfaehig: true,
+    text: 'Der Allrounder für die Region. Ladebordwand, kommt überall hin.',
   },
   fern: {
     key: 'fern', name: 'Fernverkehr 400', klasse: 'Sattelzug',
-    price: 34000, speed: +6, fuel: 1.20, load: 1.40, risk: 1.0,
-    text: 'Für lange Läufe. Hält den Schnitt auch nach Stunden.',
+    price: 34000, speed: +6, fuel: 1.20, risk: 1.0,
+    zgg: 40000, leer: 16000, nutzlast: 24000, paletten: 33, volumen: 90,
+    aufbau: 'Schiebeplane', kuehlbar: true, adrfaehig: true,
+    text: 'Das Arbeitspferd des Fernverkehrs. 13,6 Lademeter.',
   },
   schwer: {
     key: 'schwer', name: 'Schwerlast 620', klasse: 'Schwertransport',
-    price: 52000, speed: -4, fuel: 1.55, load: 1.90, risk: 1.2,
-    text: 'Zieht alles, säuft alles. Lohnt erst bei hohen Frachtwerten.',
+    price: 52000, speed: -4, fuel: 1.55, risk: 1.2,
+    zgg: 44000, leer: 17000, nutzlast: 27000, paletten: 26, volumen: 70,
+    aufbau: 'Tieflader', kuehlbar: false, adrfaehig: true,
+    text: 'Für schwere Güter. Industriepaletten statt Europaletten.',
+  },
+};
+
+/* Nachrüstung beim Kauf. Wer Kühlgut oder Gefahrgut fahren will,
+   braucht das passende Fahrzeug. */
+export const EQUIPMENT = {
+  kuehl: { key: 'kuehl', name: 'Kühlaufbau',      icon: '❄️', preis: 9000,
+           text: 'nötig für Kühlgut, kostet 8 % Nutzlast' },
+  adr:   { key: 'adr',   name: 'ADR-Ausrüstung',  icon: '☢️', preis: 4500,
+           text: 'nötig für Gefahrgut' },
+};
+
+/* ── Güterklassen ───────────────────────────────────────────────
+   Angelehnt an das Einheitliche Güterverzeichnis für die
+   Verkehrsstatistik (NST-2007) des Statistischen Bundesamts.
+
+   kgProPalette bestimmt, ob eine Ladung am Gewicht oder am Platz
+   scheitert: Baustoffe machen den Sattelzug schwer, bevor er voll ist,
+   Möbel füllen ihn, lange bevor er schwer wird.                       */
+export const GOODS = {
+  agrar: {
+    key: 'agrar', nst: '01', name: 'Land- und Forstwirtschaft', icon: '🌾',
+    kgProPalette: 700, preis: 0.90, braucht: null,
+  },
+  nahrung: {
+    key: 'nahrung', nst: '04', name: 'Nahrungs- und Genussmittel', icon: '🥫',
+    kgProPalette: 600, preis: 1.00, braucht: null,
+  },
+  kuehlgut: {
+    key: 'kuehlgut', nst: '04', name: 'Kühlgut', icon: '🧊',
+    kgProPalette: 550, preis: 1.40, braucht: 'kuehl',
+  },
+  steine: {
+    key: 'steine', nst: '03', name: 'Erze, Steine und Erden', icon: '🪨',
+    kgProPalette: 1500, preis: 0.85, braucht: null,
+  },
+  bau: {
+    key: 'bau', nst: '08', name: 'Baustoffe, Glas, Zement', icon: '🧱',
+    kgProPalette: 1200, preis: 0.95, braucht: null,
+  },
+  chemie: {
+    key: 'chemie', nst: '07', name: 'Chemische Erzeugnisse', icon: '⚗️',
+    kgProPalette: 800, preis: 1.15, braucht: null,
+  },
+  gefahrgut: {
+    key: 'gefahrgut', nst: '07', name: 'Gefahrgut nach ADR', icon: '☢️',
+    kgProPalette: 850, preis: 1.55, braucht: 'adr',
+  },
+  metall: {
+    key: 'metall', nst: '10', name: 'Metalle und Metallerzeugnisse', icon: '⚙️',
+    kgProPalette: 1400, preis: 1.05, braucht: null,
+  },
+  maschinen: {
+    key: 'maschinen', nst: '11', name: 'Maschinen und Ausrüstung', icon: '🏭',
+    kgProPalette: 900, preis: 1.20, braucht: null,
+  },
+  moebel: {
+    key: 'moebel', nst: '12', name: 'Möbel und Konsumgüter', icon: '🛋️',
+    kgProPalette: 250, preis: 1.10, braucht: null,
+  },
+  papier: {
+    key: 'papier', nst: '09', name: 'Papier und Druckerzeugnisse', icon: '📰',
+    kgProPalette: 800, preis: 0.95, braucht: null,
+  },
+  stueckgut: {
+    key: 'stueckgut', nst: '18', name: 'Stückgut und Sammelgut', icon: '📦',
+    kgProPalette: 400, preis: 1.15, braucht: null,
   },
 };
 
@@ -99,8 +174,8 @@ export const USED = {
 /* ── Wirtschaft und Fahrphysik ── */
 export const RULES = {
   BASE_KMH:     62,
-  FUEL_PER_KM:  1.15,
-  DAILY_COST:   1400,
+  FUEL_PER_KM:  0.55,   // etwa 30 l/100 km bei 1,80 € je Liter
+  DAILY_COST:    550,   // Fahrerlohn, Versicherung, Abschreibung je Tag
   RESALE_NEW:   0.55,   // Anteil vom Neupreis beim Verkauf
   RESALE_USED:  0.45,
   TRAIN_COST:   3000,

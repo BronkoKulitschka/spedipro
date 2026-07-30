@@ -129,6 +129,7 @@ src/
     contracts.js        Rahmenverträge
     partners.js         befreundete Speditionen
     progress.js         Betriebsstufen und Freischaltungen
+    goods.js            Güterklassen, Kapazität, Ladungsprüfung
     events.js           kleine Ereignisse aus dem Alltag
     save.js             Sichern und Laden im Browser
     offline.js          Nachrechnen der Abwesenheit
@@ -283,6 +284,50 @@ Fahrverbot und für jeden Fahrer einen Tagesbalken: gefüllt die verbrauchte
 Lenkzeit, der rote Strich die aktuelle Uhrzeit.
 
 Die Werte stehen in `config.js` unter `DRIVE` und lassen sich frei ändern.
+
+## Ladung und Fahrzeuge
+
+Jede Sendung hat eine Güterklasse nach dem **Einheitlichen Güterverzeichnis für
+die Verkehrsstatistik (NST-2007)** des Statistischen Bundesamts, eine Menge in
+Europaletten und ein Gewicht. Zwölf Klassen von Baustoffen bis Kühlgut, jede mit
+eigener Dichte und eigenem Preisniveau.
+
+Das entscheidet, woran eine Ladung scheitert:
+
+| Klasse | kg je Palette | im Sattelzug |
+|---|---|---|
+| Möbel und Konsumgüter | 250 | 33 Paletten — der Platz ist zuerst voll |
+| Nahrungsmittel | 600 | 33 Paletten |
+| Baustoffe | 1.200 | 20 Paletten — das Gewicht bremst |
+| Erze, Steine, Erden | 1.500 | 16 Paletten |
+
+Kühlgut braucht einen **Kühlaufbau**, Gefahrgut nach ADR eine **ADR-Ausrüstung**.
+Beides gibt es beim Kauf dazu, der Kühlaufbau kostet 8 % Nutzlast.
+
+### Fahrzeugdaten
+
+| Klasse | zGG | Leer | Nutzlast | Stellplätze | Volumen |
+|---|---|---|---|---|---|
+| Kurier 3.5 | 3,5 t | 2,3 t | 1,2 t | 4 | 14 m³ |
+| Verteiler 12 | 12 t | 6,5 t | 5,5 t | 17 | 45 m³ |
+| Fernverkehr 400 | 40 t | 16 t | 24 t | 33 | 90 m³ |
+| Schwerlast 620 | 44 t | 17 t | 27 t | 26 | 70 m³ |
+
+Die Werte entsprechen dem, was in der Branche üblich ist: ein Standardsattelzug
+mit 13,6 Lademetern fasst 33 bis 34 Europaletten bei rund 24 t Nutzlast.
+
+### Touren zusammenlegen
+
+In der Disposition sammelst du mit **„+ laden"** mehrere Sendungen auf einem
+Fahrzeug. Die Ladeliste zeigt laufend Stellplätze und Nutzlast als Balken, bei
+jeder weiteren Sendung den **Umweg in Kilometern**, den sie kostet. Passt etwas
+nicht, steht der Grund dort statt des Knopfes — „nur 17 Stellplätze" oder
+„Nutzlast 5,5 t überschritten".
+
+**„Tour starten"** schickt das Fahrzeug los. Die Stopps werden nach dem nächsten
+Nachbarn geordnet, jede Teilstrecke einzeln über OSRM geroutet. An jedem Stopp
+wird die jeweilige Fracht abgerechnet. Mehrstopp-Touren brauchen nur 33 Minuten
+Rampenzeit je Stopp statt einer vollen Stunde — Sammelverkehr lohnt sich.
 
 ## Fahrzeuge und Kasse
 

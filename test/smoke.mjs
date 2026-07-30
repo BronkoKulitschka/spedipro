@@ -35,7 +35,9 @@ const { inventFirms }        = await import('../src/data/invent.js');
 const { refillOffers }       = await import('../src/sim/orders.js');
 const { initPartners }       = await import('../src/sim/partners.js');
 const { refillContractOffers, signContract } = await import('../src/sim/contracts.js');
-const { dispatch, moveTrucks, buyTruck, distanceFrom } = await import('../src/sim/fleet.js');
+const { dispatch, moveTrucks, buyTruck, distanceFrom, startTour } = await import('../src/sim/fleet.js');
+const { kapazitaet, summe, passt } = await import('../src/sim/goods.js');
+const { takeOffer } = await import('../src/sim/orders.js');
 const { driftMarket }        = await import('../src/sim/market.js');
 const { DEPOTS, LEVELS }     = await import('../src/config.js');
 const prog = await import('../src/sim/progress.js');
@@ -56,6 +58,17 @@ ok(typeof S.rep === 'number', 'Ansehen vorhanden');
 ok(Array.isArray(S.ledger), 'Kassenbuch vorhanden');
 ok(S.offers.length > 0, `Auftragsbörse gefüllt (${S.offers.length})`);
 ok(S.hubs.length > 20, `Umschlagpunkte geladen (${S.hubs.length})`);
+ok(S.offers.every(o => o.paletten > 0 && o.gewicht > 0), 'Alle Sendungen haben Menge und Gewicht');
+
+const kap = kapazitaet(S.trucks[0]);
+ok(kap.paletten > 0 && kap.kg > 0, `Kapazität lesbar (${kap.paletten} Pal., ${kap.kg} kg)`);
+/* Eine gezielt überladene Sendung muss abgelehnt werden. */
+const zuGross = { klasse: 'steine', paletten: 30, gewicht: 45000 };
+ok(passt(S.trucks[0], [], zuGross).ok === false,
+   `Überladung wird abgelehnt (${passt(S.trucks[0], [], zuGross).grund})`);
+const kuehl = { klasse: 'kuehlgut', paletten: 2, gewicht: 1100 };
+ok(passt(S.trucks[0], [], kuehl).ok === false,
+   'Kühlgut ohne Kühlaufbau wird abgelehnt');
 ok(S.contractOffers.length > 0, `Ausschreibungen vorhanden (${S.contractOffers.length})`);
 ok(S.trucks.length === 1 && S.trucks[0].pos, 'Ein LKW mit Standort');
 ok(S.level === 1, 'Start auf Stufe 1');
@@ -78,6 +91,34 @@ ok(buyTruck('verteiler', false) === true, 'Verteiler gekauft');
 ok(S.money < geld, 'Kaufpreis gebucht');
 ok(S.ledger.some(e => e.cat === 'Fahrzeugkauf'), 'Buchung im Kassenbuch');
 
+/* ── Mehrstopp-Tour ── */
+console.log('\nTour mit mehreren Stopps');
+{
+  const t = S.trucks.find(x => x.model === 'verteiler');
+  /* Drei kleine Sendungen, damit der Test nicht vom Zufall der Börse
+     abhängt. Die Kapazitätsprüfung läuft trotzdem echt. */
+  const klein = [0, 1, 2].map(i => ({
+    id: 'test' + i, kind: 'spot', paletten: 3, gewicht: 1200, klasse: 'stueckgut',
+    fee: 400, estKm: 40 + i * 20,
+    firm: { name: 'Testkunde ' + i, lat: 53.4 + i * 0.2, lon: 9.8 + i * 0.3, km: 40 + i * 20, kind: 'Lager' },
+  }));
+  S.offers.push(...klein);
+
+  const geladen = [];
+  for (const o of klein) {
+    if (passt(t, geladen, o).ok) { geladen.push(o); takeOffer(o.id); }
+  }
+  ok(geladen.length >= 2, `Mehrere Sendungen geladen (${geladen.length})`);
+  const last = summe(geladen);
+  const kapT = kapazitaet(t);
+  ok(last.paletten <= kapT.paletten && last.kg <= kapT.kg,
+     `Ladung im Rahmen (${last.paletten}/${kapT.paletten} Pal., ${Math.round(last.kg)}/${kapT.kg} kg)`);
+  await startTour(t.nr, geladen, { sync: true });
+  ok(t.tour && t.tour.etappen.length === geladen.length,
+     `Tour mit ${geladen.length} Etappen gestartet`);
+  ok(t.phase === 'driving', 'Fahrzeug rollt');
+}
+
 /* ── Ein paar Tage fahren ── */
 console.log('\nBetrieb über zehn Tage');
 S.silent = true;                       // ohne Netz und ohne Protokollflut
@@ -86,7 +127,7 @@ const SCHRITT = 15;
 
 /* Bis zur Freischaltung der Automatik wird von Hand disponiert,
    danach übernimmt der Betrieb selbst. So spielt es sich auch. */
-function disponieren() {
+async function disponieren() {
   if (prog.automatikFrei()) {
     for (const t of S.trucks) t.auto = true;
     return;
@@ -94,12 +135,17 @@ function disponieren() {
   for (const t of S.trucks) {
     if (t.phase !== 'idle' || driveStatus(t).code !== 'frei') continue;
     if (!S.offers.length) break;
+    /* Nur Sendungen, die auch draufpassen — sonst blockiert eine zu
+       große Ladung dauerhaft den besten Platz in der Liste. */
+    const passend = S.offers.filter(o => passt(t, [], o).ok);
+    if (!passend.length) continue;
+
     let best = null, score = -Infinity;
-    for (const o of S.offers) {
+    for (const o of passend) {
       const wert = o.fee / Math.max(12, distanceFrom(t, o.firm));
       if (wert > score) { score = wert; best = o; }
     }
-    if (best) dispatch(best.id, t.nr, { sync: true });
+    if (best) await dispatch(best.id, t.nr, { sync: true });
   }
 }
 
@@ -107,7 +153,7 @@ for (let tag = 0; tag < 10; tag++) {
   const bisher = day();
   while (day() === bisher) {
     S.minutes += SCHRITT;
-    disponieren();
+    await disponieren();
     moveTrucks(SCHRITT);
   }
   driftMarket();
@@ -129,8 +175,8 @@ ok(S.trucks.every(t => t.today <= 9 * 60 + SCHRITT),
    'Tageslenkzeit nirgends überschritten');
 ok(S.trucks.every(t => driveStatus(t).code), 'Fahrerstatus lesbar');
 
-const summe = ledgerSums();
-ok(Math.abs(summe.saldo - (S.money - 50000)) < 1,
+const bilanz = ledgerSums();
+ok(Math.abs(bilanz.saldo - (S.money - 50000)) < 1,
    'Kassenbuch stimmt mit dem Kontostand überein');
 /* Obergrenze zur Plausibilität, keine Balancevorgabe: mit neun Stunden
    Lenkzeit und einer Stunde Rampenzeit je Sendung sind mehr als ein
@@ -140,8 +186,8 @@ ok(S.stats.tours / 10 / S.trucks.length < 12,
 
 console.log('\nStand nach zehn Tagen');
 console.log(`  Kasse      ${Math.round(S.money)} €`);
-console.log(`  Einnahmen  ${Math.round(summe.ein)} €`);
-console.log(`  Ausgaben   ${Math.round(summe.aus)} €`);
+console.log(`  Einnahmen  ${Math.round(bilanz.ein)} €`);
+console.log(`  Ausgaben   ${Math.round(bilanz.aus)} €`);
 console.log(`  Fahrten    ${S.stats.tours}`);
 console.log(`  Kilometer  ${Math.round(S.stats.km)}`);
 console.log(`  Ansehen    ${S.rep.toFixed(1)}`);
