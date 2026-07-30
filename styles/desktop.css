@@ -24,23 +24,31 @@ html, body { height: 100%; overflow: hidden; }
 #windows > * { pointer-events: auto; }
 
 .desk-icons {
-  position: absolute; top: 8px; left: 8px;
+  position: absolute; top: 10px; left: 10px;
   display: flex; flex-direction: column; flex-wrap: wrap;
   align-content: flex-start;
-  gap: 4px;
-  max-height: calc(100% - 16px);
+  gap: 6px;
+  max-height: calc(100% - 20px);
 }
 .desk-icon {
-  width: 78px; padding: 6px 2px;
+  width: 104px; padding: 8px 4px;
   background: none; border: none; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  font-family: inherit; font-size: 11px; color: #fff;
-  text-shadow: 1px 1px 1px rgba(0,0,0,.6);
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  font-family: inherit; font-size: 12px; color: #fff;
+  text-shadow: 1px 1px 2px rgba(0,0,0,.85), 0 0 4px rgba(0,0,0,.5);
 }
 .desk-icon:focus-visible { outline: 1px dotted #fff; }
-.desk-glyph { font-size: 30px; line-height: 1; }
-.desk-label { line-height: 1.2; }
-.desk-icon:active .desk-label { background: #000080; }
+.desk-glyph {
+  font-size: 42px; line-height: 1;
+  filter: drop-shadow(2px 2px 2px rgba(0,0,0,.5));
+}
+.desk-label {
+  line-height: 1.25; text-align: center;
+  word-break: break-word; hyphens: auto;
+  padding: 1px 3px;
+}
+.desk-icon:hover .desk-label { background: rgba(0,0,128,.35); }
+.desk-icon:active .desk-label { background: #000080; text-shadow: none; }
 
 .desk-brand {
   position: absolute; right: 10px; bottom: 10px;
@@ -126,8 +134,9 @@ html, body { height: 100%; overflow: hidden; }
 
 /* ── Schmale Bildschirme ── */
 @media (max-width: 820px) {
-  .desk-icons { flex-direction: row; flex-wrap: wrap; max-height: none; width: calc(100% - 16px); }
-  .desk-icon { width: 72px; }
+  .desk-icons { flex-direction: row; flex-wrap: wrap; max-height: none; width: calc(100% - 20px); }
+  .desk-icon { width: 88px; font-size: 11px; }
+  .desk-glyph { font-size: 36px; }
   .desk-brand { display: none; }
   .taskbar-app { flex: 1 1 0; }
   .tb-label { display: none; }
@@ -188,3 +197,34 @@ html, body { height: 100%; overflow: hidden; }
   .dispo-map  { flex: 0 0 52%; }
   .dispo-list { flex: 1; min-width: 0; border-left: none; border-top: 1px solid #808080; }
 }
+
+
+/* ── Hintergrundauswahl ───────────────────────────────────── */
+.hg-gitter { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.hg-feld {
+  background: #c0c0c0; cursor: pointer; padding: 3px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-family: inherit; font-size: 10px; color: #000;
+  border-top: 2px solid #fff; border-left: 2px solid #fff;
+  border-right: 2px solid #808080; border-bottom: 2px solid #808080;
+}
+.hg-feld:active, .hg-feld.gewaehlt {
+  border-top: 2px solid #808080; border-left: 2px solid #808080;
+  border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+}
+.hg-feld.gewaehlt { font-weight: bold; }
+.hg-vorschau {
+  display: block; width: 100%; height: 26px;
+  border: 1px solid #404040;
+}
+.hg-name { line-height: 1.1; }
+
+/* Der gewählte Hintergrund scheint im Fuhrpark durch. */
+.fuhrpark-flaeche { position: relative; }
+.fuhrpark-flaeche::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: var(--wallpaper, none);
+  background-size: cover; background-position: center;
+  opacity: .14; pointer-events: none;
+}
+.fuhrpark-flaeche > * { position: relative; }

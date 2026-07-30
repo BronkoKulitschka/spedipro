@@ -106,6 +106,19 @@ Die Texte stehen gesammelt in `src/help/topics.js` in einem einfachen Format aus
 Überschriften, Absätzen, Listen, Tabellen, Hinweiskästen und Querverweisen — ein
 neues Thema ist ein Eintrag mehr in dieser Datei.
 
+## Aussehen
+
+Der Hintergrund der Arbeitsfläche lässt sich in den Einstellungen wechseln:
+neun Voreinstellungen von Türkis bis Karomuster, dazu ein eigenes Bild. Das
+Bild wird vor dem Speichern auf 1600 Bildpunkte verkleinert und liegt unter
+`spedipro.wallpaper` im Browserspeicher, getrennt vom Spielstand. Im Fuhrpark
+scheint es gedämpft als Untergrund durch.
+
+Fahrende Fahrzeuge auf der Karte tragen einen pulsierenden Ring, wippen leicht
+und wandern in einer Sekunde zur nächsten Position, statt zu springen. Die
+Blickrichtung ergibt sich aus dem zuletzt gefahrenen Stück. Wer
+`prefers-reduced-motion` gesetzt hat, bekommt alles ohne Bewegung.
+
 ## Testlauf
 
 Ein Rauchtest spielt zehn Spieltage ohne Browser durch und prüft, dass

@@ -9,7 +9,8 @@ const zahl = (wert, einheit) =>
   einheit === ' km' ? num(wert) + ' km' : Math.floor(wert).toString();
 
 export const ProgressApp = {
-  id: 'progress', icon: '🏆', title: () => 'Betriebsentwicklung', desktop: true,
+  id: 'progress', icon: '🏆', title: () => 'Betriebsentwicklung',
+  kurz: 'Betriebs-\nentwicklung', desktop: true,
   width: 440, height: 470,
 
   body: () => `

@@ -15,7 +15,8 @@ const std = min => {
 };
 
 export const DailyApp = {
-  id: 'daily', icon: '📅', title: () => 'Tagesansicht',
+    id: 'daily', icon: '📅', title: () => 'Tagesansicht',
+  kurz: 'Tages-\nansicht', desktop: true,
   width: 430, height: 430, desktop: true,
 
   body: () => `

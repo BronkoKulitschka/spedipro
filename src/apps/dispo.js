@@ -19,7 +19,7 @@ import { empty } from './shared.js';
 const DETAIL_ZOOM = 14;
 
 export const DispoApp = {
-  id: 'dispo', icon: '🗺️', title: () => 'Disposition', desktop: true,
+  id: 'dispo', icon: '🗺️', title: () => 'Disposition', kurz: 'Disposition\nund Karte', desktop: true,
   width: 820, height: 560, startMaximized: false,
 
   body: () => `

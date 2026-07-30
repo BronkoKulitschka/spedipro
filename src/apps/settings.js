@@ -11,6 +11,7 @@ import { toast } from '../ui/toast.js';
 import { log } from '../state.js';
 import { VERSION, BUILD, CODENAME } from '../version.js';
 import { saveGame, clearSave, saveInfo } from '../sim/save.js';
+import { PRESETS, ladeHintergrund, speichereHintergrund, wendeAn, bildLaden } from '../ui/wallpaper.js';
 import { onTick } from '../ui/wm.js';
 
 export const SettingsApp = {
@@ -39,6 +40,28 @@ export const SettingsApp = {
           ${TIME.RATIOS.map(r => `<button class="btn btn-sm" data-ratio="${r}">1 : ${r}</button>`).join('')}
         </div>
         <div class="muted" style="font-size:10px;margin-top:6px;" id="stRatioNote">—</div>
+      </div>
+
+      <div class="raised-box" style="margin-bottom:8px;">
+        <div class="section-title">Hintergrund</div>
+        <div class="muted" style="font-size:10px;margin-bottom:6px;">
+          Gilt für die Arbeitsfläche und als Untergrund im Fuhrpark.
+        </div>
+        <div class="hg-gitter" id="stHg">
+          ${Object.entries(PRESETS).map(([key, p]) => `
+            <button class="hg-feld" data-hg="${key}" title="${p.name}">
+              <span class="hg-vorschau" style="background:${p.css}"></span>
+              <span class="hg-name">${p.name}</span>
+            </button>`).join('')}
+        </div>
+        <div class="flex-row" style="margin-top:8px;flex-wrap:wrap;gap:6px;">
+          <label class="btn btn-sm" style="cursor:pointer;">
+            eigenes Bild wählen
+            <input type="file" id="stBild" accept="image/*" style="display:none;">
+          </label>
+          <button class="btn btn-sm" id="stBildWeg">zurücksetzen</button>
+        </div>
+        <div class="muted" style="font-size:10px;margin-top:4px;" id="stHgNote">—</div>
       </div>
 
       <div class="raised-box" style="margin-bottom:8px;">
@@ -86,6 +109,24 @@ export const SettingsApp = {
     </div>`,
 
   mount(el) {
+    el.querySelector('#stBild').addEventListener('change', ev => {
+      const datei = ev.target.files?.[0];
+      if (!datei) return;
+      el.querySelector('#stHgNote').textContent = 'Bild wird verkleinert …';
+
+      bildLaden(datei, ergebnis => {
+        if (ergebnis.ok) {
+          toast('🖼️', 'Neuer Hintergrund gesetzt.',
+                `<span class="muted">${ergebnis.groesse} Bildpunkte</span>`);
+        } else {
+          toast('⚠️', 'Hintergrund nicht übernommen.',
+                `<span class="muted">${ergebnis.grund}</span>`);
+        }
+        hinweisHintergrund(el);
+      });
+      ev.target.value = '';
+    });
+
     el.addEventListener('click', e => {
       const speed = e.target.closest('button[data-speed]');
       if (speed) { setSpeed(Number(speed.dataset.speed)); onTick(); return; }
@@ -98,6 +139,24 @@ export const SettingsApp = {
         toast(done ? '💾' : '⚠️',
               done ? 'Spielstand gesichert.' : 'Sichern nicht möglich.',
               done ? '' : '<span class="muted">Der Browser erlaubt keinen Speicher.</span>');
+        return;
+      }
+
+      const hg = e.target.closest('button[data-hg]');
+      if (hg) {
+        const wahl = { art: 'preset', wert: hg.dataset.hg };
+        speichereHintergrund(wahl);
+        wendeAn(wahl);
+        hinweisHintergrund(el);
+        return;
+      }
+
+      if (e.target.closest('#stBildWeg')) {
+        const wahl = { art: 'preset', wert: 'teal' };
+        speichereHintergrund(wahl);
+        wendeAn(wahl);
+        hinweisHintergrund(el);
+        toast('🖼️', 'Hintergrund zurückgesetzt.');
         return;
       }
 
@@ -124,6 +183,8 @@ export const SettingsApp = {
       `Ein Spieltag dauert damit bei der gewählten Stufe etwa `
       + (hours >= 1 ? `${hours.toFixed(1)} Stunden` : `${Math.round(hours * 60)} Minuten`)
       + ' echter Zeit.';
+
+    hinweisHintergrund(el);
 
     const info = saveInfo();
     el.querySelector('#stSave').innerHTML = info
@@ -159,4 +220,17 @@ async function reload(el) {
         `<span class="muted">Quelle: ${source}</span>`);
   button.disabled = false;
   onTick();
+}
+
+/* Zeigt, welcher Hintergrund gerade eingestellt ist. */
+function hinweisHintergrund(el) {
+  const wahl = ladeHintergrund();
+  const note = el.querySelector('#stHgNote');
+  if (note) {
+    note.textContent = wahl.art === 'bild'
+      ? `Eigenes Bild${wahl.name ? ': ' + wahl.name : ''}`
+      : `Voreinstellung: ${PRESETS[wahl.wert]?.name || 'Türkis'}`;
+  }
+  el.querySelectorAll('[data-hg]').forEach(b =>
+    b.classList.toggle('gewaehlt', wahl.art === 'preset' && b.dataset.hg === wahl.wert));
 }

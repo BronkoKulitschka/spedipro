@@ -12,7 +12,7 @@ import { empty } from './shared.js';
 const tageBis = c => Math.max(0, Math.ceil((c.endMinutes - S.minutes) / 1440));
 
 export const ContractsApp = {
-  id: 'contracts', icon: '📜', title: () => 'Verträge', desktop: true,
+  id: 'contracts', icon: '📜', title: () => 'Verträge', kurz: 'Verträge', desktop: true,
   width: 450, height: 480,
 
   body: () => `

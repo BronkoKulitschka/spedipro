@@ -21,7 +21,7 @@ export const FleetApp = {
         <span id="flNote">—</span>
         <button class="btn btn-sm" id="flDealer">🏷️ Fahrzeughandel</button>
       </div>
-      <div class="inset-box scroll fill" id="fleetBox" style="padding:4px;"></div>
+      <div class="inset-box scroll fill fuhrpark-flaeche" id="fleetBox" style="padding:4px;"></div>
     </div>`,
 
   mount(el) {

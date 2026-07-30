@@ -16,6 +16,7 @@ import { saveGame, readSave, clearSave, saveInfo } from './sim/save.js';
 import { catchUp, offlineMinutes } from './sim/offline.js';
 import { startScreen, bootScreen, desktopShell } from './ui/screens.js';
 import { openApp, onTick, renderTaskbar, toggleStartMenu, closeAll, isNarrow } from './ui/wm.js';
+import { wendeAn } from './ui/wallpaper.js';
 
 const root = () => document.getElementById('root');
 
@@ -214,6 +215,7 @@ async function adoptFirms({ firms, source }) {
 function enterDesktop({ resumed = false } = {}) {
   S.screen = 'desktop';
   root().innerHTML = desktopShell();
+  wendeAn();
   wireDesktop();
 
   if (resumed) {

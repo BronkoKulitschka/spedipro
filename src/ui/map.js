@@ -143,15 +143,29 @@ export function updateTruckMarker(truck) {
 
   const pos = positionAt(truck.route, truck.progress);
 
+  /* Blickrichtung aus dem letzten Stück Weg ableiten */
+  const vorher = truck._letzte || pos;
+  const richtung = pos[1] < vorher[1] - 1e-6 ? 'links'
+                 : pos[1] > vorher[1] + 1e-6 ? 'rechts'
+                 : truck._richtung || 'rechts';
+  truck._richtung = richtung;
+  truck._letzte = pos;
+
   if (!truck.marker) {
     truck.marker = L.marker(pos, {
-      icon: L.divIcon({ className: '', html: '<div class="truck-icon">🚛</div>',
-                        iconSize: [20, 20], iconAnchor: [10, 10] }),
+      icon: L.divIcon({ className: 'truck-marker fahrend',
+        html: `<span class="ring"></span><span class="truck-icon fahrt ${richtung}">🚛</span>`,
+        iconSize: [26, 26], iconAnchor: [13, 13] }),
     }).addTo(layers.trucks);
   } else {
     truck.marker.setLatLng(pos);
-    const el = truck.marker.getElement()?.firstChild;
-    if (el) el.className = 'truck-icon';
+    const wurzel = truck.marker.getElement();
+    if (wurzel) {
+      wurzel.classList.add('truck-marker', 'fahrend');
+      const icon = wurzel.querySelector('.truck-icon');
+      if (icon) icon.className = `truck-icon fahrt ${richtung}`;
+      else wurzel.innerHTML = `<span class="ring"></span><span class="truck-icon fahrt ${richtung}">🚛</span>`;
+    }
   }
 
   truck.marker.bindPopup(fahrtPopup(truck), { minWidth: 210 });
@@ -187,13 +201,16 @@ function parkTruck(truck) {
 
   if (!truck.marker) {
     truck.marker = L.marker([pos.lat, pos.lon], {
-      icon: L.divIcon({ className: '', iconSize: [20, 20], iconAnchor: [10, 10],
-        html: `<div class="truck-icon parked${ruht ? ' resting' : ''}">🚛</div>` }),
+      icon: L.divIcon({ className: 'truck-marker', iconSize: [26, 26], iconAnchor: [13, 13],
+        html: `<span class="truck-icon parked${ruht ? ' resting' : ''}">🚛</span>` }),
     }).addTo(layers.trucks);
   } else {
     truck.marker.setLatLng([pos.lat, pos.lon]);
-    const el = truck.marker.getElement()?.firstChild;
-    if (el) el.className = `truck-icon parked${ruht ? ' resting' : ''}`;
+    const wurzel = truck.marker.getElement();
+    if (wurzel) {
+      wurzel.classList.remove('fahrend');
+      wurzel.innerHTML = `<span class="truck-icon parked${ruht ? ' resting' : ''}">🚛</span>`;
+    }
   }
 
   truck.marker.bindPopup(truckPopup(truck), { minWidth: 210 });
