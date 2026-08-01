@@ -67,7 +67,7 @@ export const DailyApp = {
 
       const farbe = {
         frei: 'ok', pause: 'warn', ruhe: 'warn', rampe: 'muted',
-        verbot: 'bad', werkstatt: 'bad', ausgefahren: 'warn',
+        anfahrt: 'warn', verbot: 'bad', werkstatt: 'bad', ausgefahren: 'warn',
       }[status.code] || 'muted';
 
       return `

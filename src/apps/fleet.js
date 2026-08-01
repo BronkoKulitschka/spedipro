@@ -64,6 +64,7 @@ export const FleetApp = {
       [t.nr, t.model, t.driver.level, t.driver.points, Object.values(t.driver.skills).join(''),
        t.phase, t.auto ? 1 : 0, t.place, t.shopMin > 0 ? 1 : 0, S.level,
        t.restMin > 0 ? 1 : 0, t.job?.klasse || '', t.job?.stopp || 0,
+       t.rastZiel ? 1 : 0, t.rastOrt || '',
        Math.floor((t.odo || 0) / 1000)].join(':')).join('|');
 
     if (box.dataset.sig !== sig) {
@@ -88,13 +89,16 @@ export const FleetApp = {
         status.innerHTML = `<span class="muted">📦 ${esc(driveStatus(truck).text)}</span>`;
         bar.style.width = '100%';
       } else if (truck.restMin > 0) {
-        status.innerHTML = `<span class="warn">${esc(driveStatus(truck).text)}</span>`;
+        status.innerHTML = `<span class="warn">🅿️ ${esc(driveStatus(truck).text)}</span>`;
         bar.classList.add('shop');
         bar.style.width = truck.route
           ? Math.min(100, truck.progress / truck.route.km * 100) + '%' : '0';
       } else if (truck.phase === 'planning') {
         status.innerHTML = '<span class="muted">Route wird geplant …</span>';
         bar.style.width = '0';
+      } else if (truck.phase === 'driving' && truck.rastZiel) {
+        status.innerHTML = `<span class="warn">🅿️ ${esc(truck.rastZiel.name.slice(0, 22))}</span>`;
+        bar.style.width = Math.min(100, truck.progress / truck.route.km * 100) + '%';
       } else if (truck.phase === 'driving' && truck.route) {
         const ziel = truck.job?.kind === 'return' ? 'Depot' : truck.job?.firm?.name || '';
         status.innerHTML = `→ <strong>${esc(ziel.slice(0, 20))}</strong>`;

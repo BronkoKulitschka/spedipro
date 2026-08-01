@@ -22,10 +22,18 @@ const NACH_ZIEL = {
   Industrie:    ['metall', 'chemie', 'bau', 'maschinen'],
 };
 
-export function klasseFuer(ziel) {
-  const auswahl = NACH_ZIEL[ziel?.art] || NACH_ZIEL[ziel?.kind];
-  if (auswahl && Math.random() < 0.85) return GOODS[pick(auswahl)];
-  return pick(KLASSEN);
+/* maxKg begrenzt die Auswahl auf Güter, von denen wenigstens eine
+   Palette auf das größte Fahrzeug im Hof passt. Sonst entstehen
+   Sendungen, die niemand fahren kann — eine Palette Schotter wiegt
+   1,5 Tonnen und passt auf keinen Transporter. */
+export function klasseFuer(ziel, maxKg = Infinity) {
+  const moeglich = KLASSEN.filter(k => k.kgProPalette <= maxKg);
+  const auswahl = (NACH_ZIEL[ziel?.art] || NACH_ZIEL[ziel?.kind] || [])
+    .map(k => GOODS[k])
+    .filter(k => k.kgProPalette <= maxKg);
+
+  if (auswahl.length && Math.random() < 0.85) return pick(auswahl);
+  return pick(moeglich.length ? moeglich : KLASSEN);
 }
 
 /* Sendungsgröße: vom Stückgut bis zur Komplettladung.
@@ -71,13 +79,21 @@ export function flottenGrenze(trucks) {
 
 /* ── Kapazität eines Fahrzeugs ── */
 export function kapazitaet(truck) {
-  const m = TRUCK_MODELS[truck.model] || TRUCK_MODELS.verteiler;
-  const kuehl = truck.equip?.includes('kuehl');
+  const m = TRUCK_MODELS[truck.model] || TRUCK_MODELS.kurier;
+  /* Nachgerüstete Kühlung kostet Nutzlast, fest verbaute steckt schon
+     im Leergewicht des Fahrzeugs. */
+  const nachgeruestet = truck.equip?.includes('kuehl') && !m.kuehlfest;
   return {
     paletten: m.paletten,
-    kg: Math.round(m.nutzlast * (kuehl ? 0.92 : 1)),   // Kühlaufbau kostet Nutzlast
+    kg: Math.round(m.nutzlast * (nachgeruestet ? 0.92 : 1)),
     volumen: m.volumen,
   };
+}
+
+/* Kann dieses Fahrzeug Kühlgut fahren? */
+export function kannKuehlen(truck) {
+  const m = TRUCK_MODELS[truck.model];
+  return !!(m?.kuehlfest || truck.equip?.includes('kuehl'));
 }
 
 /* Was eine Liste von Sendungen zusammen wiegt und belegt */
@@ -93,8 +109,11 @@ export function passt(truck, bisher, neu) {
   const kap = kapazitaet(truck);
   const g = GOODS[neu.klasse];
 
-  if (g?.braucht && !truck.equip?.includes(g.braucht)) {
-    return { ok: false, grund: `${EQUIPMENT[g.braucht].name} fehlt` };
+  if (g?.braucht === 'kuehl' && !kannKuehlen(truck)) {
+    return { ok: false, grund: 'Kühlaufbau fehlt' };
+  }
+  if (g?.braucht === 'adr' && !truck.equip?.includes('adr')) {
+    return { ok: false, grund: 'ADR-Ausrüstung fehlt' };
   }
 
   const s = summe([...bisher, neu]);

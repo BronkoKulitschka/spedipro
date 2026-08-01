@@ -6,7 +6,7 @@
    Spielminuten je echter Minute. */
 
 import { RULES, TIME } from '../config.js';
-import { S, log, book, day, truckRisk, todayText, holidayNow, weekendNow } from '../state.js';
+import { S, log, book, day, truckRisk, fixGesamt, todayText, holidayNow, weekendNow } from '../state.js';
 import { fmt } from '../util.js';
 import { moveTrucks } from './fleet.js';
 import { fireEvent } from './events.js';
@@ -103,8 +103,8 @@ function newDay() {
   else if (weekendNow()) log(`📅 ${todayText()} — Wochenende.`);
   else log(`📅 ${todayText()}`);
 
-  const cost = S.trucks.length * RULES.DAILY_COST;
-  book('Fixkosten', `${S.trucks.length} LKW · Fahrer, Versicherung, Wartung`, -cost);
+  const cost = fixGesamt();
+  book('Fixkosten', `${S.trucks.length} Fahrzeuge · Fahrer, Versicherung, Wartung`, -cost);
   log(`Tagesfixkosten für ${S.trucks.length} LKW: ${fmt(-cost)}`);
 
   for (const truck of S.trucks) {

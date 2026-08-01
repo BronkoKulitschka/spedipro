@@ -74,6 +74,7 @@ ok(S.trucks.length === 1 && S.trucks[0].pos, 'Ein LKW mit Standort');
 ok(S.level === 1, 'Start auf Stufe 1');
 ok(prog.automatikFrei() === false, 'Automatik anfangs gesperrt');
 ok(prog.modelFrei('schwer') === false, 'Schwerlast anfangs gesperrt');
+ok(prog.modelFrei('kurier') === true, 'Kurier von Anfang an verfügbar');
 
 /* ── Vertrag unterschreiben ── */
 console.log('\nVertrag');
@@ -86,19 +87,20 @@ ok(S.offers.some(o => o.kind === 'vertrag'), 'Vertragssendung in der Börse');
 /* ── Fahrzeug kaufen ── */
 console.log('\nFuhrpark');
 const geld = S.money;
-ok(buyTruck('fern', false) === false, 'Fernverkehr auf Stufe 1 gesperrt');
-ok(buyTruck('verteiler', false) === true, 'Verteiler gekauft');
+ok(buyTruck('fern', false) === false, 'Sattelzug auf Stufe 1 gesperrt');
+ok(buyTruck('siebenhalb', false) === false, '7,5-Tonner auf Stufe 1 gesperrt');
+ok(buyTruck('maxi', false) === true, 'Großraumtransporter gekauft');
 ok(S.money < geld, 'Kaufpreis gebucht');
 ok(S.ledger.some(e => e.cat === 'Fahrzeugkauf'), 'Buchung im Kassenbuch');
 
 /* ── Mehrstopp-Tour ── */
 console.log('\nTour mit mehreren Stopps');
 {
-  const t = S.trucks.find(x => x.model === 'verteiler');
+  const t = S.trucks.find(x => x.model === 'maxi');
   /* Drei kleine Sendungen, damit der Test nicht vom Zufall der Börse
      abhängt. Die Kapazitätsprüfung läuft trotzdem echt. */
   const klein = [0, 1, 2].map(i => ({
-    id: 'test' + i, kind: 'spot', paletten: 3, gewicht: 1200, klasse: 'stueckgut',
+    id: 'test' + i, kind: 'spot', paletten: 2, gewicht: 320, klasse: 'stueckgut',
     fee: 400, estKm: 40 + i * 20,
     firm: { name: 'Testkunde ' + i, lat: 53.4 + i * 0.2, lon: 9.8 + i * 0.3, km: 40 + i * 20, kind: 'Lager' },
   }));
@@ -117,6 +119,34 @@ console.log('\nTour mit mehreren Stopps');
   ok(t.tour && t.tour.etappen.length === geladen.length,
      `Tour mit ${geladen.length} Etappen gestartet`);
   ok(t.phase === 'driving', 'Fahrzeug rollt');
+}
+
+/* ── Rastplatzsuche ── */
+console.log('\nPausen auf Rastplätzen');
+{
+  const { naechsterRastplatz } = await import('../src/sim/fleet.js');
+  const t = S.trucks[0];
+
+  /* Eine gerade Strecke nach Norden, mit zwei Parkplätzen darauf. */
+  const coords = [];
+  for (let i = 0; i <= 40; i++) coords.push([53.5 + i * 0.02, 9.9]);
+  t.route = { km: 90, coords, real: false };
+  t.progress = 10;
+
+  S.parking = [
+    { lat: 53.5 + 20 * 0.02, lon: 9.9, name: 'Rastplatz Heidberg', road: 'A7' },
+    { lat: 53.5 + 38 * 0.02, lon: 9.9, name: 'Rastplatz Nordheide', road: 'A7' },
+  ];
+
+  const ziel = naechsterRastplatz(t);
+  ok(ziel !== null, `Parkplatz auf der Strecke gefunden (${ziel?.name})`);
+  ok(ziel && ziel.km > t.progress, 'Der Parkplatz liegt voraus, nicht dahinter');
+  ok(ziel && ziel.name === 'Rastplatz Heidberg', 'Der nächstgelegene wird gewählt');
+
+  S.parking = [];
+  ok(naechsterRastplatz(t) === null, 'Ohne Daten kein Parkplatz');
+
+  t.route = null; t.progress = 0;
 }
 
 /* ── Ein paar Tage fahren ── */

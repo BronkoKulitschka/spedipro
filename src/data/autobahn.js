@@ -24,6 +24,36 @@ async function fetchService(road, kind) {
   }).filter(Boolean);
 }
 
+/* LKW-Parkplätze und Rastanlagen.
+   Eigener Dienst derselben Schnittstelle: parking_lorry. */
+export async function loadParking(onProgress = () => {}) {
+  const out = [];
+  let done = 0;
+
+  await Promise.all(AUTOBAHNEN.map(async road => {
+    try {
+      const res = await fetch(`${BASE}/${road}/services/parking_lorry`);
+      if (res.ok) {
+        const json = await res.json();
+        for (const p of json.parking_lorry || []) {
+          const lat = parseFloat(p.coordinate?.lat);
+          const lon = parseFloat(p.coordinate?.long);
+          if (!isFinite(lat) || !isFinite(lon)) continue;
+
+          out.push({
+            lat, lon, road,
+            name: p.title || p.subtitle || 'Rastplatz',
+            plaetze: Number(p.lorryParkingFeatureIcons?.length) || null,
+          });
+        }
+      }
+    } catch { /* eine Autobahn ohne Daten ist kein Grund abzubrechen */ }
+    onProgress(++done, AUTOBAHNEN.length, road);
+  }));
+
+  return out;
+}
+
 /* Lädt alle konfigurierten Autobahnen parallel.
    onProgress bekommt (fertig, gesamt) für den Ladebildschirm. */
 export async function loadTraffic(onProgress = () => {}) {

@@ -27,13 +27,19 @@ function baseFee(firm) {
    sich nach Strecke, Klasse und Menge — eine Komplettladung bringt mehr
    als ein paar Paletten, aber nicht proportional. */
 function mitLadung(basis, firm, faktor = 1) {
-  const klasse = klasseFuer(firm);
+  const flotte = flottenGrenze(S.trucks);
 
-  /* Zwei von drei Sendungen sind auf den eigenen Fuhrpark zugeschnitten,
-     die dritte darf größer sein — als Anreiz für ein größeres Fahrzeug. */
-  const grenze = Math.random() < 0.7 ? flottenGrenze(S.trucks) : null;
+  /* Bei kleinem Fuhrpark fast alles zuschneiden, bei großem öfter
+     etwas Größeres anbieten — als Anreiz für das nächste Fahrzeug. */
+  const anteil = S.trucks.length <= 2 ? 0.88 : 0.7;
+  const grenze = Math.random() < anteil ? flotte : null;
+
+  const klasse = klasseFuer(firm, grenze ? grenze.kg : Infinity);
   const l = ladung(klasse, grenze);
-  const mengenFaktor = 0.55 + 0.45 * Math.min(1, l.paletten / 33);
+
+  /* Stückgut kostet je Palette mehr als eine Komplettladung — der
+     Sockel sorgt dafür, dass sich auch kleine Sendungen tragen. */
+  const mengenFaktor = 0.72 + 0.38 * Math.min(1, l.paletten / 33);
   const fee = basis * klasse.preis * mengenFaktor * faktor;
 
   return { ...l, fee: Math.round(fee / 10) * 10 };

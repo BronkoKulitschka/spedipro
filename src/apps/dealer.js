@@ -3,7 +3,7 @@
    ist die Frage nicht „welcher ist der beste", sondern „welcher passt
    zu den Strecken, die ich fahre". */
 
-import { TRUCK_MODELS, USED, RULES, EQUIPMENT } from '../config.js';
+import { TRUCK_MODELS, USED, RULES, EQUIPMENT, LICENCE } from '../config.js';
 import { S } from '../state.js';
 import { fmt, esc } from '../util.js';
 import { buyTruck, priceOf } from '../sim/fleet.js';
@@ -65,54 +65,69 @@ export const DealerApp = {
     if (list.dataset.sig === sig) return;
     list.dataset.sig = sig;
 
-    list.innerHTML = Object.values(TRUCK_MODELS).map(m => {
-      const zusatz = (kuehl && m.kuehlbar ? EQUIPMENT.kuehl.preis : 0)
-                   + (adr && m.adrfaehig ? EQUIPMENT.adr.preis : 0);
-      const price = priceOf(m.key, used) + zusatz;
-      const offen = modelFrei(m.key);
-      const kann = offen && S.money >= price;
-      const hinweis = [
-        kuehl && !m.kuehlbar ? 'kein Kühlaufbau möglich' : '',
-        adr && !m.adrfaehig ? 'nicht ADR-fähig' : '',
-      ].filter(Boolean).join(' · ');
-      const verbrauch = (RULES.FUEL_PER_KM * m.fuel).toFixed(2);
+    /* Nach Führerscheinklasse gruppiert, damit die Liste übersichtlich
+       bleibt — inzwischen sind es elf Fahrzeuge. */
+    const gruppen = {};
+    for (const m of Object.values(TRUCK_MODELS)) {
+      (gruppen[m.fs] ||= []).push(m);
+    }
 
-      return `
-      <div class="offer">
-        <div class="flex-row" style="justify-content:space-between;">
-          <span><strong>${esc(m.name)}</strong>
-            <span class="muted">· ${esc(m.klasse)}${used ? ' · gebraucht' : ''}</span></span>
-          <span class="${kann ? 'money' : 'debt'}">${fmt(price)}</span>
-        </div>
-        <div class="muted" style="font-size:10px;margin:2px 0 4px;">${esc(m.text)}</div>
-        <table class="win-table" style="font-size:10px;margin-bottom:4px;">
-          <tr>
-            <td>zul. Gesamtgewicht</td><td style="text-align:right">${(m.zgg / 1000).toFixed(1)} t</td>
-            <td>Leergewicht</td><td style="text-align:right">${(m.leer / 1000).toFixed(1)} t</td>
-          </tr>
-          <tr>
-            <td><strong>Nutzlast</strong></td>
-            <td style="text-align:right"><strong>${(m.nutzlast / 1000).toFixed(1)} t</strong></td>
-            <td><strong>Stellplätze</strong></td>
-            <td style="text-align:right"><strong>${m.paletten} Pal.</strong></td>
-          </tr>
-          <tr>
-            <td>Ladevolumen</td><td style="text-align:right">${m.volumen} m³</td>
-            <td>Aufbau</td><td style="text-align:right">${esc(m.aufbau)}</td>
-          </tr>
-          <tr>
-            <td>Diesel</td><td style="text-align:right">${verbrauch} €/km</td>
-            <td>Schnitt</td>
-            <td style="text-align:right">${m.speed >= 0 ? '+' : ''}${m.speed} km/h</td>
-          </tr>
-        </table>
-        <div class="flex-row" style="justify-content:space-between;">
-          <span class="muted" style="font-size:10px;">
-            ${offen ? esc(hinweis) : `🔒 ab Stufe ${stufeFuerModell(m.key)}`}
-            ${zusatz ? `<span class="warn">inkl. Ausstattung ${fmt(zusatz)}</span>` : ''}</span>
-          <button class="btn btn-sm" data-model="${m.key}" ${kann ? '' : 'disabled'}>kaufen</button>
-        </div>
-      </div>`;
-    }).join('');
+    list.innerHTML = Object.entries(gruppen).map(([fs, modelle]) => `
+      <div class="handel-gruppe">
+        ${LICENCE[fs].name} <span class="muted">· ${LICENCE[fs].text}</span>
+      </div>
+      ${modelle.map(m => {
+        const zusatz = (kuehl && m.kuehlbar ? EQUIPMENT.kuehl.preis : 0)
+                     + (adr && m.adrfaehig ? EQUIPMENT.adr.preis : 0);
+        const price = priceOf(m.key, used) + zusatz;
+        const offen = modelFrei(m.key);
+        const kann = offen && S.money >= price;
+        const verbrauch = (RULES.FUEL_PER_KM * m.fuel).toFixed(2);
+        const fix = Math.round(RULES.DAILY_COST * (m.fix ?? 1));
+        const hinweis = [
+          kuehl && !m.kuehlbar && !m.kuehlfest ? 'kein Kühlaufbau möglich' : '',
+          adr && !m.adrfaehig ? 'nicht ADR-fähig' : '',
+        ].filter(Boolean).join(' · ');
+
+        return `
+        <div class="offer">
+          <div class="flex-row" style="justify-content:space-between;">
+            <span><strong>${esc(m.name)}</strong>
+              <span class="muted">· ${esc(m.klasse)}${used ? ' · gebraucht' : ''}</span>
+              ${m.kuehlfest ? ' ❄️' : ''}</span>
+            <span class="${kann ? 'money' : 'debt'}">${fmt(price)}</span>
+          </div>
+          <div class="muted" style="font-size:10px;margin:2px 0 4px;">${esc(m.text)}</div>
+
+          <table class="win-table" style="font-size:10px;margin-bottom:4px;">
+            <tr>
+              <td>zul. Gesamtgewicht</td><td style="text-align:right">${(m.zgg / 1000).toFixed(1)} t</td>
+              <td>Leergewicht</td><td style="text-align:right">${(m.leer / 1000).toFixed(1)} t</td>
+            </tr>
+            <tr>
+              <td><strong>Nutzlast</strong></td>
+              <td style="text-align:right"><strong>${(m.nutzlast / 1000).toFixed(1)} t</strong></td>
+              <td><strong>Stellplätze</strong></td>
+              <td style="text-align:right"><strong>${m.paletten} Pal.</strong></td>
+            </tr>
+            <tr>
+              <td>Ladevolumen</td><td style="text-align:right">${m.volumen} m³</td>
+              <td>Aufbau</td><td style="text-align:right">${esc(m.aufbau)}</td>
+            </tr>
+            <tr>
+              <td>Diesel</td><td style="text-align:right">${verbrauch} €/km</td>
+              <td>Fixkosten</td><td style="text-align:right">${fmt(fix)} je Tag</td>
+            </tr>
+          </table>
+
+          <div class="flex-row" style="justify-content:space-between;">
+            <span class="muted" style="font-size:10px;">
+              ${offen ? esc(hinweis) : `🔒 ab Stufe ${stufeFuerModell(m.key)}`}
+              ${zusatz ? `<span class="warn">inkl. Ausstattung ${fmt(zusatz)}</span>` : ''}</span>
+            <button class="btn btn-sm" data-model="${m.key}" ${kann ? '' : 'disabled'}>kaufen</button>
+          </div>
+        </div>`;
+      }).join('')}
+    `).join('');
   },
 };

@@ -18,6 +18,22 @@ export function haversine(a, b) {
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
+/* Aufsummierte Streckenlängen einer Route, für Positionsrechnungen.
+   Wird zwischengespeichert, weil sie sich nicht ändert. */
+export function routeCum(route) {
+  if (route.cum) return route.cum;
+
+  const c = route.coords;
+  const cum = [0];
+  for (let i = 1; i < c.length; i++) {
+    cum[i] = cum[i - 1] + haversine(
+      { lat: c[i - 1][0], lon: c[i - 1][1] },
+      { lat: c[i][0],     lon: c[i][1] });
+  }
+  route.cum = cum;
+  return cum;
+}
+
 /* Fertigkeitsstufen als kleine Kästchen */
 export function pips(level, max) {
   let out = '';

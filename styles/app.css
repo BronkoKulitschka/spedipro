@@ -257,3 +257,34 @@
   .truck-marker .truck-icon.links.fahrt { animation: none; }
   .truck-marker .ring { animation: none; opacity: .5; }
 }
+
+
+/* Rastanlagen */
+.park-pin {
+  font-size: 11px; line-height: 14px; text-align: center;
+  width: 16px; height: 16px; background: #dde8f5;
+  border-top: 1px solid #fff; border-left: 1px solid #fff;
+  border-right: 1px solid #607080; border-bottom: 1px solid #607080;
+}
+
+
+/* Anfahrt in der Auftragsliste */
+.anfahrt {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  font-size: 10px; margin: 3px 0;
+  padding: 2px 4px;
+  background: #d8d8d8;
+  border-left: 3px solid #000080;
+}
+.anfahrt-km { font-size: 12px; font-weight: bold; color: #000080; }
+.offer-partner .anfahrt { border-left-color: #2e8b57; }
+.offer-vertrag .anfahrt { border-left-color: #000080; }
+
+
+/* Fahrzeughandel: Gruppen nach Führerscheinklasse */
+.handel-gruppe {
+  background: #000080; color: #fff; padding: 3px 6px;
+  font-size: 10px; font-weight: bold; margin: 4px 0 2px;
+}
+.handel-gruppe:first-child { margin-top: 0; }
+.handel-gruppe .muted { color: #b0c0e0; font-weight: normal; }

@@ -8,7 +8,7 @@ import { RULES, TRUCK_MODELS, USED, DRIVE, REP, EQUIPMENT } from '../config.js';
 import { S, log, book, newTruck, findTruck, idleTrucks, truckPos, atDepot,
          modelOf, resaleValue, truckKmh, truckFuel,
          feeMul, calmMul, canDrive, driveStatus, bannedFor } from '../state.js';
-import { haversine, fmt, esc } from '../util.js';
+import { haversine, fmt, esc, routeCum } from '../util.js';
 import { osrmRoute, straightRoute } from '../data/osrm.js';
 import { takeOffer } from './orders.js';
 import { gainXp } from './drivers.js';
@@ -209,6 +209,75 @@ export async function returnToDepot(nr, opts = {}) {
   log(`${truck.driver.name} fährt leer zurück ins Depot · ${route.km.toFixed(0)} km`);
 }
 
+/* ── Rastplatzsuche ──────────────────────────────────────────────
+   Sucht den nächsten Parkplatz, der vor dem Fahrzeug auf der Strecke
+   liegt. Zurückgegeben wird die Kilometermarke auf der Route. */
+export function naechsterRastplatz(truck) {
+  if (!truck.route || !S.parking?.length) return null;
+
+  const cum = routeCum(truck.route);
+  const c = truck.route.coords;
+  const gesamt = cum[cum.length - 1] || truck.route.km;
+
+  /* Position des Fahrzeugs auf der Route, in Kartenkilometern */
+  const hier = truck.progress / truck.route.km * gesamt;
+  const bis = Math.min(gesamt, hier + DRIVE.RAST_SUCHE);
+
+  const schritt = Math.max(1, Math.floor(c.length / 400));
+
+  for (let i = 0; i < c.length; i += schritt) {
+    if (cum[i] <= hier + 1) continue;      // schon vorbei
+    if (cum[i] > bis) break;               // zu weit
+
+    const punkt = { lat: c[i][0], lon: c[i][1] };
+    for (const p of S.parking) {
+      if (haversine(punkt, p) < DRIVE.RAST_NAEHE) {
+        return {
+          km: cum[i] / gesamt * truck.route.km,   // zurück in Fahrkilometer
+          name: p.name,
+          road: p.road,
+        };
+      }
+    }
+  }
+  return null;
+}
+
+/* Pause oder Ruhezeit beginnen, an Ort und Stelle. */
+function halteAn(truck, art, ort) {
+  truck.restMin = art === 'ruhe' ? DRIVE.DAILY_REST : DRIVE.BREAK;
+  truck.restKind = art;
+  truck.rastZiel = null;
+
+  const wo = ort ? `auf ${ort}` : 'am Straßenrand';
+  if (art === 'ruhe') {
+    log(`🛏️ ${truck.driver.name} legt die Ruhezeit ${wo} ein.`);
+  } else {
+    log(`☕ ${truck.driver.name} macht Pause ${wo}.`);
+  }
+  truck.rastOrt = ort || null;
+}
+
+/* Steht eine Unterbrechung an? Dann Parkplatz ansteuern. */
+function pruefeRast(truck) {
+  if (truck.restMin > 0 || truck.rastZiel) return;
+
+  const art = truck.today >= DRIVE.MAX_DAY ? 'ruhe'
+            : truck.stint >= DRIVE.MAX_STINT ? 'pause' : null;
+  if (!art) return;
+
+  const ziel = naechsterRastplatz(truck);
+
+  if (ziel) {
+    truck.rastZiel = { ...ziel, art };
+    log(`${truck.driver.name} steuert ${ziel.name} an (${ziel.road}), `
+      + `noch ${Math.max(0, ziel.km - truck.progress).toFixed(0)} km.`);
+  } else {
+    /* Kein Parkplatz in Reichweite: notgedrungen hier halten. */
+    halteAn(truck, art, null);
+  }
+}
+
 /* ── Ein Takt Bewegung ── */
 export function moveTrucks(minutes) {
   for (const truck of S.trucks) {
@@ -254,16 +323,14 @@ export function moveTrucks(minutes) {
 
     if (truck.progress >= truck.route.km) { finish(truck); continue; }
 
-    /* Vorgeschriebene Unterbrechungen */
-    if (truck.today >= DRIVE.MAX_DAY) {
-      truck.restMin = DRIVE.DAILY_REST;
-      truck.restKind = 'ruhe';
-      log(`🛏️ ${truck.driver.name} hat die Tageslenkzeit erreicht und legt die Ruhezeit ein.`);
-    } else if (truck.stint >= DRIVE.MAX_STINT) {
-      truck.restMin = DRIVE.BREAK;
-      truck.restKind = 'pause';
-      log(`☕ ${truck.driver.name} macht die vorgeschriebene Pause.`);
+    /* Angesteuerten Parkplatz erreicht? */
+    if (truck.rastZiel && truck.progress >= truck.rastZiel.km) {
+      halteAn(truck, truck.rastZiel.art, truck.rastZiel.name);
+      continue;
     }
+
+    /* Steht eine Unterbrechung an? */
+    pruefeRast(truck);
   }
 }
 
@@ -294,8 +361,12 @@ function finish(truck) {
 
     /* Be- und Entladen kostet Zeit. Ohne Rampenzeit ließe sich ein
        Fahrzeug beliebig oft am Tag einsetzen. */
+    /* Be- und Entladen kostet Zeit, aber nach Menge: zwei Paletten
+       sind schneller abgeladen als eine Komplettladung. Bei Touren mit
+       mehreren Stopps entfällt der Papierkram je Stopp teilweise. */
     const stopps = truck.job.stopps || 1;
-    truck.restMin = stopps > 1 ? Math.round(RULES.LOAD_MIN * 0.55) : RULES.LOAD_MIN;
+    const zeit = RULES.LOAD_BASE + (truck.job.paletten || 1) * RULES.LOAD_JE_PAL;
+    truck.restMin = Math.min(RULES.LOAD_MAX, Math.round(zeit * (stopps > 1 ? 0.7 : 1)));
     truck.restKind = 'rampe';
   } else {
     book('Diesel', `Leerfahrt ins Depot · LKW ${truck.nr}`, -fuel);

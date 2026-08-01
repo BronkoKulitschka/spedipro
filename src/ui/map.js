@@ -14,7 +14,7 @@ import { kapazitaet, klasseVon } from '../sim/goods.js';
 let map = null;
 let host = null;
 const layers = { depot: null, firms: null, hubs: null, offers: null, traffic: null,
-                 routes: null, trucks: null, preview: null };
+                 parking: null, routes: null, trucks: null, preview: null };
 
 /* Wird von der Routenplanung gesetzt, damit die Karte einen Auftrag
    annehmen kann, ohne die Simulation direkt zu kennen. */
@@ -40,7 +40,7 @@ export function initMap() {
                + ' · Routing: OSRM · Verkehr: Autobahn GmbH',
   }).addTo(map);
 
-  for (const key of ['routes', 'preview', 'firms', 'hubs', 'traffic', 'offers', 'trucks', 'depot']) {
+  for (const key of ['routes', 'preview', 'firms', 'hubs', 'parking', 'traffic', 'offers', 'trucks', 'depot']) {
     layers[key] = L.layerGroup().addTo(map);
   }
 
@@ -72,6 +72,7 @@ export function initMap() {
 
   drawFirms();
   drawHubs();
+  drawParking();
   drawTraffic();
   drawOffers();
   drawTrucks();
@@ -402,4 +403,20 @@ function fahrtPopup(truck) {
 export function zeigeFahrzeug(truck) {
   if (!map || !truck?.marker) return;
   truck.marker.openPopup();
+}
+
+/* ── LKW-Parkplätze und Rastanlagen ── */
+export function drawParking() {
+  if (!map || !layers.parking) return;
+  layers.parking.clearLayers();
+
+  for (const p of S.parking || []) {
+    L.marker([p.lat, p.lon], {
+      icon: L.divIcon({ className: '', iconSize: [16, 16], iconAnchor: [8, 8],
+        html: '<div class="park-pin">🅿️</div>' }),
+    }).bindPopup(
+      `<strong>${esc(p.name)}</strong><br>${esc(p.road)}<br>`
+      + '<span class="muted">Rastanlage für Lastkraftwagen</span>'
+    ).addTo(layers.parking);
+  }
 }

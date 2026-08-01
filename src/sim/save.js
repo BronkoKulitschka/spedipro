@@ -52,6 +52,7 @@ function serialize() {
         auto: t.auto,
         stint: t.stint, today: t.today,
         restMin: t.restMin, restKind: t.restKind, idleMin: t.idleMin,
+        rastZiel: t.rastZiel, rastOrt: t.rastOrt,
         pos: t.pos,
         place: t.place,
         shopMin: t.shopMin,

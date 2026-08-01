@@ -5,7 +5,7 @@
    auf der Karte, ein angetipptes Fahrzeug rückt in den Ausschnitt.
    Auf schmalen Geräten liegt die Liste unter der Karte. */
 
-import { S, findTruck, canDrive, banReason, truckPos } from '../state.js';
+import { S, findTruck, canDrive, banReason, truckPos, truckKmh } from '../state.js';
 import { fmt, esc } from '../util.js';
 import { dispatch, distanceFrom, startTour, umwegFuer } from '../sim/fleet.js';
 import { KIND_LABEL, takeOffer } from '../sim/orders.js';
@@ -37,6 +37,7 @@ export const DispoApp = {
             <label class="flex-row" style="gap:3px;"><input type="checkbox" checked data-layer="hubs">✈️</label>
             <label class="flex-row" style="gap:3px;"><input type="checkbox" checked data-layer="firms">Betriebe</label>
             <label class="flex-row" style="gap:3px;"><input type="checkbox" checked data-layer="traffic">🚧</label>
+            <label class="flex-row" style="gap:3px;"><input type="checkbox" data-layer="parking">🅿️</label>
           </span>
         </div>
         <div class="map-frame fill" id="mapSlot"></div>
@@ -67,6 +68,7 @@ export const DispoApp = {
     el.querySelector('#mapSlot').appendChild(mapHost());
     initMap();
     ensureMapSize();
+    toggleLayer('parking', false);        // erst auf Wunsch einblenden
 
     onOfferAccept((offerId, truckNr) => {
       dispatch(offerId, truckNr).then(() => { drawOffers(); onTick(); });
@@ -186,7 +188,8 @@ export const DispoApp = {
     const truck = findTruck(Number(select.value));
     const ban = banReason();
     el.querySelector('#dNote').innerHTML = truck
-      ? `Steht bei ${esc(truck.place)} · ${S.offers.length} Anfragen`
+      ? `📍 Entfernungen ab <strong>${esc(truck.place)}</strong>`
+        + ` · ${S.offers.length} Anfragen`
       : ban
         ? `<span class="warn">Fahrverbot (${esc(ban)}) bis 22 Uhr.</span>`
         : 'Kein Fahrzeug einsatzbereit — unterwegs, in Pause oder Werkstatt.';
@@ -214,6 +217,15 @@ export const DispoApp = {
       const pruef = truck ? passt(truck, el._lade.filter(x => x.id !== o.id), o) : { ok: false, grund: 'kein Fahrzeug' };
       const umweg = truck && el._lade.length && !drauf ? umwegFuer(truck, el._lade, o) : null;
 
+      /* Straßenkilometer schätzen und daraus die Fahrzeit des gewählten
+         Fahrzeugs. Die genaue Route steht erst beim Losfahren fest. */
+      const strasse = km * 1.28;
+      const tempo = truck ? truckKmh(truck) : 62;
+      const minuten = strasse / tempo * 60;
+      const zeit = minuten < 60
+        ? `${Math.round(minuten)} min`
+        : `${Math.floor(minuten / 60)}:${String(Math.round(minuten % 60)).padStart(2, '0')} h`;
+
       return `
       <div class="offer offer-${o.kind || 'spot'} ${drauf ? 'geladen' : ''}" data-zeigen="${o.id}">
         <div class="flex-row" style="justify-content:space-between;">
@@ -221,21 +233,30 @@ export const DispoApp = {
             <strong>${esc(o.firm.name)}</strong></span>
           <span class="money">${fmt(o.fee)}</span>
         </div>
+
+        <div class="anfahrt">
+          <span class="anfahrt-km">📍 ${strasse.toFixed(0)} km</span>
+          <span class="muted">ca. ${zeit} Fahrt</span>
+          ${umweg !== null
+            ? `<span class="${umweg < 25 ? 'ok' : 'warn'}">Umweg +${umweg.toFixed(0)} km</span>`
+            : ''}
+          ${o.firm.hub ? `<span class="muted">${esc(o.firm.art)}</span>` : ''}
+        </div>
+
         <div style="font-size:10px;margin:2px 0;">
           ${g.icon} ${esc(g.name)} ·
           <strong>${o.paletten} Pal.</strong> ·
           <strong>${(o.gewicht / 1000).toFixed(1)} t</strong>
+          ${o.partnerName ? `· <span class="muted">${esc(o.partnerName)}</span>` : ''}
         </div>
-        <div class="flex-row" style="justify-content:space-between;font-size:10px;">
-          <span class="muted">${km.toFixed(0)} km${umweg !== null ? ` · Umweg +${umweg.toFixed(0)} km` : ''}</span>
-          <span class="flex-row" style="gap:4px;">
-            ${drauf
-              ? `<button class="btn btn-sm" data-del="${o.id}">entladen</button>`
-              : pruef.ok
-                ? `<button class="btn btn-sm" data-add="${o.id}">+ laden</button>
-                   <button class="btn btn-sm" data-offer="${o.id}">sofort</button>`
-                : `<span class="warn">${esc(pruef.grund)}</span>`}
-          </span>
+
+        <div class="flex-row" style="justify-content:flex-end;gap:4px;">
+          ${drauf
+            ? `<button class="btn btn-sm" data-del="${o.id}">entladen</button>`
+            : pruef.ok
+              ? `<button class="btn btn-sm" data-add="${o.id}">+ laden</button>
+                 <button class="btn btn-sm" data-offer="${o.id}">sofort</button>`
+              : `<span class="warn" style="font-size:10px;">${esc(pruef.grund)}</span>`}
         </div>
       </div>`;
     }).join('');

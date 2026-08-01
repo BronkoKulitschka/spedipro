@@ -1,6 +1,6 @@
 /* Der gesamte Spielzustand. Alles andere liest und schreibt hier hinein. */
 
-import { RULES, TIME, DRIVE, BAN_EXEMPT, DRIVER_NAMES, TRUCK_MODELS, USED } from './config.js';
+import { RULES, TIME, DRIVE, LEICHT, DRIVER_NAMES, TRUCK_MODELS, USED } from './config.js';
 import { MARKET, REP } from './config.js';
 import { dateOf, dateShort, dateLong, timeText, drivingBan,
          isWeekend, holidayName, weekday } from './calendar.js';
@@ -20,7 +20,7 @@ export function newDriver() {
   };
 }
 
-export function newTruck(nr, pos = null, model = 'verteiler', used = false, equip = []) {
+export function newTruck(nr, pos = null, model = 'kurier', used = false, equip = []) {
   return {
     nr,
     model,
@@ -36,7 +36,8 @@ export function newTruck(nr, pos = null, model = 'verteiler', used = false, equi
     stint: 0,          // Lenkzeit seit der letzten Pause, Minuten
     today: 0,          // Lenkzeit am laufenden Tag, Minuten
     restMin: 0,        // verbleibende Pause oder Ruhezeit
-    restKind: null,    // 'pause' | 'ruhe'
+    restKind: null,    // 'pause' | 'ruhe' | 'rampe'
+    rastZiel: null,    // angesteuerter Parkplatz: { km, name, art }
     idleMin: 0,        // wie lange schon nicht gefahren wurde
     shopMin: 0,        // verbleibende Werkstattminuten
     pos,               // aktueller Standort, null bedeutet Depot
@@ -62,10 +63,11 @@ export function resetState(depot) {
     running: false,
     prevSpeed: 1,
 
-    trucks: [newTruck(1, { lat: depot.lat, lon: depot.lon }, 'verteiler', false)],
+    trucks: [newTruck(1, { lat: depot.lat, lon: depot.lon }, 'kurier', false)],
     firms: [],
     hubs: [],          // Flughäfen, Häfen, Güterbahnhöfe
     traffic: [],
+    parking: [],       // LKW-Parkplätze und Rastanlagen
 
     /* Markt, Ruf, Verträge, Branche */
     offers: [],
@@ -105,16 +107,24 @@ export const holidayNow = () => holidayName(now());
 
 /* Gilt das Fahrverbot für dieses Fahrzeug? Leichte Fahrzeuge sind frei. */
 export const bannedFor = truck =>
-  BAN_EXEMPT.includes(truck.model) ? null : banReason();
+  LEICHT.includes(truck.model) ? null : banReason();
 
 /* Was ein Fahrer gerade darf. */
 export function driveStatus(truck) {
   if (truck.shopMin > 0)  return { code: 'werkstatt', text: `Werkstatt, ${Math.ceil(truck.shopMin / 60)} h` };
-  if (truck.restMin > 0)  return {
-    code: truck.restKind,
-    text: truck.restKind === 'ruhe'  ? `Ruhezeit, noch ${Math.ceil(truck.restMin / 60)} h`
-        : truck.restKind === 'rampe' ? `an der Rampe, noch ${Math.ceil(truck.restMin)} min`
-        : `Pause, noch ${Math.ceil(truck.restMin)} min`,
+  if (truck.restMin > 0) {
+    const wo = truck.rastOrt ? ` · ${truck.rastOrt}` : '';
+    return {
+      code: truck.restKind,
+      text: truck.restKind === 'ruhe'  ? `Ruhezeit, noch ${Math.ceil(truck.restMin / 60)} h${wo}`
+          : truck.restKind === 'rampe' ? `an der Rampe, noch ${Math.ceil(truck.restMin)} min`
+          : `Pause, noch ${Math.ceil(truck.restMin)} min${wo}`,
+    };
+  }
+
+  if (truck.rastZiel) return {
+    code: 'anfahrt',
+    text: `steuert ${truck.rastZiel.name} an`,
   };
   const ban = bannedFor(truck);
   if (ban)                return { code: 'verbot', text: `Fahrverbot (${ban})` };
@@ -171,7 +181,7 @@ export const findTruck  = nr => S.trucks.find(t => t.nr === nr);
 
 /* Wo ein LKW gerade steht. Ohne Angabe gilt das Depot. */
 export const truckPos = t => t.pos || { lat: S.depot.lat, lon: S.depot.lon };
-export const modelOf  = t => TRUCK_MODELS[t.model] || TRUCK_MODELS.verteiler;
+export const modelOf  = t => TRUCK_MODELS[t.model] || TRUCK_MODELS.kurier;
 
 /* Wiederverkaufswert: Zustand und Laufleistung drücken den Preis. */
 export function resaleValue(truck) {
@@ -192,6 +202,10 @@ export const fuelRate = d => RULES.FUEL_PER_KM * (1 - 0.07 * d.skills.eco);
 export const truckKmh  = t => Math.max(35, kmh(t.driver) + modelOf(t).speed);
 export const truckFuel = t => fuelRate(t.driver) * modelOf(t).fuel;
 export const truckRisk = t => riskMul(t.driver) * modelOf(t).risk * (t.used ? USED.risk : 1);
+
+/* Tagesfixkosten: ein Kastenwagen kostet nicht so viel wie ein Sattelzug. */
+export const truckFix = t => Math.round(RULES.DAILY_COST * (modelOf(t).fix ?? 1));
+export const fixGesamt = () => S.trucks.reduce((s, t) => s + truckFix(t), 0);
 export const feeMul   = d => 1 + 0.06 * d.skills.deal;
 export const riskMul  = d => Math.pow(0.75, d.skills.care);
 export const calmMul  = d => Math.pow(0.85, d.skills.calm);
@@ -203,6 +217,7 @@ export function hydrate(saved) {
     level: saved.level || 1,
     tutorial: saved.tutorial || { schritt: 0, aktiv: false },
     hubs: saved.hubs?.length ? saved.hubs : [],
+    parking: saved.parking || [],
     ledger: saved.ledger || [],
     books: saved.books || { ein: 0, aus: 0 },
     market: saved.market || { index: 1, trend: 0 },
@@ -217,12 +232,14 @@ export function hydrate(saved) {
       ...t,
       marker: null, line: null,
       pos: t.pos || { lat: saved.depot.lat, lon: saved.depot.lon },
-      model: t.model || 'verteiler',
+      model: t.model || 'kurier',
       equip: t.equip || [],
       used: !!t.used,
       odo: t.odo || 0,
       stint: t.stint || 0, today: t.today || 0,
       restMin: t.restMin || 0, restKind: t.restKind || null,
+      rastZiel: t.rastZiel || null,
+      rastOrt: t.rastOrt || null,
       idleMin: t.idleMin || 0,
       place: t.place || 'Depot',
       auto: !!t.auto,

@@ -4,7 +4,7 @@
 import { DEPOTS, AUTOBAHNEN } from './config.js';
 import { S, resetState, hydrate, log } from './state.js';
 import { VERSION, BUILD } from './version.js';
-import { loadTraffic } from './data/autobahn.js';
+import { loadTraffic, loadParking } from './data/autobahn.js';
 import { loadFirmsFast } from './data/overpass.js';
 import { inventFirms } from './data/invent.js';
 import { hubsFor } from './data/hubs.js';
@@ -143,6 +143,14 @@ async function bootSteps() {
     bootLine('  Dauert länger, wird im Hintergrund weitergeladen.');
     trafficJob.then(adoptTraffic);
   }
+  /* Rastanlagen kommen im Hintergrund nach; bis dahin wird notfalls
+     am Straßenrand gehalten. */
+  loadParking().then(liste => {
+    S.parking = liste;
+    if (liste.length) log(`${liste.length} Rastanlagen für Lastkraftwagen geladen.`);
+    import('./ui/map.js').then(m => m.drawParking());
+  }).catch(() => {});
+
   bootProgress(50);
 
   bootLine('');

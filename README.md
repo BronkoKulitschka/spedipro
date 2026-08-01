@@ -316,7 +316,11 @@ bundesweiten Feiertage — die beweglichen über die Osterformel von Gauß.
   7,5 Tonnen ausgenommen und fährt weiter.
 * **Lenkzeiten**, vereinfacht nach den europäischen Regeln: 4,5 Stunden am
   Stück, dann 45 Minuten Pause. 9 Stunden am Tag, dann 11 Stunden Ruhezeit.
-  Die Pause wird unterwegs eingelegt, der Zug steht dann auf der Strecke.
+* **Gehalten wird auf Rastanlagen**, nicht auf der Autobahn. Ist die Zeit um,
+  steuert der Fahrer den nächsten LKW-Parkplatz auf der Strecke an und darf
+  dafür bis zu 45 km überziehen — so, wie es die Verordnung erlaubt, um einen
+  geeigneten Halteplatz zu erreichen. Die Plätze kommen aus dem Dienst
+  `parking_lorry` der Autobahn GmbH und lassen sich auf der Karte einblenden.
 * Ein Fahrzeug, das lange genug steht, hat seine Ruhezeit ohnehin genommen —
   gerechnet wird über tatsächlichen Stillstand, nicht über Mitternacht.
 
@@ -347,15 +351,31 @@ Beides gibt es beim Kauf dazu, der Kühlaufbau kostet 8 % Nutzlast.
 
 ### Fahrzeugdaten
 
-| Klasse | zGG | Leer | Nutzlast | Stellplätze | Volumen |
-|---|---|---|---|---|---|
-| Kurier 3.5 | 3,5 t | 2,3 t | 1,2 t | 4 | 14 m³ |
-| Verteiler 12 | 12 t | 6,5 t | 5,5 t | 17 | 45 m³ |
-| Fernverkehr 400 | 40 t | 16 t | 24 t | 33 | 90 m³ |
-| Schwerlast 620 | 44 t | 17 t | 27 t | 26 | 70 m³ |
+Elf Klassen, gruppiert nach Führerscheinklasse.
 
-Die Werte entsprechen dem, was in der Branche üblich ist: ein Standardsattelzug
-mit 13,6 Lademetern fasst 33 bis 34 Europaletten bei rund 24 t Nutzlast.
+| Klasse | FS | Preis | zGG | Nutzlast | Plätze | m³ | Fix/Tag |
+|---|---|---|---|---|---|---|---|
+| Kastenwagen 3.0 | B | 7.500 € | 3,0 t | 1,0 t | 3 | 8 | 250 € |
+| Kurier 3.5 | B | 12.000 € | 3,5 t | 1,2 t | 4 | 14 | 303 € |
+| Maxi 3.5 lang | B | 15.500 € | 3,5 t | 1,05 t | 6 | 20 | 341 € |
+| Kompakt 5.0 | C1 | 17.000 € | 5,0 t | 1,8 t | 10 | 26 | 413 € |
+| Nahverkehr 7.5 | C1 | 24.000 € | 7,5 t | 2,3 t | 15 | 34 | 484 € |
+| Verteiler 12 | C | 30.000 € | 12 t | 5,5 t | 17 | 45 | 550 € |
+| Solo 18 | C | 42.000 € | 18 t | 9,5 t | 18 | 50 | 660 € |
+| Fernverkehr 400 | CE | 52.000 € | 40 t | 24 t | 33 | 90 | 743 € |
+| Jumbo 40 | CE | 58.000 € | 40 t | 24,5 t | 38 | 120 | 798 € |
+| Thermo 40 | CE | 68.000 € | 40 t | 21,5 t | 33 | 82 | 853 € |
+| Schwerlast 620 | CE | 78.000 € | 44 t | 27 t | 26 | 70 | 935 € |
+
+Die Werte folgen dem Branchenüblichen: ein 7,5-Tonner fasst 15 Europaletten bei
+rund 2,3 t Nutzlast, ein Standardsattelzug mit 13,6 Lademetern 33 Paletten bei
+24 t. Der Jumbo als Gliederzug mit Durchladesystem kommt auf 38 Paletten.
+
+Fahrzeuge bis 3,5 t sind vom Sonntags- und Feiertagsfahrverbot ausgenommen.
+Der Thermo 40 hat das Kühlaggregat fest verbaut und braucht keine Nachrüstung.
+
+Die Fixkosten je Tag richten sich nach der Klasse — ein großes Fahrzeug ohne
+Auslastung ist teuer.
 
 ### Touren zusammenlegen
 

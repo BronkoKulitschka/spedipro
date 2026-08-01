@@ -1,7 +1,7 @@
 /* Kassenbuch: jede Geldbewegung, Einnahmen grün, Ausgaben rot,
    darunter die Bilanz nach Bereichen. */
 
-import { S, ledgerSums, day } from '../state.js';
+import { S, ledgerSums, day, fixGesamt } from '../state.js';
 import { fmt, num, esc } from '../util.js';
 import { empty } from './shared.js';
 
