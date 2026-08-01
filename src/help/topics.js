@@ -68,6 +68,7 @@ export const TOPICS = {
     titel: 'Fuhrpark', icon: '🚛', gruppe: 'Programme',
     inhalt: [
       { p: 'Der Zustand aller Fahrzeuge auf einen Blick: wo sie stehen, was sie geladen haben, wie weit die Fahrer sind.' },
+      { p: 'Über der Liste steht der Bestand nach Bauart — wie viele Fahrzeuge jeder Klasse im Hof stehen, wie viele davon gebraucht sind, und was der Fuhrpark zusammen an Fixkosten je Tag verursacht.' },
       { h: 'Was in einer Zeile steht' },
       { list: [
         'Fahrername, Fahrzeugnummer und Fahrerstufe.',
@@ -94,6 +95,7 @@ export const TOPICS = {
     titel: 'Fahrzeughandel', icon: '🏷️', gruppe: 'Programme',
     inhalt: [
       { p: 'Elf Fahrzeugklassen, gruppiert nach Führerscheinklasse. Die Frage ist nicht, welche die beste ist, sondern welche zu den Strecken und Gütern passt, die du fährst.' },
+      { p: 'Klassen, von denen du schon Fahrzeuge hast, tragen eine grüne Marke mit der Anzahl.' },
       { h: 'Klasse B — bis 3,5 t' },
       { tab: {
         kopf: ['Fahrzeug', 'Preis', 'Nutzlast', 'Plätze', 'm³'],
@@ -228,6 +230,7 @@ export const TOPICS = {
     titel: 'Kasse', icon: '💰', gruppe: 'Programme',
     inhalt: [
       { p: 'Jede Geldbewegung wird gebucht: Bereich, Text, Spieltag und Uhrzeit. Einnahmen grün, Ausgaben rot.' },
+      { p: 'Der Kontostand steht am oberen Rand jedes Fensters, in dem Geld ausgegeben wird — Fahrzeughandel, Fuhrpark, Schulung, Verträge und hier. Daneben die Fixkosten je Tag, damit klar ist, was der Fuhrpark laufend verursacht.' },
       { h: 'Bereiche' },
       { list: [
         'Fracht, Vertragsfracht, Partnerfracht — die Erlöse.',
@@ -284,6 +287,65 @@ export const TOPICS = {
       } },
       { p: 'Vier Stufen je Fertigkeit, jede kostet einen Punkt und 3.000 € Kursgebühr.' },
       { tipp: 'Verhandlung wirkt auf jede Fracht und rechnet sich am schnellsten. Spritsparen lohnt bei Fahrzeugen, die viele Kilometer machen.' },
+    ],
+  },
+
+  fahrer: {
+    titel: 'Fahrer und Eigenheiten', icon: '🧑‍✈️', gruppe: 'Grundlagen',
+    inhalt: [
+      { p: 'Jeder Fahrer bekommt beim Einstellen zwei Eigenheiten. Sie wirken auf die Arbeit, aber nie streng — ein Zug ist ein leichter Vorteil oder Nachteil, kein Hindernis.' },
+      { tab: {
+        kopf: ['Eigenheit', 'Wirkung'],
+        zeilen: [
+          ['🌅 Frühaufsteher', 'morgens schneller, abends langsamer'],
+          ['🌙 Nachtfahrer', 'nachts deutlich schneller'],
+          ['🛣️ Langstreckenfahrer', 'stark auf langen Läufen'],
+          ['🏘️ Nahverkehrsprofi', 'schnell auf kurzen Strecken, flott an der Rampe'],
+          ['🪙 Sparfuchs', 'weniger Diesel'],
+          ['💨 Zügig unterwegs', 'schneller, aber durstiger'],
+          ['🧰 Sorgsam', 'selten Pannen, gründlich an der Rampe'],
+          ['💬 Redselig', 'braucht länger, bringt mehr Ansehen'],
+          ['⏱️ Pünktlich', 'mehr Ansehen je Zustellung'],
+          ['🧘 Die Ruhe selbst', 'lässt sich von Staus nicht bremsen'],
+          ['📚 Lernwillig', 'steigt schneller auf'],
+          ['🐢 Gemütlich', 'langsam, aber sparsam und zuverlässig'],
+        ],
+      } },
+      { p: 'Widersprüchliche Züge kommen nie zusammen vor — niemand ist gleichzeitig Frühaufsteher und Nachtfahrer.' },
+      { tipp: 'Setze Nachtfahrer auf lange Läufe und Nahverkehrsprofis auf Touren mit vielen Stopps. Die Eigenheiten stehen im Fuhrpark unter jedem Fahrer.' },
+      { ref: 'training' },
+    ],
+  },
+
+  goals: {
+    titel: 'Rücklage und Anschaffungen', icon: '🎯', gruppe: 'Programme',
+    inhalt: [
+      { p: 'Große Anschaffungen, auf die man über Wochen hinspart. Zurückgelegtes Geld ist nicht weg — es lässt sich jederzeit wieder entnehmen.' },
+      { tab: {
+        kopf: ['Anschaffung', 'Preis', 'Wirkung'],
+        zeilen: [
+          ['⛽ Betriebstankstelle', '45.000 €', 'Diesel −12 %'],
+          ['🏭 Eigene Halle', '60.000 €', 'Fixkosten −8 %'],
+          ['🏢 Disposition mit Personal', '75.000 €', 'mehr Anfragen, bessere Sätze'],
+          ['🔧 Eigene Werkstatt', '95.000 €', 'Rechnungen −40 %, halbe Standzeit'],
+          ['📍 Zweites Depot', '180.000 €', 'für eine spätere Fassung vorgemerkt'],
+        ],
+      } },
+      { p: 'Jede Anschaffung braucht eine bestimmte Betriebsstufe. Ist die Rücklage voll, wird gebaut — die Wirkung gilt dann dauerhaft.' },
+    ],
+  },
+
+  chronik: {
+    titel: 'Chronik', icon: '🏅', gruppe: 'Programme',
+    inhalt: [
+      { p: 'Die eigene Geschichte: Bestwerte, Stammkundschaft und der Jahreslauf des Marktes.' },
+      { h: 'Bestwerte' },
+      { p: 'Längste Tour, wertvollste Fracht, bester Tag, beste Woche, größte Einzelsendung. Kein Wettbewerb gegen andere — nur die eigenen Zahlen, die man überbieten kann.' },
+      { h: 'Stammkundschaft' },
+      { p: 'Ein Betrieb, den man oft beliefert, zahlt besser. Vier Stufen von „neu" bis „Hauskunde" nach 18 Fahrten, dann 24 Prozent Aufschlag auf jede Fracht dorthin. Die Beziehung kann nicht abkühlen.' },
+      { h: 'Jahreslauf' },
+      { p: 'Die Nachfrage schwankt über das Jahr. Der November mit dem Weihnachtsgeschäft zahlt 22 Prozent über dem Schnitt, der Januar 12 Prozent darunter. Im Sommer läuft die Bausaison, im Juli sind Werksferien.' },
+      { p: 'Die Säulen zeigen den Preisverlauf, der dunkle Balken ist der laufende Monat.' },
     ],
   },
 
@@ -366,4 +428,5 @@ export const HELP_FOR_APP = {
   daily: 'daily', progress: 'progress', industry: 'industry',
   finance: 'finance', log: 'log', settings: 'settings', training: 'training',
   report: 'abwesenheit', tutorial: 'start', help: 'fenster',
+  goals: 'goals', chronik: 'chronik', week: 'chronik',
 };

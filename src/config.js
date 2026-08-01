@@ -339,11 +339,11 @@ export const LEVELS = [
 ];
 
 export const REQ_LABEL = {
-  tours:     { text: 'Zustellungen',        einheit: '' },
-  km:        { text: 'gefahrene Kilometer', einheit: ' km' },
-  rep:       { text: 'Ansehen',             einheit: '' },
-  trucks:    { text: 'Fahrzeuge',           einheit: '' },
-  contracts: { text: 'erfüllte Verträge',   einheit: '' },
+  tours:     { text: 'Zustellungen',        eins: 'Zustellung',      einheit: '' },
+  km:        { text: 'gefahrene Kilometer', eins: 'Kilometer',       einheit: ' km' },
+  rep:       { text: 'Ansehen',             eins: 'Punkt Ansehen',   einheit: '' },
+  trucks:    { text: 'Fahrzeuge',           eins: 'Fahrzeug',        einheit: '' },
+  contracts: { text: 'erfüllte Verträge',   eins: 'erfüllter Vertrag', einheit: '' },
 };
 
 /* ── Markt, Verträge, Branche ───────────────────────────────────

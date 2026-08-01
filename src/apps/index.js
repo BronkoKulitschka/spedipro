@@ -14,9 +14,13 @@ import { IndustryApp }  from './industry.js';
 import { ProgressApp }  from './progress.js';
 import { HelpApp }      from './help.js';
 import { TutorialApp }  from './tutorial.js';
+import { GoalsApp }     from './goals.js';
+import { ChronikApp }   from './chronik.js';
+import { WeekApp }      from './week.js';
 
 export const APPS = Object.fromEntries(
-  [DispoApp, ContractsApp, FleetApp, DailyApp, ProgressApp, IndustryApp, FinanceApp, LogApp, SettingsApp, HelpApp, TrainingApp, ReportApp, DealerApp, TutorialApp]
+  [DispoApp, ContractsApp, FleetApp, DailyApp, ProgressApp, IndustryApp, FinanceApp, LogApp, GoalsApp, ChronikApp, SettingsApp, HelpApp,
+   TrainingApp, ReportApp, DealerApp, TutorialApp, WeekApp]
     .map(app => [app.id, app]));
 
 export const DESKTOP_APPS = Object.values(APPS).filter(a => a.desktop);

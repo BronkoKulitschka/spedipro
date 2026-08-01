@@ -288,3 +288,76 @@
 }
 .handel-gruppe:first-child { margin-top: 0; }
 .handel-gruppe .muted { color: #b0c0e0; font-weight: normal; }
+
+
+/* Bestandsübersicht im Fuhrpark */
+.bestand { display: flex; flex-wrap: wrap; gap: 3px; }
+.bestand-posten {
+  font-size: 10px; padding: 1px 5px; background: #d4d0c8;
+  border-top: 1px solid #fff; border-left: 1px solid #fff;
+  border-right: 1px solid #808080; border-bottom: 1px solid #808080;
+}
+.bestand-kosten { background: #e8e4d8; margin-left: auto; }
+
+/* Bestandsmarke im Fahrzeughandel */
+.im-hof {
+  font-size: 9px; font-weight: bold; padding: 0 4px; margin-left: 3px;
+  background: #2e8b57; color: #fff;
+}
+
+
+/* Kontostand über jedem Fenster, in dem Geld ausgegeben wird */
+.kasse-leiste {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  padding: 4px 8px; flex-shrink: 0;
+  background: #c0c0c0;
+  border-bottom: 1px solid #808080;
+  border-top: 2px solid #fff;
+}
+.kasse-text { font-size: 10px; color: #404040; }
+.kasse-wert { font-size: 15px; font-weight: bold; }
+.kasse-zusatz { font-size: 10px; color: #404040; margin-left: auto; text-align: right; }
+
+
+/* Warum ein Fahrzeug nicht gekauft werden kann */
+.kauf-sperre {
+  font-size: 10px; line-height: 1.4; padding: 4px 6px; margin: 3px 0;
+  border-top: 1px solid #fff; border-left: 1px solid #fff;
+  border-right: 1px solid #808080; border-bottom: 1px solid #808080;
+}
+.kauf-geld  { background: #f0dcdc; }
+.kauf-stufe { background: #e4e4f0; }
+.kauf-hinweis {
+  font-size: 10px; padding: 3px 6px; margin: 3px 0;
+  background: #f4efd8; border-left: 3px solid #806000;
+}
+
+
+/* Eigenheiten der Fahrer */
+.zuege { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 3px; }
+.zug {
+  font-size: 9px; padding: 0 4px; background: #e0dcd0;
+  border-top: 1px solid #fff; border-left: 1px solid #fff;
+  border-right: 1px solid #909090; border-bottom: 1px solid #909090;
+}
+
+/* Sparziel */
+.truck-row.ziel-aktiv { outline: 2px solid #000080; outline-offset: -2px; }
+
+/* Wochenabschluss */
+.woche-kopf {
+  background: linear-gradient(to right, #000080, #1084d0);
+  color: #fff; padding: 6px 10px; flex-shrink: 0;
+}
+
+/* Jahreslauf */
+.jahr-balken { display: flex; align-items: flex-end; gap: 2px; height: 54px; }
+.jahr-monat { flex: 1; display: flex; flex-direction: column;
+              align-items: center; justify-content: flex-end; height: 100%; }
+.jahr-saeule { width: 100%; background: #4a6ac0; min-height: 4px; }
+.jahr-monat.jetzt .jahr-saeule { background: #000080; }
+.jahr-monat.jetzt .jahr-name { font-weight: bold; }
+.jahr-name { font-size: 8px; margin-top: 2px; }
+
+/* Stammkundschaft */
+.kunde-zeile { padding: 3px 2px; border-bottom: 1px solid #e8e8e8; }

@@ -7,7 +7,7 @@ import { marketText, repText } from '../sim/market.js';
 import { signContract, currentRate, vertraegeFrei } from '../sim/contracts.js';
 import { maxVertraege } from '../sim/progress.js';
 import { onTick } from '../ui/wm.js';
-import { empty } from './shared.js';
+import { empty, kasseLeiste, kasseAktualisieren } from './shared.js';
 
 const tageBis = c => Math.max(0, Math.ceil((c.endMinutes - S.minutes) / 1440));
 
@@ -17,6 +17,7 @@ export const ContractsApp = {
 
   body: () => `
     <div class="col fill">
+      ${kasseLeiste()}
       <div class="pad" style="padding-bottom:6px;">
         <div class="flex-row" style="gap:6px;align-items:stretch;">
           <div class="raised-box" style="flex:1;">
@@ -53,6 +54,11 @@ export const ContractsApp = {
   },
 
   update(el) {
+    /* Ein Vertrag kostet zwar nichts, bindet aber Fahrzeuge — der
+       Kontostand hilft bei der Einschätzung, ob man sich das leisten
+       kann oder erst einen weiteren Lkw braucht. */
+    kasseAktualisieren(el);
+
     const idx = S.market.index;
     const pfeil = S.market.trend > 0.005 ? '▲' : S.market.trend < -0.005 ? '▼' : '▬';
     const ci = el.querySelector('#ctIndex');

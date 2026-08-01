@@ -4,6 +4,7 @@ import { RULES, TIME, DRIVE, LEICHT, DRIVER_NAMES, TRUCK_MODELS, USED } from './
 import { MARKET, REP } from './config.js';
 import { dateOf, dateShort, dateLong, timeText, drivingBan,
          isWeekend, holidayName, weekday } from './calendar.js';
+import { wuerfleTraits } from './sim/persons.js';
 import { pick, pad } from './util.js';
 
 export let S = null;
@@ -16,6 +17,8 @@ export function newDriver() {
   usedNames.push(name);
   return {
     name, xp: 0, level: 1, points: 1, tours: 0,
+    traits: wuerfleTraits(2),
+    km: 0,                    // eigene Laufleistung, für die Bestenliste
     skills: { eco: 0, route: 0, deal: 0, care: 0, calm: 0 },
   };
 }
@@ -76,6 +79,13 @@ export function resetState(depot) {
     contracts: [],
     contractOffers: [],
     partners: [],
+    kunden: {},        // Stammkundschaft je Betrieb
+    ruecklage: 0,      // beiseitegelegtes Geld
+    sparziel: null,    // woran gerade gespart wird
+    gebaut: [],        // fertiggestellte Anschaffungen
+    rekorde: {},       // Bestwerte für die Chronik
+    woche: null,       // letzter Wochenabschluss
+    tagTouren: 0,      // Zustellungen am laufenden Tag
 
     log: [],
     level: 1,
@@ -204,7 +214,22 @@ export const truckFuel = t => fuelRate(t.driver) * modelOf(t).fuel;
 export const truckRisk = t => riskMul(t.driver) * modelOf(t).risk * (t.used ? USED.risk : 1);
 
 /* Tagesfixkosten: ein Kastenwagen kostet nicht so viel wie ein Sattelzug. */
-export const truckFix = t => Math.round(RULES.DAILY_COST * (modelOf(t).fix ?? 1));
+export const truckFix = t =>
+  Math.round(RULES.DAILY_COST * (modelOf(t).fix ?? 1) * (S.gebaut?.includes('halle') ? 0.92 : 1));
+
+/* Wie viele Fahrzeuge einer Bauart im Hof stehen. */
+export const anzahlVon = modelKey => S.trucks.filter(t => t.model === modelKey).length;
+
+export function bestand() {
+  const zaehler = {};
+  for (const t of S.trucks) {
+    const k = t.model;
+    zaehler[k] ||= { gesamt: 0, gebraucht: 0 };
+    zaehler[k].gesamt++;
+    if (t.used) zaehler[k].gebraucht++;
+  }
+  return zaehler;
+}
 export const fixGesamt = () => S.trucks.reduce((s, t) => s + truckFix(t), 0);
 export const feeMul   = d => 1 + 0.06 * d.skills.deal;
 export const riskMul  = d => Math.pow(0.75, d.skills.care);
@@ -225,6 +250,13 @@ export function hydrate(saved) {
     contracts: saved.contracts || [],
     contractOffers: saved.contractOffers || [],
     partners: saved.partners || [],
+    kunden: saved.kunden || {},
+    ruecklage: saved.ruecklage || 0,
+    sparziel: saved.sparziel || null,
+    gebaut: saved.gebaut || [],
+    rekorde: saved.rekorde || {},
+    woche: saved.woche || null,
+    tagTouren: 0,
     screen: 'desktop',
     silent: false,
     lastReport: null,
@@ -241,6 +273,10 @@ export function hydrate(saved) {
       rastZiel: t.rastZiel || null,
       rastOrt: t.rastOrt || null,
       idleMin: t.idleMin || 0,
+      /* Ältere Spielstände kennen noch keine Züge — nachrüsten. */
+      driver: { ...t.driver,
+                traits: t.driver?.traits?.length ? t.driver.traits : wuerfleTraits(2),
+                km: t.driver?.km || 0 },
       place: t.place || 'Depot',
       auto: !!t.auto,
       phase: t.phase === 'out' || t.phase === 'back' ? 'idle' : t.phase,

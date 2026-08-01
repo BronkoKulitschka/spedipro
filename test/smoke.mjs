@@ -205,6 +205,46 @@ ok(S.trucks.every(t => t.today <= 9 * 60 + SCHRITT),
    'Tageslenkzeit nirgends überschritten');
 ok(S.trucks.every(t => driveStatus(t).code), 'Fahrerstatus lesbar');
 
+/* ── Die sechs Ausbaustufen ── */
+console.log('\nAusbau');
+{
+  const { TRAITS, traitsVon } = await import('../src/sim/persons.js');
+  const { topKunden, fahrtenZu } = await import('../src/sim/customers.js');
+  const { saison, saisonPreis } = await import('../src/sim/season.js');
+  const { fortschritt, setzeZiel, zurueckLegen, bauen, gebaut } = await import('../src/sim/goals.js');
+  const { rekordListe, wochenAbschluss } = await import('../src/sim/records.js');
+
+  ok(S.trucks.every(t => t.driver.traits?.length === 2),
+     'Jeder Fahrer hat zwei Eigenheiten');
+  ok(traitsVon(S.trucks[0].driver).every(t => t.name),
+     `Eigenheiten lesbar (${traitsVon(S.trucks[0].driver).map(t => t.name).join(', ')})`);
+
+  const kunden = topKunden(3);
+  ok(kunden.length > 0, `Stammkundschaft erfasst (${kunden.length} Betriebe)`);
+  ok(kunden[0].fahrten > 0, `Meistbelieferter: ${kunden[0].name}, ${kunden[0].fahrten} Fahrten`);
+
+  ok(saison().name && saisonPreis() > 0, `Saison wirkt (${saison().name}, Faktor ${saisonPreis()})`);
+
+  setzeZiel('tankstelle');
+  const vorher = S.money;
+  zurueckLegen(20000);
+  ok(S.ruecklage === 20000 && S.money === vorher - 20000, 'Rücklage gebildet');
+  const f = fortschritt();
+  ok(f && f.anteil > 0, `Sparfortschritt ablesbar (${Math.round(f.anteil)} %)`);
+  ok(bauen() === false, 'Bauen erst bei voller Rücklage');
+
+  S.ruecklage = 45000;
+  ok(bauen() === true && gebaut('tankstelle'), 'Anschaffung fertiggestellt');
+
+  const rek = rekordListe().filter(r => r.eintrag);
+  ok(rek.length > 0, `Bestwerte erfasst (${rek.length} von ${rekordListe().length})`);
+
+  S.woche = null;
+  const bericht = wochenAbschluss();
+  ok(bericht && bericht.touren >= 0, `Wochenabschluss erstellt (${bericht?.touren} Zustellungen)`);
+  ok(bericht?.fahrer?.name, `Fahrer der Woche: ${bericht?.fahrer?.name}`);
+}
+
 const bilanz = ledgerSums();
 ok(Math.abs(bilanz.saldo - (S.money - 50000)) < 1,
    'Kassenbuch stimmt mit dem Kontostand überein');

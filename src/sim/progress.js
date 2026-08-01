@@ -62,6 +62,25 @@ export function stufeFuerModell(key) {
 }
 export const stufeFuerAutomatik = () => LEVELS.find(l => l.frei.automatik)?.nr ?? null;
 
+/* Was für die nächste Stufe noch offen ist, als kurzer Satz.
+   Wird dort gebraucht, wo etwas wegen der Stufe gesperrt ist. */
+export function nochOffen() {
+  const p = progress();
+  if (!p) return '';
+
+  const offen = p.punkte.filter(x => !x.erfüllt);
+  if (!offen.length) return 'Alle Anforderungen erfüllt.';
+
+  const teile = offen.slice(0, 3).map(x => {
+    const fehlt = Math.ceil(x.soll - x.ist);
+    if (x.key === 'km') return `${fehlt.toLocaleString('de-DE')} km`;
+    const wort = fehlt === 1 ? (REQ_LABEL[x.key]?.eins || x.label) : x.label;
+    return `${fehlt} ${wort}`;
+  });
+
+  return teile.join(', ') + (teile.length > 1 || offen[0].soll - offen[0].ist > 1 ? ' fehlen' : ' fehlt');
+}
+
 /* ── Aufstieg ── */
 export function checkLevelUp() {
   const ziel = next();

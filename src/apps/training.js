@@ -4,6 +4,8 @@ import { SKILLS, RULES } from '../config.js';
 import { S, findTruck, xpNeeded } from '../state.js';
 import { fmt, esc, pips } from '../util.js';
 import { canLearn, learn } from '../sim/drivers.js';
+import { kasseLeiste, kasseAktualisieren } from './shared.js';
+import { traitsVon } from '../sim/persons.js';
 import { onTick } from '../ui/wm.js';
 
 export const TrainingApp = {
@@ -15,7 +17,9 @@ export const TrainingApp = {
   width: 400, height: 380,
 
   body: () => `
-    <div class="pad">
+    <div class="col fill">
+      ${kasseLeiste()}
+      <div class="pad scroll fill">
       <div class="inset-box" style="margin-bottom:8px;">
         <div class="flex-row" style="justify-content:space-between;">
           <span id="trName">—</span><span id="trLevel">—</span>
@@ -29,8 +33,13 @@ export const TrainingApp = {
           <span>Kursgebühr: <strong>${fmt(RULES.TRAIN_COST)}</strong></span>
         </div>
       </div>
+      <div class="raised-box" style="margin-bottom:8px;">
+        <div class="section-title">Eigenheiten</div>
+        <div id="trZuege"></div>
+      </div>
       <table class="win-table" id="trTable"></table>
       <div class="muted" style="margin-top:8px;font-size:10px;" id="trHint"></div>
+      </div>
     </div>`,
 
   mount(el, params) {
@@ -47,12 +56,20 @@ export const TrainingApp = {
     if (!truck) return;
     const d = truck.driver;
 
+    kasseAktualisieren(el);
+
     el.querySelector('#trName').innerHTML  = `<strong>${esc(d.name)}</strong> · LKW ${truck.nr}`;
     el.querySelector('#trLevel').textContent = `Stufe ${d.level} · ${d.tours} Zustellungen`;
     el.querySelector('#trXp').style.width  = Math.min(100, d.xp / xpNeeded(d.level) * 100) + '%';
     el.querySelector('#trXpText').textContent =
       `${Math.round(d.xp)} / ${xpNeeded(d.level)} Erfahrung bis Stufe ${d.level + 1}`;
     el.querySelector('#trPts').textContent = d.points;
+
+    el.querySelector('#trZuege').innerHTML = traitsVon(d).map(t => `
+      <div style="margin-bottom:4px;">
+        <strong>${t.icon} ${esc(t.name)}</strong><br>
+        <span class="muted" style="font-size:10px;">${esc(t.text)}</span>
+      </div>`).join('') || '<span class="muted">Keine besonderen Eigenheiten.</span>';
 
     el.querySelector('#trTable').innerHTML = Object.entries(SKILLS).map(([key, s]) => {
       const maxed = d.skills[key] >= s.max;
@@ -67,9 +84,10 @@ export const TrainingApp = {
       </tr>`;
     }).join('');
 
-    el.querySelector('#trHint').textContent =
+    el.querySelector('#trHint').innerHTML =
       d.points === 0 ? 'Noch kein Punkt frei. Erfahrung sammelt sich mit jeder Zustellung, längere Strecken bringen mehr.'
-      : S.money < RULES.TRAIN_COST ? 'Für die Kursgebühr fehlt gerade Geld.'
-      : '';
+      : S.money < RULES.TRAIN_COST
+        ? `<span class="debt">${fmt(RULES.TRAIN_COST - S.money)} fehlen für die Kursgebühr.</span>`
+        : '';
   },
 };

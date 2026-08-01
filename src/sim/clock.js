@@ -16,6 +16,9 @@ import { settleContracts, refillContractOffers } from './contracts.js';
 import { growIndustry } from './partners.js';
 import { onTick } from '../ui/wm.js';
 import { saveGame } from './save.js';
+import { panneFaktor } from './persons.js';
+import { werkstattRabatt, werkstattZeit } from './goals.js';
+import { tagAbschluss, wochenAbschluss, istSonntag } from './records.js';
 
 let timer = null;
 let lastDay = 1;
@@ -98,6 +101,18 @@ function tick() {
 
 /* Mitternacht: Fixkosten, Pannenwurf, frische Aufträge. */
 function newDay() {
+  /* Erst den vergangenen Tag abschließen, dann den neuen beginnen. */
+  tagAbschluss();
+
+  /* Sonntags ist ohnehin Fahrverbot — der richtige Moment für die
+     Wochenbilanz. */
+  if (istSonntag()) {
+    const bericht = wochenAbschluss();
+    if (bericht && !S.silent) {
+      import('../ui/wm.js').then(m => m.openApp('week'));
+    }
+  }
+
   const feiertag = holidayNow();
   if (feiertag) log(`📅 ${todayText()} — ${feiertag}. Für schwere Fahrzeuge gilt Fahrverbot bis 22 Uhr.`);
   else if (weekendNow()) log(`📅 ${todayText()} — Wochenende.`);
@@ -110,11 +125,11 @@ function newDay() {
   for (const truck of S.trucks) {
     const rolling = truck.phase === 'driving';
     if (!rolling || truck.shopMin) continue;
-    if (Math.random() >= RULES.BREAKDOWN * truckRisk(truck)) continue;
+    if (Math.random() >= RULES.BREAKDOWN * truckRisk(truck) * panneFaktor(truck.driver)) continue;
 
-    const bill = 800 + Math.floor(Math.random() * 2200);
+    const bill = Math.round((800 + Math.random() * 2200) * werkstattRabatt());
     book('Werkstatt', `LKW ${truck.nr} · ${truck.driver.name}`, -bill);
-    truck.shopMin = 180 + Math.floor(Math.random() * 300);
+    truck.shopMin = Math.round((180 + Math.random() * 300) * werkstattZeit());
     log(`🔧 LKW ${truck.nr} (${truck.driver.name}) steht in der Werkstatt: ${fmt(-bill)}.`);
   }
 

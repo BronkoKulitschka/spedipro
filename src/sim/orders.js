@@ -14,6 +14,9 @@ import { levelOf, pickPartner } from './partners.js';
 import { current } from './progress.js';
 import { hubsFor } from '../data/hubs.js';
 import { klasseFuer, ladung, flottenGrenze } from './goods.js';
+import { rateFuer } from './customers.js';
+import { saisonPreis, saisonMenge } from './season.js';
+import { mehrAnfragen, besserePreise } from './goals.js';
 
 const id = () => Math.random().toString(36).slice(2, 8);
 
@@ -47,7 +50,8 @@ function mitLadung(basis, firm, faktor = 1) {
 
 function spotOffer(firm) {
   const bonus = firm.bonus || 1;
-  const basis = baseFee(firm) * bonus * S.market.index * repMul();
+  const basis = baseFee(firm) * bonus * S.market.index * repMul()
+              * saisonPreis() * rateFuer(firm.name) * besserePreise();
   return {
     id: id(), kind: 'spot', firm,
     estKm: firm.km * 1.28,
@@ -105,7 +109,8 @@ export function refillOffers() {
   }
 
   /* Der Rest ist Spotmarkt. Am Wochenende kommt weniger herein. */
-  const ziel = Math.max(3, Math.round(RULES.OFFER_COUNT * supplyToday()));
+  const ziel = Math.max(3, Math.round(
+    RULES.OFFER_COUNT * supplyToday() * saisonMenge() * mehrAnfragen()));
   let guard = 0;
   while (S.offers.length < ziel && guard++ < 200) {
     const firm = pickZiel();

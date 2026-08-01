@@ -2,13 +2,15 @@
 
 import { SKILLS } from '../config.js';
 import { S, xpNeeded, findTruck, atDepot, modelOf, resaleValue,
-         driveStatus, canDrive } from '../state.js';
+         driveStatus, canDrive, bestand, truckFix, fixGesamt } from '../state.js';
 import { esc, pips, fmt, num } from '../util.js';
 import { kapazitaet, klasseVon } from '../sim/goods.js';
 import { EQUIPMENT } from '../config.js';
 import { setAuto, returnToDepot, sellTruck } from '../sim/fleet.js';
 import { openApp, onTick } from '../ui/wm.js';
 import { automatikFrei, stufeFuerAutomatik } from '../sim/progress.js';
+import { kasseLeiste, kasseAktualisieren } from './shared.js';
+import { traitsVon } from '../sim/persons.js';
 import { focusTruck } from '../ui/map.js';
 
 export const FleetApp = {
@@ -17,9 +19,13 @@ export const FleetApp = {
 
   body: () => `
     <div class="col fill">
-      <div class="bar-note flex-row" style="justify-content:space-between;gap:6px;">
-        <span id="flNote">—</span>
-        <button class="btn btn-sm" id="flDealer">🏷️ Fahrzeughandel</button>
+      ${kasseLeiste()}
+      <div class="bar-note col" style="gap:4px;">
+        <div class="flex-row" style="justify-content:space-between;gap:6px;">
+          <span id="flNote">—</span>
+          <button class="btn btn-sm" id="flDealer">🏷️ Fahrzeughandel</button>
+        </div>
+        <div class="bestand" id="flBestand"></div>
       </div>
       <div class="inset-box scroll fill" id="fleetBox" style="padding:4px;"></div>
     </div>`,
@@ -54,11 +60,32 @@ export const FleetApp = {
   },
 
   update(el) {
+    kasseAktualisieren(el, `${fixGesamt().toLocaleString('de-DE')} € Fixkosten je Tag`);
+
     const box = el.querySelector('#fleetBox');
     const free = S.trucks.filter(t => t.phase === 'idle' && !t.shopMin).length;
     const auto = S.trucks.filter(t => t.auto).length;
     el.querySelector('#flNote').textContent =
-      `${S.trucks.length} LKW · ${free} verfügbar · ${auto} auf Automatik`;
+      `${S.trucks.length} Fahrzeuge · ${free} verfügbar · ${auto} auf Automatik`;
+
+    /* Bestand nach Bauart, damit man die Zusammensetzung sieht,
+       ohne die ganze Liste durchzugehen. */
+    const zaehler = bestand();
+    const bestandSig = Object.entries(zaehler).map(([k, v]) => `${k}:${v.gesamt}`).join(',');
+    const bestandBox = el.querySelector('#flBestand');
+
+    if (bestandBox.dataset.sig !== bestandSig) {
+      bestandBox.dataset.sig = bestandSig;
+      bestandBox.innerHTML = Object.entries(zaehler)
+        .sort((a, b) => b[1].gesamt - a[1].gesamt)
+        .map(([key, v]) => {
+          const m = modelOf({ model: key });
+          return `<span class="bestand-posten" title="${esc(m.klasse)} · Führerschein ${m.fs}">
+            <strong>${v.gesamt}×</strong> ${esc(m.name)}${v.gebraucht ? `
+            <span class="muted">(${v.gebraucht} gebr.)</span>` : ''}
+          </span>`;
+        }).join('');
+    }
 
     const sig = S.trucks.map(t =>
       [t.nr, t.model, t.driver.level, t.driver.points, Object.values(t.driver.skills).join(''),
@@ -143,15 +170,18 @@ function row(truck) {
     <table class="win-table" style="font-size:10px;margin:3px 0;">
       <tr>
         <td>Nutzlast</td><td style="text-align:right">${(kap.kg / 1000).toFixed(1)} t</td>
-        <td>Stellplätze</td><td style="text-align:right">${kap.paletten}</td>
+        <td>Plätze</td><td style="text-align:right">${kap.paletten}</td>
         <td>zGG</td><td style="text-align:right">${(m.zgg / 1000).toFixed(1)} t</td>
+        <td>Fix</td><td style="text-align:right">${truckFix(truck)} €</td>
       </tr>
     </table>
 
     ${ladeZeile(truck, kap)}
     <div class="xpbar" style="margin:3px 0;"><div class="xpfill" id="xp${truck.nr}"></div></div>
     <div class="prog" style="margin:3px 0;"><div class="prog-fill" id="tpg${truck.nr}"></div></div>
-    <div style="font-size:10px;margin:2px 0 4px;">${skills}</div>
+    <div style="font-size:10px;margin:2px 0 3px;">${skills}</div>
+    <div class="zuege">${traitsVon(d).map(t =>
+      `<span class="zug" title="${esc(t.text)}">${t.icon} ${esc(t.name)}</span>`).join('')}</div>
     <div class="flex-row" style="justify-content:space-between;font-size:10px;flex-wrap:wrap;gap:4px;">
       ${automatikFrei()
         ? `<label class="flex-row" style="gap:3px;" title="Sucht sich selbst den nächsten Auftrag">

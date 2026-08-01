@@ -15,10 +15,14 @@ import { gainXp } from './drivers.js';
 import { addRep } from './market.js';
 import { registerDelivery } from './contracts.js';
 import { registerPartnerLoad } from './partners.js';
+import { registriereFahrt } from './customers.js';
+import { dieselRabatt } from './goals.js';
+import { pruefeRekord } from './records.js';
 import { checkLevelUp, automatikFrei, modelFrei } from './progress.js';
 import { kapazitaet, summe, passt } from './goods.js';
 import { toast } from '../ui/toast.js';
 import { drawRoute, removeTruckLayers, dropTruck, updateTruckMarker } from '../ui/map.js';
+import { tempoFaktor, dieselFaktor, rampeFaktor, ansehenFaktor, stauFaktor, xpFaktor } from './persons.js';
 
 /* ── Baustellen und Meldungen entlang einer Strecke ── */
 export function trafficOnRoute(coords) {
@@ -337,7 +341,7 @@ export function moveTrucks(minutes) {
 function finish(truck) {
   const d = truck.driver;
   const km = truck.route.km;
-  const fuel = km * truckFuel(truck);
+  const fuel = km * truckFuel(truck) * dieselFaktor(d) * dieselRabatt();
 
   if (truck.job.kind === 'delivery') {
     const fee = truck.job.fee * feeMul(d);
@@ -348,12 +352,21 @@ function finish(truck) {
 
     if (truck.job.contractId) registerDelivery(truck.job.contractId);
     if (truck.job.partnerKey) registerPartnerLoad(truck.job.partnerKey);
+    registriereFahrt(truck.job.firm);
     addRep(REP.PER_LOAD);
     checkLevelUp();
     book('Diesel', `${km.toFixed(0)} km · LKW ${truck.nr}`, -fuel);
     S.stats.tours++;
     S.stats.revenue += fee;
+    S.tagTouren = (S.tagTouren || 0) + 1;
     d.tours++;
+
+    pruefeRekord('tourGeld', fee, `${truck.job.firm.name} · ${d.name}`);
+    pruefeRekord('paletten', truck.job.paletten || 0, truck.job.firm.name);
+    if (truck.tour) {
+      const gesamt = truck.tour.etappen.reduce((s, e) => s + e.route.km, 0);
+      pruefeRekord('tourKm', Math.round(gesamt), `${d.name}, ${truck.tour.etappen.length} Stopps`);
+    }
     log(`✔ ${d.name} hat bei ${truck.job.firm.name} entladen. `
       + `Fracht ${fmt(fee)}, Diesel ${fmt(-fuel)}.`);
     gainXp(d, 40 + Math.round(km / 8));

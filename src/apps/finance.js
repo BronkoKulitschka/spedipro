@@ -3,7 +3,7 @@
 
 import { S, ledgerSums, day, fixGesamt } from '../state.js';
 import { fmt, num, esc } from '../util.js';
-import { empty } from './shared.js';
+import { empty, kasseLeiste, kasseAktualisieren } from './shared.js';
 
 const FILTERS = {
   alle:  { label: 'alle',      test: () => true },
@@ -18,12 +18,8 @@ export const FinanceApp = {
 
   body: () => `
     <div class="col fill">
-      <div class="pad" style="padding-bottom:0;">
-        <div class="inset-box" style="text-align:center;padding:8px;margin-bottom:6px;">
-          <div class="muted">Kontostand</div>
-          <div style="font-size:19px;font-weight:bold;" id="fMoney">—</div>
-        </div>
-
+      ${kasseLeiste()}
+      <div class="pad scroll" style="padding-bottom:0;">
         <div class="raised-box" style="margin-bottom:6px;">
           <div class="section-title">Bilanz</div>
           <table class="win-table">
@@ -64,9 +60,7 @@ export const FinanceApp = {
 };
 
 function paint(el) {
-  const money = el.querySelector('#fMoney');
-  money.textContent = fmt(S.money);
-  money.className = S.money >= 0 ? 'money' : 'debt';
+  kasseAktualisieren(el, `Fixkosten ${fixGesamt().toLocaleString('de-DE')} € je Tag`);
 
   const sums = ledgerSums();
   el.querySelector('#fIn').textContent  = fmt(sums.ein);
