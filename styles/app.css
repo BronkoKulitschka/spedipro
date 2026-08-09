@@ -205,28 +205,67 @@
 
 
 /* ── Fahrzeuge auf der Karte ──────────────────────────────────
-   Ruhige Darstellung ohne Bewegung. Die Blickrichtung ergibt sich
-   aus dem zuletzt gefahrenen Stück. */
+   Jedes Fahrzeug trägt einen Ring in seiner eigenen Farbe. Fährt es,
+   sitzt außen ein Pfeil auf dem Ring und zeigt in Fahrtrichtung.
+   Gedreht wird nur der Pfeil — nicht der Marker selbst, weil Leaflet
+   dessen 'transform' für die Positionierung braucht. */
 .truck-marker {
+  position: relative;
+  width: 34px; height: 34px;
   display: flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px;
 }
+
+.kurs-ring {
+  position: absolute; top: 50%; left: 50%;
+  width: 30px; height: 30px; margin: -15px 0 0 -15px;
+  border: 2px solid #808080; border-radius: 50%;
+  background: rgba(255, 255, 255, .55);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .35);
+  pointer-events: none;
+}
+
+/* Der Zeiger dreht sich um die Mitte, der Pfeil sitzt an seinem Rand. */
+.kurs-zeiger {
+  position: absolute; top: 50%; left: 50%;
+  width: 0; height: 0; margin: 0;
+  pointer-events: none;
+}
+.kurs-pfeil {
+  position: absolute; left: -5px; top: -21px;
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 8px solid #000080;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, .9));
+}
+
 .truck-marker .truck-icon {
-  font-size: 18px; line-height: 1;
-  filter: drop-shadow(1px 1px 0 rgba(0,0,0,.6));
+  position: relative; z-index: 2;
+  font-size: 17px; line-height: 1;
+  filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, .5));
 }
 .truck-marker .truck-icon.links { transform: scaleX(-1); }
+.truck-icon.parked { opacity: .92; }
+.truck-icon.parked.resting { opacity: .6; filter: grayscale(.6); }
 
-/* Fahrende etwas kräftiger, stehende zurückgenommen */
-.truck-marker.fahrend .truck-icon {
-  filter: drop-shadow(1px 1px 1px rgba(0,0,0,.8));
+/* Fahrzeugnummer als kleine Fahne am Ring */
+.truck-nr {
+  position: absolute; right: -1px; bottom: -1px; z-index: 3;
+  min-width: 12px; height: 12px; padding: 0 2px;
+  font-size: 9px; font-weight: bold; line-height: 12px;
+  text-align: center; color: #fff;
+  border: 1px solid #fff;
 }
-.truck-icon.parked { opacity: .9; }
-.truck-icon.parked.resting { opacity: .65; filter: grayscale(.6) drop-shadow(1px 1px 0 rgba(0,0,0,.5)); }
 
 /* Eigene Grafik, falls unter assets/truck.png hinterlegt */
-.truck-bild { width: 24px; height: 24px; display: block; image-rendering: pixelated; }
-.truck-marker.fahrend .truck-bild { width: 26px; height: 26px; }
+.truck-bild { width: 22px; height: 22px; display: block; image-rendering: pixelated; }
+
+@media (pointer: coarse) {
+  .truck-marker { width: 40px; height: 40px; }
+  .kurs-ring { width: 34px; height: 34px; margin: -17px 0 0 -17px; }
+  .kurs-pfeil { top: -24px; }
+  .truck-marker .truck-icon { font-size: 19px; }
+}
 
 /* Rastanlagen */
 .park-pin {
@@ -341,3 +380,11 @@
 .datum { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
 .dl { color: #505050; }
 .dw { font-weight: bold; }
+
+
+/* Farbmarke des Fahrzeugs, in Listen und Fenstern */
+.farb-marke, .popup-farbe {
+  display: inline-block; width: 9px; height: 9px; margin-right: 4px;
+  border: 1px solid #404040;
+  vertical-align: baseline;
+}

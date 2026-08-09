@@ -72,6 +72,53 @@ export function pointOnRoute(route, km) {
   ];
 }
 
+/* Kurswinkel zwischen zwei Punkten, in Grad.
+   0 ist Norden, 90 Osten — wie auf dem Kompass. */
+export function bearing(a, b) {
+  const rad = Math.PI / 180;
+  const dLon = (b.lon - a.lon) * rad;
+  const lat1 = a.lat * rad, lat2 = b.lat * rad;
+
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2)
+          - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+
+  return (Math.atan2(y, x) / rad + 360) % 360;
+}
+
+/* Kurs an einer Stelle der Route: Blickrichtung des nächsten Stücks. */
+export function courseOnRoute(route, km) {
+  const c = route.coords || [];
+  if (c.length < 2) return 0;
+
+  const cum = routeCum(route);
+  const total = cum[cum.length - 1];
+  if (!(total > 0)) return 0;
+
+  const anteil = route.km > 0 ? Math.max(0, Math.min(1, km / route.km)) : 0;
+  const ziel = anteil * total;
+
+  let i = 1;
+  while (i < cum.length - 1 && cum[i] < ziel) i++;
+
+  const a = c[i - 1], b = c[i];
+  if (!a || !b) return 0;
+  return bearing({ lat: a[0], lon: a[1] }, { lat: b[0], lon: b[1] });
+}
+
+/* Eine eigene Farbe je Fahrzeug.
+
+   Der goldene Winkel verteilt die Farbtöne so, dass auch benachbarte
+   Nummern deutlich unterscheidbar bleiben. */
+export function truckFarbe(nr) {
+  const ton = (nr * 137.508) % 360;
+  return {
+    kraeftig: `hsl(${ton.toFixed(0)}, 72%, 42%)`,
+    hell:     `hsl(${ton.toFixed(0)}, 68%, 62%)`,
+    ton,
+  };
+}
+
 /* Fertigkeitsstufen als kleine Kästchen */
 export function pips(level, max) {
   let out = '';

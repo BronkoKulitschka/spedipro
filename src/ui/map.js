@@ -6,7 +6,8 @@
    ins neue Fenster und Leaflet behält Zoom und Position. */
 
 import { S, truckPos, driveStatus, modelOf, xpNeeded } from '../state.js';
-import { esc, haversine, fmt, num, pips, pointOnRoute } from '../util.js';
+import { esc, haversine, fmt, num, pips, pointOnRoute,
+         courseOnRoute, truckFarbe } from '../util.js';
 import { HUB_ICON } from '../data/hubs.js';
 import { SKILLS, EQUIPMENT } from '../config.js';
 import { kapazitaet, klasseVon } from '../sim/goods.js';
@@ -41,6 +42,24 @@ export function truckBild() {
   return bildVorhanden
     ? '<img src="./assets/truck.png" alt="" class="truck-bild">'
     : '🚛';
+}
+
+/* Ring um das Fahrzeug, in seiner eigenen Farbe. Fährt es, sitzt ein
+   Pfeil auf dem Ring und zeigt in Fahrtrichtung. */
+function ringInhalt(truck, kurs, richtung, faehrt, ruht = false) {
+  const farbe = truckFarbe(truck.nr);
+  const dreh = faehrt ? `transform:rotate(${kurs.toFixed(1)}deg);` : '';
+
+  return `
+    <span class="kurs-ring" style="border-color:${farbe.kraeftig}"></span>
+    ${faehrt ? `
+      <span class="kurs-zeiger" style="${dreh}">
+        <span class="kurs-pfeil" style="border-bottom-color:${farbe.kraeftig}"></span>
+      </span>` : ''}
+    <span class="truck-icon ${richtung}${faehrt ? '' : ' parked'}${ruht ? ' resting' : ''}">
+      ${truckBild()}
+    </span>
+    <span class="truck-nr" style="background:${farbe.kraeftig}">${truck.nr}</span>`;
 }
 
 export function mapHost() {
@@ -133,9 +152,14 @@ export function drawTraffic() {
 
 export function drawRoute(truck) {
   if (!map || !truck.route) return;
+
+  /* Die Linie trägt dieselbe Farbe wie der Ring des Fahrzeugs — so ist
+     bei mehreren Fahrzeugen sofort klar, welche Strecke zu wem gehört. */
+  const farbe = truckFarbe(truck.nr);
+
   truck.line = L.polyline(truck.route.coords, {
-    color: truck.route.real ? '#000080' : '#808080',
-    weight: 3, opacity: .75,
+    color: farbe.kraeftig,
+    weight: 3, opacity: .8,
     dashArray: truck.route.real ? null : '6 6',
   }).addTo(layers.routes);
 }
@@ -146,29 +170,33 @@ export function updateTruckMarker(truck) {
   const pos = pointOnRoute(truck.route, truck.progress);
   if (!pos) return;
 
-  /* Blickrichtung aus dem letzten Stück Weg ableiten */
-  const vorher = truck._letzte || pos;
-  const richtung = pos[1] < vorher[1] - 1e-6 ? 'links'
-                 : pos[1] > vorher[1] + 1e-6 ? 'rechts'
-                 : truck._richtung || 'rechts';
+  /* Kurs aus der Route: der Pfeil zeigt dorthin, wo es weitergeht. */
+  const kurs = courseOnRoute(truck.route, truck.progress);
+  const richtung = (kurs > 180) ? 'links' : 'rechts';
   truck._richtung = richtung;
-  truck._letzte = pos;
 
-  const inhalt = `<span class="truck-icon ${richtung}">${truckBild()}</span>`;
+  const inhalt = ringInhalt(truck, kurs, richtung, true);
 
   if (!truck.marker) {
     truck.marker = L.marker(pos, {
       icon: L.divIcon({ className: 'truck-marker fahrend', html: inhalt,
-                        iconSize: [26, 26], iconAnchor: [13, 13] }),
+                        iconSize: [34, 34], iconAnchor: [17, 17] }),
     }).addTo(layers.trucks);
   } else {
     truck.marker.setLatLng(pos);
     const wurzel = truck.marker.getElement();
     if (wurzel) {
       wurzel.classList.add('truck-marker', 'fahrend');
-      const icon = wurzel.querySelector('.truck-icon');
-      if (icon) icon.className = `truck-icon ${richtung}`;
-      else wurzel.innerHTML = inhalt;
+
+      /* Nur den Pfeil drehen, statt alles neu aufzubauen. */
+      const zeiger = wurzel.querySelector('.kurs-zeiger');
+      if (zeiger) {
+        zeiger.style.transform = `rotate(${kurs.toFixed(1)}deg)`;
+        const icon = wurzel.querySelector('.truck-icon');
+        if (icon) icon.className = `truck-icon ${richtung}`;
+      } else {
+        wurzel.innerHTML = inhalt;
+      }
     }
   }
 
@@ -203,12 +231,12 @@ function parkTruck(truck) {
   const status = driveStatus(truck);
   const ruht = status.code !== 'frei';
 
-  const inhalt = `<span class="truck-icon parked${ruht ? ' resting' : ''}">${truckBild()}</span>`;
+  const inhalt = ringInhalt(truck, null, truck._richtung || 'rechts', false, ruht);
 
   if (!truck.marker) {
     truck.marker = L.marker([pos.lat, pos.lon], {
       icon: L.divIcon({ className: 'truck-marker', html: inhalt,
-                        iconSize: [26, 26], iconAnchor: [13, 13] }),
+                        iconSize: [34, 34], iconAnchor: [17, 17] }),
     }).addTo(layers.trucks);
   } else {
     truck.marker.setLatLng([pos.lat, pos.lon]);
@@ -228,7 +256,7 @@ function truckPopup(truck) {
   const kap = kapazitaet(truck);
   const d = truck.driver;
   const status = driveStatus(truck);
-  const farbe = status.code === 'frei' ? '#006400' : '#806000';
+  const statusFarbe = status.code === 'frei' ? '#006400' : '#806000';
 
   const skills = Object.entries(SKILLS)
     .map(([key, s]) => `${s.icon}${pips(d.skills[key], s.max)}`).join(' ');
@@ -248,11 +276,14 @@ function truckPopup(truck) {
       })()
     : `<tr><td>Standort</td><td>${esc(truck.place)}</td></tr>`;
 
+  const wagenFarbe = truckFarbe(truck.nr);
+
   return `
     <div style="min-width:200px;">
+      <span class="popup-farbe" style="background:${wagenFarbe.kraeftig}"></span>
       <strong>LKW ${truck.nr} · ${esc(d.name)}</strong>
       <span style="color:#606060">· Stufe ${d.level}</span><br>
-      <span style="color:${farbe}">${esc(status.text)}</span>
+      <span style="color:${statusFarbe}">${esc(status.text)}</span>
       <table class="popup-table">
         <tr><td>Fahrzeug</td><td>${esc(m.name)}${truck.used ? ' · gebraucht' : ''}
             ${(truck.equip || []).map(k => EQUIPMENT[k]?.icon || '').join('')}</td></tr>

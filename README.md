@@ -135,10 +135,19 @@ Anforderungen: PNG mit durchsichtigem Hintergrund, 64 × 64 Bildpunkte,
 Fahrzeug zeigt nach rechts. Die Gegenrichtung spiegelt das Programm selbst.
 Näheres in `assets/README.md`.
 
-Die Fahrzeuge werden bewusst **nicht animiert** dargestellt. Eine frühere
-Fassung hatte einen pulsierenden Ring und eine Bewegungsanimation — beides
-ist entfallen, weil die Animation auf `transform` lief und damit Leaflets
-eigener Positionierung in die Quere kam.
+Jedes Fahrzeug trägt einen Ring in einer eigenen Farbe, dazu seine Nummer.
+Die Farbe ergibt sich aus der Fahrzeugnummer über den goldenen Winkel, so
+dass auch benachbarte Nummern deutlich unterscheidbar bleiben. Dieselbe
+Farbe hat die Streckenlinie, die Marke im Fuhrpark und der Punkt in der
+Fahrzeugauswahl.
+
+Fährt ein Fahrzeug, sitzt außen am Ring ein Pfeil in Fahrtrichtung. Der
+Kurs wird aus dem Verlauf der Route berechnet — der Pfeil dreht sich also
+mit der Straße. Gedreht wird dabei nur der Pfeil, nicht der Marker selbst:
+dessen `transform` gehört Leaflet für die Positionierung, und ein Eingriff
+dort war der Grund, warum Fahrzeuge früher über die Karte schwammen.
+
+Bewegungsanimationen gibt es keine.
 
 ## Testlauf
 

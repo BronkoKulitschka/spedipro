@@ -6,7 +6,7 @@
    Auf schmalen Geräten liegt die Liste unter der Karte. */
 
 import { S, findTruck, canDrive, banReason, truckPos, truckKmh } from '../state.js';
-import { fmt, esc } from '../util.js';
+import { fmt, esc, truckFarbe } from '../util.js';
 import { dispatch, distanceFrom, startTour, umwegFuer } from '../sim/fleet.js';
 import { KIND_LABEL, takeOffer } from '../sim/orders.js';
 import { kapazitaet, summe, passt, klasseVon } from '../sim/goods.js';
@@ -180,7 +180,7 @@ export const DispoApp = {
       const keep = select.value;
       select.dataset.sig = listSig;
       select.innerHTML = free.length
-        ? free.map(t => `<option value="${t.nr}">LKW ${t.nr} · ${esc(t.driver.name)} · ${esc(t.place)}</option>`).join('')
+        ? free.map(t => `<option value="${t.nr}">● LKW ${t.nr} · ${esc(t.driver.name)} · ${esc(t.place)}</option>`).join('')
         : '<option value="">kein Fahrzeug frei</option>';
       if (free.some(t => String(t.nr) === keep)) select.value = keep;
     }

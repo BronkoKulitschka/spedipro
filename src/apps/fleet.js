@@ -3,7 +3,7 @@
 import { SKILLS } from '../config.js';
 import { S, xpNeeded, findTruck, atDepot, modelOf, resaleValue,
          driveStatus, canDrive, bestand, truckFix, fixGesamt } from '../state.js';
-import { esc, pips, fmt, num } from '../util.js';
+import { esc, pips, fmt, num, truckFarbe } from '../util.js';
 import { kapazitaet, klasseVon } from '../sim/goods.js';
 import { EQUIPMENT } from '../config.js';
 import { setAuto, returnToDepot, sellTruck } from '../sim/fleet.js';
@@ -157,7 +157,9 @@ function row(truck) {
   return `
   <div class="truck-row mit-hintergrund">
     <div class="flex-row" style="justify-content:space-between;">
-      <span><strong>${esc(d.name)}</strong>
+      <span>
+        <span class="farb-marke" style="background:${truckFarbe(truck.nr).kraeftig}"></span>
+        <strong>${esc(d.name)}</strong>
         <span class="muted">· LKW ${truck.nr} · St. ${d.level}</span></span>
       <span style="font-size:10px;" id="tst${truck.nr}"></span>
     </div>
