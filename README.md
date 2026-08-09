@@ -195,6 +195,7 @@ node test/cities.mjs     # Städteliste und Ersatzplätze
 node test/places.mjs     # Ortsbewertung bei freier Wahl
 node test/wallpaper.mjs  # Hintergrundwerte
 node test/wiring.mjs     # jede aufgerufene Funktion existiert auch
+node test/sprites.mjs    # Rasteraufteilung des Sammelbilds
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und

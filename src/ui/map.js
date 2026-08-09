@@ -10,7 +10,7 @@ import { esc, haversine, fmt, num, pips, pointOnRoute,
          courseOnRoute, truckFarbe } from '../util.js';
 import { HUB_ICON } from '../data/hubs.js';
 import { SKILLS, EQUIPMENT } from '../config.js';
-import { fahrzeugBild, onBildBereit } from './sprites.js';
+import { fahrzeugBild, onBildBereit, bildStand } from './sprites.js';
 import { kapazitaet, klasseVon } from '../sim/goods.js';
 
 let map = null;
@@ -192,20 +192,24 @@ export function updateTruckMarker(truck) {
       icon: L.divIcon({ className: 'truck-marker fahrend', html: inhalt,
                         iconSize: [26, 26], iconAnchor: [13, 13] }),
     }).addTo(layers.trucks);
+    const neu = truck.marker.getElement();
+    if (neu) neu.dataset.bild = bildStand();
   } else {
     truck.marker.setLatLng(pos);
     const wurzel = truck.marker.getElement();
     if (wurzel) {
       wurzel.classList.add('truck-marker', 'fahrend');
 
-      /* Nur den Pfeil drehen, statt alles neu aufzubauen. */
+      /* Nur den Pfeil drehen, statt alles neu aufzubauen — außer der
+         Bildstand hat sich geändert, dann muss der Inhalt neu. */
       const zeiger = wurzel.querySelector('.kurs-zeiger');
-      if (zeiger) {
+      if (zeiger && wurzel.dataset.bild === bildStand()) {
         zeiger.style.transform = `rotate(${kurs.toFixed(1)}deg)`;
         const icon = wurzel.querySelector('.truck-icon');
         if (icon) icon.className = `truck-icon ${richtung}`;
       } else {
         wurzel.innerHTML = inhalt;
+        wurzel.dataset.bild = bildStand();
       }
     }
   }
@@ -248,12 +252,15 @@ function parkTruck(truck) {
       icon: L.divIcon({ className: 'truck-marker', html: inhalt,
                         iconSize: [26, 26], iconAnchor: [13, 13] }),
     }).addTo(layers.trucks);
+    const neu = truck.marker.getElement();
+    if (neu) neu.dataset.bild = bildStand();
   } else {
     truck.marker.setLatLng([pos.lat, pos.lon]);
     const wurzel = truck.marker.getElement();
     if (wurzel) {
       wurzel.classList.remove('fahrend');
       wurzel.innerHTML = inhalt;
+      wurzel.dataset.bild = bildStand();
     }
   }
 

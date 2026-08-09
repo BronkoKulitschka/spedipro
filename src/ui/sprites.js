@@ -72,7 +72,12 @@ export function fahrzeugBild(modelKey) {
        verbleibenden Platz — daher die Teilung durch Spalten minus eins. */
     const x = SPALTEN > 1 ? (sp / (SPALTEN - 1)) * 100 : 0;
     const y = ZEILEN  > 1 ? (ze / (ZEILEN  - 1)) * 100 : 0;
-    return `<span class="lkw-feld" style="background-position:${x}% ${y}%"></span>`;
+
+    /* Bildquelle direkt am Element, nicht über eine Stilvariable —
+       das ist unabhängig davon, ob die Variable schon gesetzt ist. */
+    return `<span class="lkw-feld" style="`
+         + `background-image:url('${BLATT}');`
+         + `background-position:${x}% ${y}%"></span>`;
   }
 
   if (einzelne.has(modelKey)) {
@@ -83,3 +88,7 @@ export function fahrzeugBild(modelKey) {
 }
 
 export const bildZustand = () => zustand;
+
+/* Kennzeichnet den aktuellen Bildstand. Ändert er sich, müssen die
+   Marken auf der Karte neu aufgebaut werden. */
+export const bildStand = () => zustand + ':' + einzelne.size;

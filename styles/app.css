@@ -241,10 +241,10 @@
 .truck-icon.parked { opacity: .92; }
 .truck-icon.parked.resting { opacity: .6; filter: grayscale(.6); }
 
-/* Ausschnitt aus dem Sammelbild assets/trucks.png */
+/* Ausschnitt aus dem Sammelbild assets/trucks.png.
+   Die Bildquelle setzt sprites.js direkt am Element. */
 .lkw-feld {
   display: block; width: 18px; height: 18px;
-  background-image: var(--lkw-blatt);
   background-size: 400% 300%;      /* vier Spalten, drei Zeilen */
   background-repeat: no-repeat;
   image-rendering: pixelated;
