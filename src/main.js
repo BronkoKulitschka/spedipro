@@ -290,7 +290,7 @@ async function bootSteps() {
   loadParking().then(liste => {
     S.parking = liste;
     if (liste.length) log(`${liste.length} Rastanlagen für Lastkraftwagen geladen.`);
-    import('./ui/map.js').then(m => m.drawParking());
+    import('./ui/map.js').then(m => m.drawParking());   // zeichnet nur, wenn sichtbar
   }).catch(() => {});
 
   bootProgress(50);

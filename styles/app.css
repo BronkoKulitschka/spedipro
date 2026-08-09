@@ -131,12 +131,7 @@
 /* Stehende Fahrzeuge und Umschlagpunkte */
 .truck-icon.parked { opacity: .95; filter: drop-shadow(1px 1px 0 rgba(0,0,0,.5)) grayscale(.15); }
 .truck-icon.parked.resting { filter: drop-shadow(1px 1px 0 rgba(0,0,0,.5)) grayscale(.7); opacity: .8; }
-.hub-pin {
-  font-size: 13px; line-height: 16px; text-align: center;
-  width: 18px; height: 18px; background: #d8d8c0;
-  border-top: 1px solid #fff; border-left: 1px solid #fff;
-  border-right: 1px solid #606060; border-bottom: 1px solid #606060;
-}
+
 
 
 /* Ladeliste */
@@ -276,13 +271,7 @@
   .truck-nr { min-width: 13px; height: 13px; font-size: 9px; line-height: 13px; }
 }
 
-/* Rastanlagen */
-.park-pin {
-  font-size: 11px; line-height: 14px; text-align: center;
-  width: 16px; height: 16px; background: #dde8f5;
-  border-top: 1px solid #fff; border-left: 1px solid #fff;
-  border-right: 1px solid #607080; border-bottom: 1px solid #607080;
-}
+
 
 
 /* Anfahrt in der Auftragsliste */

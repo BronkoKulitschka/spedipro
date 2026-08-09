@@ -157,6 +157,23 @@ Positionierung.
 
 Bewegungsanimationen gibt es keine.
 
+## Karte und Geschwindigkeit
+
+Leaflet läuft mit `preferCanvas`, Kreismarken werden also auf eine
+Zeichenfläche gemalt statt als einzelne DOM-Elemente. Bei mehreren hundert
+Marken ist das der Unterschied zwischen flüssig und zäh.
+
+Als DOM-Elemente bleiben nur Fahrzeuge und Aufträge — dort werden Ring,
+Pfeil und Nummer gebraucht. Alles andere ist Kreismarke: Betriebe,
+Umschlagpunkte, Meldungen, Rastanlagen.
+
+Sichtbarkeit und Zeichnen hängen zusammen: Was ausgeblendet ist, wird gar
+nicht erst erzeugt. Der Zustand der Ebenen liegt in `ui/map.js` und
+übersteht das Schließen des Fensters — die Häkchen richten sich beim
+Öffnen danach.
+
+Von den Betrieben werden die 150 nächstgelegenen gezeichnet.
+
 ## Testlauf
 
 Ein Rauchtest spielt zehn Spieltage ohne Browser durch und prüft, dass
@@ -168,6 +185,7 @@ node test/position.mjs   # Positionsrechnung auf der Route
 node test/cities.mjs     # Städteliste und Ersatzplätze
 node test/places.mjs     # Ortsbewertung bei freier Wahl
 node test/wallpaper.mjs  # Hintergrundwerte
+node test/wiring.mjs     # jede aufgerufene Funktion existiert auch
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und

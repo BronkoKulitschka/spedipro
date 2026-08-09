@@ -18,10 +18,38 @@ let host = null;
 const layers = { depot: null, firms: null, hubs: null, offers: null, traffic: null,
                  parking: null, routes: null, trucks: null, preview: null };
 
+/* Welche Ebenen sichtbar sein sollen. Diese Angabe ist die Wahrheit —
+   sie übersteht auch das Schließen und Wiederöffnen des Fensters.
+   Was nicht sichtbar ist, wird gar nicht erst gezeichnet. */
+const sichtbar = {
+  depot: true, firms: true, hubs: true, offers: true,
+  traffic: true, parking: false, routes: true, trucks: true, preview: true,
+};
+
+export const istSichtbar = name => !!sichtbar[name];
+
 /* Wird von der Routenplanung gesetzt, damit die Karte einen Auftrag
    annehmen kann, ohne die Simulation direkt zu kennen. */
 let acceptHandler = null;
 export function onOfferAccept(fn) { acceptHandler = fn; }
+
+/* Ring um das Fahrzeug, in seiner eigenen Farbe. Fährt es, sitzt ein
+   Pfeil auf dem Ring und zeigt in Fahrtrichtung. */
+function ringInhalt(truck, kurs, richtung, faehrt, ruht = false) {
+  const farbe = truckFarbe(truck.nr);
+  const dreh = faehrt ? `transform:rotate(${kurs.toFixed(1)}deg);` : '';
+
+  return `
+    <span class="kurs-ring" style="border-color:${farbe.kraeftig}"></span>
+    ${faehrt ? `
+      <span class="kurs-zeiger" style="${dreh}">
+        <span class="kurs-pfeil" style="border-bottom-color:${farbe.kraeftig}"></span>
+      </span>` : ''}
+    <span class="truck-icon ${richtung}${faehrt ? '' : ' parked'}${ruht ? ' resting' : ''}">
+      ${fahrzeugBild(truck.model)}
+    </span>
+    <span class="truck-nr" style="background:${farbe.kraeftig}">${truck.nr}</span>`;
+}
 
 export function mapHost() {
   if (!host) {
@@ -34,7 +62,13 @@ export function mapHost() {
 export function initMap() {
   if (map) { ensureMapSize(); return; }
 
-  map = L.map(mapHost(), { zoomControl: true }).setView([S.depot.lat, S.depot.lon], 8);
+  /* preferCanvas zeichnet Kreismarken auf eine Zeichenfläche statt als
+     einzelne DOM-Elemente. Bei mehreren hundert Marken ist das der
+     Unterschied zwischen flüssig und zäh. */
+  map = L.map(mapHost(), {
+    zoomControl: true,
+    preferCanvas: true,
+  }).setView([S.depot.lat, S.depot.lon], 8);
 
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
@@ -42,8 +76,10 @@ export function initMap() {
                + ' · Routing: OSRM · Verkehr: Autobahn GmbH',
   }).addTo(map);
 
-  for (const key of ['routes', 'preview', 'firms', 'hubs', 'parking', 'traffic', 'offers', 'trucks', 'depot']) {
-    layers[key] = L.layerGroup().addTo(map);
+  for (const key of ['routes', 'preview', 'firms', 'hubs', 'parking',
+                     'traffic', 'offers', 'trucks', 'depot']) {
+    layers[key] = L.layerGroup();
+    if (sichtbar[key]) layers[key].addTo(map);
   }
 
   /* Vorschaulinie vom nächsten freien LKW zum angeklickten Auftrag */
@@ -93,9 +129,13 @@ export function ensureMapSize() {
 }
 
 export function drawFirms() {
-  if (!map) return;
+  if (!map || !sichtbar.firms) return;
   layers.firms.clearLayers();
-  for (const f of S.firms.slice(0, 300)) {
+  /* Nur die nächstgelegenen zeichnen. Weiter entfernte Betriebe sind
+     ohnehin selten Ziel, und jede Marke kostet beim Verschieben. */
+  const naechste = [...S.firms].sort((a, b) => a.km - b.km).slice(0, 150);
+
+  for (const f of naechste) {
     L.circleMarker([f.lat, f.lon], {
       radius: 3, color: '#000080', weight: 1,
       fillColor: f.invented ? '#c8a020' : '#4a90d9', fillOpacity: .85,
@@ -107,7 +147,7 @@ export function drawFirms() {
 }
 
 export function drawTraffic() {
-  if (!map) return;
+  if (!map || !sichtbar.traffic) return;
   layers.traffic.clearLayers();
   for (const t of S.traffic) {
     L.circleMarker([t.lat, t.lon], {
@@ -268,16 +308,21 @@ function truckPopup(truck) {
 }
 
 /* ── Umschlagpunkte ── */
+const HUB_FARBE = {
+  Flughafen: '#8060b0', Seehafen: '#2070a0',
+  Binnenhafen: '#40a0a0', Güterbahnhof: '#a08040',
+};
+
 export function drawHubs() {
-  if (!map || !layers.hubs) return;
+  if (!map || !layers.hubs || !sichtbar.hubs) return;
   layers.hubs.clearLayers();
 
   for (const h of S.hubs || []) {
-    L.marker([h.lat, h.lon], {
-      icon: L.divIcon({ className: '', iconSize: [18, 18], iconAnchor: [9, 9],
-        html: `<div class="hub-pin">${HUB_ICON[h.art] || '📍'}</div>` }),
+    L.circleMarker([h.lat, h.lon], {
+      radius: 5, color: '#202020', weight: 1,
+      fillColor: HUB_FARBE[h.art] || '#808080', fillOpacity: .9,
     }).bindPopup(
-      `<strong>${esc(h.name)}</strong><br>${esc(h.art)}<br>`
+      `<strong>${HUB_ICON[h.art] || '📍'} ${esc(h.name)}</strong><br>${esc(h.art)}<br>`
       + `${h.km.toFixed(0)} km vom Depot<br>`
       + `<span class="muted">Umschlagzuschlag +${Math.round((h.bonus - 1) * 100)} %</span>`
     ).addTo(layers.hubs);
@@ -309,8 +354,20 @@ export function focusTruck(truck) {
 }
 
 export function toggleLayer(name, visible) {
+  sichtbar[name] = !!visible;
   if (!map || !layers[name]) return;
-  visible ? map.addLayer(layers[name]) : map.removeLayer(layers[name]);
+
+  if (visible) {
+    map.addLayer(layers[name]);
+    /* Erst jetzt zeichnen — vorher wäre es verschwendete Arbeit. */
+    if (name === 'parking') drawParking();
+    if (name === 'firms')   drawFirms();
+    if (name === 'traffic') drawTraffic();
+    if (name === 'hubs')    drawHubs();
+  } else {
+    map.removeLayer(layers[name]);
+    layers[name].clearLayers();
+  }
 }
 
 
@@ -398,15 +455,15 @@ export function zeigeFahrzeug(truck) {
 
 /* ── LKW-Parkplätze und Rastanlagen ── */
 export function drawParking() {
-  if (!map || !layers.parking) return;
+  if (!map || !layers.parking || !sichtbar.parking) return;
   layers.parking.clearLayers();
 
   for (const p of S.parking || []) {
-    L.marker([p.lat, p.lon], {
-      icon: L.divIcon({ className: '', iconSize: [16, 16], iconAnchor: [8, 8],
-        html: '<div class="park-pin">🅿️</div>' }),
+    L.circleMarker([p.lat, p.lon], {
+      radius: 4, color: '#405060', weight: 1,
+      fillColor: '#a8c8e8', fillOpacity: .9,
     }).bindPopup(
-      `<strong>${esc(p.name)}</strong><br>${esc(p.road)}<br>`
+      `<strong>🅿️ ${esc(p.name)}</strong><br>${esc(p.road)}<br>`
       + '<span class="muted">Rastanlage für Lastkraftwagen</span>'
     ).addTo(layers.parking);
   }

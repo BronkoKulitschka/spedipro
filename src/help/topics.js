@@ -61,7 +61,8 @@ export const TOPICS = {
       { list: [
         '🚛 Fahrzeuge — immer sichtbar, ausgegraut bei Pause oder Ruhezeit.',
         '📦 offene Aufträge, 📜 aus Verträgen, 🤝 von Partnern.',
-        '✈️ ⚓ 🚉 Umschlagpunkte im ganzen Bundesgebiet.',
+        '✈️ ⚓ 🚉 Umschlagpunkte im ganzen Bundesgebiet, nach Art eingefärbt.',
+        '🅿️ Rastanlagen — standardmäßig ausgeblendet, weil es viele sind.',
         '🚧 gemeldete Baustellen und Verkehrsmeldungen.',
       ] },
       { p: 'Deutschland legt den Ausschnitt über alles Wesentliche, Depot holt dich zurück. Ein Klick auf ein Fahrzeug zeigt seine Daten als Kurzfassung.' },

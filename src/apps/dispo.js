@@ -12,7 +12,8 @@ import { KIND_LABEL, takeOffer } from '../sim/orders.js';
 import { kapazitaet, summe, passt, klasseVon } from '../sim/goods.js';
 import { onTick } from '../ui/wm.js';
 import { initMap, ensureMapSize, mapHost, drawOffers, drawTrucks,
-         toggleLayer, onOfferAccept, focusPoint, fitAll, zeigeFahrzeug } from '../ui/map.js';
+         toggleLayer, onOfferAccept, focusPoint, fitAll, zeigeFahrzeug,
+         istSichtbar } from '../ui/map.js';
 import { empty } from './shared.js';
 
 /* Tief genug, dass Straßen und Hausnummern zu erkennen sind. */
@@ -32,11 +33,11 @@ export const DispoApp = {
             <button class="btn btn-sm" data-view="depot">Depot</button>
           </span>
           <span class="flex-row" style="gap:7px;font-size:10px;flex-wrap:wrap;">
-            <label class="flex-row" style="gap:3px;"><input type="checkbox" checked data-layer="trucks">🚛</label>
-            <label class="flex-row" style="gap:3px;"><input type="checkbox" checked data-layer="offers">📦</label>
-            <label class="flex-row" style="gap:3px;"><input type="checkbox" checked data-layer="hubs">✈️</label>
-            <label class="flex-row" style="gap:3px;"><input type="checkbox" checked data-layer="firms">Betriebe</label>
-            <label class="flex-row" style="gap:3px;"><input type="checkbox" checked data-layer="traffic">🚧</label>
+            <label class="flex-row" style="gap:3px;"><input type="checkbox" data-layer="trucks">🚛</label>
+            <label class="flex-row" style="gap:3px;"><input type="checkbox" data-layer="offers">📦</label>
+            <label class="flex-row" style="gap:3px;"><input type="checkbox" data-layer="hubs">✈️</label>
+            <label class="flex-row" style="gap:3px;"><input type="checkbox" data-layer="firms">Betriebe</label>
+            <label class="flex-row" style="gap:3px;"><input type="checkbox" data-layer="traffic">🚧</label>
             <label class="flex-row" style="gap:3px;"><input type="checkbox" data-layer="parking">🅿️</label>
           </span>
         </div>
@@ -68,7 +69,12 @@ export const DispoApp = {
     el.querySelector('#mapSlot').appendChild(mapHost());
     initMap();
     ensureMapSize();
-    toggleLayer('parking', false);        // erst auf Wunsch einblenden
+
+    /* Die Häkchen auf den gemerkten Stand bringen — er gilt auch
+       nach dem Schließen und Wiederöffnen des Fensters. */
+    el.querySelectorAll('input[data-layer]').forEach(cb => {
+      cb.checked = istSichtbar(cb.dataset.layer);
+    });
 
     onOfferAccept((offerId, truckNr) => {
       dispatch(offerId, truckNr).then(() => { drawOffers(); onTick(); });
