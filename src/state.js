@@ -56,6 +56,7 @@ export function resetState(depot) {
     screen: 'start',
     name: 'Meine Spedition',
     depot,
+    stadt: null,       // gewählter Standort aus der Städteliste
     money: RULES.START_MONEY,
 
     /* Zeit wird in Minuten seit Spielbeginn geführt, als Kommazahl.
@@ -243,6 +244,7 @@ export function hydrate(saved) {
     tutorial: saved.tutorial || { schritt: 0, aktiv: false },
     hubs: saved.hubs?.length ? saved.hubs : [],
     parking: saved.parking || [],
+    stadt: saved.stadt || null,
     ledger: saved.ledger || [],
     books: saved.books || { ein: 0, aus: 0 },
     market: saved.market || { index: 1, trend: 0 },

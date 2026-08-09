@@ -5,8 +5,8 @@
    und in den Einstellungen, damit sich mit einem Blick prüfen lässt,
    welcher Stand gerade läuft. */
 
-export const VERSION = '0.19.4';
+export const VERSION = '0.20.2';
 export const BUILD   = '2026-08-09';
-export const CODENAME = 'Am Ball';
+export const CODENAME = 'Standortwahl';
 
 export const versionLine = () => `Version ${VERSION} · ${BUILD}`;

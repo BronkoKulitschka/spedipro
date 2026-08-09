@@ -21,6 +21,11 @@ export const TOPICS = {
         'Keine Vertragsstrafen. Wer einen Vertrag nicht erfüllt, bekommt weniger Prämie, mehr nicht.',
         'Ein Konto im Minus ist kein Verlieren, nur eine Zahl.',
       ] },
+      { h: 'Der Standort' },
+      { p: 'Beim Start wählst du einen Standort — eine der 42 Städte aus der Liste, oder du tippst irgendwohin auf die Karte. Im zweiten Fall wird nachgeschlagen, welche Ortschaft dort in der Nähe liegt; ein Dorf direkt am Punkt zählt mehr als eine Großstadt zwanzig Kilometer weiter.' },
+      { p: 'Liegt im Umkreis von 25 Kilometern keine Ortschaft, ist der Punkt nicht wählbar — mitten in der Nordsee lässt sich keine Spedition gründen.' },
+      { p: 'Der Betriebshof wird danach in einem echten Gewerbe- oder Industriegebiet am Ortsrand angelegt, meist drei bis zehn Kilometer vom Zentrum. Die Flächen stammen aus OpenStreetMap.' },
+      { p: 'Der Standort bestimmt, welche Kundschaft in Reichweite liegt. Ein Hafen bringt Umschlagverkehr, das Ruhrgebiet dichte Kurzstrecken, Kassel eine zentrale Lage für den Fernverkehr.' },
       { h: 'Der Einstieg in drei Schritten' },
       { list: [
         'In der Disposition ein Fahrzeug wählen und einen Auftrag annehmen.',

@@ -127,13 +127,22 @@ Blickrichtung ergibt sich aus dem zuletzt gefahrenen Stück. Wer
 
 ## Eigene Fahrzeuggrafik
 
-Liegt unter `assets/truck.png` eine Datei, wird sie auf der Karte anstelle
-des Sinnbilds 🚛 verwendet. Ohne Datei bleibt das Sinnbild — es geht also
-nichts kaputt, wenn keine da ist.
+Drei Stufen, in dieser Reihenfolge geprüft:
 
-Anforderungen: PNG mit durchsichtigem Hintergrund, 64 × 64 Bildpunkte,
-Fahrzeug zeigt nach rechts. Die Gegenrichtung spiegelt das Programm selbst.
-Näheres in `assets/README.md`.
+1. **`assets/trucks.png`** — ein Sammelbild mit allen elf Fahrzeugen in
+   einem Raster von vier Spalten und drei Zeilen, jedes Feld 64 × 64. Das
+   Seitenverhältnis wird geprüft, damit kein fremdes Bild zerschnitten wird.
+2. **`assets/truck-<klasse>.png`** — ein Bild je Fahrzeugklasse. Auch
+   einzelne genügen.
+3. Das Sinnbild 🚛, wenn nichts davon vorliegt.
+
+Dargestellt wird mit 18 Bildpunkten, auf Geräten ohne Maus mit 22. Die
+Vorlagen dürfen größer sein; `image-rendering: pixelated` hält die Kanten
+scharf. Fahrzeuge nach links werden vom Spiel gespiegelt — alle Bilder
+also nach rechts zeichnen.
+
+Näheres in `assets/README.md`. Die Zuordnung der Rasterfelder steht in
+`src/ui/sprites.js`.
 
 Jedes Fahrzeug trägt einen Ring in einer eigenen Farbe, dazu seine Nummer.
 Die Farbe ergibt sich aus der Fahrzeugnummer über den goldenen Winkel, so
@@ -142,10 +151,9 @@ Farbe hat die Streckenlinie, die Marke im Fuhrpark und der Punkt in der
 Fahrzeugauswahl.
 
 Fährt ein Fahrzeug, sitzt außen am Ring ein Pfeil in Fahrtrichtung. Der
-Kurs wird aus dem Verlauf der Route berechnet — der Pfeil dreht sich also
-mit der Straße. Gedreht wird dabei nur der Pfeil, nicht der Marker selbst:
-dessen `transform` gehört Leaflet für die Positionierung, und ein Eingriff
-dort war der Grund, warum Fahrzeuge früher über die Karte schwammen.
+Kurs wird aus dem Verlauf der Route berechnet. Gedreht wird dabei nur der
+Pfeil, nicht der Marker selbst: dessen `transform` gehört Leaflet für die
+Positionierung.
 
 Bewegungsanimationen gibt es keine.
 
@@ -155,7 +163,11 @@ Ein Rauchtest spielt zehn Spieltage ohne Browser durch und prüft, dass
 Zustand, Auftragsbörse, Verträge, Fahrten und Kassenbuch zusammenpassen:
 
 ```bash
-node test/smoke.mjs
+node test/smoke.mjs      # zehn Spieltage mit allen Systemen
+node test/position.mjs   # Positionsrechnung auf der Route
+node test/cities.mjs     # Städteliste und Ersatzplätze
+node test/places.mjs     # Ortsbewertung bei freier Wahl
+node test/wallpaper.mjs  # Hintergrundwerte
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und

@@ -10,6 +10,7 @@ import { esc, haversine, fmt, num, pips, pointOnRoute,
          courseOnRoute, truckFarbe } from '../util.js';
 import { HUB_ICON } from '../data/hubs.js';
 import { SKILLS, EQUIPMENT } from '../config.js';
+import { fahrzeugBild, onBildBereit } from './sprites.js';
 import { kapazitaet, klasseVon } from '../sim/goods.js';
 
 let map = null;
@@ -21,46 +22,6 @@ const layers = { depot: null, firms: null, hubs: null, offers: null, traffic: nu
    annehmen kann, ohne die Simulation direkt zu kennen. */
 let acceptHandler = null;
 export function onOfferAccept(fn) { acceptHandler = fn; }
-
-/* ── Fahrzeugbild ────────────────────────────────────────────────
-   Solange keine eigene Grafik hinterlegt ist, wird das Sinnbild
-   benutzt. Liegt unter assets/truck.png eine Datei, tritt sie an
-   seine Stelle — ohne Änderung am Programm. */
-let bildVorhanden = null;
-
-export function truckBild() {
-  if (bildVorhanden === null) {
-    bildVorhanden = false;
-    const probe = new Image();
-    probe.onload = () => {
-      bildVorhanden = true;
-      document.documentElement.classList.add('eigenes-lkw-bild');
-      drawTrucks();
-    };
-    probe.src = './assets/truck.png';
-  }
-  return bildVorhanden
-    ? '<img src="./assets/truck.png" alt="" class="truck-bild">'
-    : '🚛';
-}
-
-/* Ring um das Fahrzeug, in seiner eigenen Farbe. Fährt es, sitzt ein
-   Pfeil auf dem Ring und zeigt in Fahrtrichtung. */
-function ringInhalt(truck, kurs, richtung, faehrt, ruht = false) {
-  const farbe = truckFarbe(truck.nr);
-  const dreh = faehrt ? `transform:rotate(${kurs.toFixed(1)}deg);` : '';
-
-  return `
-    <span class="kurs-ring" style="border-color:${farbe.kraeftig}"></span>
-    ${faehrt ? `
-      <span class="kurs-zeiger" style="${dreh}">
-        <span class="kurs-pfeil" style="border-bottom-color:${farbe.kraeftig}"></span>
-      </span>` : ''}
-    <span class="truck-icon ${richtung}${faehrt ? '' : ' parked'}${ruht ? ' resting' : ''}">
-      ${truckBild()}
-    </span>
-    <span class="truck-nr" style="background:${farbe.kraeftig}">${truck.nr}</span>`;
-}
 
 export function mapHost() {
   if (!host) {
@@ -101,11 +62,20 @@ export function initMap() {
   L.marker([S.depot.lat, S.depot.lon], {
     icon: L.divIcon({ className: '', html: '<div class="depot-icon">🏠</div>',
                       iconSize: [20, 20], iconAnchor: [10, 10] }),
-  }).bindPopup(`<strong>Depot ${esc(S.depot.name)}</strong>`).addTo(layers.depot);
+  }).bindPopup(
+    `<strong>Betriebshof ${esc(S.depot.name)}</strong><br>`
+    + (S.depot.lage ? `${esc(S.depot.lage)}<br>` : '')
+    + `<span class="muted">${esc(S.depot.art || 'Gewerbegebiet')}`
+    + (S.depot.entfernung ? ` · ${S.depot.entfernung.toFixed(0)} km vom Zentrum` : '')
+    + '</span>'
+  ).addTo(layers.depot);
 
   /* Nach einem Zoomvorgang die Fahrzeuge neu setzen, damit sie
      sicher an der richtigen Stelle sitzen. */
   map.on('zoomend', () => drawTrucks());
+
+  /* Treffen die Bilder verspätet ein, Fahrzeuge neu zeichnen. */
+  onBildBereit(() => drawTrucks());
 
   drawFirms();
   drawHubs();
@@ -180,7 +150,7 @@ export function updateTruckMarker(truck) {
   if (!truck.marker) {
     truck.marker = L.marker(pos, {
       icon: L.divIcon({ className: 'truck-marker fahrend', html: inhalt,
-                        iconSize: [34, 34], iconAnchor: [17, 17] }),
+                        iconSize: [26, 26], iconAnchor: [13, 13] }),
     }).addTo(layers.trucks);
   } else {
     truck.marker.setLatLng(pos);
@@ -236,7 +206,7 @@ function parkTruck(truck) {
   if (!truck.marker) {
     truck.marker = L.marker([pos.lat, pos.lon], {
       icon: L.divIcon({ className: 'truck-marker', html: inhalt,
-                        iconSize: [34, 34], iconAnchor: [17, 17] }),
+                        iconSize: [26, 26], iconAnchor: [13, 13] }),
     }).addTo(layers.trucks);
   } else {
     truck.marker.setLatLng([pos.lat, pos.lon]);

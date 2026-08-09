@@ -1,12 +1,9 @@
 /* Alle Stellschrauben an einem Ort. */
 
-export const DEPOTS = [
-  { key: 'HH', name: 'Hamburg',   lat: 53.5461, lon:  9.9661 },
-  { key: 'B',  name: 'Berlin',    lat: 52.5200, lon: 13.4050 },
-  { key: 'K',  name: 'Köln',      lat: 50.9375, lon:  6.9603 },
-  { key: 'F',  name: 'Frankfurt', lat: 50.1109, lon:  8.6821 },
-  { key: 'M',  name: 'München',   lat: 48.1372, lon: 11.5755 },
-];
+/* Die Standortauswahl steht in data/cities.js — dort mit allen
+   wählbaren Städten. Der genaue Platz des Betriebshofs wird beim Start
+   über data/depotsite.js in einem echten Gewerbegebiet gesucht. */
+
 
 export const AUTOBAHNEN = [
   'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','A24','A31','A45','A61','A81','A99',

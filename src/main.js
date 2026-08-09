@@ -1,7 +1,13 @@
 /* Einstiegspunkt: Ablauf vom Startbildschirm über das Laden der Daten
    bis zum Desktop, auf dem die Programme in Fenstern laufen. */
 
-import { DEPOTS, AUTOBAHNEN } from './config.js';
+import { AUTOBAHNEN } from './config.js';
+import { CITIES, cityByKey } from './data/cities.js';
+import { esc } from './util.js';
+import { findeDepotplatz } from './data/depotsite.js';
+import { zeigeStaedteKarte, markiere, schliesseStaedteKarte,
+         setzeFreienPunkt, entferneFreienPunkt, zeigeAusschnitt } from './ui/citymap.js';
+import { ortAn } from './data/placelookup.js';
 import { S, resetState, hydrate, log } from './state.js';
 import { VERSION, BUILD } from './version.js';
 import { loadTraffic, loadParking } from './data/autobahn.js';
@@ -21,9 +27,48 @@ import { wendeAn } from './ui/wallpaper.js';
 const root = () => document.getElementById('root');
 
 /* ── Startbildschirm ── */
+let gewaehlteStadt = 'KS';       // Kassel liegt in der Mitte
+let freierOrt = null;            // frei gewählter Standort, falls vorhanden
+let sucheLaeuft = false;
+
 function showStart() {
   S.screen = 'start';
   root().innerHTML = startScreen(saveInfo());
+
+  const liste = document.getElementById('depotSel');
+  liste.value = gewaehlteStadt;
+
+  zeigeStaedteKarte(
+    document.getElementById('waehlKarte'),
+    freierOrt ? null : gewaehlteStadt,
+
+    /* Eine Stadt aus der Liste wurde angetippt */
+    key => {
+      freierOrt = null;
+      gewaehlteStadt = key;
+      liste.value = key;
+      zeigeStadtInfo(key);
+    },
+
+    /* Irgendwohin auf die Karte getippt */
+    (lat, lon) => waehleFreienPunkt(lat, lon),
+  );
+
+  liste.onchange = () => {
+    freierOrt = null;
+    gewaehlteStadt = liste.value;
+    markiere(gewaehlteStadt);
+    zeigeStadtInfo(gewaehlteStadt);
+  };
+
+  if (freierOrt) {
+    setzeFreienPunkt(freierOrt.lat, freierOrt.lon, freierOrt.name);
+    zeigeAusschnitt(freierOrt.lat, freierOrt.lon, 9);
+    zeigeFreienOrt();
+  } else {
+    zeigeStadtInfo(gewaehlteStadt);
+  }
+
   document.getElementById('startBtnGo').onclick = beginBoot;
   document.getElementById('continueBtn')?.addEventListener('click', continueGame);
   document.getElementById('dropSaveBtn')?.addEventListener('click', () => {
@@ -52,6 +97,77 @@ function continueGame() {
   }
 }
 
+/* ── Freie Standortwahl ──────────────────────────────────────────
+   Der Punkt wird nachgeschlagen: Liegt eine Ortschaft in der Nähe,
+   gilt sie als Standort. Sonst bleibt es bei der bisherigen Wahl. */
+async function waehleFreienPunkt(lat, lon) {
+  if (sucheLaeuft) return;
+  sucheLaeuft = true;
+
+  setzeFreienPunkt(lat, lon, 'wird nachgeschlagen …', 'suche');
+  const kasten = document.getElementById('stadtInfo');
+  if (kasten) kasten.innerHTML = '<span class="muted">Ort wird nachgeschlagen …</span>';
+
+  const ergebnis = await ortAn(lat, lon);
+  sucheLaeuft = false;
+
+  if (!ergebnis.ok) {
+    setzeFreienPunkt(lat, lon, 'kein Ort in der Nähe', 'fehler');
+    if (kasten) {
+      kasten.innerHTML = `<span class="warn">${esc(ergebnis.grund)}</span>`;
+    }
+    setTimeout(() => {
+      entferneFreienPunkt();
+      if (freierOrt) setzeFreienPunkt(freierOrt.lat, freierOrt.lon, freierOrt.name);
+      else markiere(gewaehlteStadt);
+      freierOrt ? zeigeFreienOrt() : zeigeStadtInfo(gewaehlteStadt);
+    }, 3500);
+    return;
+  }
+
+  const ort = ergebnis.ort;
+  freierOrt = {
+    key: 'frei',
+    name: ort.name,
+    lat: ort.lat,
+    lon: ort.lon,
+    land: ort.art,
+    einwohner: ort.einwohner,
+    text: `Frei gewählter Standort, ${ort.art}.`,
+  };
+
+  setzeFreienPunkt(ort.lat, ort.lon, ort.name);
+  zeigeFreienOrt();
+}
+
+function zeigeFreienOrt() {
+  const kasten = document.getElementById('stadtInfo');
+  if (!kasten || !freierOrt) return;
+
+  kasten.innerHTML = `
+    <strong>${esc(freierOrt.name)}</strong>
+    <span class="muted">· ${esc(freierOrt.land)}</span>
+    <span class="frei-hinweis">frei gewählt</span><br>
+    <span style="font-size:10px;">Der Betriebshof entsteht in einem
+      Gewerbegebiet in der Nähe.</span><br>
+    <span class="muted" style="font-size:10px;">
+      rund ${freierOrt.einwohner.toLocaleString('de-DE')} Tausend Einwohner</span>`;
+}
+
+/* Kurzbeschreibung der gewählten Stadt im Startbildschirm */
+function zeigeStadtInfo(key) {
+  const stadt = cityByKey(key);
+  const kasten = document.getElementById('stadtInfo');
+  if (!stadt || !kasten) return;
+
+  kasten.innerHTML = `
+    <strong>${stadt.name}</strong>
+    <span class="muted">· ${stadt.land}</span><br>
+    <span style="font-size:10px;">${stadt.text}</span><br>
+    <span class="muted" style="font-size:10px;">
+      rund ${stadt.einwohner.toLocaleString('de-DE')} Tausend Einwohner</span>`;
+}
+
 /* ── Ladebildschirm ── */
 let bootOffen = true;
 function quiet() { bootOffen = false; }
@@ -78,10 +194,17 @@ function bootProgress(percent) {
 
 function beginBoot() {
   bootOffen = true;
-  const key  = document.getElementById('depotSel').value;
   const name = document.getElementById('pname').value.trim();
+  const key  = document.getElementById('depotSel').value || gewaehlteStadt;
 
-  resetState(DEPOTS.find(d => d.key === key) || DEPOTS[0]);
+  /* Ein frei gewählter Punkt hat Vorrang vor der Liste. */
+  const stadt = freierOrt || cityByKey(key) || CITIES[0];
+
+  schliesseStaedteKarte();
+
+  /* Vorläufig die Stadtmitte; der genaue Platz wird beim Laden gesucht. */
+  resetState({ key: stadt.key, name: stadt.name, lat: stadt.lat, lon: stadt.lon });
+  S.stadt = stadt;
   if (name) S.name = name;
 
   S.screen = 'boot';
@@ -118,8 +241,27 @@ async function runBoot() {
 async function bootSteps() {
   bootLine(`SpeditionsPro 95 — Version ${VERSION} (${BUILD})`);
   bootLine('');
-  bootLine(`Depot: ${S.depot.name}`);
+  bootLine(`Standort: ${S.depot.name}`);
   bootLine('');
+
+  /* Einen echten Gewerbestandort für den Betriebshof suchen. */
+  bootLine('Betriebshof wird gesucht …');
+  const platz = await findeDepotplatz(S.stadt || S.depot, bootLine);
+  S.depot = {
+    key: S.stadt?.key || S.depot.key,
+    name: S.stadt?.name || S.depot.name,
+    lat: platz.lat,
+    lon: platz.lon,
+    lage: platz.name,
+    art: platz.art,
+    geschaetzt: !!platz.geschaetzt,
+    entfernung: platz.km,
+  };
+  S.trucks.forEach(t => { t.pos = { lat: platz.lat, lon: platz.lon }; });
+
+  bootLine(`  Betriebshof: ${platz.name}, ${platz.km.toFixed(0)} km vom Zentrum.`);
+  bootLine('');
+  bootProgress(20);
 
   bootLine(`Verkehrslage der Autobahn GmbH (${AUTOBAHNEN.length} Autobahnen) …`);
   bootProgress(10);
@@ -230,7 +372,8 @@ function enterDesktop({ resumed = false } = {}) {
     log(`Betrieb fortgesetzt. Version ${VERSION}.`);
   } else {
     log(`SpeditionsPro 95, Version ${VERSION} gestartet.`);
-    log(`Betrieb aufgenommen. Depot ${S.depot.name}, ${S.firms.length} Betriebe im Umkreis.`);
+    log(`Betrieb aufgenommen. Betriebshof ${S.depot.lage || S.depot.name} `
+    + `bei ${S.depot.name}, ${S.firms.length} Betriebe im Umkreis.`);
   }
 
   /* Auf schmalen Geräten nur ein Fenster öffnen, sonst wird es unübersichtlich. */
@@ -304,5 +447,5 @@ document.addEventListener('visibilitychange', () => {
 });
 
 /* ── Los geht es ── */
-resetState(DEPOTS[0]);
+resetState(cityByKey(gewaehlteStadt) || CITIES[0]);
 showStart();

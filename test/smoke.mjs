@@ -39,12 +39,13 @@ const { dispatch, moveTrucks, buyTruck, distanceFrom, startTour } = await import
 const { kapazitaet, summe, passt } = await import('../src/sim/goods.js');
 const { takeOffer } = await import('../src/sim/orders.js');
 const { driftMarket }        = await import('../src/sim/market.js');
-const { DEPOTS, LEVELS }     = await import('../src/config.js');
+const { LEVELS }             = await import('../src/config.js');
+const { CITIES }             = await import('../src/data/cities.js');
 const prog = await import('../src/sim/progress.js');
 
 /* ── Aufbau ── */
 console.log('\nAufbau');
-resetState(DEPOTS[0]);
+resetState(CITIES[0]);
 const S = state.S;
 S.firms = inventFirms(S.depot, 40);
 const { hubsFor } = await import('../src/data/hubs.js');
