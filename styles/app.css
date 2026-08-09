@@ -205,59 +205,28 @@
 
 
 /* ── Fahrzeuge auf der Karte ──────────────────────────────────
-   Fahrende Fahrzeuge bekommen einen pulsierenden Ring und wandern
-   sanft zur nächsten Position, statt zu springen. */
+   Ruhige Darstellung ohne Bewegung. Die Blickrichtung ergibt sich
+   aus dem zuletzt gefahrenen Stück. */
 .truck-marker {
   display: flex; align-items: center; justify-content: center;
   width: 26px; height: 26px;
 }
-.leaflet-marker-icon.truck-marker {
-  transition: transform 1s linear;
-}
-/* Beim Zoomen und Verschieben ohne Übergang, sonst schwimmen die
-   Fahrzeuge über die Karte. */
-.ohne-anim .leaflet-marker-icon.truck-marker,
-.leaflet-zoom-anim .leaflet-marker-icon.truck-marker { transition: none; }
 .truck-marker .truck-icon {
-  position: relative; z-index: 2; font-size: 17px; line-height: 1;
+  font-size: 18px; line-height: 1;
   filter: drop-shadow(1px 1px 0 rgba(0,0,0,.6));
 }
-.truck-marker .truck-icon.fahrt { animation: rollen 1.1s ease-in-out infinite; }
 .truck-marker .truck-icon.links { transform: scaleX(-1); }
-.truck-marker .truck-icon.links.fahrt { animation: rollen-links 1.1s ease-in-out infinite; }
 
-.truck-marker { position: relative; }
-.truck-marker .ring {
-  position: absolute; top: 50%; left: 50%;
-  width: 24px; height: 24px; margin: -12px 0 0 -12px;
-  border-radius: 50%;
-  border: 2px solid rgba(0, 0, 160, .85);
-  box-shadow: 0 0 3px rgba(255, 255, 255, .7);
-  animation: ping 1.8s ease-out infinite;
-  pointer-events: none;
+/* Fahrende etwas kräftiger, stehende zurückgenommen */
+.truck-marker.fahrend .truck-icon {
+  filter: drop-shadow(1px 1px 1px rgba(0,0,0,.8));
 }
+.truck-icon.parked { opacity: .9; }
+.truck-icon.parked.resting { opacity: .65; filter: grayscale(.6) drop-shadow(1px 1px 0 rgba(0,0,0,.5)); }
 
-@keyframes rollen {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-2px); }
-}
-@keyframes rollen-links {
-  0%, 100% { transform: scaleX(-1) translateY(0); }
-  50%      { transform: scaleX(-1) translateY(-2px); }
-}
-@keyframes ping {
-  0%   { transform: scale(.55); opacity: .9; }
-  70%  { transform: scale(1.35); opacity: 0; }
-  100% { transform: scale(1.35); opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .leaflet-marker-icon.truck-marker { transition: none; }
-  .truck-marker .truck-icon.fahrt,
-  .truck-marker .truck-icon.links.fahrt { animation: none; }
-  .truck-marker .ring { animation: none; opacity: .5; }
-}
-
+/* Eigene Grafik, falls unter assets/truck.png hinterlegt */
+.truck-bild { width: 24px; height: 24px; display: block; image-rendering: pixelated; }
+.truck-marker.fahrend .truck-bild { width: 26px; height: 26px; }
 
 /* Rastanlagen */
 .park-pin {
@@ -361,3 +330,14 @@
 
 /* Stammkundschaft */
 .kunde-zeile { padding: 3px 2px; border-bottom: 1px solid #e8e8e8; }
+
+
+/* Kennzahlen im Fuhrpark: Beschriftung und Wert dicht beieinander,
+   die Paare selbst mit Luft dazwischen. */
+.daten-reihe {
+  display: flex; flex-wrap: wrap; gap: 3px 12px;
+  font-size: 10px; margin: 4px 0;
+}
+.datum { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+.dl { color: #505050; }
+.dw { font-weight: bold; }

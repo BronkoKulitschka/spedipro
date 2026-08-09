@@ -125,6 +125,21 @@ und wandern in einer Sekunde zur nächsten Position, statt zu springen. Die
 Blickrichtung ergibt sich aus dem zuletzt gefahrenen Stück. Wer
 `prefers-reduced-motion` gesetzt hat, bekommt alles ohne Bewegung.
 
+## Eigene Fahrzeuggrafik
+
+Liegt unter `assets/truck.png` eine Datei, wird sie auf der Karte anstelle
+des Sinnbilds 🚛 verwendet. Ohne Datei bleibt das Sinnbild — es geht also
+nichts kaputt, wenn keine da ist.
+
+Anforderungen: PNG mit durchsichtigem Hintergrund, 64 × 64 Bildpunkte,
+Fahrzeug zeigt nach rechts. Die Gegenrichtung spiegelt das Programm selbst.
+Näheres in `assets/README.md`.
+
+Die Fahrzeuge werden bewusst **nicht animiert** dargestellt. Eine frühere
+Fassung hatte einen pulsierenden Ring und eine Bewegungsanimation — beides
+ist entfallen, weil die Animation auf `transform` lief und damit Leaflets
+eigener Positionierung in die Quere kam.
+
 ## Testlauf
 
 Ein Rauchtest spielt zehn Spieltage ohne Browser durch und prüft, dass
@@ -429,6 +444,21 @@ Die Wirtschaftsebene, angelehnt an klassische Aufbausimulationen:
 * **Werkstatt und Zustand** je Fahrzeug, Reifen, Inspektionsintervalle.
 
 Reihenfolge und Umfang sind offen — vermerkt, nicht beschlossen.
+
+## Erfundene Namen
+
+Alle Betriebsnamen im Spiel sind frei erfunden und benennen keine wirklichen
+Unternehmen — weder die Ersatzliste in `data/fallback.js`, die bei einem
+Ausfall der Overpass-Abfrage einspringt, noch der Namensgenerator in
+`data/invent.js`, noch die Partnerspeditionen.
+
+Ausgenommen sind die Umschlagpunkte in `data/hubs.js`: Häfen, Frachtflughäfen
+und Güterbahnhöfe sind öffentliche Infrastruktur und tragen ihre tatsächlichen
+Ortsbezeichnungen. Markennamen einzelner Betreiber wurden dort durch neutrale
+Bezeichnungen ersetzt.
+
+Kommt die Overpass-Abfrage durch, stammen die Namen aus OpenStreetMap und sind
+dann selbstverständlich echt — das sind offene Kartendaten.
 
 ## Datenquellen
 

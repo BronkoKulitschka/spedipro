@@ -19,11 +19,15 @@ export function haversine(a, b) {
 }
 
 /* Aufsummierte Streckenlängen einer Route, für Positionsrechnungen.
-   Wird zwischengespeichert, weil sie sich nicht ändert. */
-export function routeCum(route) {
-  if (route.cum) return route.cum;
 
-  const c = route.coords;
+   Das Ergebnis wird an der Route zwischengespeichert. Die Länge muss zu
+   den Koordinaten passen — sonst stammt der Zwischenspeicher von einer
+   anderen Strecke und wird verworfen. Genau das passierte bei
+   Mehrstopp-Touren, wenn die Etappe wechselte. */
+export function routeCum(route) {
+  const c = route.coords || [];
+  if (route.cum && route.cum.length === c.length) return route.cum;
+
   const cum = [0];
   for (let i = 1; i < c.length; i++) {
     cum[i] = cum[i - 1] + haversine(
@@ -32,6 +36,40 @@ export function routeCum(route) {
   }
   route.cum = cum;
   return cum;
+}
+
+/* Punkt auf einer Route nach zurückgelegten Kilometern.
+
+   route.km ist die gefahrene Strecke, die Geometrie kann davon
+   abweichen — bei Luftlinienrouten um den Umwegfaktor. Deshalb wird
+   der Anteil gerechnet und auf die Geometrie übertragen. */
+export function pointOnRoute(route, km) {
+  const c = route.coords || [];
+  if (!c.length) return null;
+  if (c.length === 1) return c[0];
+
+  const cum = routeCum(route);
+  const total = cum[cum.length - 1];
+  if (!(total > 0)) return c[0];
+
+  const anteil = route.km > 0 ? Math.max(0, Math.min(1, km / route.km)) : 0;
+  const ziel = anteil * total;
+
+  /* Erstes Segment finden, dessen Ende hinter dem Ziel liegt */
+  let i = 1;
+  while (i < cum.length - 1 && cum[i] < ziel) i++;
+
+  const a = c[i - 1];
+  const b = c[i];
+  if (!a || !b) return c[c.length - 1];
+
+  const laenge = cum[i] - cum[i - 1];
+  const f = laenge > 0 ? (ziel - cum[i - 1]) / laenge : 0;
+
+  return [
+    a[0] + (b[0] - a[0]) * Math.max(0, Math.min(1, f)),
+    a[1] + (b[1] - a[1]) * Math.max(0, Math.min(1, f)),
+  ];
 }
 
 /* Fertigkeitsstufen als kleine Kästchen */

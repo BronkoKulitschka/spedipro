@@ -167,14 +167,12 @@ function row(truck) {
       <span class="muted">· ${num(truck.odo || 0)} km</span> · ${stehtWo}
     </div>
 
-    <table class="win-table" style="font-size:10px;margin:3px 0;">
-      <tr>
-        <td>Nutzlast</td><td style="text-align:right">${(kap.kg / 1000).toFixed(1)} t</td>
-        <td>Plätze</td><td style="text-align:right">${kap.paletten}</td>
-        <td>zGG</td><td style="text-align:right">${(m.zgg / 1000).toFixed(1)} t</td>
-        <td>Fix</td><td style="text-align:right">${truckFix(truck)} €</td>
-      </tr>
-    </table>
+<div class="daten-reihe">
+      <span class="datum"><span class="dl">Nutzlast</span><span class="dw">${(kap.kg / 1000).toFixed(1)} t</span></span>
+      <span class="datum"><span class="dl">Plätze</span><span class="dw">${kap.paletten}</span></span>
+      <span class="datum"><span class="dl">zGG</span><span class="dw">${(m.zgg / 1000).toFixed(1)} t</span></span>
+      <span class="datum"><span class="dl">Fix/Tag</span><span class="dw">${truckFix(truck)} €</span></span>
+    </div>
 
     ${ladeZeile(truck, kap)}
     <div class="xpbar" style="margin:3px 0;"><div class="xpfill" id="xp${truck.nr}"></div></div>

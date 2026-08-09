@@ -371,7 +371,7 @@ export const CONTRACTS = {
 /* Befreundete Speditionen. Sie geben Aufträge an Subunternehmer weiter. */
 export const PARTNERS = [
   { key: 'nordfracht', name: 'Nordfracht Logistik',  ort: 'Bremen'     },
-  { key: 'hellweg',    name: 'Hellweg Spedition',    ort: 'Dortmund'   },
+  { key: 'hellweg',    name: 'Ruhrtal Spedition',    ort: 'Dortmund'   },
   { key: 'donau',      name: 'Donau Transport AG',   ort: 'Regensburg' },
   { key: 'kranich',    name: 'Kranich Verkehr KG',   ort: 'Kassel'     },
 ];

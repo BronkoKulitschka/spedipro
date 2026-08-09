@@ -221,10 +221,12 @@ export function naechsterRastplatz(truck) {
 
   const cum = routeCum(truck.route);
   const c = truck.route.coords;
-  const gesamt = cum[cum.length - 1] || truck.route.km;
+  const gesamt = cum[cum.length - 1];
+  if (!(gesamt > 0)) return null;
 
   /* Position des Fahrzeugs auf der Route, in Kartenkilometern */
-  const hier = truck.progress / truck.route.km * gesamt;
+  const anteil = truck.route.km > 0 ? truck.progress / truck.route.km : 0;
+  const hier = Math.max(0, Math.min(1, anteil)) * gesamt;
   const bis = Math.min(gesamt, hier + DRIVE.RAST_SUCHE);
 
   const schritt = Math.max(1, Math.floor(c.length / 400));

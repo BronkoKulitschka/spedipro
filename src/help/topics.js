@@ -54,7 +54,7 @@ export const TOPICS = {
       { tipp: 'Sammelverkehr lohnt sich: Bei mehreren Stopps sind es nur 33 Minuten Rampenzeit je Stopp statt einer vollen Stunde.' },
       { h: 'Die Karte' },
       { list: [
-        '🚛 Fahrzeuge — immer sichtbar, ausgegraut bei Pause oder Ruhezeit.',
+        '🚛 Fahrzeuge — immer sichtbar, ausgegraut bei Pause oder Ruhezeit. Die Blickrichtung zeigt, wohin es geht.',
         '📦 offene Aufträge, 📜 aus Verträgen, 🤝 von Partnern.',
         '✈️ ⚓ 🚉 Umschlagpunkte im ganzen Bundesgebiet.',
         '🚧 gemeldete Baustellen und Verkehrsmeldungen.',

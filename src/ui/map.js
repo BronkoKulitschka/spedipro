@@ -6,7 +6,7 @@
    ins neue Fenster und Leaflet behält Zoom und Position. */
 
 import { S, truckPos, driveStatus, modelOf, xpNeeded } from '../state.js';
-import { esc, haversine, fmt, num, pips } from '../util.js';
+import { esc, haversine, fmt, num, pips, pointOnRoute } from '../util.js';
 import { HUB_ICON } from '../data/hubs.js';
 import { SKILLS, EQUIPMENT } from '../config.js';
 import { kapazitaet, klasseVon } from '../sim/goods.js';
@@ -20,6 +20,28 @@ const layers = { depot: null, firms: null, hubs: null, offers: null, traffic: nu
    annehmen kann, ohne die Simulation direkt zu kennen. */
 let acceptHandler = null;
 export function onOfferAccept(fn) { acceptHandler = fn; }
+
+/* ── Fahrzeugbild ────────────────────────────────────────────────
+   Solange keine eigene Grafik hinterlegt ist, wird das Sinnbild
+   benutzt. Liegt unter assets/truck.png eine Datei, tritt sie an
+   seine Stelle — ohne Änderung am Programm. */
+let bildVorhanden = null;
+
+export function truckBild() {
+  if (bildVorhanden === null) {
+    bildVorhanden = false;
+    const probe = new Image();
+    probe.onload = () => {
+      bildVorhanden = true;
+      document.documentElement.classList.add('eigenes-lkw-bild');
+      drawTrucks();
+    };
+    probe.src = './assets/truck.png';
+  }
+  return bildVorhanden
+    ? '<img src="./assets/truck.png" alt="" class="truck-bild">'
+    : '🚛';
+}
 
 export function mapHost() {
   if (!host) {
@@ -62,13 +84,9 @@ export function initMap() {
                       iconSize: [20, 20], iconAnchor: [10, 10] }),
   }).bindPopup(`<strong>Depot ${esc(S.depot.name)}</strong>`).addTo(layers.depot);
 
-  /* Während eines Zoomvorgangs rechnet Leaflet alle Marken um. Läuft
-     dabei die Bewegungsanimation mit, schwimmen die Fahrzeuge über die
-     Karte, statt an ihrem Punkt zu bleiben. */
-  const halt = () => map.getContainer().classList.add('ohne-anim');
-  const weiter = () => setTimeout(() => map.getContainer().classList.remove('ohne-anim'), 80);
-  map.on('zoomstart movestart', halt);
-  map.on('zoomend moveend', weiter);
+  /* Nach einem Zoomvorgang die Fahrzeuge neu setzen, damit sie
+     sicher an der richtigen Stelle sitzen. */
+  map.on('zoomend', () => drawTrucks());
 
   drawFirms();
   drawHubs();
@@ -122,35 +140,11 @@ export function drawRoute(truck) {
   }).addTo(layers.routes);
 }
 
-function positionAt(route, km) {
-  const c = route.coords;
-  if (c.length < 2) return c[0];
-
-  if (!route.cum) {
-    route.cum = [0];
-    for (let i = 1; i < c.length; i++) {
-      route.cum[i] = route.cum[i - 1] + haversine(
-        { lat: c[i - 1][0], lon: c[i - 1][1] },
-        { lat: c[i][0],     lon: c[i][1] });
-    }
-  }
-
-  const total  = route.cum[route.cum.length - 1];
-  const target = Math.max(0, Math.min(total, km / route.km * total));
-
-  let i = 1;
-  while (i < route.cum.length && route.cum[i] < target) i++;
-
-  const a = c[i - 1], b = c[Math.min(i, c.length - 1)];
-  const seg = (route.cum[Math.min(i, route.cum.length - 1)] - route.cum[i - 1]) || 1;
-  const f = (target - route.cum[i - 1]) / seg;
-  return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
-}
-
 export function updateTruckMarker(truck) {
   if (!map || !truck.route) return;
 
-  const pos = positionAt(truck.route, truck.progress);
+  const pos = pointOnRoute(truck.route, truck.progress);
+  if (!pos) return;
 
   /* Blickrichtung aus dem letzten Stück Weg ableiten */
   const vorher = truck._letzte || pos;
@@ -160,27 +154,21 @@ export function updateTruckMarker(truck) {
   truck._richtung = richtung;
   truck._letzte = pos;
 
+  const inhalt = `<span class="truck-icon ${richtung}">${truckBild()}</span>`;
+
   if (!truck.marker) {
     truck.marker = L.marker(pos, {
-      icon: L.divIcon({ className: 'truck-marker fahrend',
-        html: `<span class="ring"></span><span class="truck-icon fahrt ${richtung}">🚛</span>`,
-        iconSize: [26, 26], iconAnchor: [13, 13] }),
+      icon: L.divIcon({ className: 'truck-marker fahrend', html: inhalt,
+                        iconSize: [26, 26], iconAnchor: [13, 13] }),
     }).addTo(layers.trucks);
   } else {
     truck.marker.setLatLng(pos);
     const wurzel = truck.marker.getElement();
     if (wurzel) {
       wurzel.classList.add('truck-marker', 'fahrend');
-
-      /* Der Ring entsteht beim Losfahren. Stand die Marke vorher im
-         Depot, fehlt er in der Marke — also hier nachziehen. */
-      if (!wurzel.querySelector('.ring')) {
-        wurzel.innerHTML = '<span class="ring"></span>'
-                         + `<span class="truck-icon fahrt ${richtung}">🚛</span>`;
-      } else {
-        const icon = wurzel.querySelector('.truck-icon');
-        if (icon) icon.className = `truck-icon fahrt ${richtung}`;
-      }
+      const icon = wurzel.querySelector('.truck-icon');
+      if (icon) icon.className = `truck-icon ${richtung}`;
+      else wurzel.innerHTML = inhalt;
     }
   }
 
@@ -215,17 +203,19 @@ function parkTruck(truck) {
   const status = driveStatus(truck);
   const ruht = status.code !== 'frei';
 
+  const inhalt = `<span class="truck-icon parked${ruht ? ' resting' : ''}">${truckBild()}</span>`;
+
   if (!truck.marker) {
     truck.marker = L.marker([pos.lat, pos.lon], {
-      icon: L.divIcon({ className: 'truck-marker', iconSize: [26, 26], iconAnchor: [13, 13],
-        html: `<span class="truck-icon parked${ruht ? ' resting' : ''}">🚛</span>` }),
+      icon: L.divIcon({ className: 'truck-marker', html: inhalt,
+                        iconSize: [26, 26], iconAnchor: [13, 13] }),
     }).addTo(layers.trucks);
   } else {
     truck.marker.setLatLng([pos.lat, pos.lon]);
     const wurzel = truck.marker.getElement();
     if (wurzel) {
       wurzel.classList.remove('fahrend');
-      wurzel.innerHTML = `<span class="truck-icon parked${ruht ? ' resting' : ''}">🚛</span>`;
+      wurzel.innerHTML = inhalt;
     }
   }
 
