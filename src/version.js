@@ -5,7 +5,7 @@
    und in den Einstellungen, damit sich mit einem Blick prüfen lässt,
    welcher Stand gerade läuft. */
 
-export const VERSION = '0.20.3';
+export const VERSION = '0.20.4';
 export const BUILD   = '2026-08-09';
 export const CODENAME = 'Standortwahl';
 

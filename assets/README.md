@@ -20,9 +20,14 @@ Belegung von links oben nach rechts unten:
 | **Zeile 2** | 7,5-Tonner | Verteiler 12t | Solo 18t | Sattelzug |
 | **Zeile 3** | Gliederzug | Kühlsattelzug | Tieflader | *(leer)* |
 
-Das Seitenverhältnis wird geprüft. Passt es nicht zu 4 : 3, wird das
-Bild verworfen und auf Einzelbilder zurückgegriffen — so wird kein
-fremdes Bild versehentlich zerschnitten.
+Das Bild darf auch quadratisch sein, solange das Raster darin sauber
+liegt — Bildgeneratoren liefern gern quadratische Vorlagen. Wichtig ist
+nur, dass jedes Fahrzeug mittig in seinem Feld sitzt.
+
+**Aus einer ungleichmäßigen Vorlage eine saubere machen:** Liegen die
+Fahrzeuge nicht in gleichmäßigen Feldern, hilft ein kurzes Skript, das
+sie einzeln ausschneidet und neu anordnet. Die mitgelieferte
+`trucks.png` ist auf diese Weise entstanden.
 
 ## Einzelbilder: truck-<klasse>.png
 

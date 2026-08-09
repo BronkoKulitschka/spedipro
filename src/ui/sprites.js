@@ -36,11 +36,12 @@ function pruefe() {
 
   const blatt = new Image();
   blatt.onload = () => {
-    /* Nur annehmen, wenn das Seitenverhältnis zum Raster passt —
-       sonst ist es ein anderes Bild und würde falsch zerschnitten. */
-    const soll = SPALTEN / ZEILEN;
-    const ist = blatt.width / blatt.height;
-    if (Math.abs(ist - soll) < 0.25) {
+    /* Angenommen wird jedes Bild, das sich sinnvoll in vier Spalten und
+       drei Zeilen teilen lässt. Eine strenge Prüfung des Seitenver-
+       hältnisses hat sich als zu eng erwiesen: Bildgeneratoren liefern
+       gern quadratische Bilder, in denen das Raster trotzdem sauber
+       liegt — nur mit mehr Rand oben und unten. */
+    if (blatt.width >= SPALTEN * 8 && blatt.height >= ZEILEN * 8) {
       zustand = 'blatt';
       document.documentElement.classList.add('lkw-blatt');
       document.documentElement.style.setProperty('--lkw-blatt', `url(${BLATT})`);

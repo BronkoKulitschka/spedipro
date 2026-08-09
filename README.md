@@ -144,6 +144,15 @@ also nach rechts zeichnen.
 Näheres in `assets/README.md`. Die Zuordnung der Rasterfelder steht in
 `src/ui/sprites.js`.
 
+Liegen die Fahrzeuge in einer Vorlage nicht in gleichmäßigen Feldern —
+was bei erzeugten Bildern die Regel ist — bereitet `tools/spritemap.py`
+sie auf: Es sucht die Fahrzeuge einzeln, schneidet sie aus und ordnet sie
+in einem sauberen Raster an.
+
+```bash
+python3 tools/spritemap.py rohbild.png assets/trucks.png
+```
+
 Jedes Fahrzeug trägt einen Ring in einer eigenen Farbe, dazu seine Nummer.
 Die Farbe ergibt sich aus der Fahrzeugnummer über den goldenen Winkel, so
 dass auch benachbarte Nummern deutlich unterscheidbar bleiben. Dieselbe
