@@ -7,8 +7,9 @@
 import { RULES, TRUCK_MODELS, USED, DRIVE, REP, EQUIPMENT } from '../config.js';
 import { S, log, book, newTruck, findTruck, idleTrucks, truckPos, atDepot,
          modelOf, resaleValue, truckKmh, truckFuel,
-         feeMul, calmMul, canDrive, driveStatus, bannedFor } from '../state.js';
-import { haversine, fmt, esc, routeCum } from '../util.js';
+         feeMul, calmMul, canDrive, driveStatus, bannedFor,
+         faehrtLeer, verfuegbar } from '../state.js';
+import { haversine, fmt, esc, routeCum, pointOnRoute } from '../util.js';
 import { osrmRoute, straightRoute } from '../data/osrm.js';
 import { takeOffer } from './orders.js';
 import { gainXp } from './drivers.js';
@@ -44,8 +45,18 @@ export function effectiveKmh(truck) {
   return truckKmh(truck) * (1 - slowdown);
 }
 
+/* Wo ein Fahrzeug gerade wirklich ist. Bei einer Leerfahrt ist das der
+   Punkt auf der Strecke, nicht der zuletzt angefahrene Ort. */
+export function jetztPos(truck) {
+  if (faehrtLeer(truck) && truck.route) {
+    const p = pointOnRoute(truck.route, truck.progress);
+    if (p) return { lat: p[0], lon: p[1] };
+  }
+  return truckPos(truck);
+}
+
 /* Luftlinie vom Standort eines LKW zu einem Ziel, für die Vorschau. */
-export const distanceFrom = (truck, target) => haversine(truckPos(truck), target);
+export const distanceFrom = (truck, target) => haversine(jetztPos(truck), target);
 
 /* ── Tour aus mehreren Sendungen ─────────────────────────────────
    Die Stopps werden nach dem Prinzip des nächsten Nachbarn geordnet:
@@ -89,7 +100,11 @@ export function kapazitaetsPruefung(truck, bisher, neu) {
 
 export async function startTour(truckNr, sendungen, opts = {}) {
   const truck = findTruck(truckNr);
-  if (!truck || truck.phase !== 'idle' || !canDrive(truck) || !sendungen.length) return false;
+  if (!truck || !verfuegbar(truck) || !sendungen.length) return false;
+
+  /* Eine laufende Leerfahrt wird abgebrochen — das Fahrzeug übernimmt
+     die Fracht von dort aus, wo es gerade steht. */
+  if (faehrtLeer(truck)) brichLeerfahrtAb(truck);
 
   const folge = ordneStopps(truckPos(truck), sendungen);
 
@@ -156,15 +171,41 @@ function starteEtappe(truck) {
   updateTruckMarker(truck);
 }
 
+/* Eine Leerfahrt beenden und dort halten, wo das Fahrzeug gerade ist.
+   Die bis dahin gefahrenen Kilometer werden abgerechnet. */
+function brichLeerfahrtAb(truck) {
+  const hier = jetztPos(truck);
+  const gefahren = truck.progress;
+
+  if (gefahren > 0) {
+    const d = truck.driver;
+    const sprit = gefahren * truckFuel(truck) * dieselFaktor(d) * dieselRabatt();
+    book('Diesel', `Leerfahrt abgebrochen · LKW ${truck.nr}`, -sprit);
+    truck.odo = (truck.odo || 0) + gefahren;
+    S.stats.km += gefahren;
+    d.km = (d.km || 0) + gefahren;
+  }
+
+  truck.pos = { lat: hier.lat, lon: hier.lon };
+  truck.place = 'auf der Strecke';
+  truck.route = null;
+  truck.job = null;
+  truck.progress = 0;
+  truck.phase = 'idle';
+  removeTruckLayers(truck);
+
+  log(`${truck.driver.name} bricht die Leerfahrt ab und nimmt Fracht auf.`);
+}
+
 /* ── Auftrag annehmen ── */
 export async function dispatch(offerId, truckNr = null, opts = {}) {
   const truck = truckNr
     ? findTruck(truckNr)
-    : S.trucks.find(t => t.phase === 'idle' && canDrive(t));
+    : S.trucks.find(verfuegbar);
 
-  if (!truck || truck.phase !== 'idle') return;
+  if (!truck) return;
 
-  if (!canDrive(truck)) {
+  if (!verfuegbar(truck)) {
     const status = driveStatus(truck);
     if (!S.silent) {
       toast('⏳', `<strong>${esc(truck.driver.name)}</strong> kann nicht losfahren.`,

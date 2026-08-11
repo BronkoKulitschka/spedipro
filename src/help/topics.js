@@ -43,6 +43,7 @@ export const TOPICS = {
       { p: 'Das wichtigste Fenster. Links die Karte, rechts die offenen Anfragen. Hier entscheidest du, welches Fahrzeug welche Fracht fährt.' },
       { h: 'Fahrzeug wählen' },
       { p: 'Oben rechts steht die Auswahlliste aller einsatzbereiten Fahrzeuge mit ihrem aktuellen Standort. Alle Entfernungen in der Auftragsliste gelten ab diesem Standort — nicht ab dem Depot.' },
+      { p: 'Auch Fahrzeuge auf Leerfahrt stehen in der Liste. Eine Rückfahrt ins Depot bringt nichts ein und lässt sich jederzeit abbrechen: Nimmt so ein Fahrzeug einen Auftrag an, hält es dort an, wo es gerade ist, und fährt von dort zur Fracht. Die bis dahin gefahrenen Kilometer werden abgerechnet.' },
       { p: 'Jede Anfrage zeigt deshalb in eigener Zeile, wie weit sie vom gewählten Fahrzeug entfernt ist und wie lange die Fahrt dauert. Die Fahrzeit rechnet mit dem Schnitt dieses Fahrzeugs, also einschließlich der Streckenkenntnis des Fahrers.' },
       { p: 'Die Liste ist nach Anfahrt sortiert, das Nächstgelegene steht oben. Wechselst du das Fahrzeug, ordnet sie sich neu — ein Auftrag, der für den einen weit weg ist, liegt für den anderen um die Ecke.' },
       { p: 'Die Lupe daneben springt zum Fahrzeug und klappt seine Daten auf.' },
@@ -90,7 +91,7 @@ export const TOPICS = {
       ] },
       { h: 'Die Knöpfe' },
       { list: [
-        'ins Depot — schickt ein stehendes Fahrzeug leer zurück. Kostet Diesel und bringt nichts ein, lohnt sich nur, wenn in der Gegend nichts zu holen ist.',
+        'ins Depot — schickt ein stehendes Fahrzeug leer zurück. Kostet Diesel und bringt nichts ein, lohnt sich nur, wenn in der Gegend nichts zu holen ist. Taucht unterwegs doch eine Fracht auf, lässt sich die Fahrt abbrechen.',
         'zeigen — öffnet die Disposition und zoomt zum Fahrzeug.',
         'Schulung — öffnet das Schulungsfenster des Fahrers.',
         'verkaufen — der Wiederverkaufswert sinkt mit den gefahrenen Kilometern.',

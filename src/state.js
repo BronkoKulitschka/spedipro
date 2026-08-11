@@ -145,6 +145,20 @@ export function driveStatus(truck) {
 
 export const canDrive = truck => driveStatus(truck).code === 'frei';
 
+/* Fährt das Fahrzeug gerade leer zurück ins Depot?
+   Eine solche Fahrt bringt nichts ein und darf jederzeit abgebrochen
+   werden, sobald eine Fracht auftaucht. */
+export const faehrtLeer = truck =>
+  truck.phase === 'driving' && truck.job?.kind === 'return';
+
+/* Für die Disposition: alles, was jetzt einen Auftrag übernehmen kann —
+   stehende Fahrzeuge und solche auf Leerfahrt. */
+export const verfuegbar = truck =>
+  !truck.shopMin && !truck.restMin
+  && (truck.phase === 'idle' || faehrtLeer(truck))
+  && !bannedFor(truck)
+  && truck.today < DRIVE.MAX_DAY;
+
 export function log(msg) {
   if (S.silent) return;          // während des Nachrechnens
   S.log.unshift(`${clockText()} · Tag ${day()} — ${msg}`);

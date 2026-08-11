@@ -277,6 +277,10 @@ export const MeinApp = {
 
 ## Spielprinzip
 
+* Fahrzeuge auf **Leerfahrt ins Depot** gelten weiter als verfügbar. Nimmt
+  so eines einen Auftrag an, bricht es die Rückfahrt ab und fährt von seiner
+  jetzigen Position zur Fracht — die bis dahin gefahrenen Kilometer werden
+  abgerechnet.
 * Ein LKW fährt von dort los, wo er gerade steht, und **bleibt am Ziel**.
   Es gibt keine Zwangsrückfahrt — wer geschickt disponiert, kettet Aufträge
   aneinander und spart Leerkilometer. Zurück ins Depot geht es nur auf

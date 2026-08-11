@@ -5,7 +5,7 @@
    geschlossen und wieder geöffnet, wandert derselbe Knoten zurück
    ins neue Fenster und Leaflet behält Zoom und Position. */
 
-import { S, truckPos, driveStatus, modelOf, xpNeeded } from '../state.js';
+import { S, truckPos, driveStatus, modelOf, xpNeeded, verfuegbar } from '../state.js';
 import { esc, haversine, fmt, num, pips, pointOnRoute,
          courseOnRoute, truckFarbe } from '../util.js';
 import { HUB_ICON } from '../data/hubs.js';
@@ -383,7 +383,7 @@ export function toggleLayer(name, visible) {
 export function nearestIdle(target) {
   let best = null, bestKm = Infinity;
   for (const t of S.trucks) {
-    if (t.phase !== 'idle' || t.shopMin) continue;
+    if (!verfuegbar(t)) continue;
     const km = haversine(truckPos(t), target);
     if (km < bestKm) { bestKm = km; best = t; }
   }

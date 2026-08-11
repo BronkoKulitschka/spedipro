@@ -5,9 +5,10 @@
    auf der Karte, ein angetipptes Fahrzeug rückt in den Ausschnitt.
    Auf schmalen Geräten liegt die Liste unter der Karte. */
 
-import { S, findTruck, canDrive, banReason, truckPos, truckKmh } from '../state.js';
+import { S, findTruck, banReason, truckKmh,
+         verfuegbar, faehrtLeer } from '../state.js';
 import { fmt, esc, truckFarbe } from '../util.js';
-import { dispatch, distanceFrom, startTour, umwegFuer } from '../sim/fleet.js';
+import { dispatch, distanceFrom, startTour, umwegFuer, jetztPos } from '../sim/fleet.js';
 import { KIND_LABEL, takeOffer } from '../sim/orders.js';
 import { kapazitaet, summe, passt, klasseVon } from '../sim/goods.js';
 import { onTick } from '../ui/wm.js';
@@ -87,7 +88,7 @@ export const DispoApp = {
       if (e.target.closest('#dTruck')) {
         el.querySelector('#offerBox').dataset.sig = '';
         const t = findTruck(Number(el.querySelector('#dTruck').value));
-        if (t) { const p = truckPos(t); focusPoint(p.lat, p.lon, DETAIL_ZOOM); }
+        if (t) { const p = jetztPos(t); focusPoint(p.lat, p.lon, DETAIL_ZOOM); }
         onTick();
       }
     });
@@ -102,7 +103,7 @@ export const DispoApp = {
 
       if (e.target.closest('#dShow')) {
         const t = findTruck(Number(el.querySelector('#dTruck').value));
-        const p = t ? truckPos(t) : S.depot;
+        const p = t ? jetztPos(t) : S.depot;
         focusPoint(p.lat, p.lon, DETAIL_ZOOM);
         if (t) zeigeFahrzeug(t);
         return;
@@ -175,18 +176,24 @@ export const DispoApp = {
     /* Auftragsmarken nur bei Änderung neu setzen */
     const slot = el.querySelector('#mapSlot');
     const markSig = S.offers.map(o => o.id).join(',') + '|'
-                  + S.trucks.filter(t => t.phase === 'idle' && canDrive(t)).map(t => t.nr).join(',');
+                  + S.trucks.filter(verfuegbar).map(t => t.nr).join(',');
     if (slot.dataset.sig !== markSig) { slot.dataset.sig = markSig; drawOffers(); }
 
     /* Fahrzeugauswahl */
     const select = el.querySelector('#dTruck');
-    const free = S.trucks.filter(t => t.phase === 'idle' && canDrive(t));
-    const listSig = free.map(t => `${t.nr}@${t.place}`).join(',');
+    /* Auch Fahrzeuge auf Leerfahrt stehen zur Verfügung — eine
+       Rückfahrt ins Depot lässt sich jederzeit abbrechen. */
+    const free = S.trucks.filter(verfuegbar);
+    const listSig = free.map(t => `${t.nr}@${t.place}@${faehrtLeer(t) ? 'leer' : 'steht'}`).join(',');
+
     if (select.dataset.sig !== listSig) {
       const keep = select.value;
       select.dataset.sig = listSig;
       select.innerHTML = free.length
-        ? free.map(t => `<option value="${t.nr}">● LKW ${t.nr} · ${esc(t.driver.name)} · ${esc(t.place)}</option>`).join('')
+        ? free.map(t => {
+            const wo = faehrtLeer(t) ? 'auf Leerfahrt' : t.place;
+            return `<option value="${t.nr}">LKW ${t.nr} · ${esc(t.driver.name)} · ${esc(wo)}</option>`;
+          }).join('')
         : '<option value="">kein Fahrzeug frei</option>';
       if (free.some(t => String(t.nr) === keep)) select.value = keep;
     }
@@ -194,8 +201,11 @@ export const DispoApp = {
     const truck = findTruck(Number(select.value));
     const ban = banReason();
     el.querySelector('#dNote').innerHTML = truck
-      ? `📍 Entfernungen ab <strong>${esc(truck.place)}</strong>`
-        + ` · ${S.offers.length} Anfragen`
+      ? faehrtLeer(truck)
+        ? `📍 <strong>auf Leerfahrt</strong> — Entfernungen ab der jetzigen`
+          + ` Position. Ein Auftrag bricht die Rückfahrt ab.`
+        : `📍 Entfernungen ab <strong>${esc(truck.place)}</strong>`
+          + ` · ${S.offers.length} Anfragen`
       : ban
         ? `<span class="warn">Fahrverbot (${esc(ban)}) bis 22 Uhr.</span>`
         : 'Kein Fahrzeug einsatzbereit — unterwegs, in Pause oder Werkstatt.';

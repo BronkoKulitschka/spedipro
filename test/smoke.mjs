@@ -150,6 +150,42 @@ console.log('\nPausen auf Rastplätzen');
   t.route = null; t.progress = 0;
 }
 
+/* ── Leerfahrt lässt sich abbrechen ── */
+console.log('\nLeerfahrt und Verfügbarkeit');
+{
+  const { returnToDepot, jetztPos } = await import('../src/sim/fleet.js');
+  const { faehrtLeer, verfuegbar } = await import('../src/state.js');
+
+  const t = S.trucks.find(x => x.phase === 'idle');
+  t.pos = { lat: S.depot.lat + 1.2, lon: S.depot.lon + 0.6 };
+  t.place = 'Testkunde';
+
+  await returnToDepot(t.nr, { sync: true });
+  ok(faehrtLeer(t), 'Fahrzeug ist auf Leerfahrt');
+  ok(verfuegbar(t), 'Auf Leerfahrt trotzdem verfügbar');
+
+  moveTrucks(120);
+  const unterwegs = jetztPos(t);
+  ok(unterwegs.lat !== t.pos.lat || unterwegs.lon !== t.pos.lon,
+     'Position wandert auf der Strecke mit');
+
+  const sendung = {
+    id: 'leer1', kind: 'spot', paletten: 2, gewicht: 400, klasse: 'stueckgut',
+    fee: 500, estKm: 40,
+    firm: { name: 'Abholkunde', lat: S.depot.lat + 1.0, lon: S.depot.lon + 0.5,
+            km: 40, kind: 'Lager' },
+  };
+  S.offers.push(sendung);
+  takeOffer(sendung.id);
+
+  const vorherKm = S.stats.km;
+  await startTour(t.nr, [sendung], { sync: true });
+
+  ok(!faehrtLeer(t), 'Leerfahrt wurde abgebrochen');
+  ok(t.phase === 'driving' && t.job?.kind === 'delivery', 'Fahrzeug fährt jetzt die Fracht');
+  ok(S.stats.km > vorherKm, 'Die gefahrenen Leerkilometer wurden abgerechnet');
+}
+
 /* ── Ein paar Tage fahren ── */
 console.log('\nBetrieb über zehn Tage');
 S.silent = true;                       // ohne Netz und ohne Protokollflut

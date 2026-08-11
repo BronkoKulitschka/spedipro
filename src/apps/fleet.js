@@ -2,7 +2,8 @@
 
 import { SKILLS } from '../config.js';
 import { S, xpNeeded, findTruck, atDepot, modelOf, resaleValue,
-         driveStatus, canDrive, bestand, truckFix, fixGesamt } from '../state.js';
+         driveStatus, canDrive, bestand, truckFix, fixGesamt,
+         faehrtLeer, verfuegbar } from '../state.js';
 import { esc, pips, fmt, num, truckFarbe } from '../util.js';
 import { kapazitaet, klasseVon } from '../sim/goods.js';
 import { EQUIPMENT } from '../config.js';
@@ -91,7 +92,7 @@ export const FleetApp = {
       [t.nr, t.model, t.driver.level, t.driver.points, Object.values(t.driver.skills).join(''),
        t.phase, t.auto ? 1 : 0, t.place, t.shopMin > 0 ? 1 : 0, S.level,
        t.restMin > 0 ? 1 : 0, t.job?.klasse || '', t.job?.stopp || 0,
-       t.rastZiel ? 1 : 0, t.rastOrt || '',
+       t.rastZiel ? 1 : 0, t.rastOrt || '', faehrtLeer(t) ? 1 : 0,
        Math.floor((t.odo || 0) / 1000)].join(':')).join('|');
 
     if (box.dataset.sig !== sig) {
@@ -125,6 +126,10 @@ export const FleetApp = {
         bar.style.width = '0';
       } else if (truck.phase === 'driving' && truck.rastZiel) {
         status.innerHTML = `<span class="warn">🅿️ ${esc(truck.rastZiel.name.slice(0, 22))}</span>`;
+        bar.style.width = Math.min(100, truck.progress / truck.route.km * 100) + '%';
+      } else if (faehrtLeer(truck)) {
+        status.innerHTML = '<span class="ok">↩ Leerfahrt · verfügbar</span>';
+        bar.classList.add('back');
         bar.style.width = Math.min(100, truck.progress / truck.route.km * 100) + '%';
       } else if (truck.phase === 'driving' && truck.route) {
         const ziel = truck.job?.kind === 'return' ? 'Depot' : truck.job?.firm?.name || '';
