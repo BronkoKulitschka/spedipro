@@ -6,7 +6,7 @@
 
 import { DRIVE } from '../config.js';
 import { S, now, fullDate, clockText, driveStatus, banReason,
-         holidayNow, weekendNow, bannedFor } from '../state.js';
+         holidayNow, weekendNow, bannedFor, driverOf } from '../state.js';
 import { esc } from '../util.js';
 
 const std = min => {
@@ -73,7 +73,7 @@ export const DailyApp = {
       return `
       <div class="truck-row">
         <div class="flex-row" style="justify-content:space-between;">
-          <span><strong>${esc(truck.driver.name)}</strong>
+          <span><strong>${esc(driverOf(truck).name)}</strong>
             <span class="muted">· LKW ${truck.nr}</span></span>
           <span class="${farbe}" style="font-size:10px;">${esc(status.text)}</span>
         </div>

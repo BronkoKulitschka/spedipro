@@ -20,15 +20,26 @@ export function openApp(appId, params = {}) {
   const app = APPS[appId];
   if (!app) return;
 
-  const key = app.multi ? `${appId}:${params.nr ?? ''}` : appId;
+  const key = app.multi ? `${appId}:${params.id ?? params.nr ?? ''}` : appId;
+
+  /* Woher kommt der Aufruf? Das oberste sichtbare Fenster gilt als
+     Herkunft — so führt der Rückweg dorthin, wo man hergekommen ist. */
+  const herkunft = params.herkunft ?? oberstesFenster(key);
+
   const existing = open.get(key);
-  if (existing) { focus(key); restore(key); return; }
+  if (existing) {
+    if (herkunft && herkunft !== key) existing.herkunft = herkunft;
+    focus(key); restore(key);
+    renderTaskbar();
+    return;
+  }
 
   const el = buildWindow(key, app, params);
   document.getElementById('windows').appendChild(el);
 
   const entry = {
     key, appId, app, params, el,
+    herkunft,
     body: el.querySelector('.win-body'),
     minimized: false,
     maximized: isNarrow() || !!app.startMaximized,
@@ -42,6 +53,36 @@ export function openApp(appId, params = {}) {
   focus(key);
   app.update?.(entry.body, params);
   renderTaskbar();
+}
+
+/* Das oberste sichtbare Fenster — es gilt als Herkunft eines
+   Aufrufs, wenn keine ausdrücklich angegeben wurde. */
+function oberstesFenster(ausser = null) {
+  let bestes = null, hoechste = -1;
+  for (const e of open.values()) {
+    if (e.key === ausser || e.minimized) continue;
+    const z = Number(e.el.style.zIndex) || 0;
+    if (z > hoechste) { hoechste = z; bestes = e.key; }
+  }
+  return bestes;
+}
+
+/* Zurück zum aufrufenden Fenster: dieses schließen, jenes nach vorn. */
+export function geheZurueck(key) {
+  const entry = open.get(key);
+  if (!entry) return;
+
+  const ziel = entry.herkunft;
+  closeWindow(key);
+
+  if (ziel && open.has(ziel)) {
+    restore(ziel);
+  } else if (ziel) {
+    /* Das Ziel ist inzwischen zu — dann eben neu öffnen. */
+    const appId = ziel.split(':')[0];
+    const nr = ziel.includes(':') ? Number(ziel.split(':')[1]) : undefined;
+    if (APPS[appId]) openApp(appId, nr ? { nr } : {});
+  }
 }
 
 export function closeWindow(key) {
@@ -131,6 +172,7 @@ function buildWindow(key, app, params) {
     <div class="title-bar win-drag">
       <span class="title-bar-text">${app.icon} ${esc(app.title(params))}</span>
       <div class="title-bar-controls">
+        <div class="tb-btn tb-zurueck" data-act="zurueck" title="zurück" style="display:none;">◀</div>
         ${HELP_FOR_APP[app.id] ? '<div class="tb-btn tb-help" data-act="help" title="Hilfe zu diesem Programm">?</div>' : ''}
         <div class="tb-btn" data-act="min" title="Minimieren">_</div>
         <div class="tb-btn" data-act="max" title="Vollbild">□</div>
@@ -149,6 +191,9 @@ function buildWindow(key, app, params) {
     const { oeffneHilfe } = await import('../apps/help.js');
     oeffneHilfe(HELP_FOR_APP[app.id]);
   };
+
+  const zurueck = el.querySelector('[data-act=zurueck]');
+  if (zurueck) zurueck.onclick = e => { e.stopPropagation(); geheZurueck(key); };
 
   el.querySelector('[data-act=min]').onclick   = e => { e.stopPropagation(); minimize(key); };
   el.querySelector('[data-act=max]').onclick   = e => { e.stopPropagation(); toggleMaximize(key); };
@@ -222,6 +267,17 @@ function makeResizable(el, grip, key) {
 export function onTick() {
   for (const entry of open.values()) {
     if (!entry.minimized) entry.app.update?.(entry.body, entry.params);
+
+    /* Der Rückweg gilt nur, solange das Ziel noch offen ist. */
+    const knopf = entry.el.querySelector('[data-act=zurueck]');
+    if (knopf) {
+      const moeglich = entry.herkunft && open.has(entry.herkunft);
+      knopf.style.display = moeglich ? '' : 'none';
+      if (moeglich) {
+        const ziel = open.get(entry.herkunft);
+        knopf.title = `zurück zu ${ziel.app.title(ziel.params)}`;
+      }
+    }
   }
   const clock = document.getElementById('tbClock');
   if (clock) clock.textContent = dateText();

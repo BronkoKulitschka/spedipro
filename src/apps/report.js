@@ -1,6 +1,6 @@
 /* Bericht über die Zeit, in der nicht gespielt wurde. */
 
-import { S, driveStatus } from '../state.js';
+import { S, driveStatus, driverOf } from '../state.js';
 import { fmt, num, esc } from '../util.js';
 import { progress } from '../sim/progress.js';
 import { xpNeeded } from '../state.js';
@@ -71,15 +71,15 @@ function offeneFaeden() {
     zeilen.push(`🚛 ${bereit.length} Fahrzeug${bereit.length > 1 ? 'e stehen' : ' steht'} abfahrbereit`);
   }
 
-  const punkte = S.trucks.filter(t => t.driver.points > 0);
+  const punkte = S.trucks.filter(t => driverOf(t).points > 0);
   if (punkte.length) {
     zeilen.push(`🎓 ${punkte.length} Fahrer ${punkte.length > 1 ? 'haben' : 'hat'} einen Schulungspunkt frei`);
   }
 
   for (const t of S.trucks) {
-    const fehlt = xpNeeded(t.driver.level) - t.driver.xp;
+    const fehlt = xpNeeded(driverOf(t).level) - driverOf(t).xp;
     if (fehlt <= 60) {
-      zeilen.push(`⭐ ${esc(t.driver.name)} steht kurz vor Stufe ${t.driver.level + 1}`);
+      zeilen.push(`⭐ ${esc(driverOf(t).name)} steht kurz vor Stufe ${driverOf(t).level + 1}`);
       break;
     }
   }

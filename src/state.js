@@ -4,24 +4,11 @@ import { RULES, TIME, DRIVE, LEICHT, DRIVER_NAMES, TRUCK_MODELS, USED } from './
 import { MARKET, REP } from './config.js';
 import { dateOf, dateShort, dateLong, timeText, drivingBan,
          isWeekend, holidayName, weekday } from './calendar.js';
-import { wuerfleTraits } from './sim/persons.js';
-import { pick, pad } from './util.js';
+import { pad } from './util.js';
 
 export let S = null;
 
 let usedNames = [];
-
-export function newDriver() {
-  const free = DRIVER_NAMES.filter(n => !usedNames.includes(n));
-  const name = free.length ? pick(free) : 'Aushilfe ' + (usedNames.length + 1);
-  usedNames.push(name);
-  return {
-    name, xp: 0, level: 1, points: 1, tours: 0,
-    traits: wuerfleTraits(2),
-    km: 0,                    // eigene Laufleistung, für die Bestenliste
-    skills: { eco: 0, route: 0, deal: 0, care: 0, calm: 0 },
-  };
-}
 
 export function newTruck(nr, pos = null, model = 'kurier', used = false, equip = []) {
   return {
@@ -30,7 +17,7 @@ export function newTruck(nr, pos = null, model = 'kurier', used = false, equip =
     used,
     equip,          // ['kuehl', 'adr']
     odo: used ? USED.odo : 0,      // Kilometerstand
-    driver: newDriver(),
+    driverId: null,                // wer es fährt, siehe sim/staff.js
     order: null,
     route: null,
     progress: 0,       // gefahrene km auf der laufenden Fahrt
@@ -68,6 +55,8 @@ export function resetState(depot) {
     prevSpeed: 1,
 
     trucks: [newTruck(1, { lat: depot.lat, lon: depot.lon }, 'kurier', false)],
+    drivers: [],       // angestellte Fahrer
+    bewerber: [],      // Personalbörse
     firms: [],
     hubs: [],          // Flughäfen, Häfen, Güterbahnhöfe
     traffic: [],
@@ -122,6 +111,7 @@ export const bannedFor = truck =>
 
 /* Was ein Fahrer gerade darf. */
 export function driveStatus(truck) {
+  if (!truck.driverId)    return { code: 'kein-fahrer', text: 'kein Fahrer zugeteilt' };
   if (truck.shopMin > 0)  return { code: 'werkstatt', text: `Werkstatt, ${Math.ceil(truck.shopMin / 60)} h` };
   if (truck.restMin > 0) {
     const wo = truck.rastOrt ? ` · ${truck.rastOrt}` : '';
@@ -154,7 +144,8 @@ export const faehrtLeer = truck =>
 /* Für die Disposition: alles, was jetzt einen Auftrag übernehmen kann —
    stehende Fahrzeuge und solche auf Leerfahrt. */
 export const verfuegbar = truck =>
-  !truck.shopMin && !truck.restMin
+  !!truck.driverId
+  && !truck.shopMin && !truck.restMin
   && (truck.phase === 'idle' || faehrtLeer(truck))
   && !bannedFor(truck)
   && truck.today < DRIVE.MAX_DAY;
@@ -201,7 +192,7 @@ export function ledgerSums(sinceDay = null) {
 
 /* ── Abgeleitete Werte ── */
 export const idleTrucks = () => S.trucks.filter(t => t.phase === 'idle' && !t.shopMin).length;
-export const freePoints = () => S.trucks.reduce((sum, t) => sum + t.driver.points, 0);
+export const freePoints = () => (S.drivers || []).reduce((sum, d) => sum + d.points, 0);
 export const findTruck  = nr => S.trucks.find(t => t.nr === nr);
 
 /* Wo ein LKW gerade steht. Ohne Angabe gilt das Depot. */
@@ -224,9 +215,20 @@ export const kmh      = d => RULES.BASE_KMH + 5 * d.skills.route;
 export const fuelRate = d => RULES.FUEL_PER_KM * (1 - 0.07 * d.skills.eco);
 
 /* Dieselben Werte, aber mit dem Fahrzeug verrechnet. */
-export const truckKmh  = t => Math.max(35, kmh(t.driver) + modelOf(t).speed);
-export const truckFuel = t => fuelRate(t.driver) * modelOf(t).fuel;
-export const truckRisk = t => riskMul(t.driver) * modelOf(t).risk * (t.used ? USED.risk : 1);
+/* Der Fahrer eines Fahrzeugs — oder null, wenn keiner zugeteilt ist. */
+export const driverOf = t => (S.drivers || []).find(d => d.id === t?.driverId) || null;
+
+/* Ohne Fahrer steht das Fahrzeug. Für die Rechnungen gilt dann ein
+   neutraler Ersatzfahrer, damit nirgends etwas zusammenbricht. */
+const KEIN_FAHRER = {
+  name: '—', level: 1, xp: 0, points: 0, tours: 0, km: 0, traits: [],
+  skills: { eco: 0, route: 0, deal: 0, care: 0, calm: 0 },
+};
+export const fahrerOderErsatz = t => driverOf(t) || KEIN_FAHRER;
+
+export const truckKmh  = t => Math.max(35, kmh(fahrerOderErsatz(t)) + modelOf(t).speed);
+export const truckFuel = t => fuelRate(fahrerOderErsatz(t)) * modelOf(t).fuel;
+export const truckRisk = t => riskMul(fahrerOderErsatz(t)) * modelOf(t).risk * (t.used ? USED.risk : 1);
 
 /* Tagesfixkosten: ein Kastenwagen kostet nicht so viel wie ein Sattelzug. */
 export const truckFix = t =>
@@ -259,6 +261,8 @@ export function hydrate(saved) {
     hubs: saved.hubs?.length ? saved.hubs : [],
     parking: saved.parking || [],
     stadt: saved.stadt || null,
+    drivers: saved.drivers || [],
+    bewerber: saved.bewerber || [],
     ledger: saved.ledger || [],
     books: saved.books || { ein: 0, aus: 0 },
     market: saved.market || { index: 1, trend: 0 },
@@ -289,10 +293,7 @@ export function hydrate(saved) {
       rastZiel: t.rastZiel || null,
       rastOrt: t.rastOrt || null,
       idleMin: t.idleMin || 0,
-      /* Ältere Spielstände kennen noch keine Züge — nachrüsten. */
-      driver: { ...t.driver,
-                traits: t.driver?.traits?.length ? t.driver.traits : wuerfleTraits(2),
-                km: t.driver?.km || 0 },
+      driverId: t.driverId || null,
       place: t.place || 'Depot',
       auto: !!t.auto,
       phase: t.phase === 'out' || t.phase === 'back' ? 'idle' : t.phase,

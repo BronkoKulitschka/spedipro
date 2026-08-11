@@ -1,7 +1,7 @@
 /* Erfahrung und Schulung der Fahrer. */
 
 import { SKILLS, RULES } from '../config.js';
-import { S, log, book, findTruck, xpNeeded } from '../state.js';
+import { S, log, book, xpNeeded } from '../state.js';
 import { fmt, esc } from '../util.js';
 import { toast } from '../ui/toast.js';
 
@@ -23,11 +23,9 @@ export function canLearn(driver, key) {
       && S.money >= RULES.TRAIN_COST;
 }
 
-export function learn(nr, key) {
-  const truck = findTruck(nr);
-  if (!truck) return false;
-  const d = truck.driver;
-  if (!canLearn(d, key)) return false;
+export function learn(fahrerId, key) {
+  const d = (S.drivers || []).find(x => x.id === fahrerId);
+  if (!d || !canLearn(d, key)) return false;
 
   d.points--;
   d.skills[key]++;

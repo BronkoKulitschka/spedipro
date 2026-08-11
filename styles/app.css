@@ -386,3 +386,57 @@
   border: 1px solid #404040;
   vertical-align: baseline;
 }
+
+
+/* Fußleiste im Schulungsfenster — immer sichtbar, auch wenn der
+   Inhalt darüber scrollt. */
+.tr-fuss {
+  padding: 5px 6px; flex-shrink: 0;
+  background: #c0c0c0;
+  border-top: 2px solid #fff;
+}
+
+
+/* ── Personal ────────────────────────────────────────────── */
+.person {
+  padding: 6px; margin-bottom: 5px;
+  background: #d4d0c8;
+  border-top: 1px solid #fff; border-left: 1px solid #fff;
+  border-right: 1px solid #808080; border-bottom: 1px solid #808080;
+}
+.zug.schwach { background: #f0dcdc; border-right-color: #a06060; border-bottom-color: #a06060; }
+.auffaellig {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  font-size: 10px; margin-top: 4px; padding: 3px 5px;
+  background: #f4efd8; border-left: 3px solid #806000;
+}
+
+/* Reiterleiste */
+.reiter {
+  display: flex; gap: 3px; padding: 4px 5px 0;
+  background: #c0c0c0; flex-shrink: 0;
+}
+.reiter .btn { border-bottom-color: #c0c0c0; }
+.reiter .btn.pressed {
+  border-top: 2px solid #808080; border-left: 2px solid #808080;
+  border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+  font-weight: bold;
+}
+
+/* Fahrerzeile im Fuhrpark */
+.fahrer-zeile {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  font-size: 11px; margin: 4px 0;
+  padding: 3px 5px;
+  background: rgba(255, 255, 255, .55);
+  border-left: 3px solid #000080;
+}
+.fahrer-zeile .btn { margin-left: auto; }
+.truck-row.ohne-fahrer { border-left: 3px solid #a02020; }
+
+/* Hofbeschreibung im Handel */
+.hof-hinweis {
+  font-size: 10px; color: #404040; padding: 4px 8px;
+  background: #c0c0c0; border-bottom: 1px solid #808080;
+  flex-shrink: 0;
+}

@@ -261,6 +261,17 @@ async function bootSteps() {
 
   bootLine(`  Betriebshof: ${platz.name}, ${platz.km.toFixed(0)} km vom Zentrum.`);
   bootLine('');
+  /* Der erste Fahrer gehört zum Betrieb, alles Weitere kommt über
+     die Personalbörse. */
+  const { neuerFahrer, fuelleBoerse } = await import('./sim/staff.js');
+  if (!S.drivers.length) {
+    const erster = neuerFahrer(true);
+    S.drivers.push(erster);
+    if (S.trucks[0]) S.trucks[0].driverId = erster.id;
+    bootLine(`  Fahrer: ${erster.name}`);
+  }
+  fuelleBoerse();
+
   bootProgress(20);
 
   bootLine(`Verkehrslage der Autobahn GmbH (${AUTOBAHNEN.length} Autobahnen) …`);

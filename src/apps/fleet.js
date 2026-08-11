@@ -3,7 +3,7 @@
 import { SKILLS } from '../config.js';
 import { S, xpNeeded, findTruck, atDepot, modelOf, resaleValue,
          driveStatus, canDrive, bestand, truckFix, fixGesamt,
-         faehrtLeer, verfuegbar } from '../state.js';
+         faehrtLeer, verfuegbar, driverOf } from '../state.js';
 import { esc, pips, fmt, num, truckFarbe } from '../util.js';
 import { kapazitaet, klasseVon } from '../sim/goods.js';
 import { EQUIPMENT } from '../config.js';
@@ -40,7 +40,7 @@ export const FleetApp = {
       if (!btn) return;
       const nr = Number(btn.dataset.nr);
       if (btn.dataset.act === 'show') { openApp('dispo'); focusTruck(findTruck(nr)); }
-      if (btn.dataset.act === 'train')  openApp('training', { nr });
+      if (btn.dataset.act === 'personal') { openApp('staff'); return; }
       if (btn.dataset.act === 'home')   returnToDepot(nr).then(onTick);
       if (btn.dataset.act === 'sell') {
         const truck = findTruck(nr);
@@ -89,7 +89,7 @@ export const FleetApp = {
     }
 
     const sig = S.trucks.map(t =>
-      [t.nr, t.model, t.driver.level, t.driver.points, Object.values(t.driver.skills).join(''),
+      [t.nr, t.model, driverOf(t).level, driverOf(t).points, Object.values(driverOf(t).skills).join(''),
        t.phase, t.auto ? 1 : 0, t.place, t.shopMin > 0 ? 1 : 0, S.level,
        t.restMin > 0 ? 1 : 0, t.job?.klasse || '', t.job?.stopp || 0,
        t.rastZiel ? 1 : 0, t.rastOrt || '', faehrtLeer(t) ? 1 : 0,
@@ -106,7 +106,7 @@ export const FleetApp = {
       const xp     = box.querySelector(`#xp${truck.nr}`);
       if (!status || !bar) continue;
 
-      if (xp) xp.style.width = Math.min(100, truck.driver.xp / xpNeeded(truck.driver.level) * 100) + '%';
+      if (xp) xp.style.width = Math.min(100, driverOf(truck).xp / xpNeeded(driverOf(truck).level) * 100) + '%';
       bar.className = 'prog-fill';
 
       if (truck.shopMin > 0) {
@@ -148,45 +148,50 @@ export const FleetApp = {
 };
 
 function row(truck) {
-  const d = truck.driver;
-  const skills = Object.entries(SKILLS)
-    .map(([key, s]) => `<span title="${s.name}">${s.icon}${pips(d.skills[key], s.max)}</span>`)
-    .join(' ');
-
+  const d = driverOf(truck);
   const m = modelOf(truck);
   const kap = kapazitaet(truck);
+
   const stehtWo = truck.phase === 'idle'
     ? `<span class="muted">bei ${esc(truck.place)}</span>`
     : '<span class="muted">unterwegs</span>';
 
   return `
-  <div class="truck-row mit-hintergrund">
+  <div class="truck-row mit-hintergrund ${d ? '' : 'ohne-fahrer'}">
     <div class="flex-row" style="justify-content:space-between;">
       <span>
         <span class="farb-marke" style="background:${truckFarbe(truck.nr).kraeftig}"></span>
-        <strong>${esc(d.name)}</strong>
-        <span class="muted">· LKW ${truck.nr} · St. ${d.level}</span></span>
+        <strong>LKW ${truck.nr}</strong>
+        <span class="muted">· ${esc(m.name)}</span>
+        ${(truck.equip || []).map(k => EQUIPMENT[k]?.icon || '').join('')}
+      </span>
       <span style="font-size:10px;" id="tst${truck.nr}"></span>
     </div>
+
     <div style="font-size:10px;margin:2px 0;">
-      ${esc(m.name)}${truck.used ? ' <span class="muted">· gebraucht</span>' : ''}
-      ${(truck.equip || []).map(k => EQUIPMENT[k]?.icon || '').join('')}
-      <span class="muted">· ${num(truck.odo || 0)} km</span> · ${stehtWo}
+      ${truck.used ? '<span class="muted">gebraucht · </span>' : ''}
+      <span class="muted">${num(truck.odo || 0)} km</span> · ${stehtWo}
     </div>
 
-<div class="daten-reihe">
+    <div class="daten-reihe">
       <span class="datum"><span class="dl">Nutzlast</span><span class="dw">${(kap.kg / 1000).toFixed(1)} t</span></span>
       <span class="datum"><span class="dl">Plätze</span><span class="dw">${kap.paletten}</span></span>
       <span class="datum"><span class="dl">zGG</span><span class="dw">${(m.zgg / 1000).toFixed(1)} t</span></span>
       <span class="datum"><span class="dl">Fix/Tag</span><span class="dw">${truckFix(truck)} €</span></span>
     </div>
 
+    <div class="fahrer-zeile">
+      ${d
+        ? `👤 <strong>${esc(d.name)}</strong>
+           <span class="muted">· Stufe ${d.level}</span>
+           ${d.points ? `<span class="ok">· ${d.points} Pkt. frei</span>` : ''}`
+        : '<span class="warn">👤 kein Fahrer — das Fahrzeug steht</span>'}
+      <button class="btn btn-sm" data-act="personal">Personal</button>
+    </div>
+
     ${ladeZeile(truck, kap)}
-    <div class="xpbar" style="margin:3px 0;"><div class="xpfill" id="xp${truck.nr}"></div></div>
     <div class="prog" style="margin:3px 0;"><div class="prog-fill" id="tpg${truck.nr}"></div></div>
-    <div style="font-size:10px;margin:2px 0 3px;">${skills}</div>
-    <div class="zuege">${traitsVon(d).map(t =>
-      `<span class="zug" title="${esc(t.text)}">${t.icon} ${esc(t.name)}</span>`).join('')}</div>
+
     <div class="flex-row" style="justify-content:space-between;font-size:10px;flex-wrap:wrap;gap:4px;">
       ${automatikFrei()
         ? `<label class="flex-row" style="gap:3px;" title="Sucht sich selbst den nächsten Auftrag">
@@ -196,11 +201,9 @@ function row(truck) {
         : `<span class="muted" title="Wird mit der Betriebsstufe frei">
              🔒 Automatik ab Stufe ${stufeFuerAutomatik()}</span>`}
       <span class="flex-row" style="gap:4px;">
-        ${d.points ? `<span class="ok">${d.points} Pkt.</span>` : ''}
         <button class="btn btn-sm" data-act="home" data-nr="${truck.nr}"
           ${truck.phase === 'idle' && !truck.shopMin && !atDepot(truck) ? '' : 'disabled'}>ins Depot</button>
         <button class="btn btn-sm" data-act="show"  data-nr="${truck.nr}">zeigen</button>
-        <button class="btn btn-sm" data-act="train" data-nr="${truck.nr}">Schulung</button>
         <button class="btn btn-sm" data-act="sell" data-nr="${truck.nr}"
           title="Wiederverkaufswert ${fmt(resaleValue(truck))}"
           ${truck.phase === 'idle' && !truck.shopMin && S.trucks.length > 1 ? '' : 'disabled'}>verkaufen</button>

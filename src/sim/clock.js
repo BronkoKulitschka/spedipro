@@ -6,7 +6,7 @@
    Spielminuten je echter Minute. */
 
 import { RULES, TIME } from '../config.js';
-import { S, log, book, day, truckRisk, fixGesamt, todayText, holidayNow, weekendNow } from '../state.js';
+import { S, log, book, day, truckRisk, fixGesamt, todayText, holidayNow, weekendNow, driverOf } from '../state.js';
 import { fmt } from '../util.js';
 import { moveTrucks } from './fleet.js';
 import { fireEvent } from './events.js';
@@ -19,6 +19,7 @@ import { saveGame } from './save.js';
 import { panneFaktor } from './persons.js';
 import { werkstattRabatt, werkstattZeit } from './goals.js';
 import { tagAbschluss, wochenAbschluss, istSonntag } from './records.js';
+import { lohnGesamt, fuelleBoerse } from './staff.js';
 
 let timer = null;
 let lastDay = 1;
@@ -119,18 +120,32 @@ function newDay() {
   else log(`📅 ${todayText()}`);
 
   const cost = fixGesamt();
-  book('Fixkosten', `${S.trucks.length} Fahrzeuge · Fahrer, Versicherung, Wartung`, -cost);
+  book('Fixkosten', `${S.trucks.length} Fahrzeuge · Versicherung, Steuer, Wartung`, -cost);
+
+  /* Löhne laufen unabhängig davon, ob gefahren wird. */
+  const loehne = lohnGesamt();
+  if (loehne > 0) {
+    book('Personal', `${S.drivers.length} Fahrer · Tageslohn`, -loehne);
+    for (const d of S.drivers) d.stats.tage = (d.stats.tage || 0) + 1;
+  }
+
+  /* Die Börse wechselt gelegentlich durch. */
+  if (Math.random() < 0.35 && S.bewerber?.length > 3) S.bewerber.shift();
+  fuelleBoerse();
   log(`Tagesfixkosten für ${S.trucks.length} LKW: ${fmt(-cost)}`);
 
   for (const truck of S.trucks) {
     const rolling = truck.phase === 'driving';
     if (!rolling || truck.shopMin) continue;
-    if (Math.random() >= RULES.BREAKDOWN * truckRisk(truck) * panneFaktor(truck.driver)) continue;
+    if (Math.random() >= RULES.BREAKDOWN * truckRisk(truck) * panneFaktor(driverOf(truck))) continue;
+
+    const fahrer = driverOf(truck);
+    if (fahrer?.stats) fahrer.stats.pannen = (fahrer.stats.pannen || 0) + 1;
 
     const bill = Math.round((800 + Math.random() * 2200) * werkstattRabatt());
-    book('Werkstatt', `LKW ${truck.nr} · ${truck.driver.name}`, -bill);
+    book('Werkstatt', `LKW ${truck.nr} · ${driverOf(truck).name}`, -bill);
     truck.shopMin = Math.round((180 + Math.random() * 300) * werkstattZeit());
-    log(`🔧 LKW ${truck.nr} (${truck.driver.name}) steht in der Werkstatt: ${fmt(-bill)}.`);
+    log(`🔧 LKW ${truck.nr} (${driverOf(truck).name}) steht in der Werkstatt: ${fmt(-bill)}.`);
   }
 
   driftMarket();

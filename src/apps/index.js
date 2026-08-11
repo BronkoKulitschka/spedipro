@@ -17,9 +17,10 @@ import { TutorialApp }  from './tutorial.js';
 import { GoalsApp }     from './goals.js';
 import { ChronikApp }   from './chronik.js';
 import { WeekApp }      from './week.js';
+import { StaffApp }     from './staff.js';
 
 export const APPS = Object.fromEntries(
-  [DispoApp, ContractsApp, FleetApp, DailyApp, ProgressApp, IndustryApp, FinanceApp, LogApp, GoalsApp, ChronikApp, SettingsApp, HelpApp,
+  [DispoApp, ContractsApp, FleetApp, DailyApp, ProgressApp, IndustryApp, FinanceApp, LogApp, StaffApp, GoalsApp, ChronikApp, SettingsApp, HelpApp,
    TrainingApp, ReportApp, DealerApp, TutorialApp, WeekApp]
     .map(app => [app.id, app]));
 

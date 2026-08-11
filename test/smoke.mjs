@@ -47,6 +47,13 @@ const prog = await import('../src/sim/progress.js');
 console.log('\nAufbau');
 resetState(CITIES[0]);
 const S = state.S;
+
+/* Ein Fahrer gehört zum Betrieb, weitere kommen über die Börse. */
+const staff = await import('../src/sim/staff.js');
+const ersterFahrer = staff.neuerFahrer(true);
+S.drivers.push(ersterFahrer);
+S.trucks[0].driverId = ersterFahrer.id;
+staff.fuelleBoerse();
 S.firms = inventFirms(S.depot, 40);
 const { hubsFor } = await import('../src/data/hubs.js');
 S.hubs = hubsFor(S.depot);
@@ -91,6 +98,12 @@ const geld = S.money;
 ok(buyTruck('fern', false) === false, 'Sattelzug auf Stufe 1 gesperrt');
 ok(buyTruck('siebenhalb', false) === false, '7,5-Tonner auf Stufe 1 gesperrt');
 ok(buyTruck('maxi', false) === true, 'Großraumtransporter gekauft');
+{
+  const zweiter = staff.neuerFahrer();
+  S.drivers.push(zweiter);
+  const ohne = S.trucks.find(t => !t.driverId);
+  if (ohne) ohne.driverId = zweiter.id;
+}
 ok(S.money < geld, 'Kaufpreis gebucht');
 ok(S.ledger.some(e => e.cat === 'Fahrzeugkauf'), 'Buchung im Kassenbuch');
 
@@ -148,6 +161,58 @@ console.log('\nPausen auf Rastplätzen');
   ok(naechsterRastplatz(t) === null, 'Ohne Daten kein Parkplatz');
 
   t.route = null; t.progress = 0;
+}
+
+/* ── Personal ── */
+console.log('\nPersonal');
+{
+  const { einstellen, entlassen, zuteilen, abziehen, fahrzeugVon,
+          freieFahrer, leereFahrzeuge, tagesLohn, lohnGesamt,
+          bewertung, urteil } = staff;
+  const { schwaechenVon, staerkenVon } = await import('../src/sim/persons.js');
+
+  ok(S.bewerber.length >= 4, `Börse gefüllt (${S.bewerber.length} Bewerber)`);
+  ok(S.bewerber.every(b => b.traits.length >= 1), 'Alle Bewerber haben Eigenheiten');
+
+  const mitSchwaeche = S.bewerber.filter(b => schwaechenVon(b).length > 0);
+  ok(mitSchwaeche.length > 0, `Bewerber mit Schwächen vorhanden (${mitSchwaeche.length})`);
+
+  const vorher = S.drivers.length;
+  const neuer = einstellen(S.bewerber[0].id);
+  ok(neuer && S.drivers.length === vorher + 1, `${neuer?.name} eingestellt`);
+  ok(S.bewerber.length >= 4, 'Börse füllt sich nach');
+
+  ok(tagesLohn(neuer) > 0, `Tageslohn berechnet (${tagesLohn(neuer)} €)`);
+  ok(lohnGesamt() >= tagesLohn(neuer), `Lohnsumme (${lohnGesamt()} € je Tag)`);
+
+  ok(freieFahrer().some(d => d.id === neuer.id), 'Neuer Fahrer hat kein Fahrzeug');
+
+  const leer = leereFahrzeuge();
+  if (leer.length) {
+    ok(zuteilen(neuer.id, leer[0].nr), `Fahrzeug LKW ${leer[0].nr} zugeteilt`);
+    ok(fahrzeugVon(neuer)?.nr === leer[0].nr, 'Zuteilung ist wirksam');
+    ok(abziehen(leer[0].nr), 'Fahrer wieder abgezogen');
+    ok(!fahrzeugVon(neuer), 'Fahrzeug ist wieder ohne Fahrer');
+  } else {
+    ok(true, 'Kein freies Fahrzeug für die Zuteilung, übersprungen');
+  }
+
+  const ohneFahrten = bewertung(neuer);
+  ok(ohneFahrten === null, 'Ohne Fahrten kein Urteil');
+
+  neuer.tours = 20;
+  neuer.stats = { erloes: 12000, diesel: 2000, pannen: 1, verspaetungen: 0, tage: 10 };
+  const wert = bewertung(neuer);
+  ok(wert !== null && wert >= 0 && wert <= 100,
+     `Bewertung berechnet (${wert} Punkte · ${urteil(wert)})`);
+
+  const schlecht = { ...neuer, tours: 20,
+    stats: { erloes: 5000, diesel: 2500, pannen: 6, verspaetungen: 0, tage: 10 } };
+  ok(bewertung(schlecht) < wert, 'Schlechte Leistung ergibt weniger Punkte');
+
+  const kasseVorher = S.money;
+  ok(entlassen(neuer.id), 'Fahrer entlassen');
+  ok(S.money < kasseVorher, 'Abfindung wurde gebucht');
 }
 
 /* ── Leerfahrt lässt sich abbrechen ── */
@@ -251,10 +316,10 @@ console.log('\nAusbau');
   const { fortschritt, setzeZiel, zurueckLegen, bauen, gebaut } = await import('../src/sim/goals.js');
   const { rekordListe, wochenAbschluss } = await import('../src/sim/records.js');
 
-  ok(S.trucks.every(t => t.driver.traits?.length === 2),
-     'Jeder Fahrer hat zwei Eigenheiten');
-  ok(traitsVon(S.trucks[0].driver).every(t => t.name),
-     `Eigenheiten lesbar (${traitsVon(S.trucks[0].driver).map(t => t.name).join(', ')})`);
+  ok(S.drivers.every(d => d.traits?.length >= 1),
+     'Jeder Fahrer hat Eigenheiten');
+  ok(traitsVon(S.drivers[0]).every(t => t.name),
+     `Eigenheiten lesbar (${traitsVon(S.drivers[0]).map(t => t.name).join(', ')})`);
 
   const kunden = topKunden(3);
   ok(kunden.length > 0, `Stammkundschaft erfasst (${kunden.length} Betriebe)`);

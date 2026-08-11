@@ -196,6 +196,7 @@ node test/places.mjs     # Ortsbewertung bei freier Wahl
 node test/wallpaper.mjs  # Hintergrundwerte
 node test/wiring.mjs     # jede aufgerufene Funktion existiert auch
 node test/sprites.mjs    # Rasteraufteilung des Sammelbilds
+node test/navigation.mjs # Herkunft beim Fensterwechsel
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und
@@ -457,6 +458,37 @@ nicht, steht der Grund dort statt des Knopfes — „nur 17 Stellplätze" oder
 Nachbarn geordnet, jede Teilstrecke einzeln über OSRM geroutet. An jedem Stopp
 wird die jeweilige Fracht abgerechnet. Mehrstopp-Touren brauchen nur 33 Minuten
 Rampenzeit je Stopp statt einer vollen Stunde — Sammelverkehr lohnt sich.
+
+## Personal
+
+Fahrer sind eigenständige Personen, keine Eigenschaft der Fahrzeuge. Der
+Ablauf: einstellen, einem Fahrzeug zuteilen, beurteilen, gegebenenfalls
+entlassen. Ein Fahrzeug ohne Fahrer steht.
+
+Das Programm hat drei Blätter:
+
+* **Mannschaft** — Angestellte mit Eigenheiten, Leistung und Zuteilung
+* **Börse** — sechs Bewerber, die gelegentlich wechseln
+* **Auswertung** — nach Leistung geordnet, mit Note und Auffälligkeiten
+
+### Eigenheiten
+
+Zwölf Stärken und acht Schwächen. Jeder Bewerber bringt ein bis drei
+Stärken und null bis zwei Schwächen mit. Widersprüchliches kommt nie
+zusammen vor — niemand ist sorgsam und unachtsam zugleich.
+
+Schwächen kosten wirklich: Ein Bleifuß verbraucht 18 % mehr Diesel, ein
+Unachtsamer steht deutlich häufiger in der Werkstatt, ein Mürrischer
+bringt kaum Ansehen.
+
+### Lohn und Bewertung
+
+95 € je Tag auf Stufe 1, je weiterer Stufe 18 € mehr. Der Lohn läuft ab
+dem ersten Tag, unabhängig davon, ob gefahren wird. Eine Entlassung kostet
+vierzehn Tageslöhne Abfindung.
+
+Die Note von 0 bis 100 entsteht aus Erlös je Fahrt, Spritanteil und
+Pannenhäufigkeit. Ohne Fahrten gibt es kein Urteil.
 
 ## Fahrzeuge und Kasse
 

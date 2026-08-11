@@ -8,7 +8,7 @@ import { RULES, TRUCK_MODELS, USED, DRIVE, REP, EQUIPMENT } from '../config.js';
 import { S, log, book, newTruck, findTruck, idleTrucks, truckPos, atDepot,
          modelOf, resaleValue, truckKmh, truckFuel,
          feeMul, calmMul, canDrive, driveStatus, bannedFor,
-         faehrtLeer, verfuegbar } from '../state.js';
+         faehrtLeer, verfuegbar, driverOf } from '../state.js';
 import { haversine, fmt, esc, routeCum, pointOnRoute } from '../util.js';
 import { osrmRoute, straightRoute } from '../data/osrm.js';
 import { takeOffer } from './orders.js';
@@ -41,7 +41,7 @@ export function trafficOnRoute(coords) {
 
 export function effectiveKmh(truck) {
   const jams = truck.job?.jams || 0;
-  const slowdown = Math.min(0.55, 0.05 * jams * calmMul(truck.driver));
+  const slowdown = Math.min(0.55, 0.05 * jams * calmMul(driverOf(truck)));
   return truckKmh(truck) * (1 - slowdown);
 }
 
@@ -134,7 +134,7 @@ export async function startTour(truckNr, sendungen, opts = {}) {
   const erloes = folge.reduce((s, o) => s + o.fee, 0);
   const last = summe(folge);
 
-  log(`${truck.driver.name} startet Tour mit ${folge.length} Stopp${folge.length > 1 ? 's' : ''}: `
+  log(`${driverOf(truck).name} startet Tour mit ${folge.length} Stopp${folge.length > 1 ? 's' : ''}: `
     + `${gesamt.toFixed(0)} km, ${last.paletten} Paletten, ${(last.kg / 1000).toFixed(1)} t, ${fmt(erloes)}`);
 
   if (alleHits.length && !S.silent) {
@@ -178,7 +178,7 @@ function brichLeerfahrtAb(truck) {
   const gefahren = truck.progress;
 
   if (gefahren > 0) {
-    const d = truck.driver;
+    const d = driverOf(truck);
     const sprit = gefahren * truckFuel(truck) * dieselFaktor(d) * dieselRabatt();
     book('Diesel', `Leerfahrt abgebrochen · LKW ${truck.nr}`, -sprit);
     truck.odo = (truck.odo || 0) + gefahren;
@@ -194,7 +194,7 @@ function brichLeerfahrtAb(truck) {
   truck.phase = 'idle';
   removeTruckLayers(truck);
 
-  log(`${truck.driver.name} bricht die Leerfahrt ab und nimmt Fracht auf.`);
+  log(`${driverOf(truck).name} bricht die Leerfahrt ab und nimmt Fracht auf.`);
 }
 
 /* ── Auftrag annehmen ── */
@@ -208,7 +208,7 @@ export async function dispatch(offerId, truckNr = null, opts = {}) {
   if (!verfuegbar(truck)) {
     const status = driveStatus(truck);
     if (!S.silent) {
-      toast('⏳', `<strong>${esc(truck.driver.name)}</strong> kann nicht losfahren.`,
+      toast('⏳', `<strong>${esc(driverOf(truck).name)}</strong> kann nicht losfahren.`,
                   `<span class="muted">${esc(status.text)}</span>`);
     }
     return;
@@ -251,7 +251,7 @@ export async function returnToDepot(nr, opts = {}) {
 
   drawRoute(truck);
   updateTruckMarker(truck);
-  log(`${truck.driver.name} fährt leer zurück ins Depot · ${route.km.toFixed(0)} km`);
+  log(`${driverOf(truck).name} fährt leer zurück ins Depot · ${route.km.toFixed(0)} km`);
 }
 
 /* ── Rastplatzsuche ──────────────────────────────────────────────
@@ -298,9 +298,9 @@ function halteAn(truck, art, ort) {
 
   const wo = ort ? `auf ${ort}` : 'am Straßenrand';
   if (art === 'ruhe') {
-    log(`🛏️ ${truck.driver.name} legt die Ruhezeit ${wo} ein.`);
+    log(`🛏️ ${driverOf(truck).name} legt die Ruhezeit ${wo} ein.`);
   } else {
-    log(`☕ ${truck.driver.name} macht Pause ${wo}.`);
+    log(`☕ ${driverOf(truck).name} macht Pause ${wo}.`);
   }
   truck.rastOrt = ort || null;
 }
@@ -317,7 +317,7 @@ function pruefeRast(truck) {
 
   if (ziel) {
     truck.rastZiel = { ...ziel, art };
-    log(`${truck.driver.name} steuert ${ziel.name} an (${ziel.road}), `
+    log(`${driverOf(truck).name} steuert ${ziel.name} an (${ziel.road}), `
       + `noch ${Math.max(0, ziel.km - truck.progress).toFixed(0)} km.`);
   } else {
     /* Kein Parkplatz in Reichweite: notgedrungen hier halten. */
@@ -382,9 +382,10 @@ export function moveTrucks(minutes) {
 }
 
 function finish(truck) {
-  const d = truck.driver;
+  const d = driverOf(truck);
   const km = truck.route.km;
   const fuel = km * truckFuel(truck) * dieselFaktor(d) * dieselRabatt();
+  if (d.stats) d.stats.diesel += fuel;
 
   if (truck.job.kind === 'delivery') {
     const fee = truck.job.fee * feeMul(d);
@@ -401,6 +402,8 @@ function finish(truck) {
     book('Diesel', `${km.toFixed(0)} km · LKW ${truck.nr}`, -fuel);
     S.stats.tours++;
     S.stats.revenue += fee;
+    d.stats ||= { erloes: 0, diesel: 0, pannen: 0, verspaetungen: 0, tage: 0 };
+    d.stats.erloes += fee;
     S.tagTouren = (S.tagTouren || 0) + 1;
     d.tours++;
 
@@ -507,9 +510,22 @@ export function buyTruck(modelKey = 'verteiler', used = false, equip = []) {
   checkLevelUp();
 
   book('Fahrzeugkauf', `${model.name}${used ? ', gebraucht' : ''} · LKW ${truck.nr}`, -price);
-  log(`${model.name}${used ? ' (gebraucht)' : ''} gekauft, ${truck.driver.name} übernimmt LKW ${truck.nr}: ${fmt(-price)}`);
-  toast('🚛', `<strong>${esc(truck.driver.name)}</strong> übernimmt den ${esc(model.name)}.`,
-              `<span class="muted">LKW ${truck.nr} steht im Depot bereit.</span>`);
+  log(`${model.name}${used ? ' (gebraucht)' : ''} gekauft als LKW ${truck.nr}: ${fmt(-price)}`);
+
+  /* Ein neues Fahrzeug hat keinen Fahrer. Wartet jemand ohne Fahrzeug,
+     übernimmt er es gleich — sonst steht es, bis jemand eingestellt wird. */
+  const wartend = (S.drivers || []).find(d => !S.trucks.some(t => t.driverId === d.id));
+  if (wartend) {
+    truck.driverId = wartend.id;
+    log(`${wartend.name} übernimmt LKW ${truck.nr}.`);
+    if (!S.silent) {
+      toast('🚛', `<strong>${esc(wartend.name)}</strong> übernimmt den ${esc(model.name)}.`,
+                  `<span class="muted">LKW ${truck.nr} steht im Depot bereit.</span>`);
+    }
+  } else if (!S.silent) {
+    toast('👤', `LKW ${truck.nr} braucht noch einen Fahrer.`,
+                '<span class="muted">Im Personal einstellen und zuteilen.</span>');
+  }
   return true;
 }
 
@@ -526,7 +542,7 @@ export function sellTruck(nr = null) {
 
   const value = resaleValue(truck);
   book('Fahrzeugverkauf', `${modelOf(truck).name} · LKW ${truck.nr}`, value);
-  log(`LKW ${truck.nr} verkauft, ${truck.driver.name} verabschiedet sich: ${fmt(value)}`);
+  log(`LKW ${truck.nr} verkauft, ${driverOf(truck).name} verabschiedet sich: ${fmt(value)}`);
   toast('🤝', `LKW ${truck.nr} verkauft.`, `<span class="money">${fmt(value)}</span>`);
   return true;
 }

@@ -78,7 +78,8 @@ export const TOPICS = {
   fleet: {
     titel: 'Fuhrpark', icon: '🚛', gruppe: 'Programme',
     inhalt: [
-      { p: 'Der Zustand aller Fahrzeuge auf einen Blick: wo sie stehen, was sie geladen haben, wie weit die Fahrer sind.' },
+      { p: 'Der Zustand aller Fahrzeuge auf einen Blick: wo sie stehen, was sie geladen haben, wer sie fährt.' },
+      { p: 'Fahrer selbst werden im Personal verwaltet — hier steht nur, wer zugeteilt ist. Ein Fahrzeug ohne Fahrer trägt einen roten Rand und steht still.' },
       { p: 'Über der Liste steht der Bestand nach Bauart — wie viele Fahrzeuge jeder Klasse im Hof stehen, wie viele davon gebraucht sind, und was der Fuhrpark zusammen an Fixkosten je Tag verursacht.' },
       { h: 'Was in einer Zeile steht' },
       { list: [
@@ -99,6 +100,31 @@ export const TOPICS = {
       { h: 'Automatik' },
       { p: 'Ein Fahrzeug auf Automatik sucht sich selbst Aufträge und lädt zusammen, was zusammenpasst. Das ist die Voraussetzung dafür, dass in deiner Abwesenheit weitergefahren wird. Die Automatik wird mit Betriebsstufe 2 frei.' },
       { ref: 'progress' },
+    ],
+  },
+
+  staff: {
+    titel: 'Personal', icon: '👤', gruppe: 'Programme',
+    inhalt: [
+      { p: 'Fahrer sind eigenständige Personen, kein Zubehör der Fahrzeuge. Sie werden eingestellt, einem Fahrzeug zugeteilt und gegebenenfalls entlassen. Ein Fahrzeug ohne Fahrer steht.' },
+      { h: 'Mannschaft' },
+      { p: 'Alle Angestellten mit ihren Eigenheiten, Leistungsdaten und dem Fahrzeug, das sie fahren. Über die Auswahlliste lässt sich jederzeit umverteilen — allerdings nur, solange das Fahrzeug steht.' },
+      { h: 'Börse' },
+      { p: 'Sechs Bewerber, die gelegentlich wechseln. Jeder hat eine bis drei Stärken und null bis zwei Schwächen. Manche bringen schon Erfahrung mit und kosten entsprechend mehr.' },
+      { p: 'Der Lohn beginnt mit dem ersten Tag und läuft weiter, ob gefahren wird oder nicht. Ein Fahrer ohne Fahrzeug kostet also Geld, ohne etwas einzubringen.' },
+      { tab: {
+        kopf: ['Posten', 'Betrag'],
+        zeilen: [
+          ['Grundlohn Stufe 1', '95 € je Tag'],
+          ['je weiterer Stufe', '+18 € je Tag'],
+          ['Abfindung bei Entlassung', '14 Tageslöhne'],
+        ],
+      } },
+      { h: 'Auswertung' },
+      { p: 'Nach Leistung geordnet, mit einer Note von 0 bis 100. Sie entsteht aus dem Erlös je Fahrt, dem Anteil des Diesels am Erlös und der Häufigkeit von Pannen. Ohne Fahrten gibt es kein Urteil.' },
+      { p: 'Darunter stehen die Auffälligkeiten: sichtbare Schwächen und Zahlen, die aus dem Rahmen fallen. Das ist die Grundlage für die Entscheidung, ob jemand bleibt.' },
+      { tipp: 'Eine Entlassung kostet vierzehn Tageslöhne. Bei einem schwachen Fahrer rechnet sich das trotzdem oft — ein Bleifuß verbrennt mehr, als die Abfindung kostet.' },
+      { ref: 'fahrer' },
     ],
   },
 
@@ -297,6 +323,7 @@ export const TOPICS = {
         ],
       } },
       { p: 'Vier Stufen je Fertigkeit, jede kostet einen Punkt und 3.000 € Kursgebühr.' },
+      { p: 'Das <strong>◀</strong> in der Titelleiste führt zurück in den Fuhrpark. Haben mehrere Fahrer einen Punkt frei, schaltet <strong>nächster ▶</strong> unten direkt zum nächsten weiter — das spart den Umweg, wenn man mehrere nacheinander schult.' },
       { tipp: 'Verhandlung wirkt auf jede Fracht und rechnet sich am schnellsten. Spritsparen lohnt bei Fahrzeugen, die viele Kilometer machen.' },
     ],
   },
@@ -322,7 +349,22 @@ export const TOPICS = {
           ['🐢 Gemütlich', 'langsam, aber sparsam und zuverlässig'],
         ],
       } },
-      { p: 'Widersprüchliche Züge kommen nie zusammen vor — niemand ist gleichzeitig Frühaufsteher und Nachtfahrer.' },
+      { h: 'Schwächen' },
+      { p: 'Jeder Mensch hat welche. Sie machen niemanden unbrauchbar, aber sie kosten.' },
+      { tab: {
+        kopf: ['Schwäche', 'Wirkung'],
+        zeilen: [
+          ['🐌 Trödelt', 'langsamer, länger an der Rampe'],
+          ['⛽ Bleifuß', '18 % mehr Diesel, mehr Pannen'],
+          ['💥 Unachtsam', 'deutlich häufiger in der Werkstatt'],
+          ['😠 Mürrisch', 'kaum Ansehen je Zustellung'],
+          ['🧭 Verfährt sich', 'Umwege kosten Zeit und Diesel'],
+          ['😰 Hektisch', 'verliert im Stau überdurchschnittlich'],
+          ['🛋️ Dienst nach Vorschrift', 'lernt langsam, trödelt an der Rampe'],
+          ['💸 Fordernd', '35 % höherer Lohn'],
+        ],
+      } },
+      { p: 'Widersprüchliche Züge kommen nie zusammen vor — niemand ist gleichzeitig Frühaufsteher und Nachtfahrer oder sorgsam und unachtsam.' },
       { tipp: 'Setze Nachtfahrer auf lange Läufe und Nahverkehrsprofis auf Touren mit vielen Stopps. Die Eigenheiten stehen im Fuhrpark unter jedem Fahrer.' },
       { ref: 'training' },
     ],
@@ -424,6 +466,7 @@ export const TOPICS = {
         'Fenster lassen sich an der Titelleiste ziehen und an der rechten unteren Ecke in der Größe ändern.',
         'Ein Doppeltipp auf die Titelleiste schaltet auf Vollbild.',
         'Das ? in der Titelleiste öffnet die Hilfe zum jeweiligen Programm.',
+        'Das ◀ links daneben führt zurück zu dem Fenster, aus dem heraus geöffnet wurde. Es erscheint nur, wenn es einen Rückweg gibt.',
         'Die Taskleiste zeigt alles Offene, jeder Eintrag hat ein eigenes ✕ zum Schließen.',
       ] },
       { p: 'Auf schmalen Bildschirmen öffnen Fenster grundsätzlich bildfüllend, und die Taskleiste dient zum Umschalten.' },
@@ -439,5 +482,5 @@ export const HELP_FOR_APP = {
   daily: 'daily', progress: 'progress', industry: 'industry',
   finance: 'finance', log: 'log', settings: 'settings', training: 'training',
   report: 'abwesenheit', tutorial: 'start', help: 'fenster',
-  goals: 'goals', chronik: 'chronik', week: 'chronik',
+  goals: 'goals', chronik: 'chronik', week: 'chronik', staff: 'staff',
 };

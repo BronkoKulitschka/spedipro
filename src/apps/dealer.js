@@ -18,10 +18,14 @@ export const DealerApp = {
   body: () => `
     <div class="col fill">
       ${kasseLeiste('Fixkosten steigen mit jedem Fahrzeug')}
+      <div class="reiter" id="dlReiter">
+        <button class="btn btn-sm" data-hof="neu">🏢 Neuwagen</button>
+        <button class="btn btn-sm" data-hof="gebraucht">🔧 Gebrauchtwagen</button>
+      </div>
+      <div class="hof-hinweis" id="dlHof"></div>
       <div class="bar-note flex-row" style="justify-content:space-between;">
         <span class="muted" style="font-size:10px;">Preis inkl. gewählter Ausstattung</span>
         <span class="flex-row" style="gap:8px;font-size:10px;flex-wrap:wrap;">
-          <label class="flex-row" style="gap:4px;"><input type="checkbox" id="dlUsed"> gebraucht</label>
           <label class="flex-row" style="gap:4px;"><input type="checkbox" id="eq-kuehl">
             ${EQUIPMENT.kuehl.icon} Kühlaufbau</label>
           <label class="flex-row" style="gap:4px;"><input type="checkbox" id="eq-adr">
@@ -36,6 +40,16 @@ export const DealerApp = {
     </div>`,
 
   mount(el) {
+    el.dataset.hof = 'neu';
+
+    el.querySelector('#dlReiter').addEventListener('click', e => {
+      const knopf = e.target.closest('[data-hof]');
+      if (!knopf) return;
+      el.dataset.hof = knopf.dataset.hof;
+      el.querySelector('#dlList').dataset.sig = '';
+      onTick();
+    });
+
     el.addEventListener('change', () => {
       el.querySelector('#dlList').dataset.sig = '';
       onTick();
@@ -46,7 +60,7 @@ export const DealerApp = {
 
       const btn = e.target.closest('button[data-model]');
       if (!btn) return;
-      const used = el.querySelector('#dlUsed').checked;
+      const used = el.dataset.hof === 'gebraucht';
       const equip = [];
       if (el.querySelector('#eq-kuehl').checked) equip.push('kuehl');
       if (el.querySelector('#eq-adr').checked)   equip.push('adr');
@@ -58,7 +72,7 @@ export const DealerApp = {
   },
 
   update(el) {
-    const used = el.querySelector('#dlUsed').checked;
+    const used = el.dataset.hof === 'gebraucht';
 
     /* Der Kontostand zeigt zusätzlich, was der Fuhrpark am Tag kostet —
        ein Fahrzeug mehr heißt auch jeden Tag mehr Fixkosten. */
@@ -66,9 +80,18 @@ export const DealerApp = {
       `${S.trucks.length} Fahrzeuge · ${fixGesamt().toLocaleString('de-DE')} € Fixkosten je Tag`);
 
     const list = el.querySelector('#dlList');
+    el.querySelectorAll('[data-hof]').forEach(b =>
+      b.classList.toggle('pressed', b.dataset.hof === el.dataset.hof));
+
+    el.querySelector('#dlHof').innerHTML = el.dataset.hof === 'gebraucht'
+      ? `Vorführ- und Gebrauchtwagen. Rund ${Math.round((1 - USED.price) * 100)} % `
+        + `günstiger, mit ${(USED.odo / 1000).toFixed(0)}.000 km auf der Uhr und `
+        + `${USED.risk.toFixed(1)}-fachem Pannenrisiko.`
+      : 'Neufahrzeuge vom Hersteller, mit Werksgarantie und ohne Laufleistung.';
+
     const kuehl = el.querySelector('#eq-kuehl').checked;
     const adr   = el.querySelector('#eq-adr').checked;
-    const sig = `${used}|${kuehl}|${adr}|${S.level}|${Math.floor(S.money / 500)}`
+    const sig = `${el.dataset.hof}|${kuehl}|${adr}|${S.level}|${Math.floor(S.money / 500)}`
               + '|' + S.trucks.map(t => t.model).sort().join(',');
     if (list.dataset.sig === sig) return;
     list.dataset.sig = sig;

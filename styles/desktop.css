@@ -307,3 +307,11 @@ html, body { height: 100%; overflow: hidden; }
   padding: 0 4px; margin-left: 4px;
   background: #000080; color: #fff;
 }
+
+
+/* Zurückknopf in der Titelleiste — etwas breiter als die anderen,
+   damit das Dreieck nicht gequetscht wirkt. */
+.tb-zurueck { font-size: 9px; }
+@media (pointer: coarse) {
+  .win .tb-zurueck { width: 32px; }
+}

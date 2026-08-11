@@ -1,20 +1,20 @@
 /* Schulung: ein Fenster je Fahrer. */
 
 import { SKILLS, RULES } from '../config.js';
-import { S, findTruck, xpNeeded } from '../state.js';
+import { S, xpNeeded } from '../state.js';
 import { fmt, esc, pips } from '../util.js';
 import { canLearn, learn } from '../sim/drivers.js';
 import { kasseLeiste, kasseAktualisieren } from './shared.js';
 import { traitsVon } from '../sim/persons.js';
-import { onTick } from '../ui/wm.js';
+import { onTick, openApp, closeWindow } from '../ui/wm.js';
 
 export const TrainingApp = {
   id: 'training', icon: '🎓', multi: true, hidden: true,
   title: p => {
-    const t = findTruck(p.nr);
-    return t ? `Schulung — ${t.driver.name}` : 'Schulung';
+    const d = fahrer(p);
+    return d ? `Schulung — ${d.name}` : 'Schulung';
   },
-  width: 400, height: 380,
+  width: 400, height: 430,
 
   body: () => `
     <div class="col fill">
@@ -40,25 +40,51 @@ export const TrainingApp = {
       <table class="win-table" id="trTable"></table>
       <div class="muted" style="margin-top:8px;font-size:10px;" id="trHint"></div>
       </div>
+
+      <div class="tr-fuss flex-row" style="justify-content:flex-end;gap:4px;">
+        <button class="btn btn-sm" id="trNaechster" title="nächster Fahrer mit freiem Punkt">
+          nächster ▶</button>
+        <button class="btn btn-sm" id="trFertig">schließen</button>
+      </div>
     </div>`,
 
   mount(el, params) {
     el.querySelector('#trTable').addEventListener('click', e => {
       const btn = e.target.closest('button[data-skill]');
       if (!btn) return;
-      learn(params.nr, btn.dataset.skill);
+      learn(params.id, btn.dataset.skill);
       onTick();
     });
+
+    el.querySelector('#trFertig').onclick = () => {
+      closeWindow(`training:${params.id}`);
+    };
+
+    /* Weiter zum nächsten Fahrer, der einen Punkt frei hat — beim
+       Schulen mehrerer Fahrer spart das den Umweg über den Fuhrpark. */
+    el.querySelector('#trNaechster').onclick = () => {
+      const offen = (S.drivers || []).filter(x => x.points > 0 && x.id !== params.id);
+      if (!offen.length) {
+        openApp('fleet');
+        closeWindow(`training:${params.id}`);
+        return;
+      }
+      const herkunft = params.herkunft;
+      closeWindow(`training:${params.id}`);
+      openApp('training', { id: offen[0].id, herkunft });
+    };
   },
 
   update(el, params) {
-    const truck = findTruck(params.nr);
-    if (!truck) return;
-    const d = truck.driver;
+    const d = fahrer(params);
+    if (!d) return;
 
     kasseAktualisieren(el);
 
-    el.querySelector('#trName').innerHTML  = `<strong>${esc(d.name)}</strong> · LKW ${truck.nr}`;
+    const fz = S.trucks.find(t => t.driverId === d.id);
+    el.querySelector('#trName').innerHTML = `<strong>${esc(d.name)}</strong>`
+      + (fz ? ` <span class="muted">· LKW ${fz.nr}</span>`
+            : ' <span class="warn">· ohne Fahrzeug</span>');
     el.querySelector('#trLevel').textContent = `Stufe ${d.level} · ${d.tours} Zustellungen`;
     el.querySelector('#trXp').style.width  = Math.min(100, d.xp / xpNeeded(d.level) * 100) + '%';
     el.querySelector('#trXpText').textContent =
@@ -84,6 +110,11 @@ export const TrainingApp = {
       </tr>`;
     }).join('');
 
+    const weitere = (S.drivers || []).filter(x => x.points > 0 && x.id !== params.id).length;
+    const weiter = el.querySelector('#trNaechster');
+    weiter.style.display = weitere ? '' : 'none';
+    weiter.textContent = `nächster (${weitere}) ▶`;
+
     el.querySelector('#trHint').innerHTML =
       d.points === 0 ? 'Noch kein Punkt frei. Erfahrung sammelt sich mit jeder Zustellung, längere Strecken bringen mehr.'
       : S.money < RULES.TRAIN_COST
@@ -91,3 +122,8 @@ export const TrainingApp = {
         : '';
   },
 };
+
+/* Der Fahrer, um den es in diesem Fenster geht. */
+function fahrer(params) {
+  return (S.drivers || []).find(d => d.id === params.id) || null;
+}

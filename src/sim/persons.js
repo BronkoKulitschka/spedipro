@@ -69,6 +69,51 @@ export const TRAITS = {
     text: 'Hat es nicht eilig. Dafür geht nie etwas kaputt.',
     tempoAllg: 0.94, panne: 0.7, diesel: 0.96,
   },
+
+  /* ── Schwächen ──────────────────────────────────────────────
+     Jeder Mensch hat welche. Sie machen niemanden unbrauchbar, aber
+     sie kosten — und irgendwann steht die Frage im Raum, ob es das
+     wert ist. */
+  langsam: {
+    key: 'langsam', name: 'Trödelt', icon: '🐌', schwaeche: true,
+    text: 'Kommt schwer in die Gänge. Braucht für alles etwas länger.',
+    tempoAllg: 0.90, rampe: 1.2,
+  },
+  schwerfuss: {
+    key: 'schwerfuss', name: 'Bleifuß', icon: '⛽', schwaeche: true,
+    text: 'Fährt mit zu viel Gas. Der Verbrauch spricht Bände.',
+    diesel: 1.18, panne: 1.15,
+  },
+  unachtsam: {
+    key: 'unachtsam', name: 'Unachtsam', icon: '💥', schwaeche: true,
+    text: 'Kleine Schäden häufen sich. Die Werkstatt kennt ihn gut.',
+    panne: 1.6,
+  },
+  muerrisch: {
+    key: 'muerrisch', name: 'Mürrisch', icon: '😠', schwaeche: true,
+    text: 'An der Rampe schon aufgefallen. Kunden beschweren sich.',
+    ansehen: 0.4, rampe: 1.1,
+  },
+  orientierungslos: {
+    key: 'orientierungslos', name: 'Verfährt sich', icon: '🧭', schwaeche: true,
+    text: 'Findet nichts auf Anhieb. Umwege gehören dazu.',
+    tempoAllg: 0.93, diesel: 1.10,
+  },
+  hektisch: {
+    key: 'hektisch', name: 'Hektisch', icon: '😰', schwaeche: true,
+    text: 'Staus bringen ihn aus der Fassung.',
+    stau: 1.5, diesel: 1.06,
+  },
+  faul: {
+    key: 'faul', name: 'Dienst nach Vorschrift', icon: '🛋️', schwaeche: true,
+    text: 'Keine Minute mehr als nötig. Lernt auch wenig dazu.',
+    xp: 0.7, rampe: 1.15,
+  },
+  teuer: {
+    key: 'teuer', name: 'Fordernd', icon: '💸', schwaeche: true,
+    text: 'Hat seinen Wert im Blick und lässt sich das bezahlen.',
+    lohn: 1.35,
+  },
 };
 
 /* Züge, die sich widersprechen und nicht zusammen auftreten sollen */
@@ -77,6 +122,15 @@ const UNVERTRAEGLICH = [
   ['langstrecke', 'nahverkehr'],
   ['zuegig', 'gemuetlich'],
   ['sparsam', 'zuegig'],
+  ['sparsam', 'schwerfuss'],
+  ['zuegig', 'langsam'],
+  ['gemuetlich', 'hektisch'],
+  ['sorgsam', 'unachtsam'],
+  ['ruhig', 'hektisch'],
+  ['puenktlich', 'langsam'],
+  ['redselig', 'muerrisch'],
+  ['lernwillig', 'faul'],
+  ['route', 'orientierungslos'],
 ];
 
 function passtZu(vorhanden, kandidat) {
@@ -84,18 +138,33 @@ function passtZu(vorhanden, kandidat) {
     (vorhanden.includes(a) && kandidat === b) || (vorhanden.includes(b) && kandidat === a));
 }
 
-export function wuerfleTraits(anzahl = 2) {
-  const alle = Object.keys(TRAITS);
-  const gewaehlt = [];
-  let schutz = 0;
+export const STAERKEN  = Object.keys(TRAITS).filter(k => !TRAITS[k].schwaeche);
+export const SCHWAECHEN = Object.keys(TRAITS).filter(k =>  TRAITS[k].schwaeche);
 
-  while (gewaehlt.length < anzahl && schutz++ < 50) {
-    const k = pick(alle);
-    if (gewaehlt.includes(k) || !passtZu(gewaehlt, k)) continue;
-    gewaehlt.push(k);
-  }
+/* Ein Fahrer bekommt Stärken und Schwächen. Wie viele, hängt vom Zufall
+   ab — mancher Bewerber ist eine Perle, mancher ein Griff ins Klo. */
+export function wuerfleTraits(staerken = 2, schwaechen = 1) {
+  const gewaehlt = [];
+
+  const ziehe = (topf, anzahl) => {
+    let schutz = 0;
+    let gezogen = 0;
+    while (gezogen < anzahl && schutz++ < 60) {
+      const k = pick(topf);
+      if (gewaehlt.includes(k) || !passtZu(gewaehlt, k)) continue;
+      gewaehlt.push(k);
+      gezogen++;
+    }
+  };
+
+  ziehe(STAERKEN, staerken);
+  ziehe(SCHWAECHEN, schwaechen);
   return gewaehlt;
 }
+
+export const istSchwaeche = key => !!TRAITS[key]?.schwaeche;
+export const staerkenVon  = d => (d.traits || []).filter(k => !istSchwaeche(k)).map(k => TRAITS[k]).filter(Boolean);
+export const schwaechenVon = d => (d.traits || []).filter(istSchwaeche).map(k => TRAITS[k]).filter(Boolean);
 
 export const traitsVon = driver => (driver.traits || []).map(k => TRAITS[k]).filter(Boolean);
 
@@ -122,3 +191,4 @@ export const rampeFaktor   = driver => faktor(driver, 'rampe');
 export const ansehenFaktor = driver => faktor(driver, 'ansehen');
 export const stauFaktor    = driver => faktor(driver, 'stau');
 export const xpFaktor      = driver => faktor(driver, 'xp');
+export const lohnFaktor    = driver => faktor(driver, 'lohn');
