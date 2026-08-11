@@ -111,6 +111,7 @@ export const TOPICS = {
       { p: 'Alle Angestellten mit ihren Eigenheiten, Leistungsdaten und dem Fahrzeug, das sie fahren. Über die Auswahlliste lässt sich jederzeit umverteilen — allerdings nur, solange das Fahrzeug steht.' },
       { h: 'Börse' },
       { p: 'Sechs Bewerber, die gelegentlich wechseln. Jeder hat eine bis drei Stärken und null bis zwei Schwächen. Manche bringen schon Erfahrung mit und kosten entsprechend mehr.' },
+      { p: 'Zu jeder Eigenheit steht ausgeschrieben, was sie bedeutet und wie sie sich auswirkt — grün hinterlegt die Stärken, rot die Schwächen. „18 % mehr Diesel" ist eindeutiger als ein Vorzeichen, bei dem offenbleibt, ob es gut oder schlecht ist.' },
       { p: 'Der Lohn beginnt mit dem ersten Tag und läuft weiter, ob gefahren wird oder nicht. Ein Fahrer ohne Fahrzeug kostet also Geld, ohne etwas einzubringen.' },
       { tab: {
         kopf: ['Posten', 'Betrag'],

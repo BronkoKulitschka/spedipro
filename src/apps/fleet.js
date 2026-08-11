@@ -24,7 +24,6 @@ export const FleetApp = {
       <div class="bar-note col" style="gap:4px;">
         <div class="flex-row" style="justify-content:space-between;gap:6px;">
           <span id="flNote">—</span>
-          <button class="btn btn-sm" id="flDealer">🏷️ Fahrzeughandel</button>
         </div>
         <div class="bestand" id="flBestand"></div>
       </div>
@@ -33,7 +32,6 @@ export const FleetApp = {
 
   mount(el) {
     const box = el.querySelector('#fleetBox');
-    el.querySelector('#flDealer').onclick = () => openApp('dealer');
 
     box.addEventListener('click', e => {
       const btn = e.target.closest('button[data-act]');

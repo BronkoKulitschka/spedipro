@@ -13,6 +13,7 @@ import { onTick, openApp } from '../ui/wm.js';
 
 export const DealerApp = {
   id: 'dealer', icon: '🏷️', title: () => 'Fahrzeughandel',
+  kurz: 'Fahrzeug-\nhandel', desktop: true,
   width: 460, height: 460,
 
   body: () => `

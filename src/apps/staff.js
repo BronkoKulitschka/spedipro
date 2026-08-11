@@ -130,10 +130,7 @@ function zeigeTeam() {
         <span class="muted">${fmt(tagesLohn(d))} je Tag</span>
       </div>
 
-      <div class="zuege">
-        ${staerkenVon(d).map(t => `<span class="zug" title="${esc(t.text)}">${t.icon} ${esc(t.name)}</span>`).join('')}
-        ${schwaechenVon(d).map(t => `<span class="zug schwach" title="${esc(t.text)}">${t.icon} ${esc(t.name)}</span>`).join('')}
-      </div>
+      ${eigenheiten(d)}
 
       <div class="flex-row" style="justify-content:space-between;font-size:10px;margin:3px 0;">
         <span class="muted">${num(d.tours)} Fahrten · ${num(d.km)} km</span>
@@ -178,16 +175,13 @@ function zeigeBoerse() {
         <span class="money">${fmt(tagesLohn(b))} je Tag</span>
       </div>
 
-      <div class="zuege">
-        ${staerken.map(t => `<span class="zug" title="${esc(t.text)}">${t.icon} ${esc(t.name)}</span>`).join('')}
-        ${schwaechen.map(t => `<span class="zug schwach" title="${esc(t.text)}">${t.icon} ${esc(t.name)}</span>`).join('')}
-      </div>
-
       <div class="muted" style="font-size:10px;margin:3px 0;">
         ${staerken.length} Stärke${staerken.length === 1 ? '' : 'n'},
         ${schwaechen.length} Schwäche${schwaechen.length === 1 ? '' : 'n'}
         ${b.points ? `· ${b.points} Schulungspunkt${b.points > 1 ? 'e' : ''}` : ''}
       </div>
+
+      ${eigenheiten(b)}
 
       <div class="flex-end">
         <button class="btn btn-sm" data-ein="${b.id}">einstellen</button>
@@ -246,4 +240,59 @@ function zeigeUrteil() {
         </div>` : ''}
     </div>`;
   }).join('');
+}
+
+/* Eigenheiten mit ausgeschriebener Wirkung.
+
+   Ein Tooltip nützt auf einem Handy nichts — deshalb steht die
+   Beschreibung sichtbar unter jedem Zug. */
+function eigenheiten(d) {
+  const staerken = staerkenVon(d);
+  const schwaechen = schwaechenVon(d);
+  if (!staerken.length && !schwaechen.length) {
+    return '<div class="muted" style="font-size:10px;">Keine Besonderheiten.</div>';
+  }
+
+  const zeile = (t, schwach) => `
+    <div class="eigenheit ${schwach ? 'schwach' : ''}">
+      <span class="eig-kopf">${t.icon} ${esc(t.name)}</span>
+      <span class="eig-text">${esc(t.text)}</span>
+      ${wirkungText(t) ? `<span class="eig-wirkung">${esc(wirkungText(t))}</span>` : ''}
+    </div>`;
+
+  return `<div class="eigenheiten">
+    ${staerken.map(t => zeile(t, false)).join('')}
+    ${schwaechen.map(t => zeile(t, true)).join('')}
+  </div>`;
+}
+
+/* Die Zahlen hinter einem Zug, in Worte gefasst.
+
+   Ausgeschrieben statt mit Vorzeichen: „6 % weniger Diesel" ist
+   eindeutig, „−6 % Diesel" lässt offen, ob das gut oder schlecht ist. */
+function wirkungText(t) {
+  const teile = [];
+
+  /* wert > 1 bedeutet mehr davon. mehrIstGut sagt, ob das erfreulich ist. */
+  const sag = (wert, mehr, weniger) => {
+    if (typeof wert !== 'number') return;
+    const ab = Math.round(Math.abs(1 - wert) * 100);
+    if (ab < 1) return;
+    teile.push(`${ab} % ${wert > 1 ? mehr : weniger}`);
+  };
+
+  sag(t.tempoAllg, 'schneller unterwegs', 'langsamer unterwegs');
+  sag(t.diesel,    'mehr Diesel',         'weniger Diesel');
+  sag(t.panne,     'mehr Pannen',         'weniger Pannen');
+  sag(t.rampe,     'länger an der Rampe', 'schneller an der Rampe');
+  sag(t.ansehen,   'mehr Ansehen',        'weniger Ansehen');
+  sag(t.stau,      'mehr Stauverlust',    'weniger Stauverlust');
+  sag(t.xp,        'schnellere Erfahrung','langsamere Erfahrung');
+  sag(t.lohn,      'höherer Lohn',        'geringerer Lohn');
+
+  /* Züge, die von Uhrzeit oder Strecke abhängen */
+  if (typeof t.tempo === 'function')   teile.push('Tempo je nach Tageszeit');
+  if (typeof t.tempoKm === 'function') teile.push('Tempo je nach Streckenlänge');
+
+  return teile.join(' · ');
 }
