@@ -8,7 +8,7 @@ import { RULES, TRUCK_MODELS, USED, DRIVE, REP, EQUIPMENT } from '../config.js';
 import { S, log, book, newTruck, findTruck, idleTrucks, truckPos, atDepot,
          modelOf, resaleValue, truckKmh, truckFuel,
          feeMul, calmMul, canDrive, driveStatus, bannedFor,
-         faehrtLeer, verfuegbar, driverOf } from '../state.js';
+         faehrtLeer, verfuegbar, driverOf, fahrerOderErsatz } from '../state.js';
 import { haversine, fmt, esc, routeCum, pointOnRoute } from '../util.js';
 import { osrmRoute, straightRoute } from '../data/osrm.js';
 import { takeOffer } from './orders.js';
@@ -134,7 +134,7 @@ export async function startTour(truckNr, sendungen, opts = {}) {
   const erloes = folge.reduce((s, o) => s + o.fee, 0);
   const last = summe(folge);
 
-  log(`${driverOf(truck).name} startet Tour mit ${folge.length} Stopp${folge.length > 1 ? 's' : ''}: `
+  log(`${fahrerOderErsatz(truck).name} startet Tour mit ${folge.length} Stopp${folge.length > 1 ? 's' : ''}: `
     + `${gesamt.toFixed(0)} km, ${last.paletten} Paletten, ${(last.kg / 1000).toFixed(1)} t, ${fmt(erloes)}`);
 
   if (alleHits.length && !S.silent) {
@@ -194,7 +194,7 @@ function brichLeerfahrtAb(truck) {
   truck.phase = 'idle';
   removeTruckLayers(truck);
 
-  log(`${driverOf(truck).name} bricht die Leerfahrt ab und nimmt Fracht auf.`);
+  log(`${fahrerOderErsatz(truck).name} bricht die Leerfahrt ab und nimmt Fracht auf.`);
 }
 
 /* ── Auftrag annehmen ── */
@@ -208,7 +208,7 @@ export async function dispatch(offerId, truckNr = null, opts = {}) {
   if (!verfuegbar(truck)) {
     const status = driveStatus(truck);
     if (!S.silent) {
-      toast('⏳', `<strong>${esc(driverOf(truck).name)}</strong> kann nicht losfahren.`,
+      toast('⏳', `<strong>${esc(fahrerOderErsatz(truck).name)}</strong> kann nicht losfahren.`,
                   `<span class="muted">${esc(status.text)}</span>`);
     }
     return;
@@ -251,7 +251,7 @@ export async function returnToDepot(nr, opts = {}) {
 
   drawRoute(truck);
   updateTruckMarker(truck);
-  log(`${driverOf(truck).name} fährt leer zurück ins Depot · ${route.km.toFixed(0)} km`);
+  log(`${fahrerOderErsatz(truck).name} fährt leer zurück ins Depot · ${route.km.toFixed(0)} km`);
 }
 
 /* ── Rastplatzsuche ──────────────────────────────────────────────
@@ -298,9 +298,9 @@ function halteAn(truck, art, ort) {
 
   const wo = ort ? `auf ${ort}` : 'am Straßenrand';
   if (art === 'ruhe') {
-    log(`🛏️ ${driverOf(truck).name} legt die Ruhezeit ${wo} ein.`);
+    log(`🛏️ ${fahrerOderErsatz(truck).name} legt die Ruhezeit ${wo} ein.`);
   } else {
-    log(`☕ ${driverOf(truck).name} macht Pause ${wo}.`);
+    log(`☕ ${fahrerOderErsatz(truck).name} macht Pause ${wo}.`);
   }
   truck.rastOrt = ort || null;
 }
@@ -317,7 +317,7 @@ function pruefeRast(truck) {
 
   if (ziel) {
     truck.rastZiel = { ...ziel, art };
-    log(`${driverOf(truck).name} steuert ${ziel.name} an (${ziel.road}), `
+    log(`${fahrerOderErsatz(truck).name} steuert ${ziel.name} an (${ziel.road}), `
       + `noch ${Math.max(0, ziel.km - truck.progress).toFixed(0)} km.`);
   } else {
     /* Kein Parkplatz in Reichweite: notgedrungen hier halten. */
@@ -542,7 +542,7 @@ export function sellTruck(nr = null) {
 
   const value = resaleValue(truck);
   book('Fahrzeugverkauf', `${modelOf(truck).name} · LKW ${truck.nr}`, value);
-  log(`LKW ${truck.nr} verkauft, ${driverOf(truck).name} verabschiedet sich: ${fmt(value)}`);
+  log(`LKW ${truck.nr} verkauft, ${fahrerOderErsatz(truck).name} verabschiedet sich: ${fmt(value)}`);
   toast('🤝', `LKW ${truck.nr} verkauft.`, `<span class="money">${fmt(value)}</span>`);
   return true;
 }

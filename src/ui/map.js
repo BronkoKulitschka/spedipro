@@ -5,7 +5,7 @@
    geschlossen und wieder geöffnet, wandert derselbe Knoten zurück
    ins neue Fenster und Leaflet behält Zoom und Position. */
 
-import { S, truckPos, driveStatus, modelOf, xpNeeded, verfuegbar, driverOf } from '../state.js';
+import { S, truckPos, driveStatus, modelOf, xpNeeded, verfuegbar, driverOf, fahrerOderErsatz } from '../state.js';
 import { esc, haversine, fmt, num, pips, pointOnRoute,
          courseOnRoute, truckFarbe } from '../util.js';
 import { HUB_ICON } from '../data/hubs.js';
@@ -417,7 +417,7 @@ export function drawOffers() {
         Fracht: <strong>${fmt(offer.fee)}</strong><br>
         ${near
           ? `Anfahrt ${near.km.toFixed(0)} km ab ${esc(near.truck.place)}<br>
-             <span class="muted">${esc(near.driverOf(truck).name)} · LKW ${near.truck.nr}</span><br>
+             <span class="muted">${esc(fahrerOderErsatz(near.truck).name)} · LKW ${near.truck.nr}</span><br>
              <button class="btn btn-sm" style="margin-top:6px;"
                      data-map-offer="${offer.id}" data-map-truck="${near.truck.nr}">
                annehmen</button>`

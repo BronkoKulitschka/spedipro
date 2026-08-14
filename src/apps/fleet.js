@@ -3,7 +3,7 @@
 import { SKILLS } from '../config.js';
 import { S, xpNeeded, findTruck, atDepot, modelOf, resaleValue,
          driveStatus, canDrive, bestand, truckFix, fixGesamt,
-         faehrtLeer, verfuegbar, driverOf } from '../state.js';
+         faehrtLeer, verfuegbar, driverOf, fahrerOderErsatz } from '../state.js';
 import { esc, pips, fmt, num, truckFarbe } from '../util.js';
 import { kapazitaet, klasseVon } from '../sim/goods.js';
 import { EQUIPMENT } from '../config.js';
@@ -87,7 +87,7 @@ export const FleetApp = {
     }
 
     const sig = S.trucks.map(t =>
-      [t.nr, t.model, driverOf(t).level, driverOf(t).points, Object.values(driverOf(t).skills).join(''),
+      [t.nr, t.model, fahrerOderErsatz(t).level, fahrerOderErsatz(t).points, Object.values(fahrerOderErsatz(t).skills).join(''),
        t.phase, t.auto ? 1 : 0, t.place, t.shopMin > 0 ? 1 : 0, S.level,
        t.restMin > 0 ? 1 : 0, t.job?.klasse || '', t.job?.stopp || 0,
        t.rastZiel ? 1 : 0, t.rastOrt || '', faehrtLeer(t) ? 1 : 0,
@@ -104,7 +104,7 @@ export const FleetApp = {
       const xp     = box.querySelector(`#xp${truck.nr}`);
       if (!status || !bar) continue;
 
-      if (xp) xp.style.width = Math.min(100, driverOf(truck).xp / xpNeeded(driverOf(truck).level) * 100) + '%';
+      if (xp) xp.style.width = Math.min(100, fahrerOderErsatz(truck).xp / xpNeeded(fahrerOderErsatz(truck).level) * 100) + '%';
       bar.className = 'prog-fill';
 
       if (truck.shopMin > 0) {

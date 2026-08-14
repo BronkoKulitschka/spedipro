@@ -4,7 +4,14 @@
    Fenster mit Titelleiste, Schaltflächen und Eintrag in der Taskleiste.
    Auf schmalen Bildschirmen öffnen Fenster grundsätzlich bildfüllend. */
 
-import { APPS } from '../apps/index.js';
+/* Die Programmliste wird angemeldet, nicht importiert.
+
+   Ein Programm holt sich openApp() aus dieser Datei, und diese Datei
+   bräuchte die Liste aller Programme — das ist ein Ring, der je nach
+   Ladereihenfolge auseinanderfliegt. Deshalb meldet apps/index.js die
+   Liste an, sobald sie fertig ist. */
+let APPS = {};
+export function registerApps(liste) { APPS = liste; }
 import { HELP_FOR_APP } from '../help/topics.js';
 import { S, dateText } from '../state.js';
 import { esc } from '../util.js';

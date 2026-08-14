@@ -183,6 +183,17 @@ nicht erst erzeugt. Der Zustand der Ebenen liegt in `ui/map.js` und
 
 Von den Betrieben werden die 150 nächstgelegenen gezeichnet.
 
+## Modulaufbau
+
+Die Fensterverwaltung importiert die Programmliste **nicht**, sondern
+bekommt sie über `registerApps()` angemeldet. Sonst entstünde ein Ring:
+Ein Programm holt `openApp()` aus `ui/wm.js`, und `ui/wm.js` bräuchte
+`apps/index.js`, das wiederum alle Programme lädt.
+
+Solche Ringe fliegen nur bei bestimmten Ladereihenfolgen auseinander und
+fallen deshalb erst beim Spielen auf. `node test/loading.mjs` lädt jedes
+Modul einzeln als Einstiegspunkt und deckt das ab.
+
 ## Testlauf
 
 Ein Rauchtest spielt zehn Spieltage ohne Browser durch und prüft, dass
@@ -197,6 +208,7 @@ node test/wallpaper.mjs  # Hintergrundwerte
 node test/wiring.mjs     # jede aufgerufene Funktion existiert auch
 node test/sprites.mjs    # Rasteraufteilung des Sammelbilds
 node test/navigation.mjs # Herkunft beim Fensterwechsel
+node test/loading.mjs    # jedes Modul einzeln ladbar (Ringbezüge)
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und

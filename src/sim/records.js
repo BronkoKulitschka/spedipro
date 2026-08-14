@@ -4,7 +4,7 @@
    längste Tour, der beste Tag, der Fahrer mit den meisten Kilometern.
    Und am Sonntag, wenn ohnehin Fahrverbot herrscht, eine Wochenbilanz. */
 
-import { S, log, day, now, ledgerSums, driverOf } from '../state.js';
+import { S, log, day, now, ledgerSums, driverOf, fahrerOderErsatz } from '../state.js';
 import { fmt, num, esc } from '../util.js';
 import { toast } from '../ui/toast.js';
 import { saison } from './season.js';
@@ -95,9 +95,9 @@ export function wochenAbschluss() {
 function besterFahrer() {
   let best = null;
   for (const t of S.trucks) {
-    if (!best || (driverOf(t).km || 0) > (best.km || 0)) {
-      best = { name: driverOf(t).name, km: driverOf(t).km || 0,
-               tours: driverOf(t).tours, level: driverOf(t).level };
+    if (!best || (fahrerOderErsatz(t).km || 0) > (best.km || 0)) {
+      best = { name: fahrerOderErsatz(t).name, km: fahrerOderErsatz(t).km || 0,
+               tours: fahrerOderErsatz(t).tours, level: fahrerOderErsatz(t).level };
     }
   }
   return best;

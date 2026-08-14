@@ -6,7 +6,7 @@
    Spielminuten je echter Minute. */
 
 import { RULES, TIME } from '../config.js';
-import { S, log, book, day, truckRisk, fixGesamt, todayText, holidayNow, weekendNow, driverOf } from '../state.js';
+import { S, log, book, day, truckRisk, fixGesamt, todayText, holidayNow, weekendNow, driverOf, fahrerOderErsatz } from '../state.js';
 import { fmt } from '../util.js';
 import { moveTrucks } from './fleet.js';
 import { fireEvent } from './events.js';
@@ -143,9 +143,9 @@ function newDay() {
     if (fahrer?.stats) fahrer.stats.pannen = (fahrer.stats.pannen || 0) + 1;
 
     const bill = Math.round((800 + Math.random() * 2200) * werkstattRabatt());
-    book('Werkstatt', `LKW ${truck.nr} · ${driverOf(truck).name}`, -bill);
+    book('Werkstatt', `LKW ${truck.nr} · ${fahrerOderErsatz(truck).name}`, -bill);
     truck.shopMin = Math.round((180 + Math.random() * 300) * werkstattZeit());
-    log(`🔧 LKW ${truck.nr} (${driverOf(truck).name}) steht in der Werkstatt: ${fmt(-bill)}.`);
+    log(`🔧 LKW ${truck.nr} (${fahrerOderErsatz(truck).name}) steht in der Werkstatt: ${fmt(-bill)}.`);
   }
 
   driftMarket();

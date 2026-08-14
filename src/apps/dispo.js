@@ -6,7 +6,7 @@
    Auf schmalen Geräten liegt die Liste unter der Karte. */
 
 import { S, findTruck, banReason, truckKmh,
-         verfuegbar, faehrtLeer, driverOf } from '../state.js';
+         verfuegbar, faehrtLeer, driverOf, fahrerOderErsatz } from '../state.js';
 import { fmt, esc, truckFarbe } from '../util.js';
 import { dispatch, distanceFrom, startTour, umwegFuer, jetztPos } from '../sim/fleet.js';
 import { KIND_LABEL, takeOffer } from '../sim/orders.js';
@@ -192,7 +192,7 @@ export const DispoApp = {
       select.innerHTML = free.length
         ? free.map(t => {
             const wo = faehrtLeer(t) ? 'auf Leerfahrt' : t.place;
-            return `<option value="${t.nr}">LKW ${t.nr} · ${esc(driverOf(t).name)} · ${esc(wo)}</option>`;
+            return `<option value="${t.nr}">LKW ${t.nr} · ${esc(fahrerOderErsatz(t).name)} · ${esc(wo)}</option>`;
           }).join('')
         : '<option value="">kein Fahrzeug frei</option>';
       if (free.some(t => String(t.nr) === keep)) select.value = keep;
