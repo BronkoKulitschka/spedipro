@@ -41,12 +41,12 @@ export const DealerApp = {
     </div>`,
 
   mount(el) {
-    el.dataset.hof = 'neu';
+    el.dataset.hofWahl = 'neu';
 
     el.querySelector('#dlReiter').addEventListener('click', e => {
       const knopf = e.target.closest('[data-hof]');
       if (!knopf) return;
-      el.dataset.hof = knopf.dataset.hof;
+      el.dataset.hofWahl = knopf.dataset.hof;
       el.querySelector('#dlList').dataset.sig = '';
       onTick();
     });
@@ -61,7 +61,7 @@ export const DealerApp = {
 
       const btn = e.target.closest('button[data-model]');
       if (!btn) return;
-      const used = el.dataset.hof === 'gebraucht';
+      const used = el.dataset.hofWahl === 'gebraucht';
       const equip = [];
       if (el.querySelector('#eq-kuehl').checked) equip.push('kuehl');
       if (el.querySelector('#eq-adr').checked)   equip.push('adr');
@@ -73,7 +73,7 @@ export const DealerApp = {
   },
 
   update(el) {
-    const used = el.dataset.hof === 'gebraucht';
+    const used = el.dataset.hofWahl === 'gebraucht';
 
     /* Der Kontostand zeigt zusätzlich, was der Fuhrpark am Tag kostet —
        ein Fahrzeug mehr heißt auch jeden Tag mehr Fixkosten. */
@@ -82,9 +82,9 @@ export const DealerApp = {
 
     const list = el.querySelector('#dlList');
     el.querySelectorAll('[data-hof]').forEach(b =>
-      b.classList.toggle('pressed', b.dataset.hof === el.dataset.hof));
+      b.classList.toggle('pressed', b.dataset.hof === el.dataset.hofWahl));
 
-    el.querySelector('#dlHof').innerHTML = el.dataset.hof === 'gebraucht'
+    el.querySelector('#dlHof').innerHTML = el.dataset.hofWahl === 'gebraucht'
       ? `Vorführ- und Gebrauchtwagen. Rund ${Math.round((1 - USED.price) * 100)} % `
         + `günstiger, mit ${(USED.odo / 1000).toFixed(0)}.000 km auf der Uhr und `
         + `${USED.risk.toFixed(1)}-fachem Pannenrisiko.`
@@ -92,7 +92,7 @@ export const DealerApp = {
 
     const kuehl = el.querySelector('#eq-kuehl').checked;
     const adr   = el.querySelector('#eq-adr').checked;
-    const sig = `${el.dataset.hof}|${kuehl}|${adr}|${S.level}|${Math.floor(S.money / 500)}`
+    const sig = `${el.dataset.hofWahl}|${kuehl}|${adr}|${S.level}|${Math.floor(S.money / 500)}`
               + '|' + S.trucks.map(t => t.model).sort().join(',');
     if (list.dataset.sig === sig) return;
     list.dataset.sig = sig;

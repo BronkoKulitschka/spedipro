@@ -26,13 +26,13 @@ export const StaffApp = {
     </div>`,
 
   mount(el) {
-    el.dataset.blatt = 'team';
+    el.dataset.blattWahl = 'team';
     fuelleBoerse();
 
     el.addEventListener('click', e => {
       const reiter = e.target.closest('[data-blatt]');
       if (reiter) {
-        el.dataset.blatt = reiter.dataset.blatt;
+        el.dataset.blattWahl = reiter.dataset.blatt;
         el.querySelector('#stListe').dataset.sig = '';
         onTick();
         return;
@@ -53,9 +53,6 @@ export const StaffApp = {
         }
         return;
       }
-
-      const ab = e.target.closest('[data-abziehen]');
-      if (ab) { abziehen(Number(ab.dataset.abziehen)); neu(el); return; }
 
       const schule = e.target.closest('[data-schule]');
       if (schule) { openApp('training', { id: schule.dataset.schule }); return; }
@@ -78,9 +75,9 @@ export const StaffApp = {
     kasseAktualisieren(el, `Löhne <strong>${fmt(lohnGesamt())}</strong> je Tag`);
 
     el.querySelectorAll('[data-blatt]').forEach(b =>
-      b.classList.toggle('pressed', b.dataset.blatt === el.dataset.blatt));
+      b.classList.toggle('pressed', b.dataset.blatt === el.dataset.blattWahl));
 
-    const blatt = el.dataset.blatt;
+    const blatt = el.dataset.blattWahl;
     const liste = el.querySelector('#stListe');
 
     const sig = blatt + '|' + (S.drivers || []).map(d =>

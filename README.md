@@ -194,6 +194,17 @@ Solche Ringe fliegen nur bei bestimmten Ladereihenfolgen auseinander und
 fallen deshalb erst beim Spielen auf. `node test/loading.mjs` lädt jedes
 Modul einzeln als Einstiegspunkt und deckt das ab.
 
+## Eine Falle bei Klickbehandlungen
+
+Der Zustand eines Fensters darf nicht in einem `data`-Attribut liegen, das
+denselben Namen trägt wie ein Knopfattribut. Wird etwa `el.dataset.blatt`
+am Wurzelelement gesetzt und gleichzeitig mit `closest('[data-blatt]')`
+nach Reiterknöpfen gesucht, findet `closest()` beim Hochlaufen das
+Wurzelelement — und der erste Zweig verschluckt jeden Klick im Fenster.
+
+Deshalb heißt der Zustand `blattWahl` und `hofWahl`, nicht wie das
+Attribut der Knöpfe. `node test/handlers.mjs` deckt solche Kollisionen ab.
+
 ## Testlauf
 
 Ein Rauchtest spielt zehn Spieltage ohne Browser durch und prüft, dass
@@ -209,6 +220,7 @@ node test/wiring.mjs     # jede aufgerufene Funktion existiert auch
 node test/sprites.mjs    # Rasteraufteilung des Sammelbilds
 node test/navigation.mjs # Herkunft beim Fensterwechsel
 node test/loading.mjs    # jedes Modul einzeln ladbar (Ringbezüge)
+node test/handlers.mjs   # Klickbehandlungen ohne Kollisionen
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und
