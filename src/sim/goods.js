@@ -77,6 +77,33 @@ export function flottenGrenze(trucks) {
   return paletten ? { paletten, kg } : null;
 }
 
+/* Die Kapazität eines zufällig gewählten Fahrzeugs.
+
+   Der entscheidende Unterschied zur Flottengrenze: Richten sich alle
+   Sendungen nach dem größten Fahrzeug, bekommt der Sattelzug jeden
+   Auftrag und die kleinen Fahrzeuge stehen. Hier bekommt jede
+   Fahrzeugklasse Sendungen in ihrer Größe.
+
+   Fahrzeuge mit Sonderausstattung zählen doppelt, damit ein
+   Kühlfahrzeug auch Kühlgut zu sehen bekommt. */
+export function zufallsGrenze(trucks) {
+  if (!trucks?.length) return null;
+
+  const topf = [];
+  for (const t of trucks) {
+    topf.push(t);
+    if (t.equip?.length || TRUCK_MODELS[t.model]?.kuehlfest) topf.push(t);
+  }
+
+  const gewaehlt = topf[Math.floor(Math.random() * topf.length)];
+  const k = kapazitaet(gewaehlt);
+  return { paletten: k.paletten, kg: k.kg, truck: gewaehlt };
+}
+
+/* Kann irgendein Fahrzeug im Hof diese Sendung fahren? */
+export const irgendwerKann = (sendung, trucks) =>
+  trucks.some(t => passt(t, [], sendung).ok);
+
 /* ── Kapazität eines Fahrzeugs ── */
 export function kapazitaet(truck) {
   const m = TRUCK_MODELS[truck.model] || TRUCK_MODELS.kurier;

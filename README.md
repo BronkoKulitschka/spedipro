@@ -277,6 +277,7 @@ node test/navigation.mjs # Herkunft beim Fensterwechsel
 node test/loading.mjs    # jedes Modul einzeln ladbar (Ringbezüge)
 node test/handlers.mjs   # Klickbehandlungen ohne Kollisionen
 node test/notify.mjs     # die drei Meldungsarten
+node test/market.mjs     # Börse passt zum Fuhrpark
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und
@@ -538,6 +539,21 @@ nicht, steht der Grund dort statt des Knopfes — „nur 17 Stellplätze" oder
 Nachbarn geordnet, jede Teilstrecke einzeln über OSRM geroutet. An jedem Stopp
 wird die jeweilige Fracht abgerechnet. Mehrstopp-Touren brauchen nur 33 Minuten
 Rampenzeit je Stopp statt einer vollen Stunde — Sammelverkehr lohnt sich.
+
+## Warum die Börse zum Fuhrpark passen muss
+
+Sendungsgrößen richten sich nach einem **zufällig gewählten** Fahrzeug aus
+dem eigenen Hof, nicht nach dem größten (`zufallsGrenze` in `sim/goods.js`).
+Der Unterschied ist gravierend: Galt die größte Kapazität, bekam der
+Sattelzug jeden Auftrag, und Kurier, Verteiler und 7,5-Tonner standen still
+— bei laufenden Fixkosten. Fahrzeuge mit Sonderausstattung zählen doppelt,
+damit ein Kühlfahrzeug auch Kühlgut zu sehen bekommt.
+
+Die Zahl der Angebote wächst mit dem Fuhrpark, und Sendungen, die nach drei
+Auffrischungen noch kein Fahrzeug fahren kann, werden ausgesondert — sonst
+verstopfen sie die Börse.
+
+`node test/market.mjs` prüft, dass jedes Fahrzeug Arbeit findet.
 
 ## Rahmenverträge
 

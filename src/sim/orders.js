@@ -13,7 +13,7 @@ import { currentRate } from './contracts.js';
 import { levelOf, pickPartner } from './partners.js';
 import { current } from './progress.js';
 import { hubsFor } from '../data/hubs.js';
-import { klasseFuer, ladung, flottenGrenze } from './goods.js';
+import { klasseFuer, ladung, zufallsGrenze, irgendwerKann } from './goods.js';
 import { rateFuer } from './customers.js';
 import { saisonPreis, saisonMenge } from './season.js';
 import { mehrAnfragen, besserePreise } from './goals.js';
@@ -30,12 +30,12 @@ function baseFee(firm) {
    sich nach Strecke, Klasse und Menge — eine Komplettladung bringt mehr
    als ein paar Paletten, aber nicht proportional. */
 function mitLadung(basis, firm, faktor = 1) {
-  const flotte = flottenGrenze(S.trucks);
-
-  /* Bei kleinem Fuhrpark fast alles zuschneiden, bei großem öfter
-     etwas Größeres anbieten — als Anreiz für das nächste Fahrzeug. */
-  const anteil = S.trucks.length <= 2 ? 0.88 : 0.7;
-  const grenze = Math.random() < anteil ? flotte : null;
+  /* Die Sendung richtet sich nach einem zufällig gewählten Fahrzeug aus
+     dem eigenen Hof — so bekommt jede Klasse Arbeit. Würde stattdessen
+     die größte Kapazität gelten, bekäme der Sattelzug jeden Auftrag und
+     alles Kleinere stünde still. */
+  const anteil = S.trucks.length <= 2 ? 0.9 : 0.82;
+  const grenze = Math.random() < anteil ? zufallsGrenze(S.trucks) : null;
 
   const klasse = klasseFuer(firm, grenze ? grenze.kg : Infinity);
   const l = ladung(klasse, grenze);
@@ -111,10 +111,27 @@ export function refillOffers() {
   }
 
   /* Der Rest ist Spotmarkt. Am Wochenende kommt weniger herein. */
-  const ziel = Math.max(3, Math.round(
-    RULES.OFFER_COUNT * supplyToday() * saisonMenge() * mehrAnfragen()));
+  /* Sendungen, die kein Fahrzeug im Hof fahren kann, verstopfen die
+     Börse: Sie bleiben liegen und nehmen den Platz für brauchbare weg.
+     Deshalb werden sie nach einer Weile aussortiert — sie sind ja auch
+     in der Wirklichkeit längst anderweitig vergeben. */
+  if (S.trucks.length) {
+    S.offers = S.offers.filter(o => {
+      if (o.kind !== 'spot') return true;              // Verträge bleiben
+      if (irgendwerKann(o, S.trucks)) return true;
+      o.liegt = (o.liegt || 0) + 1;
+      return o.liegt < 3;
+    });
+  }
+
+  /* Die Börse wächst mit dem Fuhrpark. Bei zehn Fahrzeugen reichen acht
+     Angebote nicht — dann steht die halbe Flotte. */
+  const proFahrzeug = Math.min(24, Math.round(S.trucks.length * 2.2));
+  const ziel = Math.max(6, Math.round(
+    (RULES.OFFER_COUNT + proFahrzeug) * supplyToday() * saisonMenge() * mehrAnfragen()));
+
   let guard = 0;
-  while (S.offers.length < ziel && guard++ < 200) {
+  while (S.offers.length < ziel && guard++ < 300) {
     const firm = pickZiel();
     if (!firm || S.offers.some(o => o.firm.name === firm.name)) continue;
     S.offers.push(spotOffer(firm));
