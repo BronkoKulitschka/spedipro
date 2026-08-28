@@ -8,7 +8,7 @@ import { findeDepotplatz } from './data/depotsite.js';
 import { zeigeStaedteKarte, markiere, schliesseStaedteKarte,
          setzeFreienPunkt, entferneFreienPunkt, zeigeAusschnitt } from './ui/citymap.js';
 import { ortAn } from './data/placelookup.js';
-import { S, resetState, hydrate, log } from './state.js';
+import { S, resetState, hydrate, log, verfuegbar } from './state.js';
 import { VERSION, BUILD } from './version.js';
 import { loadTraffic, loadParking } from './data/autobahn.js';
 import { loadFirmsFast } from './data/overpass.js';
@@ -23,6 +23,7 @@ import { catchUp, offlineMinutes } from './sim/offline.js';
 import { startScreen, bootScreen, desktopShell } from './ui/screens.js';
 import { openApp, onTick, renderTaskbar, toggleStartMenu, closeAll, isNarrow } from './ui/wm.js';
 import { wendeAn } from './ui/wallpaper.js';
+import { starteErinnerung, setzeFreieZaehler } from './ui/notify.js';
 
 const root = () => document.getElementById('root');
 
@@ -377,6 +378,11 @@ function enterDesktop({ resumed = false } = {}) {
   S.screen = 'desktop';
   root().innerHTML = desktopShell();
   wendeAn();
+
+  /* Die stündliche Erinnerung braucht zwei Dinge: einen Takt und die
+     Auskunft, wie viele Fahrzeuge gerade unbeschäftigt sind. */
+  setzeFreieZaehler(() => S.trucks.filter(verfuegbar).length);
+  starteErinnerung();
   wireDesktop();
 
   if (resumed) {

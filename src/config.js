@@ -394,7 +394,7 @@ export const REP = {
    Voreinstellung 3 bedeutet: eine echte Minute sind drei Spielminuten. */
 export const TIME = {
   TICK_MS: 1000,
-  DEFAULT_RATIO: 3,
+  DEFAULT_RATIO: 30,   // 30 Spielminuten je echter Minute
   RATIOS: [1, 3, 10, 30, 60],   // in den Einstellungen wählbar
   SPEEDS: [0, 1, 2, 4],         // Multiplikator auf das Verhältnis
 };

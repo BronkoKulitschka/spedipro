@@ -460,3 +460,19 @@
   color: #2e6030; margin-top: 1px;
 }
 .eigenheit.schwach .eig-wirkung { color: #902020; }
+
+
+/* Ausschreibungen: was gefahren wird und ob man es kann */
+.ladung-zeile {
+  font-size: 10px; margin: 3px 0; padding: 2px 5px;
+  background: #d8d8d8; border-left: 3px solid #000080;
+}
+.fahrbar {
+  font-size: 10px; margin: 3px 0; padding: 3px 5px;
+  background: #e0f0e0; border-left: 3px solid #2e8b57; color: #205020;
+}
+.unfahrbar {
+  font-size: 10px; line-height: 1.45; margin: 3px 0; padding: 4px 5px;
+  background: #f4e4e4; border-left: 3px solid #a02020; color: #602020;
+}
+.offer.nicht-fahrbar { opacity: .92; }

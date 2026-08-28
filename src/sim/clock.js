@@ -20,6 +20,7 @@ import { panneFaktor } from './persons.js';
 import { werkstattRabatt, werkstattZeit } from './goals.js';
 import { tagAbschluss, wochenAbschluss, istSonntag } from './records.js';
 import { lohnGesamt, fuelleBoerse } from './staff.js';
+import { melde } from '../ui/notify.js';
 
 let timer = null;
 let lastDay = 1;
@@ -141,6 +142,9 @@ function newDay() {
 
     const fahrer = driverOf(truck);
     if (fahrer?.stats) fahrer.stats.pannen = (fahrer.stats.pannen || 0) + 1;
+
+    melde('panne', 'Panne',
+          `LKW ${truck.nr} (${fahrerOderErsatz(truck).name}) muss in die Werkstatt.`);
 
     const bill = Math.round((800 + Math.random() * 2200) * werkstattRabatt());
     book('Werkstatt', `LKW ${truck.nr} · ${fahrerOderErsatz(truck).name}`, -bill);

@@ -8,8 +8,10 @@
    Wird ein Vertrag nicht erfüllt, passiert nichts Schlimmes — es gibt
    lediglich weniger oder keine Prämie. */
 
+import { melde } from '../ui/notify.js';
 import { CONTRACTS, RULES, REP } from '../config.js';
 import { S, log, book, day } from '../state.js';
+import { klasseFuer, ladung, flottenGrenze } from './goods.js';
 import { pick, fmt, esc } from '../util.js';
 import { repMul, addRep } from './market.js';
 import { maxVertraege, checkLevelUp } from './progress.js';
@@ -31,12 +33,30 @@ export function makeContractOffer() {
   const perWeek = pick(CONTRACTS.PER_WEEK);
   const total = weeks * perWeek;
 
+  /* Ein Rahmenvertrag läuft immer über dieselbe Ware in gleichbleibender
+     Menge — der Verlader weiß ja, was er regelmäßig zu verschicken hat.
+     Damit steht auch fest, welches Fahrzeug man dafür braucht.
+
+     Drei von vier Ausschreibungen sind auf den eigenen Fuhrpark
+     zugeschnitten. Die vierte darf größer sein — sie ist dann ein Grund,
+     über ein weiteres Fahrzeug nachzudenken. */
+  const flotte = flottenGrenze(S.trucks);
+  const grenze = Math.random() < 0.75 ? flotte : null;
+
+  const klasse = klasseFuer(firm, grenze ? grenze.kg : Infinity);
+  const l = ladung(klasse, grenze);
+
   /* Gute Verlader zahlen mit steigendem Ansehen etwas besser. */
-  const perLoad = Math.round(baseFee(firm) * CONTRACTS.RATE * repMul() / 10) * 10;
+  const mengenFaktor = 0.72 + 0.38 * Math.min(1, l.paletten / 33);
+  const perLoad = Math.round(
+    baseFee(firm) * CONTRACTS.RATE * repMul() * klasse.preis * mengenFaktor / 10) * 10;
 
   return {
     id: id(), firm, weeks, perWeek, total,
     perLoad,
+    klasse: l.klasse,
+    paletten: l.paletten,
+    gewicht: l.gewicht,
     bonus: Math.round(perLoad * total * CONTRACTS.BONUS / 100) * 100,
     signIndex: S.market.index,
   };
@@ -111,6 +131,10 @@ export function settleContracts() {
 
     log(`📜 Vertrag mit ${c.firm.name} beendet: ${c.done} von ${c.total} Sendungen`
       + (prämie ? `, Prämie ${fmt(prämie)}.` : ', ohne Prämie.'));
+
+    melde('vertrag', 'Vertrag ausgelaufen',
+          `${c.firm.name}: ${c.done} von ${c.total} Sendungen`
+          + (prämie ? `, Prämie ${fmt(prämie)}.` : ', ohne Prämie.'));
 
     toast(quote >= 1 ? '🏅' : '📜',
       `Vertrag mit <strong>${esc(c.firm.name)}</strong> ist ausgelaufen.`,

@@ -12,6 +12,8 @@ import { log } from '../state.js';
 import { VERSION, BUILD, CODENAME } from '../version.js';
 import { saveGame, clearSave, saveInfo } from '../sim/save.js';
 import { PRESETS, ladeHintergrund, speichereHintergrund, wendeAn, bildLaden } from '../ui/wallpaper.js';
+import { MODI, ARTEN, ladeEinstellung, speichereEinstellung,
+         erlaubnisStand, frageErlaubnis, probemeldung } from '../ui/notify.js';
 import { onTick } from '../ui/wm.js';
 
 export const SettingsApp = {
@@ -40,6 +42,46 @@ export const SettingsApp = {
           ${TIME.RATIOS.map(r => `<button class="btn btn-sm" data-ratio="${r}">1 : ${r}</button>`).join('')}
         </div>
         <div class="muted" style="font-size:10px;margin-top:6px;" id="stRatioNote">—</div>
+      </div>
+
+      <div class="raised-box" style="margin-bottom:8px;">
+        <div class="section-title">Benachrichtigungen</div>
+        <div class="muted" style="font-size:10px;margin-bottom:6px;">
+          Meldungen des Browsers, wenn das Fenster im Hintergrund liegt.
+          Im Vordergrund genügen die Einblendungen unten rechts.
+        </div>
+
+        <div style="font-size:10px;font-weight:bold;margin-bottom:3px;">
+          Fertige Touren
+        </div>
+        ${Object.entries(MODI).map(([key, m]) => `
+          <label class="flex-row" style="gap:5px;align-items:flex-start;margin-bottom:4px;">
+            <input type="radio" name="nfModus" value="${key}" style="margin-top:2px;">
+            <span style="font-size:10px;">
+              <strong>${m.name}</strong><br>
+              <span class="muted">${m.text}</span>
+            </span>
+          </label>`).join('')}
+
+        <div style="font-size:10px;font-weight:bold;margin:8px 0 3px;">
+          Weitere Meldungen
+        </div>
+        <div id="nfArten">
+          ${Object.entries(ARTEN).map(([key, a]) => `
+            <label class="flex-row" style="gap:5px;align-items:flex-start;margin-bottom:3px;">
+              <input type="checkbox" data-nf="${key}" style="margin-top:2px;">
+              <span style="font-size:10px;">
+                <strong>${a.name}</strong><br>
+                <span class="muted">${a.text}</span>
+              </span>
+            </label>`).join('')}
+        </div>
+
+        <div class="flex-row" style="margin-top:8px;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-sm" id="nfErlaubnis">Erlaubnis erteilen</button>
+          <button class="btn btn-sm" id="nfProbe">Probemeldung</button>
+        </div>
+        <div class="muted" style="font-size:10px;margin-top:4px;" id="nfNote">—</div>
       </div>
 
       <div class="raised-box" style="margin-bottom:8px;">
@@ -125,6 +167,7 @@ export const SettingsApp = {
                 `<span class="muted">${ergebnis.grund}</span>`);
         }
         hinweisHintergrund(el);
+    hinweisMeldungen(el);
       });
       ev.target.value = '';
     });
@@ -141,6 +184,22 @@ export const SettingsApp = {
         toast(done ? '💾' : '⚠️',
               done ? 'Spielstand gesichert.' : 'Sichern nicht möglich.',
               done ? '' : '<span class="muted">Der Browser erlaubt keinen Speicher.</span>');
+        return;
+      }
+
+      if (e.target.closest('#nfErlaubnis')) {
+        frageErlaubnis().then(() => { hinweisMeldungen(el); onTick(); });
+        return;
+      }
+
+      if (e.target.closest('#nfProbe')) {
+        if (probemeldung()) {
+          toast('🔔', 'Probemeldung gesendet.',
+                      '<span class="muted">Sichtbar, sobald du das Fenster verlässt.</span>');
+        } else {
+          toast('🔔', 'Noch keine Erlaubnis erteilt.',
+                      '<span class="muted">Erst auf „Erlaubnis erteilen" tippen.</span>');
+        }
         return;
       }
 
@@ -167,6 +226,20 @@ export const SettingsApp = {
         toast('🗑️', 'Gespeicherter Stand gelöscht.',
               '<span class="muted">Der laufende Betrieb bleibt bestehen.</span>');
       }
+    });
+
+    /* Benachrichtigungen: Auswahl übernehmen und sichern. */
+    el.addEventListener('change', e => {
+      const modus = e.target.closest('input[name=nfModus]');
+      const art = e.target.closest('input[data-nf]');
+      if (!modus && !art) return;
+
+      const wahl = ladeEinstellung();
+      if (modus) wahl.modus = modus.value;
+      if (art) wahl[art.dataset.nf] = art.checked;
+
+      speichereEinstellung(wahl);
+      hinweisMeldungen(el);
     });
   },
 
@@ -235,4 +308,40 @@ function hinweisHintergrund(el) {
   }
   el.querySelectorAll('[data-hg]').forEach(b =>
     b.classList.toggle('gewaehlt', wahl.art === 'preset' && b.dataset.hg === wahl.wert));
+}
+
+/* Zustand der Benachrichtigungen herstellen und erklären. */
+function hinweisMeldungen(el) {
+  const wahl = ladeEinstellung();
+  const stand = erlaubnisStand();
+
+  el.querySelectorAll('input[name=nfModus]').forEach(r => {
+    r.checked = r.value === wahl.modus;
+  });
+  el.querySelectorAll('input[data-nf]').forEach(c => {
+    c.checked = !!wahl[c.dataset.nf];
+    c.disabled = wahl.modus === 'aus';
+  });
+
+  const knopf = el.querySelector('#nfErlaubnis');
+  const note = el.querySelector('#nfNote');
+  if (!note) return;
+
+  if (stand === 'nicht-unterstuetzt') {
+    note.innerHTML = '<span class="warn">Dieser Browser kennt keine Benachrichtigungen. '
+                   + 'Die Einblendungen im Fenster erscheinen weiterhin.</span>';
+    if (knopf) knopf.disabled = true;
+  } else if (stand === 'erlaubt') {
+    note.innerHTML = '<span class="ok">✔ Erlaubnis erteilt.</span> '
+                   + 'Meldungen erscheinen, sobald das Fenster im Hintergrund liegt.';
+    if (knopf) knopf.disabled = true;
+  } else if (stand === 'verweigert') {
+    note.innerHTML = '<span class="warn">Der Browser hat Benachrichtigungen abgelehnt.</span> '
+                   + 'Das lässt sich nur in den Browsereinstellungen für diese Seite ändern.';
+    if (knopf) knopf.disabled = true;
+  } else {
+    note.innerHTML = 'Noch keine Erlaubnis erteilt — ohne sie bleibt es bei den '
+                   + 'Einblendungen im Fenster.';
+    if (knopf) knopf.disabled = false;
+  }
 }

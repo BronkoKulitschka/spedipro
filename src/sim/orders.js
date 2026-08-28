@@ -67,13 +67,15 @@ function pickZiel() {
 }
 
 function contractOffer(contract) {
-  const l = mitLadung(currentRate(contract), contract.firm);
+  /* Die Ladung steht im Vertrag fest — jede Sendung ist dieselbe. */
   return {
     id: id(), kind: 'vertrag', firm: contract.firm,
     contractId: contract.id,
     estKm: contract.firm.km * 1.28,
-    ...l,
-    fee: currentRate(contract),          // im Vertrag steht ein fester Satz
+    klasse: contract.klasse || 'stueckgut',
+    paletten: contract.paletten || 8,
+    gewicht: contract.gewicht || 3200,
+    fee: currentRate(contract),
   };
 }
 

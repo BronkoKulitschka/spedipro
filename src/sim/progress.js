@@ -4,6 +4,7 @@
    nur steigen. Freischaltungen sind dauerhaft, es gibt keinen Rückfall
    und keine Frist. */
 
+import { melde } from '../ui/notify.js';
 import { LEVELS, REQ_LABEL } from '../config.js';
 import { S, log } from '../state.js';
 import { esc } from '../util.js';
@@ -95,6 +96,7 @@ export function checkLevelUp() {
   if (!S.silent) {
     toast('🏆', `Der Betrieb ist jetzt <strong>${esc(ziel.name)}</strong>.`,
                 `<span class="ok">${esc(ziel.text)}</span>`);
+    melde('stufe', `Aufstieg: ${ziel.name}`, ziel.text);
   }
 
   /* Mehrere Stufen auf einmal sind möglich, wenn lange nicht geschaut wurde */

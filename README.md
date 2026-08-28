@@ -219,6 +219,23 @@ Von dort aus nimmt es das neueste ZIP aus dem Download-Ordner, ersetzt den
 Projektstand und schiebt alles ins Repo. Eigene Dateien unter `assets/`
 und `eigenes/` überstehen das.
 
+## Benachrichtigungen
+
+Meldungen des Browsers, die auch im Hintergrund ankommen. Im Vordergrund
+wird nichts gesendet — dort genügen die Einblendungen.
+
+Für fertige Touren gibt es drei Einstellungen: bei jeder Tour, stündlich
+nur bei ausbleibender Disposition, oder gar nicht. Die stündliche
+Erinnerung misst echte Zeit, nicht Spielzeit: Es geht darum, den Spieler
+zu erreichen, nicht den Betrieb abzubilden. Sie meldet sich nur, wenn
+tatsächlich Fahrzeuge frei stehen.
+
+Mehrere Meldungen innerhalb von 1,2 Sekunden werden zusammengefasst, damit
+bei fünf gleichzeitig ankommenden Fahrzeugen nicht fünfmal geklingelt wird.
+
+Die Voreinstellung des Zeitverhältnisses ist **1:30** — ein Spieltag dauert
+bei einfacher Geschwindigkeit etwa achtundvierzig Minuten.
+
 ## Testlauf
 
 Ein Rauchtest spielt zehn Spieltage ohne Browser durch und prüft, dass
@@ -235,6 +252,7 @@ node test/sprites.mjs    # Rasteraufteilung des Sammelbilds
 node test/navigation.mjs # Herkunft beim Fensterwechsel
 node test/loading.mjs    # jedes Modul einzeln ladbar (Ringbezüge)
 node test/handlers.mjs   # Klickbehandlungen ohne Kollisionen
+node test/notify.mjs     # die drei Meldungsarten
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und
@@ -496,6 +514,20 @@ nicht, steht der Grund dort statt des Knopfes — „nur 17 Stellplätze" oder
 Nachbarn geordnet, jede Teilstrecke einzeln über OSRM geroutet. An jedem Stopp
 wird die jeweilige Fracht abgerechnet. Mehrstopp-Touren brauchen nur 33 Minuten
 Rampenzeit je Stopp statt einer vollen Stunde — Sammelverkehr lohnt sich.
+
+## Rahmenverträge
+
+Ausschreibungen nennen Güterklasse, Palettenzahl und Gewicht — bei einem
+Rahmenvertrag ist jede Sendung gleich. Darunter steht, welche eigenen
+Fahrzeuge dafür taugen; passt keines, wird der Grund genannt und die
+mindestens nötige Fahrzeugklasse samt Preis.
+
+`noetigeKlasse()` sortiert dabei nach **Preis**, nicht nach Nutzlast: Für
+dreißig Paletten Möbel wäre ein Kühlsattelzug zwar ausreichend, aber ein
+unsinniger Rat.
+
+Drei von vier Ausschreibungen sind auf den eigenen Fuhrpark zugeschnitten,
+die vierte bleibt bewusst größer.
 
 ## Personal
 

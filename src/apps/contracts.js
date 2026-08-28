@@ -8,6 +8,8 @@ import { signContract, currentRate, vertraegeFrei } from '../sim/contracts.js';
 import { maxVertraege } from '../sim/progress.js';
 import { onTick } from '../ui/wm.js';
 import { empty, kasseLeiste, kasseAktualisieren } from './shared.js';
+import { klasseVon, passendeFahrzeuge, noetigeKlasse, warumNicht } from '../sim/goods.js';
+import { EQUIPMENT } from '../config.js';
 
 const tageBis = c => Math.max(0, Math.ceil((c.endMinutes - S.minutes) / 1440));
 
@@ -74,7 +76,8 @@ export const ContractsApp = {
 
     /* Laufende Verträge */
     const run = el.querySelector('#ctRunning');
-    const runSig = S.contracts.map(c => `${c.id}:${c.done}:${tageBis(c)}`).join('|');
+    const runSig = S.contracts.map(c => `${c.id}:${c.done}:${tageBis(c)}`).join('|')
+                 + '|' + S.trucks.map(t => `${t.nr}${t.model}`).join(',');
     if (run.dataset.sig !== runSig) {
       run.dataset.sig = runSig;
       run.innerHTML = S.contracts.length ? S.contracts.map(c => {
@@ -87,6 +90,14 @@ export const ContractsApp = {
             <strong>${esc(c.firm.name)}</strong>
             <span class="money">${fmt(rate)}<span class="muted"> je Fahrt</span></span>
           </div>
+          ${c.klasse ? `
+            <div class="ladung-zeile">
+              ${klasseVon(c.klasse).icon} ${esc(klasseVon(c.klasse).name)} ·
+              ${c.paletten} Pal. · ${(c.gewicht / 1000).toFixed(1)} t
+              ${passendeFahrzeuge(c, S.trucks).length
+                ? `<span class="ok">· ${passendeFahrzeuge(c, S.trucks).length} passende Fahrzeuge</span>`
+                : '<span class="bad">· kein passendes Fahrzeug mehr!</span>'}
+            </div>` : ''}
           <div class="prog" style="margin:4px 0;">
             <div class="prog-fill" style="width:${anteil}%"></div>
           </div>
@@ -105,28 +116,72 @@ export const ContractsApp = {
     /* Ausschreibungen */
     const box = el.querySelector('#ctOffers');
     const platzFrei = vertraegeFrei() > 0;
-    const sig = S.contractOffers.map(o => o.id).join(',') + '|' + platzFrei;
+    /* Der Fuhrpark gehört in die Signatur: Kauft man ein Fahrzeug,
+       ändert sich, welche Ausschreibungen fahrbar sind. */
+    const sig = S.contractOffers.map(o => o.id).join(',') + '|' + platzFrei
+              + '|' + S.trucks.map(t => `${t.nr}${t.model}${(t.equip || []).join('')}`).join(',');
     if (box.dataset.sig === sig) return;
     box.dataset.sig = sig;
 
-    box.innerHTML = S.contractOffers.length ? S.contractOffers.map(o => `
-      <div class="offer">
-        <div class="flex-row" style="justify-content:space-between;">
-          <strong>${esc(o.firm.name)}</strong>
-          <span class="money">${fmt(o.perLoad)}<span class="muted"> je Fahrt</span></span>
-        </div>
-        <div style="font-size:10px;margin:2px 0;">
-          ${o.total} Sendungen über ${o.weeks} Wochen · ${o.perWeek} je Woche<br>
-          <span class="muted">Gesamtwert ${fmt(o.perLoad * o.total)} ·
-          Abschlussprämie <span class="money">${fmt(o.bonus)}</span></span>
-        </div>
-        <div class="flex-row" style="justify-content:space-between;">
-          <span class="muted" style="font-size:10px;">
-            ab ${Math.round(CONTRACTS.PART_OK * 100)} % Erfüllung halbe Prämie</span>
-          <button class="btn btn-sm" data-sign="${o.id}" ${platzFrei ? '' : 'disabled'}>
-            ${platzFrei ? 'unterschreiben' : 'kein Platz frei'}</button>
-        </div>
-      </div>`).join('')
+    box.innerHTML = S.contractOffers.length
+      ? S.contractOffers.map(o => zeigeAusschreibung(o, platzFrei)).join('')
       : empty('Zurzeit keine Ausschreibungen.');
   },
 };
+
+/* Eine Ausschreibung mit allem, was für die Entscheidung nötig ist:
+   was gefahren wird, womit — und ob man das hat. */
+function zeigeAusschreibung(o, platzFrei) {
+  const g = klasseVon(o.klasse);
+  const sendung = { klasse: o.klasse, paletten: o.paletten, gewicht: o.gewicht };
+
+  const geeignet = passendeFahrzeuge(sendung, S.trucks);
+  const kannFahren = geeignet.length > 0;
+
+  /* Ohne passendes Fahrzeug: sagen, was fehlt und was nötig wäre. */
+  const noetig = kannFahren ? null : noetigeKlasse(sendung);
+  const grund = kannFahren ? null : warumNicht(sendung, S.trucks);
+
+  return `
+  <div class="offer ${kannFahren ? '' : 'nicht-fahrbar'}">
+    <div class="flex-row" style="justify-content:space-between;">
+      <strong>${esc(o.firm.name)}</strong>
+      <span class="money">${fmt(o.perLoad)}<span class="muted"> je Fahrt</span></span>
+    </div>
+
+    <div class="ladung-zeile">
+      ${g.icon} ${esc(g.name)} ·
+      <strong>${o.paletten} Pal.</strong> ·
+      <strong>${(o.gewicht / 1000).toFixed(1)} t</strong>
+      ${g.braucht ? `<span class="warn">· ${EQUIPMENT[g.braucht].icon} ${esc(EQUIPMENT[g.braucht].name)} nötig</span>` : ''}
+    </div>
+
+    ${kannFahren
+      ? `<div class="fahrbar">
+           ✔ ${geeignet.length} passende${geeignet.length === 1 ? 's' : ''} Fahrzeug${geeignet.length === 1 ? '' : 'e'}:
+           ${geeignet.slice(0, 4).map(t => `LKW ${t.nr}`).join(', ')}${geeignet.length > 4 ? ' …' : ''}
+         </div>`
+      : `<div class="unfahrbar">
+           <strong>✘ ${esc(grund)}</strong>
+           ${noetig
+             ? `<br>Nötig wäre mindestens ein <strong>${esc(noetig.name)}</strong>
+                ${noetig.ausstattung ? `mit ${esc(EQUIPMENT[noetig.ausstattung].name)}` : ''}
+                <span class="muted">(${fmt(noetig.price)}${
+                  noetig.ausstattung ? ` + ${fmt(EQUIPMENT[noetig.ausstattung].preis)}` : ''})</span>`
+             : '<br>Diese Ladung übersteigt jede Fahrzeugklasse.'}
+         </div>`}
+
+    <div style="font-size:10px;margin:3px 0;">
+      ${o.total} Sendungen über ${o.weeks} Wochen · ${o.perWeek} je Woche<br>
+      <span class="muted">Gesamtwert ${fmt(o.perLoad * o.total)} ·
+      Abschlussprämie <span class="money">${fmt(o.bonus)}</span></span>
+    </div>
+
+    <div class="flex-row" style="justify-content:space-between;">
+      <span class="muted" style="font-size:10px;">
+        ab ${Math.round(CONTRACTS.PART_OK * 100)} % Erfüllung halbe Prämie</span>
+      <button class="btn btn-sm" data-sign="${o.id}" ${platzFrei ? '' : 'disabled'}>
+        ${platzFrei ? 'unterschreiben' : 'kein Platz frei'}</button>
+    </div>
+  </div>`;
+}

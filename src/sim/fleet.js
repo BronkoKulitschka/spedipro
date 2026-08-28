@@ -19,6 +19,7 @@ import { registerPartnerLoad } from './partners.js';
 import { registriereFahrt } from './customers.js';
 import { dieselRabatt } from './goals.js';
 import { pruefeRekord } from './records.js';
+import { melde, merkeDisposition } from '../ui/notify.js';
 import { checkLevelUp, automatikFrei, modelFrei } from './progress.js';
 import { kapazitaet, summe, passt } from './goods.js';
 import { toast } from '../ui/toast.js';
@@ -127,6 +128,7 @@ export async function startTour(truckNr, sendungen, opts = {}) {
   const alleHits = etappen.flatMap(e => trafficOnRoute(e.route.coords));
   S.stats.jams += alleHits.length;
 
+  merkeDisposition();          // die stündliche Erinnerung beginnt von vorn
   truck.tour = { etappen, index: 0 };
   starteEtappe(truck);
 
@@ -297,6 +299,7 @@ function halteAn(truck, art, ort) {
   truck.rastZiel = null;
 
   const wo = ort ? `auf ${ort}` : 'am Straßenrand';
+
   if (art === 'ruhe') {
     log(`🛏️ ${fahrerOderErsatz(truck).name} legt die Ruhezeit ${wo} ein.`);
   } else {
@@ -446,6 +449,16 @@ function finish(truck) {
     truck.job = null;
     starteEtappe(truck);
     return;
+  }
+
+  /* Die ganze Tour ist erledigt — das ist eine Meldung wert. */
+  if (!S.silent) {
+    const stopps = truck.tour?.etappen.length || 1;
+    melde('zustellung',
+      `${fahrerOderErsatz(truck).name} ist fertig`,
+      stopps > 1
+        ? `${stopps} Stopps abgearbeitet, LKW ${truck.nr} steht frei bei ${truck.place}.`
+        : `LKW ${truck.nr} steht frei bei ${truck.place}.`);
   }
 
   truck.tour = null;

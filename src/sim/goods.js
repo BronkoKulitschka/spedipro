@@ -127,3 +127,56 @@ export function passt(truck, bisher, neu) {
 }
 
 export const klasseVon = key => GOODS[key] || GOODS.stueckgut;
+
+/* ── Welches Fahrzeug taugt für eine Ladung? ────────────────────
+   Wird bei Ausschreibungen gebraucht: Bevor man unterschreibt, sollte
+   klar sein, ob der eigene Fuhrpark die Ware überhaupt fahren kann. */
+
+export function passendeFahrzeuge(sendung, trucks) {
+  return trucks.filter(t => passt(t, [], sendung).ok);
+}
+
+/* Das günstigste Fahrzeug, das diese Ladung tragen könnte — unabhängig
+   davon, ob man es besitzt. Sortiert wird nach Preis, nicht nach
+   Nutzlast: Für dreißig Paletten Möbel wäre ein Kühlsattelzug zwar
+   ausreichend, aber ein unsinniger Rat. */
+export function noetigeKlasse(sendung) {
+  const g = GOODS[sendung.klasse] || GOODS.stueckgut;
+
+  const reihe = Object.values(TRUCK_MODELS).slice().sort((a, b) => a.price - b.price);
+
+  for (const m of reihe) {
+    /* Ein nachgerüsteter Kühlaufbau kostet Nutzlast. */
+    const nachruesten = g.braucht === 'kuehl' && !m.kuehlfest;
+    const nutzlast = Math.round(m.nutzlast * (nachruesten ? 0.92 : 1));
+
+    if (m.paletten < sendung.paletten) continue;
+    if (nutzlast < sendung.gewicht) continue;
+    if (g.braucht === 'kuehl' && !m.kuehlbar && !m.kuehlfest) continue;
+    if (g.braucht === 'adr' && !m.adrfaehig) continue;
+
+    return { ...m, ausstattung: g.braucht && !m.kuehlfest ? g.braucht : null };
+  }
+  return null;
+}
+
+/* Was einer Ladung im Weg steht, in einem Satz. */
+export function warumNicht(sendung, trucks) {
+  const g = GOODS[sendung.klasse] || GOODS.stueckgut;
+
+  if (g.braucht === 'kuehl' && !trucks.some(t => kannKuehlen(t))) {
+    return 'kein Fahrzeug mit Kühlaufbau';
+  }
+  if (g.braucht === 'adr' && !trucks.some(t => t.equip?.includes('adr'))) {
+    return 'kein Fahrzeug mit ADR-Ausrüstung';
+  }
+
+  const genugPlatz = trucks.some(t => kapazitaet(t).paletten >= sendung.paletten);
+  const genugLast  = trucks.some(t => kapazitaet(t).kg >= sendung.gewicht);
+
+  if (!genugPlatz && !genugLast) return 'zu groß und zu schwer für den Fuhrpark';
+  if (!genugPlatz) return `kein Fahrzeug mit ${sendung.paletten} Stellplätzen`;
+  if (!genugLast)  return `kein Fahrzeug für ${(sendung.gewicht / 1000).toFixed(1)} t`;
+
+  return 'kein passendes Fahrzeug';
+}
