@@ -4,20 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<title>SpeditionsPro 95</title>
+<!-- Als eigene App installierbar. Auf GitHub Pages teilen sich alle
+       Projekte eines Kontos dieselbe Herkunft — Benachrichtigungen
+       gelten dort für die ganze Domäne. Als installierte App bekommt
+       das Spiel einen eigenen Eintrag in den Systemeinstellungen. -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#000080">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="SpediPro 95">
+
+  <title>SpeditionsPro 95</title>
 
 <!-- Die Zahl hinter ?v= bei jeder neuen Fassung mit src/version.js
      gleichziehen. Dann lädt der Browser die Dateien sicher neu. -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="./styles/win95.css?v=0.24.1">
-<link rel="stylesheet" href="./styles/app.css?v=0.24.1">
-<link rel="stylesheet" href="./styles/desktop.css?v=0.24.1">
+<link rel="stylesheet" href="./styles/win95.css?v=0.24.2">
+<link rel="stylesheet" href="./styles/app.css?v=0.24.2">
+<link rel="stylesheet" href="./styles/desktop.css?v=0.24.2">
 </head>
 <body>
   <div id="root"></div>
   <div id="toasts"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script type="module" src="./src/main.js?v=0.24.1"></script>
+  <script type="module" src="./src/main.js?v=0.24.2"></script>
 </body>
 </html>

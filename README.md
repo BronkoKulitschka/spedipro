@@ -236,6 +236,19 @@ Chrome auf Android sonst jede Benachrichtigung ablehnt — ein einfaches
 speichert nichts zwischen; er muss nur angemeldet sein. Ein Klick auf eine
 Meldung holt das Spielfenster nach vorn.
 
+**Eine Fallgrube auf GitHub Pages:** Alle Projekte eines Kontos liegen
+unter derselben Adresse (`konto.github.io`). Für Benachrichtigungen zählt
+aber die Adresse, nicht der Unterordner — die Erlaubnis gilt also für alle
+Projekte zusammen und kann von einer anderen dort installierten App
+verwaltet werden. Der Browser fragt dann gar nicht erst, und der Knopf
+scheint nichts zu tun.
+
+Deshalb bringt das Spiel ein `manifest.webmanifest` mit: Über
+*Zum Startbildschirm hinzufügen* wird es zu einer eigenen App mit eigenem
+Eintrag in den Systemeinstellungen. Der Servicearbeiter meldet sich
+außerdem ausdrücklich mit `scope: './'` an, damit er anderen Projekten auf
+derselben Adresse nicht ins Gehege kommt.
+
 Der Knopf „Erlaubnis erteilen" bleibt immer bedienbar. Ein grauer Knopf
 ohne Erklärung wirkt kaputt — stattdessen sagt eine Meldung, woran es
 liegt: fehlende Unterstützung, unsichere Verbindung oder eine bereits

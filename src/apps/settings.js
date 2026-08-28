@@ -14,7 +14,8 @@ import { saveGame, clearSave, saveInfo } from '../sim/save.js';
 import { PRESETS, ladeHintergrund, speichereHintergrund, wendeAn, bildLaden } from '../ui/wallpaper.js';
 import { MODI, ARTEN, ladeEinstellung, speichereEinstellung,
          erlaubnisStand, frageErlaubnis, probemeldung,
-         moeglich, warumNicht, meldeSystemAn } from '../ui/notify.js';
+         moeglich, warumNicht, meldeSystemAn,
+         alsAppInstalliert, teiltHerkunft } from '../ui/notify.js';
 import { onTick } from '../ui/wm.js';
 
 export const SettingsApp = {
@@ -214,6 +215,13 @@ export const SettingsApp = {
             await meldeSystemAn();
             toast('🔔', 'Erlaubnis erteilt.',
                         '<span class="ok">Meldungen kommen jetzt an.</span>');
+          } else if (antwort === 'ungefragt') {
+            /* Der Browser hat die Frage gar nicht gestellt. Auf einer
+               geteilten Domäne entscheidet oft eine andere dort
+               installierte App darüber. */
+            toast('⚠️', 'Der Browser hat nicht gefragt.',
+                        '<span class="muted">Die Erlaubnis wird an anderer '
+                      + 'Stelle verwaltet — siehe Hinweis unten.</span>');
           } else {
             toast('🔔', 'Keine Erlaubnis erteilt.',
                         '<span class="muted">Es bleibt bei den Einblendungen '
@@ -380,6 +388,17 @@ function hinweisMeldungen(el) {
                    + 'dann unter den Berechtigungen dieser Seite.';
   } else {
     note.innerHTML = 'Noch keine Erlaubnis erteilt — ohne sie bleibt es bei den '
-                   + 'Einblendungen im Fenster.';
+                   + 'Einblendungen im Fenster.'
+      + (teiltHerkunft() && !alsAppInstalliert()
+          ? '<br><br><strong>Wenn der Knopf nichts bewirkt:</strong> Auf '
+          + 'github.io teilen sich alle Projekte eines Kontos dieselbe '
+          + 'Adresse. Die Erlaubnis gilt deshalb für alle zusammen und kann '
+          + 'von einer anderen dort installierten App verwaltet werden.'
+          + '<br>Zwei Wege: In den Browsereinstellungen unter '
+          + '<em>Berechtigungen</em> die Benachrichtigungen für diese Seite '
+          + 'zurücksetzen — oder das Spiel über das Browsermenü '
+          + '<em>Zum Startbildschirm hinzufügen</em>. Als eigene App bekommt '
+          + 'es einen eigenen Eintrag in den Systemeinstellungen.'
+          : '');
   }
 }

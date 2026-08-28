@@ -73,6 +73,25 @@ export async function frageErlaubnis() {
   }
 }
 
+/* Läuft das Spiel als installierte App? Dann hat es einen eigenen
+   Eintrag in den Systemeinstellungen. */
+export function alsAppInstalliert() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia?.('(display-mode: standalone)')?.matches
+      || window.navigator?.standalone === true;
+}
+
+/* Auf GitHub Pages teilen sich alle Projekte eines Kontos dieselbe
+   Herkunft. Die Erlaubnis für Benachrichtigungen gilt deshalb für die
+   ganze Domäne — und kann von einer anderen dort installierten App
+   verwaltet werden. Das ist keine Vermutung über eine bestimmte App,
+   sondern schlicht die Lage: Bleibt die Antwort nach der Frage
+   unverändert, hat etwas anderes darüber entschieden. */
+export const teiltHerkunft = () =>
+  typeof location !== 'undefined'
+  && /\.github\.io$/.test(location.hostname)
+  && location.pathname.split('/').filter(Boolean).length > 0;
+
 const imHintergrund = () =>
   typeof document !== 'undefined' && document.visibilityState === 'hidden';
 
@@ -87,7 +106,10 @@ let arbeiter = null;
 export async function meldeSystemAn() {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    arbeiter = await navigator.serviceWorker.register('./sw.js');
+    /* Der Geltungsbereich bleibt auf diesen Unterordner beschränkt,
+       damit sich das Spiel nicht mit anderen Projekten auf derselben
+       Adresse ins Gehege kommt. */
+    arbeiter = await navigator.serviceWorker.register('./sw.js', { scope: './' });
     await navigator.serviceWorker.ready;
     return arbeiter;
   } catch {

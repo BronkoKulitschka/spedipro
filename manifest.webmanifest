@@ -1,0 +1,21 @@
+{
+  "name": "SpeditionsPro 95",
+  "short_name": "SpediPro 95",
+  "description": "Eine ruhige Speditionssimulation im Stil von Windows 95.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "/spedipro/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#6a9a9a",
+  "theme_color": "#000080",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "./assets/trucks.png",
+      "sizes": "256x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
