@@ -318,6 +318,7 @@ export const TOPICS = {
       { p: 'Die stündliche Erinnerung ist die ruhigere Wahl: Sie meldet sich nur, wenn tatsächlich Fahrzeuge unbeschäftigt herumstehen, und schweigt, solange du disponierst.' },
       { p: 'Unabhängig davon lassen sich Pannen, Vertragsabschlüsse und Aufstiege einzeln an- und abschalten.' },
       { tipp: 'Der Browser fragt nur auf einen Knopfdruck hin nach der Erlaubnis. Ohne sie bleibt es bei den Einblendungen im Fenster — es geht also nichts verloren.' },
+      { p: 'Hat der Browser die Erlaubnis einmal abgelehnt, fragt er nicht erneut. Das lässt sich nur in den Browsereinstellungen ändern: in der Adressleiste auf das Schlosssymbol tippen, dann unter den Berechtigungen dieser Seite.' },
       { h: 'Hintergrund' },
       { p: 'Neun Voreinstellungen im Stil der Zeit, von Türkis über Karo bis Verlauf. Darunter lässt sich ein eigenes Bild wählen — es wird vor dem Speichern auf 1600 Bildpunkte verkleinert und liegt getrennt vom Spielstand im Browser.' },
       { p: 'Der Hintergrund gilt für die Arbeitsfläche. Im Fuhrpark bekommt jede Fahrzeugzeile denselben Hintergrund als eigene Fläche, mit einer hellen Ebene darüber, damit die Schrift lesbar bleibt.' },

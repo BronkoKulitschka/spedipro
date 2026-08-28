@@ -23,7 +23,7 @@ import { catchUp, offlineMinutes } from './sim/offline.js';
 import { startScreen, bootScreen, desktopShell } from './ui/screens.js';
 import { openApp, onTick, renderTaskbar, toggleStartMenu, closeAll, isNarrow } from './ui/wm.js';
 import { wendeAn } from './ui/wallpaper.js';
-import { starteErinnerung, setzeFreieZaehler } from './ui/notify.js';
+import { starteErinnerung, setzeFreieZaehler, meldeSystemAn } from './ui/notify.js';
 
 const root = () => document.getElementById('root');
 
@@ -383,6 +383,10 @@ function enterDesktop({ resumed = false } = {}) {
      Auskunft, wie viele Fahrzeuge gerade unbeschäftigt sind. */
   setzeFreieZaehler(() => S.trucks.filter(verfuegbar).length);
   starteErinnerung();
+
+  /* Ohne Servicearbeiter lehnt Android jede Benachrichtigung ab.
+     Die Anmeldung selbst braucht keine Erlaubnis. */
+  meldeSystemAn();
   wireDesktop();
 
   if (resumed) {

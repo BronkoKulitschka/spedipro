@@ -80,5 +80,18 @@ N.merkeDisposition();
 gesendet = [];
 ok(gesendet.length === 0, 'Direkt nach einer Disposition keine Erinnerung');
 
+/* Verfügbarkeit und Gründe */
+ok(N.moeglich() === true, 'Mit Notification ist es möglich');
+ok(N.warumNicht() === null, 'Dann gibt es keinen Hinderungsgrund');
+
+const merk = globalThis.Notification;
+delete globalThis.Notification;
+ok(N.moeglich() === false, 'Ohne Notification nicht möglich');
+ok(/kennt keine/.test(N.warumNicht() || ''), `Grund wird genannt: ${N.warumNicht()}`);
+
+const probe = N.probemeldung();
+ok(probe.ok === false && probe.grund, 'Probemeldung nennt den Grund statt still zu scheitern');
+globalThis.Notification = merk;
+
 console.log(fehler ? `\n${fehler} Fehler\n` : '\nAlles richtig\n');
 process.exit(fehler ? 1 : 0);

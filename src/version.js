@@ -5,7 +5,7 @@
    und in den Einstellungen, damit sich mit einem Blick prüfen lässt,
    welcher Stand gerade läuft. */
 
-export const VERSION = '0.24.0';
+export const VERSION = '0.24.1';
 export const BUILD   = '2026-08-28';
 export const CODENAME = 'Ausschreibung';
 

@@ -78,6 +78,43 @@ const imHintergrund = () =>
 
 const bereit = () => erlaubnisStand() === 'erlaubt' && imHintergrund();
 
+/* ── Servicearbeiter ────────────────────────────────────────────
+   Auf Android verlangt Chrome einen Servicearbeiter, sonst wirft
+   new Notification() einen Fehler. Deshalb wird er beim Start
+   angemeldet und für alle Meldungen benutzt, wenn er da ist. */
+let arbeiter = null;
+
+export async function meldeSystemAn() {
+  if (!('serviceWorker' in navigator)) return null;
+  try {
+    arbeiter = await navigator.serviceWorker.register('./sw.js');
+    await navigator.serviceWorker.ready;
+    return arbeiter;
+  } catch {
+    arbeiter = null;
+    return null;
+  }
+}
+
+/* Ob Benachrichtigungen überhaupt möglich sind. Braucht eine sichere
+   Verbindung — über http:// verweigern die Browser sie. */
+export function moeglich() {
+  if (typeof Notification === 'undefined') return false;
+  if (typeof window === 'undefined') return true;
+  return window.isSecureContext !== false;
+}
+
+/* Warum es nicht geht, in einem Satz. */
+export function warumNicht() {
+  if (typeof Notification === 'undefined') {
+    return 'Dieser Browser kennt keine Benachrichtigungen.';
+  }
+  if (typeof window !== 'undefined' && window.isSecureContext === false) {
+    return 'Benachrichtigungen brauchen eine gesicherte Verbindung (https).';
+  }
+  return null;
+}
+
 /* ── Die stündliche Erinnerung ──────────────────────────────────
    Gemessen wird echte Zeit, nicht Spielzeit: Es geht darum, den
    Spieler zu erreichen, nicht den Betrieb abzubilden. */
@@ -154,22 +191,45 @@ export function melde(art, titel, text) {
   }, 1200);
 }
 
-function zeigeMeldung(titel, text) {
+export function zeigeMeldung(titel, text) {
+  const optionen = {
+    body: text,
+    tag: 'spedipro',
+    icon: './assets/trucks.png',
+    badge: './assets/trucks.png',
+  };
+
+  /* Über den Servicearbeiter, wenn möglich — auf Android der einzige
+     Weg, der funktioniert. */
+  if (arbeiter?.showNotification) {
+    try {
+      arbeiter.showNotification(titel, optionen);
+      return true;
+    } catch { /* dann der andere Weg */ }
+  }
+
   try {
-    new Notification(titel, { body: text, tag: 'spedipro', icon: './assets/trucks.png' });
+    new Notification(titel, optionen);
+    return true;
   } catch {
-    /* Manche Browser lehnen Benachrichtigungen ohne Servicearbeiter ab.
-       Dann bleibt es bei den Einblendungen im Fenster. */
+    return false;
   }
 }
 
 /* Für die Einstellungen: eine Meldung ohne Rücksicht auf den Modus. */
 export function probemeldung() {
-  if (erlaubnisStand() !== 'erlaubt') return false;
-  zeigeMeldung('SpeditionsPro 95',
+  if (!moeglich()) return { ok: false, grund: warumNicht() };
+  if (erlaubnisStand() !== 'erlaubt') {
+    return { ok: false, grund: 'Noch keine Erlaubnis erteilt.' };
+  }
+
+  const ging = zeigeMeldung('SpeditionsPro 95',
     'So sieht eine Meldung aus. Sie erscheint nur, wenn das Fenster '
     + 'im Hintergrund liegt.');
-  return true;
+
+  return ging
+    ? { ok: true }
+    : { ok: false, grund: 'Der Browser hat die Meldung abgelehnt.' };
 }
 
 export const ARTEN = {

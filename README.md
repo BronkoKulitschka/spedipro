@@ -230,6 +230,17 @@ Erinnerung misst echte Zeit, nicht Spielzeit: Es geht darum, den Spieler
 zu erreichen, nicht den Betrieb abzubilden. Sie meldet sich nur, wenn
 tatsächlich Fahrzeuge frei stehen.
 
+**`sw.js` ist ein Servicearbeiter**, der allein deshalb existiert, weil
+Chrome auf Android sonst jede Benachrichtigung ablehnt — ein einfaches
+`new Notification()` wirft dort einen Fehler. Er fängt nichts ab und
+speichert nichts zwischen; er muss nur angemeldet sein. Ein Klick auf eine
+Meldung holt das Spielfenster nach vorn.
+
+Der Knopf „Erlaubnis erteilen" bleibt immer bedienbar. Ein grauer Knopf
+ohne Erklärung wirkt kaputt — stattdessen sagt eine Meldung, woran es
+liegt: fehlende Unterstützung, unsichere Verbindung oder eine bereits
+abgelehnte Anfrage.
+
 Mehrere Meldungen innerhalb von 1,2 Sekunden werden zusammengefasst, damit
 bei fünf gleichzeitig ankommenden Fahrzeugen nicht fünfmal geklingelt wird.
 

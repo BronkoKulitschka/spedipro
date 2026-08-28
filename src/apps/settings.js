@@ -13,7 +13,8 @@ import { VERSION, BUILD, CODENAME } from '../version.js';
 import { saveGame, clearSave, saveInfo } from '../sim/save.js';
 import { PRESETS, ladeHintergrund, speichereHintergrund, wendeAn, bildLaden } from '../ui/wallpaper.js';
 import { MODI, ARTEN, ladeEinstellung, speichereEinstellung,
-         erlaubnisStand, frageErlaubnis, probemeldung } from '../ui/notify.js';
+         erlaubnisStand, frageErlaubnis, probemeldung,
+         moeglich, warumNicht, meldeSystemAn } from '../ui/notify.js';
 import { onTick } from '../ui/wm.js';
 
 export const SettingsApp = {
@@ -167,7 +168,6 @@ export const SettingsApp = {
                 `<span class="muted">${ergebnis.grund}</span>`);
         }
         hinweisHintergrund(el);
-    hinweisMeldungen(el);
       });
       ev.target.value = '';
     });
@@ -188,17 +188,52 @@ export const SettingsApp = {
       }
 
       if (e.target.closest('#nfErlaubnis')) {
-        frageErlaubnis().then(() => { hinweisMeldungen(el); onTick(); });
+        /* Der Browser fragt nur auf eine unmittelbare Nutzerhandlung
+           hin. Deshalb steht der Aufruf direkt im Klick. */
+        if (!moeglich()) {
+          toast('⚠️', 'Benachrichtigungen nicht verfügbar.',
+                      `<span class="muted">${esc(warumNicht())}</span>`);
+          return;
+        }
+
+        const stand = erlaubnisStand();
+        if (stand === 'erlaubt') {
+          toast('🔔', 'Die Erlaubnis liegt bereits vor.');
+          hinweisMeldungen(el);
+          return;
+        }
+        if (stand === 'verweigert') {
+          toast('⚠️', 'Der Browser hat Benachrichtigungen abgelehnt.',
+                      '<span class="muted">Das lässt sich nur in den '
+                    + 'Browsereinstellungen für diese Seite ändern.</span>');
+          return;
+        }
+
+        frageErlaubnis().then(async antwort => {
+          if (antwort === 'erlaubt') {
+            await meldeSystemAn();
+            toast('🔔', 'Erlaubnis erteilt.',
+                        '<span class="ok">Meldungen kommen jetzt an.</span>');
+          } else {
+            toast('🔔', 'Keine Erlaubnis erteilt.',
+                        '<span class="muted">Es bleibt bei den Einblendungen '
+                      + 'im Fenster.</span>');
+          }
+          hinweisMeldungen(el);
+          onTick();
+        });
         return;
       }
 
       if (e.target.closest('#nfProbe')) {
-        if (probemeldung()) {
+        const ergebnis = probemeldung();
+        if (ergebnis.ok) {
           toast('🔔', 'Probemeldung gesendet.',
-                      '<span class="muted">Sichtbar, sobald du das Fenster verlässt.</span>');
+                      '<span class="muted">Auf dem Handy erscheint sie in der '
+                    + 'Leiste, sobald du das Fenster verlässt.</span>');
         } else {
-          toast('🔔', 'Noch keine Erlaubnis erteilt.',
-                      '<span class="muted">Erst auf „Erlaubnis erteilen" tippen.</span>');
+          toast('⚠️', 'Probemeldung nicht möglich.',
+                      `<span class="muted">${esc(ergebnis.grund)}</span>`);
         }
         return;
       }
@@ -260,6 +295,7 @@ export const SettingsApp = {
       + ' echter Zeit.';
 
     hinweisHintergrund(el);
+    hinweisMeldungen(el);
 
     const info = saveInfo();
     el.querySelector('#stSave').innerHTML = info
@@ -327,21 +363,23 @@ function hinweisMeldungen(el) {
   const note = el.querySelector('#nfNote');
   if (!note) return;
 
-  if (stand === 'nicht-unterstuetzt') {
-    note.innerHTML = '<span class="warn">Dieser Browser kennt keine Benachrichtigungen. '
-                   + 'Die Einblendungen im Fenster erscheinen weiterhin.</span>';
-    if (knopf) knopf.disabled = true;
+  /* Der Knopf bleibt immer bedienbar: Ein grauer Knopf ohne Erklärung
+     wirkt kaputt. Stattdessen sagt eine Meldung, woran es liegt. */
+  if (knopf) knopf.disabled = false;
+
+  if (!moeglich()) {
+    note.innerHTML = `<span class="warn">${esc(warumNicht())}</span> `
+                   + 'Die Einblendungen im Fenster erscheinen weiterhin.';
   } else if (stand === 'erlaubt') {
     note.innerHTML = '<span class="ok">✔ Erlaubnis erteilt.</span> '
                    + 'Meldungen erscheinen, sobald das Fenster im Hintergrund liegt.';
-    if (knopf) knopf.disabled = true;
+    if (knopf) knopf.textContent = 'Erlaubnis liegt vor';
   } else if (stand === 'verweigert') {
     note.innerHTML = '<span class="warn">Der Browser hat Benachrichtigungen abgelehnt.</span> '
-                   + 'Das lässt sich nur in den Browsereinstellungen für diese Seite ändern.';
-    if (knopf) knopf.disabled = true;
+                   + 'Zum Ändern: in der Adressleiste auf das Schlosssymbol tippen, '
+                   + 'dann unter den Berechtigungen dieser Seite.';
   } else {
     note.innerHTML = 'Noch keine Erlaubnis erteilt — ohne sie bleibt es bei den '
                    + 'Einblendungen im Fenster.';
-    if (knopf) knopf.disabled = false;
   }
 }
