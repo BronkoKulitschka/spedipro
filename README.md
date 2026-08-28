@@ -205,6 +205,20 @@ Wurzelelement — und der erste Zweig verschluckt jeden Klick im Fenster.
 Deshalb heißt der Zustand `blattWahl` und `hofWahl`, nicht wie das
 Attribut der Knöpfe. `node test/handlers.mjs` deckt solche Kollisionen ab.
 
+## Das Update-Skript
+
+`update.sh` liegt im Projekt und kommt daher mit jedem Archiv mit. Es
+gehört aber ins Heimatverzeichnis, nicht in den Projektordner:
+
+```bash
+cp ~/spedipro/update.sh ~/
+chmod +x ~/update.sh
+```
+
+Von dort aus nimmt es das neueste ZIP aus dem Download-Ordner, ersetzt den
+Projektstand und schiebt alles ins Repo. Eigene Dateien unter `assets/`
+und `eigenes/` überstehen das.
+
 ## Testlauf
 
 Ein Rauchtest spielt zehn Spieltage ohne Browser durch und prüft, dass
