@@ -15,6 +15,7 @@ import { current } from './progress.js';
 import { hubsFor } from '../data/hubs.js';
 import { klasseFuer, ladung, zufallsGrenze, irgendwerKann } from './goods.js';
 import { rateFuer } from './customers.js';
+import { anfrageFaktor } from './clients.js';
 import { saisonPreis, saisonMenge } from './season.js';
 import { mehrAnfragen, besserePreise } from './goals.js';
 
@@ -144,6 +145,17 @@ export function refillOffers() {
   while (S.offers.length < ziel && guard++ < 300) {
     const firm = pickZiel();
     if (!firm || S.offers.some(o => o.firm.name === firm.name)) continue;
+
+    /* Betriebsferien, Inventur, verärgert — nicht jeder Betrieb hat
+       immer etwas zu verschicken. */
+    const wie = anfrageFaktor(firm.name);
+    if (wie <= 0) continue;
+    if (wie < 1 && Math.random() > wie) continue;
+    if (wie > 1 && Math.random() < (wie - 1) * 0.3) {
+      /* Im Hochbetrieb gelegentlich gleich zwei Sendungen. */
+      S.offers.push(spotOffer(firm));
+    }
+
     S.offers.push(spotOffer(firm));
   }
 }

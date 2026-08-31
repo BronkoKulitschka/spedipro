@@ -304,6 +304,8 @@ node test/market.mjs     # Börse passt zum Fuhrpark
 node test/haggle.mjs     # Preisverhandlung
 node test/offline.mjs    # Netzunabhängigkeit
 node test/contracts.mjs  # Rahmenverträge als Relation
+node test/reputation.mjs # Ansehen in beide Richtungen
+node test/clients.mjs    # Auftraggeber, Zustände, Groll
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und
@@ -566,21 +568,52 @@ Nachbarn geordnet, jede Teilstrecke einzeln über OSRM geroutet. An jedem Stopp
 wird die jeweilige Fracht abgerechnet. Mehrstopp-Touren brauchen nur 33 Minuten
 Rampenzeit je Stopp statt einer vollen Stunde — Sammelverkehr lohnt sich.
 
+## Ansehen kann fallen
+
+Lange stieg das Ansehen nur — damit war es eine Frage der Zeit statt der
+Leistung. Jetzt geht es in beide Richtungen: nicht erfüllte Verträge
+(−3,5), überzogene Verhandlungen (−0,8), Pannen (−0,25) und Tage ohne eine
+einzige Zustellung (−0,35) zehren daran.
+
+Die Verhältnisse sind so gewählt, dass Arbeit schneller aufbaut als
+Nichtstun abträgt. Nach unten ist bei 5 Schluss — niemand fällt ins
+Bodenlose. `node test/reputation.mjs` prüft die Balance.
+
+## Auftraggeber als Personen
+
+Jeder Verlader hat einen **Charakter** (fest, aus dem Namen abgeleitet —
+derselbe Betrieb verhält sich immer gleich, ohne dass etwas gespeichert
+werden muss), eine **Tagesform** (wechselt täglich) und ein **Gedächtnis**
+(Groll, der bleibt).
+
+Dazu kommen Zustände mit eigener Dauer: Betriebsferien und Inventur
+schweigen ganz, ein kranker Disponent zahlt keinen Cent mehr, Hochbetrieb
+öffnet den Geldbeutel.
+
+**Verhandlungen haben ein Nachspiel.** Ein Abbruch hinterlässt Groll; nach
+mehreren bricht der Verlader die Zusammenarbeit für zwei bis fünf Wochen
+ab. Wie schnell, hängt am Charakter — beim Kleinlichen nach drei
+Abbrüchen, beim Beständigen nach sieben. Jede abgewickelte Fahrt
+besänftigt, und Groll verfliegt langsam von allein: Eine Sackgasse gibt es
+nicht.
+
+`node test/clients.mjs` prüft die Balance.
+
 ## Preisverhandlung
 
-Jede Spotanfrage hat einen Spielraum, den der Verlader nicht nennt. Über
-einen Regler fordert man zwischen dem genannten Preis und 45 Prozent
-darüber; drei Ausgänge sind möglich — angenommen, Gegenangebot oder
-Ablehnung.
+Ein geführtes Gespräch zwischen Disponent und Auftraggeber, höchstens drei
+Runden. Argumente kosten keine Runde und heben die Schmerzgrenze; Forderungen
+kosten eine.
 
 Die Schmerzgrenze (`sim/haggle.js`) ergibt sich aus Ansehen, Marktindex,
-Kundenbeziehung und einem festen Zufallsanteil je Anfrage. Fest heißt: aus
+Kundenbeziehung und einem festen Zufallsanteil je Anfrage — fest heißt: aus
 der Kennung abgeleitet, damit dieselbe Anfrage nicht bei jedem Blick anders
 reagiert. Über 200 Anfragen streut das zwischen ×1,07 und ×1,27.
 
-Zwei Regeln halten es fair: Der genannte Preis geht **immer** durch, und
-verloren geht nur bei echter Übertreibung — bis dahin gibt es höchstens ein
-Gegenangebot.
+Der Reiz liegt in der Reihenfolge: Wer gleich das Höchste fordert,
+verschenkt die Argumente. Zwei Regeln halten es fair — der genannte Preis
+liegt immer innerhalb der Grenze, und verloren geht nur bei echter
+Übertreibung.
 
 ## Warum die Börse zum Fuhrpark passen muss
 

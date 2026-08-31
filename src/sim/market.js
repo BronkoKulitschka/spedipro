@@ -29,8 +29,11 @@ export const marketText = () => {
 export const repMul = () =>
   REP.MIN_MUL + (S.rep / REP.MAX) * (REP.MAX_MUL - REP.MIN_MUL);
 
+/* Ansehen ändern. Es kann steigen und fallen, verlässt aber nie den
+   Bereich zwischen MIN und MAX — ein eingeführter Betrieb wird nicht
+   über Nacht wieder namenlos, und ganz auf Null fällt niemand. */
 export function addRep(amount) {
-  S.rep = Math.min(REP.MAX, S.rep + amount);
+  S.rep = Math.max(REP.MIN, Math.min(REP.MAX, S.rep + amount));
 }
 
 export const repText = () => {

@@ -11,8 +11,9 @@ import { fmt, esc, truckFarbe } from '../util.js';
 import { dispatch, distanceFrom, startTour, umwegFuer, jetztPos } from '../sim/fleet.js';
 import { KIND_LABEL, takeOffer } from '../sim/orders.js';
 import { kapazitaet, summe, passt, klasseVon } from '../sim/goods.js';
-import { verhandle, aussicht, MAX_FORDERUNG } from '../sim/haggle.js';
-import { onTick } from '../ui/wm.js';
+import { zustandVon, stimmung } from '../sim/clients.js';
+
+import { onTick, openApp } from '../ui/wm.js';
 import { initMap, ensureMapSize, mapHost, drawOffers, drawTrucks,
          toggleLayer, onOfferAccept, focusPoint, fitAll, zeigeFahrzeug,
          istSichtbar } from '../ui/map.js';
@@ -67,30 +68,7 @@ export const DispoApp = {
     /* Die Ladeliste lebt im Fenster, nicht im Spielstand — sie ist eine
        Planung, die erst mit dem Start der Tour wirksam wird. */
     el._lade = [];
-    el._verhandelt = null;
 
-    /* Beim Ziehen des Reglers nur Betrag und Einschätzung nachführen,
-       nicht die ganze Liste — sonst ruckelt es unter dem Finger. */
-    el.addEventListener('input', e => {
-      const regler = e.target.closest('input[data-regler]');
-      if (!regler) return;
-
-      const o = S.offers.find(x => x.id === regler.dataset.regler);
-      if (!o) return;
-
-      const faktor = Number(regler.value) / 100;
-      const grund = o.grundpreis || o.fee;
-
-      const betrag = el.querySelector(`[data-anzeige="${o.id}"]`);
-      if (betrag) betrag.textContent = fmt(Math.round(grund * faktor / 10) * 10);
-
-      const hinweis = el.querySelector(`[data-hinweis="${o.id}"]`);
-      if (hinweis) {
-        const a = aussicht(o, faktor);
-        hinweis.textContent = `+${Math.round((faktor - 1) * 100)} % · ${a.text}`;
-        hinweis.className = `aussicht ${a.stufe}`;
-      }
-    });
 
     el.querySelector('#mapSlot').appendChild(mapHost());
     initMap();
@@ -134,25 +112,10 @@ export const DispoApp = {
         return;
       }
 
-      /* Verhandlungsbereich auf- und zuklappen */
+      /* Verhandlungsgespräch öffnen */
       const hag = e.target.closest('button[data-haggle]');
       if (hag) {
-        el._verhandelt = el._verhandelt === hag.dataset.haggle ? null : hag.dataset.haggle;
-        el.querySelector('#offerBox').dataset.sig = '';
-        onTick();
-        return;
-      }
-
-      /* Forderung absenden */
-      const los = e.target.closest('button[data-fordern]');
-      if (los) {
-        const regler = el.querySelector(`input[data-regler="${los.dataset.fordern}"]`);
-        const faktor = regler ? Number(regler.value) / 100 : 1;
-        verhandle(los.dataset.fordern, faktor);
-        el._verhandelt = null;
-        el.querySelector('#offerBox').dataset.sig = '';
-        drawOffers();
-        onTick();
+        openApp('haggle', { id: hag.dataset.haggle });
         return;
       }
 
@@ -313,14 +276,14 @@ export const DispoApp = {
           ${o.firm.hub ? `<span class="muted">${esc(o.firm.art)}</span>` : ''}
         </div>
 
+        ${kundenHinweis(o)}
+
         <div style="font-size:10px;margin:2px 0;">
           ${g.icon} ${esc(g.name)} ·
           <strong>${o.paletten} Pal.</strong> ·
           <strong>${(o.gewicht / 1000).toFixed(1)} t</strong>
           ${o.partnerName ? `· <span class="muted">${esc(o.partnerName)}</span>` : ''}
         </div>
-
-        ${o.kind === 'spot' && !o.verhandelt && !drauf ? verhandlungsBereich(o, el) : ''}
 
         ${o.verhandelt && o.grundpreis && o.fee !== o.grundpreis ? `
           <div class="verhandelt">
@@ -397,28 +360,20 @@ function markiere(el, kachel) {
   kachel.classList.add('aktiv');
 }
 
-/* Der aufgeklappte Verhandlungsbereich einer Anfrage. */
-function verhandlungsBereich(o, el) {
-  if (el._verhandelt !== o.id) return '';
 
-  const start = 110;                       // zehn Prozent über dem Angebot
-  const grund = o.grundpreis || o.fee;
+/* Was über den Auftraggeber zu wissen ist — knapp, damit die Liste
+   nicht überläuft. Nur was gerade auffällt. */
+function kundenHinweis(o) {
+  const z = zustandVon(o.firm.name);
+  const st = stimmung(o.firm.name);
+
+  if (!z && st.stufe === 'normal') return '';
 
   return `
-    <div class="verhandlung" data-bereich="${o.id}">
-      <div class="flex-row" style="justify-content:space-between;font-size:10px;">
-        <span>Genannt: <strong>${fmt(grund)}</strong></span>
-        <span>Forderung: <strong class="money" data-anzeige="${o.id}">
-          ${fmt(grund * start / 100)}</strong></span>
-      </div>
-
-      <input type="range" data-regler="${o.id}"
-             min="100" max="${Math.round(MAX_FORDERUNG * 100)}" value="${start}" step="1"
-             style="width:100%;margin:4px 0;">
-
-      <div class="flex-row" style="justify-content:space-between;align-items:center;gap:6px;">
-        <span class="aussicht" data-hinweis="${o.id}">—</span>
-        <button class="btn btn-sm" data-fordern="${o.id}">fordern</button>
-      </div>
+    <div class="kunden-zeile">
+      ${z ? `${z.icon} <strong>${esc(z.name)}</strong>` : ''}
+      ${z && st.stufe !== 'normal' ? ' · ' : ''}
+      ${st.stufe !== 'normal'
+        ? `<span class="stimmung-${st.stufe}">${esc(st.text)}</span>` : ''}
     </div>`;
 }

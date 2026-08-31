@@ -155,8 +155,15 @@ export function settleContracts() {
       S.stats.contractsDone = (S.stats.contractsDone || 0) + 1;
       checkLevelUp();
     } else if (quote >= CONTRACTS.PART_OK) {
+      /* Teilweise erfüllt: halbe Prämie, aber der Verlader hat
+         umdisponieren müssen — das spricht sich herum. */
       prämie = Math.round(c.bonus / 2);
-      addRep(REP.PER_PARTIAL);
+      addRep(REP.PER_PARTIAL + REP.CONTRACT_WEAK);
+    } else {
+      /* Unter der Mindestquote: keine Strafe in Geld, aber der Ruf
+         leidet. Wer zusagt und nicht liefert, wird beim nächsten Mal
+         nicht gefragt. */
+      addRep(REP.CONTRACT_FAIL);
     }
 
     if (prämie) book('Vertragsprämie', `${c.firm.name} · ${c.done} von ${c.total}`, prämie);
@@ -174,7 +181,8 @@ export function settleContracts() {
         ? `<span class="ok">Vollständig erfüllt · Prämie ${fmt(prämie)}</span>`
         : prämie
           ? `<span class="warn">${c.done} von ${c.total} · halbe Prämie ${fmt(prämie)}</span>`
-          : `<span class="muted">${c.done} von ${c.total} · keine Prämie, kein Nachteil</span>`);
+          : `<span class="bad">${c.done} von ${c.total} · keine Prämie, `
+            + `Ansehen ${REP.CONTRACT_FAIL.toFixed(1)}</span>`);
 
     S.contracts.splice(S.contracts.indexOf(c), 1);
   }

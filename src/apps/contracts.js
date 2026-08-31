@@ -70,7 +70,16 @@ export const ContractsApp = {
     el.querySelector('#ctMarket').textContent = marketText();
 
     el.querySelector('#ctRepBar').style.width = S.rep + '%';
-    el.querySelector('#ctRep').textContent = `${Math.round(S.rep)} · ${repText()}`;
+
+    /* Ob es zuletzt auf- oder abwärts ging — das Ansehen kann beides. */
+    const vorher = el._repStand;
+    el._repStand = S.rep;
+    const richtung = vorher === undefined || Math.abs(S.rep - vorher) < 0.01 ? ''
+      : S.rep > vorher ? ' <span class="ok">▲</span>'
+                       : ' <span class="bad">▼</span>';
+
+    el.querySelector('#ctRep').innerHTML =
+      `${Math.round(S.rep)} · ${repText()}${richtung}`;
 
     el.querySelector('#ctRunTitle').textContent =
       `Laufende Verträge — ${S.contracts.length} von ${maxVertraege()} Plätzen belegt`;

@@ -7,6 +7,7 @@
 import { S, log } from '../state.js';
 import { esc } from '../util.js';
 import { toast } from '../ui/toast.js';
+import { beruhigen } from './clients.js';
 
 export const STUFEN = [
   { ab: 0,  name: 'neu',          rate: 1.00 },
@@ -31,6 +32,10 @@ export const fahrtenZu = name => S.kunden?.[name]?.fahrten || 0;
 export const rateFuer  = name => stufeVon(fahrtenZu(name)).rate;
 
 export function registriereFahrt(firma) {
+  /* Wer liefert, versöhnt. Verlässlichkeit wiegt mehr als ein
+     einmaliger Ärger über den Preis. */
+  beruhigen(firma.name, 2.5);
+
   S.kunden ||= {};
   const eintrag = S.kunden[firma.name] ||= { fahrten: 0, art: firma.kind || firma.art };
 

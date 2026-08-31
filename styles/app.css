@@ -478,14 +478,72 @@
 .offer.nicht-fahrbar { opacity: .92; }
 
 
-/* Preisverhandlung */
-.verhandlung {
-  margin: 4px 0; padding: 5px 6px;
-  background: #e8e4d8;
+
+
+
+/* Relation eines Rahmenvertrags: von wo nach wo */
+.relation {
+  font-size: 10px; margin: 3px 0; padding: 2px 5px;
+  background: #dfe4ee; border-left: 3px solid #4a6ac0;
+  line-height: 1.4;
+}
+.relation .pfeil { color: #4a6ac0; font-weight: bold; margin: 0 2px; }
+
+
+/* ── Verhandlungsgespräch ────────────────────────────────────── */
+.verh-kopf {
+  padding: 5px 8px; flex-shrink: 0;
+  background: #000080; color: #fff;
+}
+.verh-kopf .ok { color: #a0e0a0; }
+.verh-kopf .muted { color: #b0c0e0; }
+
+.verh-verlauf {
+  padding: 6px; background: #fff;
+  border-top: 2px solid #808080; border-left: 2px solid #808080;
+  border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+  margin: 4px;
+}
+
+.rede { margin-bottom: 7px; line-height: 1.45; }
+.rede-wer {
+  display: block; font-size: 9px; font-weight: bold;
+  text-transform: uppercase; letter-spacing: .5px; color: #606060;
+}
+.rede-text {
+  display: inline-block; padding: 4px 7px; max-width: 88%;
   border-top: 1px solid #fff; border-left: 1px solid #fff;
   border-right: 1px solid #808080; border-bottom: 1px solid #808080;
 }
-.verhandlung input[type=range] { accent-color: #000080; }
+.rede.kunde .rede-text { background: #e8e4d8; }
+.rede.ich { text-align: right; }
+.rede.ich .rede-wer { color: #000080; }
+.rede.ich .rede-text { background: #dfe4ee; text-align: left; }
+
+.rede-stand {
+  margin-top: 8px; padding: 4px 6px; font-size: 11px; text-align: center;
+  background: #d4d0c8; border: 1px solid #808080;
+}
+
+.verh-wahl { flex-shrink: 0; background: #c0c0c0; }
+.verh-gruppe { padding: 4px 6px 0; }
+.verh-titel {
+  font-size: 10px; font-weight: bold; color: #404040; margin-bottom: 3px;
+}
+.verh-arg {
+  display: block; width: 100%; text-align: left; margin-bottom: 3px;
+  font-style: italic;
+}
+.verh-stufe {
+  display: flex; width: 100%; justify-content: space-between;
+  align-items: center; gap: 6px; margin-bottom: 3px; text-align: left;
+}
+.verh-ende {
+  margin: 4px 6px; padding: 5px 7px; font-size: 11px;
+  background: #e8e4d8; border-left: 3px solid #808080;
+}
+.verh-ende.ok  { background: #e0f0e0; border-left-color: #2e8b57; }
+.verh-ende.bad { background: #f4e4e4; border-left-color: #a02020; }
 
 .aussicht { font-size: 10px; font-weight: bold; }
 .aussicht.sicher  { color: #206020; }
@@ -500,10 +558,19 @@
 }
 
 
-/* Relation eines Rahmenvertrags: von wo nach wo */
-.relation {
+/* Auftraggeber: Charakter und Stimmung */
+.kunden-zeile {
   font-size: 10px; margin: 3px 0; padding: 2px 5px;
-  background: #dfe4ee; border-left: 3px solid #4a6ac0;
-  line-height: 1.4;
+  background: #ece8dc; border-left: 3px solid #806000;
 }
-.relation .pfeil { color: #4a6ac0; font-weight: bold; margin: 0 2px; }
+.stimmung-gut      { color: #2e8b57; font-weight: bold; }
+.stimmung-normal   { color: #505050; }
+.stimmung-mies     { color: #806000; }
+.stimmung-kuehl    { color: #a05000; font-weight: bold; }
+.stimmung-boese    { color: #a02020; font-weight: bold; }
+.stimmung-gesperrt { color: #a02020; font-weight: bold; }
+.verh-kopf .stimmung-gut { color: #a0e0a0; }
+.verh-kopf .stimmung-mies,
+.verh-kopf .stimmung-kuehl { color: #ffd080; }
+.verh-kopf .stimmung-boese,
+.verh-kopf .stimmung-gesperrt { color: #ffa0a0; }

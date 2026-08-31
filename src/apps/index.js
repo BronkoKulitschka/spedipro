@@ -18,11 +18,12 @@ import { GoalsApp }     from './goals.js';
 import { ChronikApp }   from './chronik.js';
 import { WeekApp }      from './week.js';
 import { StaffApp }     from './staff.js';
+import { HaggleApp }    from './haggle.js';
 import { registerApps } from '../ui/wm.js';
 
 export const APPS = Object.fromEntries(
   [DispoApp, ContractsApp, FleetApp, DailyApp, ProgressApp, IndustryApp, FinanceApp, LogApp, StaffApp, GoalsApp, ChronikApp, SettingsApp, HelpApp,
-   TrainingApp, ReportApp, DealerApp, TutorialApp, WeekApp]
+   TrainingApp, ReportApp, DealerApp, TutorialApp, WeekApp, HaggleApp]
     .map(app => [app.id, app]));
 
 export const DESKTOP_APPS = Object.values(APPS).filter(a => a.desktop);

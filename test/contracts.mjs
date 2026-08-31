@@ -72,8 +72,16 @@ ok(abstaende.every(km => km > 20),
 
 /* Einen fahrbaren Vertrag unterschreiben */
 const t = S.trucks[0];
-const passend = S.contractOffers.find(o =>
-  passt(t, [], { klasse: o.klasse, paletten: o.paletten, gewicht: o.gewicht }).ok);
+
+/* Die Ausschreibungen richten sich am Fuhrpark aus, treffen ihn aber
+   nicht immer. Ein paarmal auffrischen, bis etwas Fahrbares dabei ist —
+   sonst hinge der Prüfstein am Zufall. */
+let passend = null;
+for (let versuch = 0; versuch < 12 && !passend; versuch++) {
+  passend = S.contractOffers.find(o =>
+    passt(t, [], { klasse: o.klasse, paletten: o.paletten, gewicht: o.gewicht }).ok);
+  if (!passend) { S.contractOffers = []; refillContractOffers(); }
+}
 
 if (!passend) {
   ok(false, 'Kein fahrbarer Vertrag in der Ausschreibung');

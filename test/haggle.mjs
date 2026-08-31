@@ -43,8 +43,9 @@ S.silent = true;
 S.firms = inventFirms(S.depot, 20);
 
 const mach = (id = 'a1') => ({
-  id, kind: 'spot', fee: 1000, grundpreis: 1000,
-  firm: { name: 'Testkunde ' + id, km: 100 },
+  id, kind: 'spot', fee: 1000, grundpreis: 1000, klasse: 'stueckgut',
+  paletten: 6, gewicht: 2400, estKm: 100,
+  firm: { name: 'Testkunde ' + id, km: 100, lat: 53, lon: 10 },
 });
 
 console.log('\nPreisverhandlung\n');
@@ -52,56 +53,81 @@ console.log('\nPreisverhandlung\n');
 /* Der genannte Preis geht immer durch — bei jeder Anfrage. */
 let alleDurch = true;
 for (let i = 0; i < 40; i++) {
-  if (H.reaktion(mach('probe' + i), 1.0).art !== 'angenommen') alleDurch = false;
+  S.offers = [mach('probe' + i)];
+  const g = H.beginne('probe' + i);
+  if (!g) { alleDurch = false; continue; }
+  if (g.grenze < 1.0) alleDurch = false;
 }
-ok(alleDurch, 'Der genannte Preis wird immer angenommen');
+ok(alleDurch, 'Der genannte Preis liegt immer innerhalb der Schmerzgrenze');
 
 /* Die Grenze bewegt sich in einem vernünftigen Rahmen */
 const grenzen = [];
-for (let i = 0; i < 60; i++) grenzen.push(H.schmerzgrenze(mach('s' + i)));
+for (let i = 0; i < 60; i++) {
+  S.offers = [mach('s' + i)];
+  grenzen.push(H.schmerzgrenze(S.offers[0]));
+}
 const min = Math.min(...grenzen), max = Math.max(...grenzen);
 ok(min >= 1.02 && max <= 1.35,
    `Schmerzgrenze zwischen ×${min.toFixed(2)} und ×${max.toFixed(2)}`);
 
-/* Übertreibung wird abgelehnt */
-ok(H.reaktion(mach(), 1.45).art === 'abgelehnt', 'Maßlose Forderung wird abgelehnt');
-
 /* Ansehen und Marktlage wirken in die richtige Richtung */
+S.offers = [mach('gleich')];
 S.rep = 20; S.market.index = 0.85;
-const schwach = H.schmerzgrenze(mach('gleich'));
+const schwach = H.schmerzgrenze(S.offers[0]);
 S.rep = 90; S.market.index = 1.30;
-const stark = H.schmerzgrenze(mach('gleich'));
+const stark = H.schmerzgrenze(S.offers[0]);
 ok(stark > schwach + 0.1,
    `Ansehen und knapper Markt helfen (×${schwach.toFixed(2)} → ×${stark.toFixed(2)})`);
 
-/* Die Einschätzung passt zur Reaktion */
 S.rep = 50; S.market.index = 1.0;
-const probe = mach('einschaetzung');
-let stimmig = true;
-for (let f = 1.0; f <= 1.45; f += 0.01) {
-  const a = H.aussicht(probe, f).stufe;
-  const r = H.reaktion(probe, f).art;
-  if (a === 'sicher' && r !== 'angenommen') stimmig = false;
-  if (a === 'zuviel' && r !== 'abgelehnt') stimmig = false;
-}
-ok(stimmig, 'Die Einschätzung sagt die Reaktion richtig voraus');
 
-/* Verhandeln verändert das Angebot */
-S.offers = [mach('echt')];
-const vorher = S.offers[0].fee;
-H.verhandle('echt', 1.05);
-ok(S.offers[0]?.fee >= vorher, `Erfolgreiche Verhandlung erhöht den Preis (${vorher} → ${S.offers[0]?.fee})`);
-ok(S.offers[0]?.verhandelt === true, 'Die Anfrage ist als verhandelt vermerkt');
+/* ── Das Gespräch ── */
+S.offers = [mach('gespraech')];
+let g = H.beginne('gespraech');
+ok(!!g && g.offen, 'Ein Gespräch lässt sich beginnen');
+ok(g.verlauf.length === 1, 'Der Kunde eröffnet');
+ok(g.runde === 1, `Runde ${g.runde} von ${H.MAX_RUNDEN}`);
 
-/* Zweiter Versuch wird abgelehnt */
-ok(H.verhandle('echt', 1.2) === null, 'Kein zweites Verhandeln an derselben Anfrage');
+const vorGrenze = g.grenze;
+const moeglich = H.offeneArgumente(g).filter(a => a.verfuegbar && !a.genutzt);
+ok(moeglich.length > 0, `${moeglich.length} Argumente stehen zur Verfügung`);
 
-/* Übertreibung kostet die Anfrage */
-S.offers = [mach('weg')];
+H.argumentieren(g, moeglich[0].key);
+ok(g.grenze > vorGrenze,
+   `Ein Argument stimmt milder (×${vorGrenze.toFixed(2)} → ×${g.grenze.toFixed(2)})`);
+ok(g.verlauf.length === 3, 'Argument und Antwort stehen im Verlauf');
+ok(g.runde === 1, 'Ein Argument kostet keine Runde');
+
+H.argumentieren(g, moeglich[0].key);
+ok(g.verlauf.length === 3, 'Dasselbe Argument wirkt nur einmal');
+
+/* Maßvoll fordern geht durch */
+S.offers = [mach('massvoll')];
+g = H.beginne('massvoll');
+H.fordern(g, 'wenig');
+ok(g.ergebnis === 'angenommen', 'Eine maßvolle Forderung wird angenommen');
+ok(g.fee > 1000, `Der Preis steigt auf ${g.fee}`);
+
+H.annehmen(g);
+ok(S.offers[0].fee === g.fee, 'Das Angebot trägt den ausgehandelten Preis');
+ok(S.offers[0].verhandelt === true, 'Die Anfrage ist als verhandelt vermerkt');
+ok(H.beginne('massvoll') === null, 'Kein zweites Gespräch zur selben Anfrage');
+
+/* Überziehen bricht ab */
+S.offers = [mach('zuviel')];
+g = H.beginne('zuviel');
 const repVorher = S.rep;
-H.verhandle('weg', 1.45);
-ok(S.offers.length === 0, 'Nach einer Ablehnung ist die Anfrage weg');
+H.fordern(g, 'kuehn');
+ok(g.ergebnis === 'abgebrochen', 'Eine überzogene Forderung bricht das Gespräch ab');
+ok(S.offers.length === 0, 'Die Fracht ist weg');
 ok(S.rep < repVorher, 'Und das Ansehen leidet ein wenig');
+
+/* Nach drei Runden ist Schluss */
+S.offers = [mach('runden')];
+g = H.beginne('runden');
+let schutz = 0;
+while (g.offen && schutz++ < 10) H.fordern(g, 'mittel');
+ok(!g.offen, `Das Gespräch endet nach höchstens ${H.MAX_RUNDEN} Runden`);
 
 console.log(fehler ? `\n${fehler} Fehler\n` : '\nAlles richtig\n');
 process.exit(fehler ? 1 : 0);

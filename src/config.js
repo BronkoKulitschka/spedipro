@@ -381,10 +381,20 @@ export const PARTNER_LEVELS = [
 ];
 
 export const REP = {
-  START: 50, MAX: 100,
-  PER_LOAD: 0.15,            // Ansehen je Zustellung
+  START: 50, MAX: 100, MIN: 5,
+
+  /* Aufwärts */
+  PER_LOAD: 0.15,            // je Zustellung
   PER_CONTRACT: 3,           // bei vollständig erfülltem Vertrag
   PER_PARTIAL: 1,
+
+  /* Abwärts — ein Ruf lässt sich auch verspielen. */
+  CONTRACT_FAIL: -3.5,       // Vertrag unter der Mindestquote
+  CONTRACT_WEAK: -1.2,       // erfüllt, aber nur zum Teil
+  HAGGLE_BREAK: -0.8,        // Verhandlung überzogen
+  BREAKDOWN: -0.25,          // Panne auf der Strecke
+  IDLE_DAY: -0.35,           // ein Tag ohne einzige Zustellung
+
   MIN_MUL: 0.90, MAX_MUL: 1.20,   // Wirkung auf die Preise
 };
 

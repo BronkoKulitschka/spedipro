@@ -4,6 +4,7 @@ import { S } from '../state.js';
 import { fmt, num, esc } from '../util.js';
 import { rekordListe } from '../sim/records.js';
 import { topKunden, STUFEN, naechsteStufe } from '../sim/customers.js';
+import { charakterVon, stimmung, zustandVon } from '../sim/clients.js';
 import { MONATE, saison, saisonText } from '../sim/season.js';
 import { now } from '../state.js';
 import { empty } from './shared.js';
@@ -71,18 +72,28 @@ export const ChronikApp = {
     /* Kundschaft */
     const kunden = topKunden(10);
     const box = el.querySelector('#chKunden');
-    const sig = kunden.map(k => `${k.name}:${k.fahrten}`).join('|');
+    const sig = kunden.map(k =>
+      `${k.name}:${k.fahrten}:${zustandVon(k.name)?.key || ''}:${stimmung(k.name).stufe}`).join('|');
     if (box.dataset.sig === sig) return;
     box.dataset.sig = sig;
 
     box.innerHTML = kunden.length ? kunden.map(k => {
       const naechste = naechsteStufe(k.fahrten);
+      const c = charakterVon(k.name);
+      const st = stimmung(k.name);
+      const z = zustandVon(k.name);
+
       return `
       <div class="kunde-zeile">
         <div class="flex-row" style="justify-content:space-between;">
-          <span>${esc(k.name.slice(0, 30))}</span>
+          <span>${esc(k.name.slice(0, 28))}</span>
           <span class="ok" style="font-size:10px;">${esc(k.stufe.name)}
             ${k.stufe.rate > 1 ? `+${Math.round((k.stufe.rate - 1) * 100)} %` : ''}</span>
+        </div>
+        <div style="font-size:9px;margin:1px 0;" title="${esc(c.text)}">
+          ${c.icon} ${esc(c.name)} ·
+          <span class="stimmung-${st.stufe}">${esc(st.text)}</span>
+          ${z ? ` · ${z.icon} ${esc(z.name)}` : ''}
         </div>
         <div class="flex-row" style="justify-content:space-between;font-size:9px;">
           <span class="muted">${k.fahrten} Fahrten</span>

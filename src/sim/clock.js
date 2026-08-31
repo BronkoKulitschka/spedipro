@@ -5,13 +5,13 @@
    Geschwindigkeitsstufe. Bei Verhältnis 3 und Stufe 1× sind das drei
    Spielminuten je echter Minute. */
 
-import { RULES, TIME } from '../config.js';
+import { RULES, TIME, REP } from '../config.js';
 import { S, log, book, day, truckRisk, fixGesamt, todayText, holidayNow, weekendNow, driverOf, fahrerOderErsatz } from '../state.js';
 import { fmt } from '../util.js';
 import { moveTrucks } from './fleet.js';
 import { fireEvent } from './events.js';
 import { refillOffers, refreshSpot } from './orders.js';
-import { driftMarket } from './market.js';
+import { driftMarket, addRep } from './market.js';
 import { settleContracts, refillContractOffers } from './contracts.js';
 import { growIndustry } from './partners.js';
 import { onTick } from '../ui/wm.js';
@@ -20,6 +20,7 @@ import { panneFaktor } from './persons.js';
 import { werkstattRabatt, werkstattZeit } from './goals.js';
 import { tagAbschluss, wochenAbschluss, istSonntag } from './records.js';
 import { lohnGesamt, fuelleBoerse } from './staff.js';
+import { neuerTag as kundenTag } from './clients.js';
 import { melde } from '../ui/notify.js';
 
 let timer = null;
@@ -103,6 +104,14 @@ function tick() {
 
 /* Mitternacht: Fixkosten, Pannenwurf, frische Aufträge. */
 function newDay() {
+  /* Wer nicht fährt, wird vergessen. Ein Tag ohne eine einzige
+     Zustellung lässt das Ansehen etwas verblassen — nicht als Strafe,
+     sondern weil ein Spediteur, von dem man nichts hört, aus dem Sinn
+     gerät. An Sonn- und Feiertagen gilt das nicht. */
+  if (!S.tagTouren && !weekendNow() && !holidayNow() && S.trucks.length) {
+    addRep(REP.IDLE_DAY);
+  }
+
   /* Erst den vergangenen Tag abschließen, dann den neuen beginnen. */
   tagAbschluss();
 
@@ -130,6 +139,9 @@ function newDay() {
     for (const d of S.drivers) d.stats.tage = (d.stats.tage || 0) + 1;
   }
 
+  /* Tagesform, Groll und Zustände der Auftraggeber fortschreiben. */
+  kundenTag();
+
   /* Die Börse wechselt gelegentlich durch. */
   if (Math.random() < 0.35 && S.bewerber?.length > 3) S.bewerber.shift();
   fuelleBoerse();
@@ -145,6 +157,10 @@ function newDay() {
 
     melde('panne', 'Panne',
           `LKW ${truck.nr} (${fahrerOderErsatz(truck).name}) muss in die Werkstatt.`);
+
+    /* Eine Panne heißt: eine Ladung kommt zu spät. Das bleibt beim
+       Kunden hängen. */
+    addRep(REP.BREAKDOWN);
 
     const bill = Math.round((800 + Math.random() * 2200) * werkstattRabatt());
     book('Werkstatt', `LKW ${truck.nr} · ${fahrerOderErsatz(truck).name}`, -bill);

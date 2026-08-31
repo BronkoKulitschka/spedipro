@@ -19,6 +19,9 @@ import { S, log } from '../state.js';
 import { addRep } from './market.js';
 import { fmt, esc } from '../util.js';
 import { fahrtenZu, stufeVon } from './customers.js';
+import { grenzenBonus, verstimmen, beruhigen, charakterVon,
+         stimmung, zustandVon } from './clients.js';
+import { GOODS, REP } from '../config.js';
 import { toast } from '../ui/toast.js';
 
 /* Wie weit man höchstens gehen kann, ohne alles zu verlieren. */
@@ -43,6 +46,11 @@ export function schmerzgrenze(offer) {
 
   /* Umschlagpunkte sind terminlich gebunden und zahlen eher. */
   if (offer.firm.hub) grenze += 0.05;
+
+  /* Charakter, Tagesform und Groll des Auftraggebers. Der kleinliche
+     Verlader mit schlechtem Tag lässt kaum etwas zu, der großzügige im
+     Hochbetrieb erstaunlich viel. */
+  grenze += grenzenBonus(offer.firm.name);
 
   /* Ein fester Zufallsanteil je Anfrage — sonst wäre es Rechnen statt
      Verhandeln. Aus der Kennung abgeleitet, damit derselbe Auftrag
@@ -73,88 +81,242 @@ function streuung(id = '') {
 }
 
 /* Oberhalb der Schmerzgrenze folgt zunächst ein Gegenangebot, erst
-   darüber die Absage. */
+   darüber der Abbruch. */
 const TOLERANZ = 0.13;
 
-/* Wie ein Verlader auf eine Forderung reagiert.
-   faktor ist das Vielfache des ursprünglichen Preises. */
-export function reaktion(offer, faktor) {
-  const grenze = schmerzgrenze(offer);
+/* ── Das Gespräch ───────────────────────────────────────────────
+   Ein Verhandlungsgespräch läuft über höchstens drei Runden. In jeder
+   Runde kann der Disponent fordern oder ein Argument einbringen.
+   Argumente heben die Schmerzgrenze ein wenig — sie sind der Grund,
+   warum sich Verhandeln lohnt, statt gleich das Höchste zu fordern. */
 
-  if (faktor <= grenze) {
-    return { art: 'angenommen', fee: Math.round(offer.grundpreis * faktor / 10) * 10 };
-  }
+export const MAX_RUNDEN = 3;
 
-  if (faktor <= grenze + TOLERANZ) {
-    /* Der Verlader trifft sich auf halbem Weg zwischen seinem
-       Höchstpreis und der Forderung. */
-    const mitte = grenze + (faktor - grenze) * 0.35;
-    return {
-      art: 'gegenangebot',
-      fee: Math.round(offer.grundpreis * mitte / 10) * 10,
-      gefordert: Math.round(offer.grundpreis * faktor / 10) * 10,
-    };
-  }
+export const ARGUMENTE = {
+  sofort: {
+    key: 'sofort',
+    text: 'Wir können noch heute laden.',
+    antwort: 'Das wäre in der Tat eine Hilfe.',
+    wirkung: 0.05,
+    moeglich: () => true,
+  },
+  quote: {
+    key: 'quote',
+    text: 'Unsere Zustellquote spricht für sich.',
+    antwort: 'Ihr Ruf ist mir bekannt, das stimmt.',
+    wirkung: 0.06,
+    moeglich: () => S.rep >= 60,
+    fehlt: 'braucht Ansehen 60',
+  },
+  stamm: {
+    key: 'stamm',
+    text: 'Wir fahren seit Längerem für Sie.',
+    antwort: 'Und das durchaus zu unserer Zufriedenheit.',
+    wirkung: 0.07,
+    moeglich: offer => fahrtenZu(offer.firm.name) >= 3,
+    fehlt: 'braucht drei Fahrten für diesen Kunden',
+  },
+  knapp: {
+    key: 'knapp',
+    text: 'Laderaum ist zurzeit knapp.',
+    antwort: 'Das höre ich dieser Tage öfter.',
+    wirkung: 0.05,
+    moeglich: () => S.market.index >= 1.08,
+    fehlt: 'braucht einen angespannten Markt',
+  },
+  ausstattung: {
+    key: 'ausstattung',
+    text: 'Für diese Ware haben wir das passende Fahrzeug.',
+    antwort: 'Nicht selbstverständlich, zugegeben.',
+    wirkung: 0.06,
+    moeglich: offer => !!(GOODS[offer.klasse]?.braucht),
+    fehlt: 'nur bei Kühlgut oder Gefahrgut',
+  },
+};
 
-  return { art: 'abgelehnt' };
-}
-
-/* Eine Einschätzung vor der Forderung — bewusst ungenau, sonst wäre
-   die Verhandlung entschieden, bevor sie beginnt. */
-export function aussicht(offer, faktor) {
-  const grenze = schmerzgrenze(offer);
-  const abstand = faktor - grenze;
-
-  if (abstand <= -0.08) return { stufe: 'sicher',   text: 'geht bestimmt durch' };
-  if (abstand <= 0)     return { stufe: 'gut',      text: 'dürfte durchgehen' };
-  if (abstand <= 0.06)  return { stufe: 'knapp',    text: 'knapp — vielleicht ein Gegenangebot' };
-  if (abstand <= TOLERANZ) return { stufe: 'riskant', text: 'ziemlich hoch gegriffen' };
-  return { stufe: 'zuviel', text: 'so viel zahlt hier niemand' };
-}
-
-/* Die Verhandlung durchführen. Ändert das Angebot oder entfernt es. */
-export function verhandle(offerId, faktor) {
+/* Ein neues Gespräch beginnen. */
+export function beginne(offerId) {
   const offer = S.offers.find(o => o.id === offerId);
   if (!offer || offer.kind !== 'spot' || offer.verhandelt) return null;
 
   offer.grundpreis ??= offer.fee;
-  const ergebnis = reaktion(offer, faktor);
+
+  return {
+    offerId,
+    runde: 1,
+    fee: offer.grundpreis,
+    grenze: schmerzgrenze(offer),
+    genutzt: [],                 // schon vorgebrachte Argumente
+    verlauf: [{
+      wer: 'kunde',
+      text: `Wir hätten da eine Sendung. ${fmt(offer.grundpreis)} sind dafür vorgesehen.`,
+    }],
+    offen: true,
+    ergebnis: null,
+  };
+}
+
+/* Welche Argumente jetzt noch zur Verfügung stehen. */
+export function offeneArgumente(gespraech) {
+  const offer = S.offers.find(o => o.id === gespraech.offerId);
+  if (!offer) return [];
+
+  return Object.values(ARGUMENTE).map(a => ({
+    ...a,
+    genutzt: gespraech.genutzt.includes(a.key),
+    verfuegbar: a.moeglich(offer),
+  }));
+}
+
+/* Ein Argument vorbringen. Kostet keine Runde, aber jedes nur einmal. */
+export function argumentieren(gespraech, key) {
+  const arg = ARGUMENTE[key];
+  const offer = S.offers.find(o => o.id === gespraech.offerId);
+  if (!arg || !offer || gespraech.genutzt.includes(key)) return gespraech;
+  if (!arg.moeglich(offer)) return gespraech;
+
+  gespraech.genutzt.push(key);
+  gespraech.grenze += arg.wirkung;
+
+  gespraech.verlauf.push({ wer: 'ich', text: arg.text });
+  gespraech.verlauf.push({ wer: 'kunde', text: arg.antwort });
+
+  return gespraech;
+}
+
+/* Die Stufen, in denen gefordert werden kann. */
+export const STUFEN = [
+  { key: 'wenig',  faktor: 1.05, text: 'Fünf Prozent mehr wären angemessen.' },
+  { key: 'mittel', faktor: 1.12, text: 'Unter zwölf Prozent mehr rechnet sich das nicht.' },
+  { key: 'viel',   faktor: 1.22, text: 'Für diese Relation brauchen wir zweiundzwanzig Prozent mehr.' },
+  { key: 'kuehn',  faktor: 1.35, text: 'Fünfunddreißig Prozent — anders geht es nicht.' },
+];
+
+/* Eine Forderung stellen. Verbraucht eine Runde. */
+export function fordern(gespraech, stufenKey) {
+  const stufe = STUFEN.find(s => s.key === stufenKey);
+  const offer = S.offers.find(o => o.id === gespraech.offerId);
+  if (!stufe || !offer || !gespraech.offen) return gespraech;
+
+  const verlangt = offer.grundpreis * stufe.faktor;
+  gespraech.verlauf.push({ wer: 'ich', text: stufe.text });
+
+  /* Innerhalb der Schmerzgrenze: angenommen. */
+  if (stufe.faktor <= gespraech.grenze) {
+    gespraech.fee = Math.round(verlangt / 10) * 10;
+    gespraech.verlauf.push({
+      wer: 'kunde',
+      text: `Einverstanden. ${fmt(gespraech.fee)}, dann machen wir das so.`,
+    });
+    schliesse(gespraech, 'angenommen');
+    return gespraech;
+  }
+
+  /* Knapp darüber: ein Gegenangebot. */
+  if (stufe.faktor <= gespraech.grenze + TOLERANZ) {
+    const mitte = gespraech.grenze + (stufe.faktor - gespraech.grenze) * 0.35;
+    gespraech.fee = Math.round(offer.grundpreis * mitte / 10) * 10;
+    gespraech.verlauf.push({
+      wer: 'kunde',
+      text: `So weit kann ich nicht gehen. ${fmt(gespraech.fee)} wären möglich.`,
+    });
+
+    gespraech.runde++;
+    if (gespraech.runde > MAX_RUNDEN) {
+      gespraech.verlauf.push({
+        wer: 'kunde',
+        text: 'Mehr kann ich nicht tun. Nehmen Sie es oder lassen Sie es.',
+      });
+      schliesse(gespraech, 'gegenangebot');
+    }
+    return gespraech;
+  }
+
+  /* Deutlich darüber: der Verlader bricht ab. */
+  gespraech.verlauf.push({
+    wer: 'kunde',
+    text: 'Das ist außerhalb jeder Verhältnismäßigkeit. Wir vergeben die '
+        + 'Fracht anderweitig.',
+  });
+  schliesse(gespraech, 'abgebrochen');
+  return gespraech;
+}
+
+/* Das aktuelle Angebot annehmen. */
+export function annehmen(gespraech) {
+  const offer = S.offers.find(o => o.id === gespraech.offerId);
+  if (!offer) return gespraech;
+
+  offer.fee = gespraech.fee;
   offer.verhandelt = true;
 
-  if (ergebnis.art === 'angenommen') {
-    offer.fee = ergebnis.fee;
+  if (gespraech.fee > offer.grundpreis) {
     log(`💬 ${offer.firm.name} zahlt ${fmt(offer.fee)} statt ${fmt(offer.grundpreis)}.`);
-    if (!S.silent) {
-      toast('🤝', `<strong>${esc(offer.firm.name)}</strong> geht mit.`,
-                  `<span class="ok">${fmt(offer.fee)} statt ${fmt(offer.grundpreis)}</span>`);
+  }
+
+  /* Ein Geschäft, das zustande kommt, glättet die Wogen. */
+  beruhigen(offer.firm.name, 2);
+  gespraech.offen = false;
+  gespraech.ergebnis = 'angenommen';
+  return gespraech;
+}
+
+/* Das Gespräch ohne Ergebnis verlassen — die Anfrage bleibt, aber
+   verhandeln lässt sie sich nicht noch einmal. */
+export function verlassen(gespraech) {
+  const offer = S.offers.find(o => o.id === gespraech.offerId);
+  if (offer) {
+    offer.fee = gespraech.fee;
+    offer.verhandelt = true;
+  }
+  gespraech.offen = false;
+  gespraech.ergebnis = gespraech.ergebnis || 'beendet';
+  return gespraech;
+}
+
+function schliesse(gespraech, ergebnis) {
+  gespraech.offen = false;
+  gespraech.ergebnis = ergebnis;
+
+  const offer = S.offers.find(o => o.id === gespraech.offerId);
+  if (!offer) return;
+
+  if (ergebnis === 'abgebrochen') {
+    /* Die Fracht ist weg — und der Verlader merkt es sich. Wie sehr,
+       hängt von seinem Charakter ab: Der Kleinliche nimmt es persönlich,
+       der Großzügige zuckt mit den Schultern. Beim dritten Mal ist
+       Schluss. */
+    S.offers = S.offers.filter(o => o.id !== gespraech.offerId);
+    addRep(REP.HAGGLE_BREAK);
+
+    const folge = verstimmen(offer.firm.name);
+
+    const eintrag = S.kunden[offer.firm.name];
+    if (eintrag && eintrag.fahrten > 0) eintrag.fahrten -= 1;
+
+    log(`💬 ${offer.firm.name} bricht die Verhandlung ab.`);
+
+    if (!S.silent && folge !== 'gesperrt') {
+      toast('❌', `<strong>${esc(offer.firm.name)}</strong> winkt ab.`,
+        folge === 'verstimmt'
+          ? '<span class="bad">Die Stimmung ist merklich abgekühlt.</span>'
+          : '<span class="bad">Die Fracht geht an jemand anderen.</span>');
     }
-    return ergebnis;
+    return;
   }
 
-  if (ergebnis.art === 'gegenangebot') {
-    offer.fee = ergebnis.fee;
-    log(`💬 ${offer.firm.name} bietet ${fmt(ergebnis.fee)} statt der geforderten `
-      + `${fmt(ergebnis.gefordert)}.`);
-    if (!S.silent) {
-      toast('💬', `<strong>${esc(offer.firm.name)}</strong> hält dagegen.`,
-                  `<span class="warn">${fmt(ergebnis.fee)} statt ${fmt(ergebnis.gefordert)}</span>`);
-    }
-    return ergebnis;
-  }
+  /* Angenommen oder letztes Gegenangebot: der Preis steht, der
+     Disponent muss ihn noch bestätigen. */
+  offer.fee = gespraech.fee;
+}
 
-  /* Abgelehnt: Die Anfrage ist weg, und der Verlader merkt es sich.
-     Der Schaden bleibt klein — es soll ärgern, nicht bestrafen. */
-  S.offers = S.offers.filter(o => o.id !== offerId);
-  addRep(-0.4);
+/* Eine Einschätzung vor der Forderung — bewusst ungenau. */
+export function aussicht(gespraech, faktor) {
+  const abstand = faktor - gespraech.grenze;
 
-  S.kunden ||= {};
-  const eintrag = S.kunden[offer.firm.name];
-  if (eintrag && eintrag.fahrten > 0) eintrag.fahrten -= 1;
-
-  log(`💬 ${offer.firm.name} lehnt ab und vergibt die Fracht anderweitig.`);
-  if (!S.silent) {
-    toast('❌', `<strong>${esc(offer.firm.name)}</strong> winkt ab.`,
-                '<span class="bad">Die Fracht geht an jemand anderen.</span>');
-  }
-  return ergebnis;
+  if (abstand <= -0.08) return { stufe: 'sicher',  text: 'geht bestimmt durch' };
+  if (abstand <= 0)     return { stufe: 'gut',     text: 'dürfte durchgehen' };
+  if (abstand <= 0.06)  return { stufe: 'knapp',   text: 'knapp' };
+  if (abstand <= TOLERANZ) return { stufe: 'riskant', text: 'hoch gegriffen' };
+  return { stufe: 'zuviel', text: 'zu viel' };
 }
