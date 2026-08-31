@@ -74,5 +74,46 @@ if (existsSync(blatt)) {
   console.log('  · keine assets/trucks.png vorhanden, Prüfung übersprungen');
 }
 
+/* ── Gesichter der Auftraggeber ── */
+console.log('\nGesichter\n');
+
+const { GESICHTER } = await import('../src/ui/sprites.js');
+const G_SP = 3, G_ZE = 2;
+
+const gFelder = Object.values(GESICHTER);
+ok(gFelder.length === 6, `${gFelder.length} Charaktere im Raster`);
+
+const gDoppelt = gFelder.filter((f, i) =>
+  gFelder.findIndex(g => g[0] === f[0] && g[1] === f[1]) !== i);
+ok(gDoppelt.length === 0, 'Kein Feld doppelt belegt');
+
+const G_ANZEIGE = 44;
+let gVersetzt = 0;
+for (const [name, [sp, ze]] of Object.entries(GESICHTER)) {
+  const x = G_SP > 1 ? (sp / (G_SP - 1)) * 100 : 0;
+  const y = G_ZE > 1 ? (ze / (G_ZE - 1)) * 100 : 0;
+  const px = Math.round((G_ANZEIGE * G_SP - G_ANZEIGE) * x / 100);
+  const py = Math.round((G_ANZEIGE * G_ZE - G_ANZEIGE) * y / 100);
+  if (px !== sp * G_ANZEIGE || py !== ze * G_ANZEIGE) {
+    console.log(`    ${name}: Versatz ${px},${py} statt ${sp * G_ANZEIGE},${ze * G_ANZEIGE}`);
+    gVersetzt++;
+  }
+}
+ok(gVersetzt === 0, 'Jedes Gesicht trifft sein Feld genau');
+
+const gBlatt = join(hier, '..', 'assets', 'gesichter.png');
+if (existsSync(gBlatt)) {
+  const daten = readFileSync(gBlatt);
+  const breite = daten.readUInt32BE(16);
+  const hoehe = daten.readUInt32BE(20);
+
+  ok(breite % G_SP === 0, `Breite ${breite} durch ${G_SP} Spalten teilbar`);
+  ok(hoehe % G_ZE === 0, `Höhe ${hoehe} durch ${G_ZE} Zeilen teilbar`);
+  ok(Math.abs(breite / hoehe - G_SP / G_ZE) < 0.01,
+     `Seitenverhältnis passt (${breite} × ${hoehe})`);
+} else {
+  console.log('  · keine assets/gesichter.png vorhanden, Prüfung übersprungen');
+}
+
 console.log(fehler ? `\n${fehler} Fehler\n` : '\nAlles richtig\n');
 process.exit(fehler ? 1 : 0);

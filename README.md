@@ -141,6 +141,11 @@ Vorlagen dürfen größer sein; `image-rendering: pixelated` hält die Kanten
 scharf. Fahrzeuge nach links werden vom Spiel gespiegelt — alle Bilder
 also nach rechts zeichnen.
 
+Dieselbe Vorgehensweise gilt für die **Gesichter der Auftraggeber**:
+`assets/gesichter.png` mit sechs Feldern in drei Spalten und zwei Zeilen,
+oder einzeln als `gesicht-<charakter>.png`. Sie erscheinen im
+Verhandlungs- und Auftragsfenster; fehlen sie, bleibt es beim Sinnbild.
+
 Näheres in `assets/README.md`. Die Zuordnung der Rasterfelder steht in
 `src/ui/sprites.js`.
 

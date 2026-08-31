@@ -56,3 +56,24 @@ Vorlagen dürfen größer sein — sie werden verkleinert, die Kanten bleiben
 durch `image-rendering: pixelated` scharf.
 
 Nach dem Ablegen einer Datei die Seite einmal neu laden.
+
+
+## Gesichter: gesichter.png
+
+Sechs Porträts der Auftraggeber in einem Raster.
+
+* **Größe:** 192 × 128 Bildpunkte, drei Spalten mal zwei Zeilen
+* **Feld:** je 64 × 64, dargestellt wird mit 44
+* **Hintergrund:** darf einfarbig sein, muss nicht durchsichtig sein
+
+| | 1 | 2 | 3 |
+|---|---|---|---|
+| **Zeile 1** | Kaufmann | Großzügig | Kleinlich |
+| **Zeile 2** | Eilig | Beständig | Misstrauisch |
+
+Alternativ einzeln als `gesicht-kaufmann.png` und so weiter. Fehlt
+beides, erscheint das Sinnbild des Charakters.
+
+Die Zuordnung steht in `src/ui/sprites.js` unter `GESICHTER` — liefert
+ein Bildgenerator die Köpfe in anderer Reihenfolge, lässt sie sich dort
+anpassen, statt das Bild neu zu erzeugen.
