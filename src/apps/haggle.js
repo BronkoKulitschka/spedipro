@@ -46,15 +46,13 @@ export const HaggleApp = {
 
       if (e.target.closest('#vhJa')) {
         annehmen(g);
-        closeWindow(`haggle:${params.id}`);
-        onTick();
+        schliessen(params.id);
         return;
       }
 
       if (e.target.closest('#vhWeg')) {
         verlassen(g);
-        closeWindow(`haggle:${params.id}`);
-        onTick();
+        schliessen(params.id);
       }
     });
 
@@ -177,4 +175,11 @@ function waehleEnde(g, offer) {
       <button class="btn btn-default" id="vhJa">${fmt(g.fee)} annehmen</button>
       <button class="btn btn-sm" id="vhWeg">ablehnen</button>
     </div>`;
+}
+
+/* Fenster schließen und die Auftragsliste zum Neuzeichnen bewegen —
+   sie zeigt sonst den Stand vor der Verhandlung. */
+function schliessen(id) {
+  closeWindow(`haggle:${id}`);
+  onTick();
 }

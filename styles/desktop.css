@@ -315,3 +315,22 @@ html, body { height: 100%; overflow: hidden; }
 @media (pointer: coarse) {
   .win .tb-zurueck { width: 32px; }
 }
+
+
+/* Herunterfahren im Startmenü — abgesetzt, damit man nicht danebentippt */
+.start-item.start-aus { color: #802020; }
+.start-item.start-aus:hover { background: #802020; color: #fff; }
+
+/* Abschiedsbildschirm */
+.abschied {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: #000080;
+}
+.abschied-kasten {
+  text-align: center; padding: 26px 34px;
+  background: #c0c0c0;
+  border-top: 2px solid #fff; border-left: 2px solid #fff;
+  border-right: 2px solid #404040; border-bottom: 2px solid #404040;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, .4);
+}

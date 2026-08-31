@@ -580,8 +580,13 @@ export const TOPICS = {
         'Das ? in der Titelleiste öffnet die Hilfe zum jeweiligen Programm.',
         'Das ◀ links daneben führt zurück zu dem Fenster, aus dem heraus geöffnet wurde. Es erscheint nur, wenn es einen Rückweg gibt.',
         'Die Taskleiste zeigt alles Offene, jeder Eintrag hat ein eigenes ✕ zum Schließen.',
+        'Im Startmenü unten: 🏠 zurück zum Hauptmenü, ⏻ herunterfahren. Beides sichert den Betrieb vorher.',
       ] },
       { p: 'Auf schmalen Bildschirmen öffnen Fenster grundsätzlich bildfüllend, und die Taskleiste dient zum Umschalten.' },
+      { h: 'Beenden' },
+      { p: '<strong>Zurück zum Hauptmenü</strong> sichert den Betrieb und bringt dich zur Startseite — von dort lässt er sich fortsetzen oder ein neuer gründen.' },
+      { p: '<strong>Herunterfahren</strong> sichert ebenfalls und zeigt einen Schlussbildschirm. Ein Browserfenster lässt sich von innen meist nicht schließen; deshalb bleibt ein „Sie können den Rechner jetzt ausschalten" stehen, wie man es von früher kennt.' },
+      { tipp: 'Beides fragt vorher nach. Der Betrieb wird ohnehin alle zwanzig Sekunden gesichert — verlorengehen kann er nicht.' },
     ],
   },
 };

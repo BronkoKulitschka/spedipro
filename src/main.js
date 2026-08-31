@@ -434,8 +434,12 @@ function wireDesktop() {
     const item = e.target.closest('.start-item');
     if (!item) return;
     toggleStartMenu(false);
-    if (item.dataset.app === '__closeall') closeAll();
-    else openApp(item.dataset.app);
+
+    if (item.dataset.app === '__closeall')    { closeAll(); return; }
+    if (item.dataset.app === '__hauptmenue')  { zumHauptmenue(); return; }
+    if (item.dataset.app === '__beenden')     { herunterfahren(); return; }
+
+    openApp(item.dataset.app);
   });
 
   document.getElementById('tbSpeedBtn').onclick = () => { togglePause(); onTick(); };
@@ -470,3 +474,59 @@ document.addEventListener('visibilitychange', () => {
 /* ── Los geht es ── */
 resetState(cityByKey(gewaehlteStadt) || CITIES[0]);
 showStart();
+
+/* ── Beenden und zurück zum Hauptmenü ───────────────────────────
+   Beides sichert vorher den Stand: Ein Betrieb soll nie deshalb
+   verlorengehen, weil man das Falsche angetippt hat. */
+
+function zumHauptmenue() {
+  if (!confirm('Zurück zum Hauptmenü?\n\n'
+             + 'Der Betrieb wird gesichert und lässt sich von dort '
+             + 'fortsetzen.')) return;
+
+  saveGame();
+  stopClock();
+  closeAll();
+  schliesseStaedteKarte();
+  showStart();
+}
+
+function herunterfahren() {
+  if (!confirm('SpeditionsPro 95 herunterfahren?\n\n'
+             + 'Der Betrieb wird gesichert.')) return;
+
+  saveGame();
+  stopClock();
+  closeAll();
+  zeigeAbschied();
+}
+
+/* Ein Abschiedsbildschirm im Stil der Zeit. Ein Browserfenster lässt
+   sich von innen meist nicht schließen — deshalb wird der Versuch
+   unternommen, und was bleibt, ist ein ruhiger Schlussbildschirm. */
+function zeigeAbschied() {
+  S.screen = 'aus';
+
+  root().innerHTML = `
+    <div class="abschied">
+      <div class="abschied-kasten">
+        <div style="font-size:34px;line-height:1;">🚛</div>
+        <div style="font-size:15px;font-weight:bold;margin:10px 0 4px;">
+          Sie können den Rechner jetzt ausschalten.
+        </div>
+        <div class="muted" style="font-size:11px;line-height:1.6;">
+          Der Betrieb wurde gesichert.<br>
+          Beim nächsten Öffnen geht es dort weiter.
+        </div>
+        <div style="margin-top:14px;">
+          <button class="btn" id="wiederAn">Erneut starten</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('wiederAn').onclick = () => showStart();
+
+  /* Wurde die Seite vom Spiel selbst geöffnet, lässt sie sich auch
+     schließen. Sonst bleibt es beim Schlussbildschirm. */
+  try { window.close(); } catch { /* dann eben nicht */ }
+}

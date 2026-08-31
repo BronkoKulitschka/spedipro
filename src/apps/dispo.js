@@ -226,7 +226,13 @@ export const DispoApp = {
 
     /* Auftragsliste, sortiert nach Anfahrt ab dem gewählten Fahrzeug */
     const box = el.querySelector('#offerBox');
-    const sig = S.offers.map(o => o.id).join(',') + '|' + (truck?.nr ?? '-');
+    /* Preis und Verhandlungsstand gehören in die Signatur: Sonst bliebe
+       die Liste nach einer Verhandlung auf altem Stand stehen — mit
+       einem Verhandeln-Knopf, der ins Leere führt. Das sah aus, als
+       wäre der Auftrag verschwunden. */
+    const sig = S.offers.map(o => `${o.id}:${o.fee}:${o.verhandelt ? 1 : 0}`).join(',')
+              + '|' + (truck?.nr ?? '-')
+              + '|' + el._lade.map(x => x.id).join(',');
     if (box.dataset.sig === sig) return;
     box.dataset.sig = sig;
 

@@ -344,6 +344,14 @@ export function startMenuHtml() {
       <div class="start-item" data-app="__closeall">
         <span class="start-icon">🧹</span><span>Alle Fenster schließen</span>
       </div>
+
+      <div class="start-sep"></div>
+      <div class="start-item" data-app="__hauptmenue">
+        <span class="start-icon">🏠</span><span>Zurück zum Hauptmenü</span>
+      </div>
+      <div class="start-item start-aus" data-app="__beenden">
+        <span class="start-icon">⏻</span><span>Herunterfahren</span>
+      </div>
     </div>`;
 }
 
