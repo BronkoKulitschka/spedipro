@@ -112,23 +112,6 @@ export const DispoApp = {
         return;
       }
 
-      /* Verhandlungsgespräch öffnen */
-      const hag = e.target.closest('button[data-haggle]');
-      if (hag) {
-        openApp('haggle', { id: hag.dataset.haggle });
-        return;
-      }
-
-      /* Sendung auf die Ladeliste nehmen */
-      const plus = e.target.closest('button[data-add]');
-      if (plus) {
-        const o = S.offers.find(x => x.id === plus.dataset.add);
-        if (o && !el._lade.some(x => x.id === o.id)) el._lade.push(o);
-        el.querySelector('#offerBox').dataset.sig = '';
-        onTick();
-        return;
-      }
-
       const minus = e.target.closest('button[data-del]');
       if (minus) {
         el._lade = el._lade.filter(x => x.id !== minus.dataset.del);
@@ -156,23 +139,15 @@ export const DispoApp = {
         return;
       }
 
-      /* Einzelne Sendung sofort losschicken */
-      const btn = e.target.closest('button[data-offer]');
-      if (btn) {
-        const nr = Number(el.querySelector('#dTruck').value) || null;
-        dispatch(btn.dataset.offer, nr).then(() => { drawOffers(); onTick(); });
-        onTick();
-        return;
-      }
-
-      /* Klick irgendwo auf die Kachel: Auftrag auf der Karte zeigen.
-         Muss zuletzt stehen, sonst schluckt die Kachel die Knöpfe. */
-      const zeigen = e.target.closest('[data-zeigen]');
-      if (zeigen) {
-        const o = S.offers.find(x => x.id === zeigen.dataset.zeigen);
+      /* Klick auf eine Auftragskachel: Fenster mit allen Angaben öffnen
+         und das Ziel auf der Karte zeigen. */
+      const kachel = e.target.closest('[data-auftrag]');
+      if (kachel) {
+        const o = S.offers.find(x => x.id === kachel.dataset.auftrag);
         if (o) {
           focusPoint(o.firm.lat, o.firm.lon, DETAIL_ZOOM);
-          markiere(el, zeigen);
+          markiere(el, kachel);
+          openApp('auftrag', { id: o.id });
         }
       }
     });
@@ -246,65 +221,35 @@ export const DispoApp = {
       const art = KIND_LABEL[o.kind || 'spot'];
       const g = klasseVon(o.klasse);
       const drauf = el._lade.some(x => x.id === o.id);
-      const pruef = truck ? passt(truck, el._lade.filter(x => x.id !== o.id), o) : { ok: false, grund: 'kein Fahrzeug' };
-      const umweg = truck && el._lade.length && !drauf ? umwegFuer(truck, el._lade, o) : null;
+      const pruef = truck ? passt(truck, el._lade.filter(x => x.id !== o.id), o)
+                          : { ok: false, grund: 'kein Fahrzeug' };
 
-      /* Straßenkilometer schätzen und daraus die Fahrzeit des gewählten
-         Fahrzeugs. Die genaue Route steht erst beim Losfahren fest. */
       const strasse = km * 1.28;
-      const tempo = truck ? truckKmh(truck) : 62;
-      const minuten = strasse / tempo * 60;
-      const zeit = minuten < 60
-        ? `${Math.round(minuten)} min`
-        : `${Math.floor(minuten / 60)}:${String(Math.round(minuten % 60)).padStart(2, '0')} h`;
+      const z = zustandVon(o.firm.name);
+      const st = stimmung(o.firm.name);
 
+      /* Die Zeile zeigt nur, was zur Auswahl nötig ist. Alles Weitere
+         steht im Auftragsfenster, das ein Antippen öffnet. */
       return `
-      <div class="offer offer-${o.kind || 'spot'} ${drauf ? 'geladen' : ''}" data-zeigen="${o.id}">
+      <div class="offer offer-${o.kind || 'spot'} ${drauf ? 'geladen' : ''}
+                  ${pruef.ok ? '' : 'nicht-fahrbar'}"
+           data-auftrag="${o.id}">
         <div class="flex-row" style="justify-content:space-between;">
-          <span><span class="art-tag">${art.icon} ${art.text}</span>
-            <strong>${esc(o.firm.name)}</strong></span>
+          <span><span class="art-tag">${art.icon}</span>
+            <strong>${esc(o.firm.name.slice(0, 26))}</strong></span>
           <span class="money">${fmt(o.fee)}</span>
         </div>
 
-        ${o.abholung ? `
-          <div class="relation">
-            📦 laden bei ${esc(o.abholung.name.slice(0, 22))}
-            <span class="pfeil">→</span>
-            ${esc(o.firm.name.slice(0, 22))}
-          </div>` : ''}
-
-        <div class="anfahrt">
-          <span class="anfahrt-km">📍 ${strasse.toFixed(0)} km</span>
-          <span class="muted">ca. ${zeit} Fahrt</span>
-          ${umweg !== null
-            ? `<span class="${umweg < 25 ? 'ok' : 'warn'}">Umweg +${umweg.toFixed(0)} km</span>`
-            : ''}
-          ${o.firm.hub ? `<span class="muted">${esc(o.firm.art)}</span>` : ''}
-        </div>
-
-        ${kundenHinweis(o)}
-
-        <div style="font-size:10px;margin:2px 0;">
-          ${g.icon} ${esc(g.name)} ·
-          <strong>${o.paletten} Pal.</strong> ·
-          <strong>${(o.gewicht / 1000).toFixed(1)} t</strong>
-          ${o.partnerName ? `· <span class="muted">${esc(o.partnerName)}</span>` : ''}
-        </div>
-
-        ${o.verhandelt && o.grundpreis && o.fee !== o.grundpreis ? `
-          <div class="verhandelt">
-            💬 verhandelt: ${fmt(o.grundpreis)} → <strong>${fmt(o.fee)}</strong>
-          </div>` : ''}
-
-        <div class="flex-row" style="justify-content:flex-end;gap:4px;">
-          ${drauf
-            ? `<button class="btn btn-sm" data-del="${o.id}">entladen</button>`
-            : pruef.ok
-              ? `${o.kind === 'spot' && !o.verhandelt
-                   ? `<button class="btn btn-sm" data-haggle="${o.id}">💬 verhandeln</button>` : ''}
-                 <button class="btn btn-sm" data-add="${o.id}">+ laden</button>
-                 <button class="btn btn-sm" data-offer="${o.id}">sofort</button>`
-              : `<span class="warn" style="font-size:10px;">${esc(pruef.grund)}</span>`}
+        <div class="offer-zeile">
+          <span class="offer-km">📍 ${strasse.toFixed(0)} km</span>
+          <span>${g.icon} ${o.paletten} Pal. · ${(o.gewicht / 1000).toFixed(1)} t</span>
+          ${drauf ? '<span class="ok">auf der Ladeliste</span>' : ''}
+          ${z ? `<span class="muted">${z.icon}</span>` : ''}
+          ${!drauf && st.stufe !== 'normal'
+            ? `<span class="stimmung-${st.stufe}">●</span>` : ''}
+          ${o.verhandelt ? '<span class="muted">💬</span>' : ''}
+          ${pruef.ok ? '' : `<span class="warn">${esc(pruef.grund)}</span>`}
+          <span class="offer-pfeil">›</span>
         </div>
       </div>`;
     }).join('');

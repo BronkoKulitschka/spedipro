@@ -92,3 +92,68 @@ export const bildZustand = () => zustand;
 /* Kennzeichnet den aktuellen Bildstand. Ändert er sich, müssen die
    Marken auf der Karte neu aufgebaut werden. */
 export const bildStand = () => zustand + ':' + einzelne.size;
+
+
+/* ── Gesichter der Auftraggeber ─────────────────────────────────
+   Dieselbe Vorgehensweise wie bei den Fahrzeugen: ein Sammelbild mit
+   sechs Feldern in drei Spalten und zwei Zeilen, oder einzelne
+   Dateien. Fehlt beides, bleibt es beim Sinnbild des Charakters. */
+
+export const GESICHTER = {
+  kaufmann:     [0, 0], grosszuegig:  [1, 0], kleinlich:    [2, 0],
+  hektisch:     [0, 1], treu:         [1, 1], misstrauisch: [2, 1],
+};
+
+const G_SPALTEN = 3;
+const G_ZEILEN  = 2;
+const G_BLATT   = './assets/gesichter.png';
+
+let gZustand = 'ungeprueft';
+let gEinzelne = new Set();
+
+function pruefeGesichter() {
+  if (gZustand !== 'ungeprueft') return;
+  gZustand = 'sinnbild';
+
+  const blatt = new Image();
+  blatt.onload = () => {
+    if (blatt.width >= G_SPALTEN * 16 && blatt.height >= G_ZEILEN * 16) {
+      gZustand = 'blatt';
+      beiAenderung?.();
+    }
+  };
+  blatt.src = G_BLATT;
+
+  for (const key of Object.keys(GESICHTER)) {
+    const bild = new Image();
+    bild.onload = () => {
+      gEinzelne.add(key);
+      if (gZustand === 'sinnbild') gZustand = 'einzeln';
+      beiAenderung?.();
+    };
+    bild.src = `./assets/gesicht-${key}.png`;
+  }
+}
+
+/* Liefert das Bild eines Charakters, oder null wenn keines vorliegt. */
+export function gesichtVon(charakterKey) {
+  pruefeGesichter();
+
+  if (gZustand === 'blatt' && GESICHTER[charakterKey]) {
+    const [sp, ze] = GESICHTER[charakterKey];
+    const x = G_SPALTEN > 1 ? (sp / (G_SPALTEN - 1)) * 100 : 0;
+    const y = G_ZEILEN  > 1 ? (ze / (G_ZEILEN  - 1)) * 100 : 0;
+
+    return `<span class="gesicht-feld" style="`
+         + `background-image:url('${G_BLATT}');`
+         + `background-position:${x}% ${y}%"></span>`;
+  }
+
+  if (gEinzelne.has(charakterKey)) {
+    return `<img src="./assets/gesicht-${charakterKey}.png" alt="" class="gesicht-bild">`;
+  }
+
+  return null;
+}
+
+export const gesichtStand = () => gZustand + ':' + gEinzelne.size;

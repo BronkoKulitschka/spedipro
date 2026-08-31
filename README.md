@@ -306,6 +306,7 @@ node test/offline.mjs    # Netzunabhängigkeit
 node test/contracts.mjs  # Rahmenverträge als Relation
 node test/reputation.mjs # Ansehen in beide Richtungen
 node test/clients.mjs    # Auftraggeber, Zustände, Groll
+node test/ladeschema.mjs # Ladeansicht, Platz und Gewicht
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und
@@ -598,6 +599,20 @@ besänftigt, und Groll verfliegt langsam von allein: Eine Sackgasse gibt es
 nicht.
 
 `node test/clients.mjs` prüft die Balance.
+
+## Auftragsfenster und Ladeschema
+
+Die Auftragsliste zeigt nur, was zur Auswahl nötig ist; ein Antippen
+öffnet den Auftrag im Einzelnen. Dort steht auch das **Ladeschema**
+(`ui/ladeschema.js`): der Wagen von oben, die Ladefläche zweireihig in
+Stellplätze geteilt, je Sendung eine eigene Farbe.
+
+Der Sinn liegt in den zwei Grenzen: Platz und Gewicht gelten
+gleichzeitig. Bei Baustoffen ist die Fläche halb leer und der Wagen
+trotzdem voll — als Zahlenpaar ist das abstrakt, als Bild sofort
+verständlich.
+
+`node test/ladeschema.mjs` prüft beide Grenzen.
 
 ## Preisverhandlung
 

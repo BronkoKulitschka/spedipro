@@ -15,6 +15,7 @@ import { klasseVon } from '../sim/goods.js';
 import { fahrtenZu, stufeVon } from '../sim/customers.js';
 import { charakterVon, stimmung, zustandVon } from '../sim/clients.js';
 import { closeWindow, onTick } from '../ui/wm.js';
+import { gesichtVon, onBildBereit } from '../ui/sprites.js';
 
 export const HaggleApp = {
   id: 'haggle', icon: '💬', multi: true, hidden: true,
@@ -56,6 +57,9 @@ export const HaggleApp = {
       }
     });
 
+    /* Treffen die Bilder verspätet ein, das Fenster neu zeichnen. */
+    onBildBereit(() => zeichne(el));
+
     zeichne(el);
   },
 
@@ -93,10 +97,13 @@ function zeichne(el) {
       ${Math.round(offer.estKm)} km
       ${beziehung.rate > 1 ? `· <span class="ok">${esc(beziehung.name)}</span>` : ''}
     </div>
-    <div style="font-size:10px;margin-top:3px;">
-      ${c.icon} ${esc(c.name)} ·
-      <span class="stimmung-${st.stufe}">${esc(st.text)}</span>
-      ${z ? `<br>${z.icon} <strong>${esc(z.name)}</strong> — ${esc(z.text)}` : ''}
+    <div class="verh-person">
+      <span class="verh-portraet">${gesichtVon(c.key) || c.icon}</span>
+      <span>
+        ${esc(c.name)} ·
+        <span class="stimmung-${st.stufe}">${esc(st.text)}</span>
+        ${z ? `<br>${z.icon} <strong>${esc(z.name)}</strong> — ${esc(z.text)}` : ''}
+      </span>
     </div>`;
 
   /* Der Gesprächsverlauf */

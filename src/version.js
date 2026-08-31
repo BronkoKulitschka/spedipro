@@ -5,8 +5,8 @@
    und in den Einstellungen, damit sich mit einem Blick prüfen lässt,
    welcher Stand gerade läuft. */
 
-export const VERSION = '0.27.1';
+export const VERSION = '0.28.0';
 export const BUILD   = '2026-08-31';
-export const CODENAME = 'Kundschaft';
+export const CODENAME = 'Ladeschema';
 
 export const versionLine = () => `Version ${VERSION} · ${BUILD}`;

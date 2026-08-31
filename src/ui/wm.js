@@ -92,6 +92,13 @@ export function geheZurueck(key) {
   }
 }
 
+/* Der Inhaltsbereich eines offenen Fensters — damit ein Programm auf
+   den Zustand eines anderen zugreifen kann, etwa das Auftragsfenster
+   auf die Ladeliste der Disposition. */
+export function fensterInhalt(key) {
+  return open.get(key)?.body || null;
+}
+
 export function closeWindow(key) {
   const entry = open.get(key);
   if (!entry) return;
