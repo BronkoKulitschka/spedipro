@@ -260,6 +260,29 @@ bei fünf gleichzeitig ankommenden Fahrzeugen nicht fünfmal geklingelt wird.
 Die Voreinstellung des Zeitverhältnisses ist **1:30** — ein Spieltag dauert
 bei einfacher Geschwindigkeit etwa achtundvierzig Minuten.
 
+## Auf dem Weg zur eigenständigen Fassung
+
+Das Ziel ist eine Fassung, die ohne Netz läuft. Erreicht ist bisher:
+
+| Bestandteil | Stand |
+|---|---|
+| Leaflet | liegt unter `vendor/` bei |
+| Spielprogramm | wird vom Servicearbeiter aufbewahrt |
+| Kartenkacheln | einmal geladen, danach im Speicher |
+| Routen | Luftlinie mit Umwegfaktor als Rückfall |
+| Betriebe | erfundene Kundschaft an echten Ortschaften |
+| Baustellen | entfallen stillschweigend |
+| Standortsuche | Platz am Stadtrand als Rückfall |
+
+**Noch offen:** ein Kartenbild ohne Netz — ein gezeichneter Umriss
+Deutschlands statt Fotokacheln wäre etwa 200 KB groß und passte
+besser zum Windows-95-Aussehen. Und der Spielstand, der für eine
+richtige Anwendung eine Datei sein sollte statt Browserspeicher.
+
+**Grundregel:** Jede Netzabfrage braucht einen Rückfall und eine
+Zeitgrenze. `node test/offline.mjs` prüft beides und hält fest, was
+noch aussteht.
+
 ## Testlauf
 
 Ein Rauchtest spielt zehn Spieltage ohne Browser durch und prüft, dass
@@ -278,6 +301,8 @@ node test/loading.mjs    # jedes Modul einzeln ladbar (Ringbezüge)
 node test/handlers.mjs   # Klickbehandlungen ohne Kollisionen
 node test/notify.mjs     # die drei Meldungsarten
 node test/market.mjs     # Börse passt zum Fuhrpark
+node test/haggle.mjs     # Preisverhandlung
+node test/offline.mjs    # Netzunabhängigkeit
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und
@@ -539,6 +564,22 @@ nicht, steht der Grund dort statt des Knopfes — „nur 17 Stellplätze" oder
 Nachbarn geordnet, jede Teilstrecke einzeln über OSRM geroutet. An jedem Stopp
 wird die jeweilige Fracht abgerechnet. Mehrstopp-Touren brauchen nur 33 Minuten
 Rampenzeit je Stopp statt einer vollen Stunde — Sammelverkehr lohnt sich.
+
+## Preisverhandlung
+
+Jede Spotanfrage hat einen Spielraum, den der Verlader nicht nennt. Über
+einen Regler fordert man zwischen dem genannten Preis und 45 Prozent
+darüber; drei Ausgänge sind möglich — angenommen, Gegenangebot oder
+Ablehnung.
+
+Die Schmerzgrenze (`sim/haggle.js`) ergibt sich aus Ansehen, Marktindex,
+Kundenbeziehung und einem festen Zufallsanteil je Anfrage. Fest heißt: aus
+der Kennung abgeleitet, damit dieselbe Anfrage nicht bei jedem Blick anders
+reagiert. Über 200 Anfragen streut das zwischen ×1,07 und ×1,27.
+
+Zwei Regeln halten es fair: Der genannte Preis geht **immer** durch, und
+verloren geht nur bei echter Übertreibung — bis dahin gibt es höchstens ein
+Gegenangebot.
 
 ## Warum die Börse zum Fuhrpark passen muss
 

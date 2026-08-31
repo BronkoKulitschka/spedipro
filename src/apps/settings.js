@@ -15,7 +15,8 @@ import { PRESETS, ladeHintergrund, speichereHintergrund, wendeAn, bildLaden } fr
 import { MODI, ARTEN, ladeEinstellung, speichereEinstellung,
          erlaubnisStand, frageErlaubnis, probemeldung,
          moeglich, warumNicht, meldeSystemAn,
-         alsAppInstalliert, teiltHerkunft } from '../ui/notify.js';
+         alsAppInstalliert, teiltHerkunft,
+         kachelZahl, kachelnLeeren } from '../ui/notify.js';
 import { onTick } from '../ui/wm.js';
 
 export const SettingsApp = {
@@ -84,6 +85,19 @@ export const SettingsApp = {
           <button class="btn btn-sm" id="nfProbe">Probemeldung</button>
         </div>
         <div class="muted" style="font-size:10px;margin-top:4px;" id="nfNote">—</div>
+      </div>
+
+      <div class="raised-box" style="margin-bottom:8px;">
+        <div class="section-title">Karte ohne Netz</div>
+        <div class="muted" style="font-size:10px;margin-bottom:6px;">
+          Einmal geladene Kartenausschnitte werden aufbewahrt und sind
+          danach auch ohne Verbindung da. Wer dieselbe Gegend öfter
+          befährt, kommt mit der Zeit ganz ohne Netz aus.
+        </div>
+        <div class="flex-row" style="gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-sm" id="ktLeeren">Speicher leeren</button>
+          <span class="muted" style="font-size:10px;" id="ktNote">—</span>
+        </div>
       </div>
 
       <div class="raised-box" style="margin-bottom:8px;">
@@ -185,6 +199,17 @@ export const SettingsApp = {
         toast(done ? '💾' : '⚠️',
               done ? 'Spielstand gesichert.' : 'Sichern nicht möglich.',
               done ? '' : '<span class="muted">Der Browser erlaubt keinen Speicher.</span>');
+        return;
+      }
+
+      if (e.target.closest('#ktLeeren')) {
+        kachelnLeeren().then(ging => {
+          toast(ging ? '🗺️' : '⚠️',
+                ging ? 'Kartenspeicher geleert.' : 'Speicher nicht erreichbar.',
+                ging ? '<span class="muted">Kacheln werden neu geladen.</span>'
+                     : '<span class="muted">Seite neu laden und erneut versuchen.</span>');
+          zeigeKachelzahl(el);
+        });
         return;
       }
 
@@ -305,6 +330,13 @@ export const SettingsApp = {
     hinweisHintergrund(el);
     hinweisMeldungen(el);
 
+    /* Die Kachelzahl nur gelegentlich erfragen — sie ändert sich
+       langsam, und jede Abfrage geht durch den Servicearbeiter. */
+    if (!el._kachelUhr || Date.now() - el._kachelUhr > 5000) {
+      el._kachelUhr = Date.now();
+      zeigeKachelzahl(el);
+    }
+
     const info = saveInfo();
     el.querySelector('#stSave').innerHTML = info
       ? `Zuletzt gesichert: <strong>${info.savedAt.toLocaleString('de-DE')}</strong>`
@@ -401,4 +433,22 @@ function hinweisMeldungen(el) {
           + 'es einen eigenen Eintrag in den Systemeinstellungen.'
           : '');
   }
+}
+
+/* Wie viele Kartenausschnitte liegen im Speicher? */
+function zeigeKachelzahl(el) {
+  const note = el.querySelector('#ktNote');
+  if (!note) return;
+
+  kachelZahl().then(zahl => {
+    if (zahl === null) {
+      note.textContent = 'Speicher noch nicht bereit — Seite einmal neu laden.';
+      return;
+    }
+    /* Eine Kachel ist im Mittel etwa 15 KB. */
+    const mb = (zahl * 15 / 1024).toFixed(1);
+    note.textContent = zahl
+      ? `${zahl.toLocaleString('de-DE')} Ausschnitte gespeichert (rund ${mb} MB)`
+      : 'Noch nichts gespeichert.';
+  });
 }

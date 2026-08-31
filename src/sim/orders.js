@@ -45,7 +45,8 @@ function mitLadung(basis, firm, faktor = 1) {
   const mengenFaktor = 0.72 + 0.38 * Math.min(1, l.paletten / 33);
   const fee = basis * klasse.preis * mengenFaktor * faktor;
 
-  return { ...l, fee: Math.round(fee / 10) * 10 };
+  const gerundet = Math.round(fee / 10) * 10;
+  return { ...l, fee: gerundet, grundpreis: gerundet };
 }
 
 function spotOffer(firm) {

@@ -54,6 +54,18 @@ export const TOPICS = {
         'Ein Klick auf die Kachel selbst zeigt das Ziel auf der Karte.',
       ] },
       { p: 'Passt eine Sendung nicht auf das gewählte Fahrzeug, steht der Grund an Stelle der Knöpfe: zu viele Stellplätze, zu schwer, oder eine fehlende Ausstattung.' },
+      { h: 'Verhandeln' },
+      { p: 'Der genannte Preis ist nicht das letzte Wort. Bei Spotanfragen öffnet <strong>💬 verhandeln</strong> einen Regler: Du forderst zwischen dem genannten Preis und 45 Prozent darüber.' },
+      { p: 'Wie viel drin ist, sagt niemand — die Einschätzung unter dem Regler gibt nur eine Richtung. Drei Ausgänge sind möglich:' },
+      { list: [
+        'Angenommen — der Verlader zahlt, was du verlangst.',
+        'Gegenangebot — er bietet weniger, aber immer noch mehr als vorher. Du kannst es nehmen oder liegen lassen.',
+        'Abgelehnt — die Fracht geht an jemand anderen, und der Verlader merkt es sich.',
+      ] },
+      { p: 'Der genannte Preis geht immer durch, und maßvolles Fordern ist risikolos. Verloren geht nur bei echter Übertreibung.' },
+      { p: 'Wie weit man gehen kann, hängt von drei Dingen ab: dem eigenen Ansehen, der Marktlage — bei knappem Laderaum sind Verlader nachgiebig — und der Beziehung zum Kunden. Ein Hauskunde zahlt lieber mehr, als den Spediteur zu wechseln.' },
+      { tipp: 'Jede Anfrage lässt sich nur einmal verhandeln. Und jede hat ihren eigenen Spielraum: Bei einer sind sieben Prozent das Ende, bei der nächsten wären siebenundzwanzig gegangen.' },
+
       { h: 'Die Ladeliste' },
       { p: 'Sammelst du mehrere Sendungen, zeigt die Ladeliste laufend zwei Balken: belegte Stellplätze und ausgenutzte Nutzlast. Bei jeder weiteren Sendung steht dabei, wie viele Kilometer Umweg sie kostet.' },
       { p: 'Tour starten schickt das Fahrzeug los. Die Stopps werden nach dem nächstgelegenen Ziel geordnet, an jedem Stopp wird die jeweilige Fracht abgerechnet.' },

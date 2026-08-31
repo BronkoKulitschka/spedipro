@@ -11,6 +11,7 @@ import { fmt, esc, truckFarbe } from '../util.js';
 import { dispatch, distanceFrom, startTour, umwegFuer, jetztPos } from '../sim/fleet.js';
 import { KIND_LABEL, takeOffer } from '../sim/orders.js';
 import { kapazitaet, summe, passt, klasseVon } from '../sim/goods.js';
+import { verhandle, aussicht, MAX_FORDERUNG } from '../sim/haggle.js';
 import { onTick } from '../ui/wm.js';
 import { initMap, ensureMapSize, mapHost, drawOffers, drawTrucks,
          toggleLayer, onOfferAccept, focusPoint, fitAll, zeigeFahrzeug,
@@ -66,6 +67,30 @@ export const DispoApp = {
     /* Die Ladeliste lebt im Fenster, nicht im Spielstand — sie ist eine
        Planung, die erst mit dem Start der Tour wirksam wird. */
     el._lade = [];
+    el._verhandelt = null;
+
+    /* Beim Ziehen des Reglers nur Betrag und Einschätzung nachführen,
+       nicht die ganze Liste — sonst ruckelt es unter dem Finger. */
+    el.addEventListener('input', e => {
+      const regler = e.target.closest('input[data-regler]');
+      if (!regler) return;
+
+      const o = S.offers.find(x => x.id === regler.dataset.regler);
+      if (!o) return;
+
+      const faktor = Number(regler.value) / 100;
+      const grund = o.grundpreis || o.fee;
+
+      const betrag = el.querySelector(`[data-anzeige="${o.id}"]`);
+      if (betrag) betrag.textContent = fmt(Math.round(grund * faktor / 10) * 10);
+
+      const hinweis = el.querySelector(`[data-hinweis="${o.id}"]`);
+      if (hinweis) {
+        const a = aussicht(o, faktor);
+        hinweis.textContent = `+${Math.round((faktor - 1) * 100)} % · ${a.text}`;
+        hinweis.className = `aussicht ${a.stufe}`;
+      }
+    });
 
     el.querySelector('#mapSlot').appendChild(mapHost());
     initMap();
@@ -106,6 +131,28 @@ export const DispoApp = {
         const p = t ? jetztPos(t) : S.depot;
         focusPoint(p.lat, p.lon, DETAIL_ZOOM);
         if (t) zeigeFahrzeug(t);
+        return;
+      }
+
+      /* Verhandlungsbereich auf- und zuklappen */
+      const hag = e.target.closest('button[data-haggle]');
+      if (hag) {
+        el._verhandelt = el._verhandelt === hag.dataset.haggle ? null : hag.dataset.haggle;
+        el.querySelector('#offerBox').dataset.sig = '';
+        onTick();
+        return;
+      }
+
+      /* Forderung absenden */
+      const los = e.target.closest('button[data-fordern]');
+      if (los) {
+        const regler = el.querySelector(`input[data-regler="${los.dataset.fordern}"]`);
+        const faktor = regler ? Number(regler.value) / 100 : 1;
+        verhandle(los.dataset.fordern, faktor);
+        el._verhandelt = null;
+        el.querySelector('#offerBox').dataset.sig = '';
+        drawOffers();
+        onTick();
         return;
       }
 
@@ -266,11 +313,20 @@ export const DispoApp = {
           ${o.partnerName ? `· <span class="muted">${esc(o.partnerName)}</span>` : ''}
         </div>
 
+        ${o.kind === 'spot' && !o.verhandelt && !drauf ? verhandlungsBereich(o, el) : ''}
+
+        ${o.verhandelt && o.grundpreis && o.fee !== o.grundpreis ? `
+          <div class="verhandelt">
+            💬 verhandelt: ${fmt(o.grundpreis)} → <strong>${fmt(o.fee)}</strong>
+          </div>` : ''}
+
         <div class="flex-row" style="justify-content:flex-end;gap:4px;">
           ${drauf
             ? `<button class="btn btn-sm" data-del="${o.id}">entladen</button>`
             : pruef.ok
-              ? `<button class="btn btn-sm" data-add="${o.id}">+ laden</button>
+              ? `${o.kind === 'spot' && !o.verhandelt
+                   ? `<button class="btn btn-sm" data-haggle="${o.id}">💬 verhandeln</button>` : ''}
+                 <button class="btn btn-sm" data-add="${o.id}">+ laden</button>
                  <button class="btn btn-sm" data-offer="${o.id}">sofort</button>`
               : `<span class="warn" style="font-size:10px;">${esc(pruef.grund)}</span>`}
         </div>
@@ -332,4 +388,30 @@ function zeichneLadeliste(el, truck) {
 function markiere(el, kachel) {
   el.querySelectorAll('.offer.aktiv').forEach(k => k.classList.remove('aktiv'));
   kachel.classList.add('aktiv');
+}
+
+/* Der aufgeklappte Verhandlungsbereich einer Anfrage. */
+function verhandlungsBereich(o, el) {
+  if (el._verhandelt !== o.id) return '';
+
+  const start = 110;                       // zehn Prozent über dem Angebot
+  const grund = o.grundpreis || o.fee;
+
+  return `
+    <div class="verhandlung" data-bereich="${o.id}">
+      <div class="flex-row" style="justify-content:space-between;font-size:10px;">
+        <span>Genannt: <strong>${fmt(grund)}</strong></span>
+        <span>Forderung: <strong class="money" data-anzeige="${o.id}">
+          ${fmt(grund * start / 100)}</strong></span>
+      </div>
+
+      <input type="range" data-regler="${o.id}"
+             min="100" max="${Math.round(MAX_FORDERUNG * 100)}" value="${start}" step="1"
+             style="width:100%;margin:4px 0;">
+
+      <div class="flex-row" style="justify-content:space-between;align-items:center;gap:6px;">
+        <span class="aussicht" data-hinweis="${o.id}">—</span>
+        <button class="btn btn-sm" data-fordern="${o.id}">fordern</button>
+      </div>
+    </div>`;
 }

@@ -254,6 +254,49 @@ export function probemeldung() {
     : { ok: false, grund: 'Der Browser hat die Meldung abgelehnt.' };
 }
 
+/* ── Kachelspeicher ─────────────────────────────────────────────
+   Der Servicearbeiter bewahrt geladene Kartenkacheln auf. Diese
+   beiden Funktionen fragen ihn danach und leeren ihn auf Wunsch. */
+export function kachelZahl() {
+  return new Promise(erfuellt => {
+    if (!navigator.serviceWorker?.controller) return erfuellt(null);
+
+    const kanal = ({ data }) => {
+      if (data?.art === 'kachel-zahl') {
+        navigator.serviceWorker.removeEventListener('message', kanal);
+        erfuellt(data.zahl);
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', kanal);
+    navigator.serviceWorker.controller.postMessage({ art: 'kacheln-zaehlen' });
+
+    setTimeout(() => {
+      navigator.serviceWorker.removeEventListener('message', kanal);
+      erfuellt(null);
+    }, 1500);
+  });
+}
+
+export function kachelnLeeren() {
+  return new Promise(erfuellt => {
+    if (!navigator.serviceWorker?.controller) return erfuellt(false);
+
+    const kanal = ({ data }) => {
+      if (data?.art === 'kacheln-geleert') {
+        navigator.serviceWorker.removeEventListener('message', kanal);
+        erfuellt(true);
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', kanal);
+    navigator.serviceWorker.controller.postMessage({ art: 'kacheln-leeren' });
+
+    setTimeout(() => {
+      navigator.serviceWorker.removeEventListener('message', kanal);
+      erfuellt(false);
+    }, 2500);
+  });
+}
+
 export const ARTEN = {
   panne:   { name: 'Panne',          text: 'Wenn ein Fahrzeug in die Werkstatt muss.' },
   vertrag: { name: 'Verträge',       text: 'Wenn ein Rahmenvertrag erfüllt ist oder ausläuft.' },
