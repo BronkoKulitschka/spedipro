@@ -303,6 +303,7 @@ node test/notify.mjs     # die drei Meldungsarten
 node test/market.mjs     # Börse passt zum Fuhrpark
 node test/haggle.mjs     # Preisverhandlung
 node test/offline.mjs    # Netzunabhängigkeit
+node test/contracts.mjs  # Rahmenverträge als Relation
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und
@@ -597,6 +598,16 @@ verstopfen sie die Börse.
 `node test/market.mjs` prüft, dass jedes Fahrzeug Arbeit findet.
 
 ## Rahmenverträge
+
+Ein Rahmenvertrag ist eine **Relation mit zwei Enden**: Beim Verlader wird
+geladen, beim Empfänger entladen. Das ist nicht nur Beiwerk — lieferte ein
+Vertrag immer an dieselbe Firma, stünde das Fahrzeug nach der ersten Fahrt
+am Ziel und lieferte dort alle weiteren Sendungen ohne einen einzigen
+Kilometer ab.
+
+Eine Vertragssendung besteht deshalb aus zwei Etappen: Anfahrt zum
+Verlader (kostet Diesel, zählt nicht als Zustellung) und die eigentliche
+Fahrt zum Empfänger. `node test/contracts.mjs` prüft das.
 
 Ausschreibungen nennen Güterklasse, Palettenzahl und Gewicht — bei einem
 Rahmenvertrag ist jede Sendung gleich. Darunter steht, welche eigenen

@@ -12,7 +12,7 @@ import { melde } from '../ui/notify.js';
 import { CONTRACTS, RULES, REP } from '../config.js';
 import { S, log, book, day } from '../state.js';
 import { klasseFuer, ladung, flottenGrenze } from './goods.js';
-import { pick, fmt, esc } from '../util.js';
+import { pick, fmt, esc, haversine } from '../util.js';
 import { repMul, addRep } from './market.js';
 import { maxVertraege, checkLevelUp } from './progress.js';
 import { toast } from '../ui/toast.js';
@@ -51,8 +51,15 @@ export function makeContractOffer() {
   const perLoad = Math.round(
     baseFee(firm) * CONTRACTS.RATE * repMul() * klasse.preis * mengenFaktor / 10) * 10;
 
+  /* Eine Relation hat zwei Enden: Beim Verlader wird geladen, beim
+     Empfänger entladen. Ohne diese Unterscheidung stünde das Fahrzeug
+     nach der ersten Fahrt am Ziel und könnte dort ohne einen einzigen
+     Kilometer weitere Sendungen abliefern. */
+  const empfaenger = suchEmpfaenger(firm);
+
   return {
     id: id(), firm, weeks, perWeek, total,
+    empfaenger,
     perLoad,
     klasse: l.klasse,
     paletten: l.paletten,
@@ -102,6 +109,31 @@ export function currentRate(contract) {
 }
 
 export const findContract = cid => S.contracts.find(c => c.id === cid);
+
+/* Ein Empfänger in vernünftiger Entfernung zum Verlader.
+
+   Zu nah wäre keine Fracht, zu weit sprengte den Rahmen. Umschlagpunkte
+   sind bevorzugte Ziele — dorthin laufen die meisten Relationen. */
+function suchEmpfaenger(verlader) {
+  const kandidaten = [...(S.firms || []), ...(S.hubs || [])]
+    .filter(z => z.name !== verlader.name)
+    .map(z => ({ z, km: haversine(verlader, z) }))
+    .filter(e => e.km > 25 && e.km < 450);
+
+  if (!kandidaten.length) {
+    /* Notfalls das Depot — immerhin ein anderer Ort. */
+    return { name: S.depot.name, lat: S.depot.lat, lon: S.depot.lon,
+             km: haversine(verlader, S.depot), kind: 'Lager' };
+  }
+
+  /* Umschlagpunkte zählen doppelt. */
+  const topf = [];
+  for (const e of kandidaten) {
+    topf.push(e.z);
+    if (e.z.art) topf.push(e.z);
+  }
+  return pick(topf);
+}
 
 export function registerDelivery(cid) {
   const c = findContract(cid);

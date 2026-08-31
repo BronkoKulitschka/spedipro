@@ -109,19 +109,33 @@ export async function startTour(truckNr, sendungen, opts = {}) {
 
   const folge = ordneStopps(truckPos(truck), sendungen);
 
-  /* Alle Teilstrecken vorab berechnen, damit die Tour als Ganzes steht. */
+  /* Alle Teilstrecken vorab berechnen, damit die Tour als Ganzes steht.
+
+     Sendungen mit einem Abholort — Vertragsfracht — brauchen zwei
+     Etappen: erst zum Verlader, dann zum Empfänger. */
   const etappen = [];
   let von = truckPos(truck);
 
+  async function strecke(a, b) {
+    if (opts.sync) return straightRoute(a, b);
+    return osrmRoute(a, b);       // wirft nicht, fällt selbst zurück
+  }
+
   for (const sendung of folge) {
-    let route;
-    if (opts.sync) {
-      route = straightRoute(von, sendung.firm);
-    } else {
-      try { route = await osrmRoute(von, sendung.firm); }
-      catch { route = straightRoute(von, sendung.firm); }
+    if (sendung.abholung && haversine(von, sendung.abholung) > 0.5) {
+      etappen.push({
+        route: await strecke(von, sendung.abholung),
+        sendung,
+        art: 'abholung',
+      });
+      von = sendung.abholung;
     }
-    etappen.push({ route, sendung });
+
+    etappen.push({
+      route: await strecke(von, sendung.firm),
+      sendung,
+      art: 'zustellung',
+    });
     von = sendung.firm;
   }
 
@@ -154,8 +168,8 @@ function starteEtappe(truck) {
   truck.progress = 0;
   truck.phase = 'driving';
   truck.job = {
-    kind: 'delivery',
-    firm: sendung.firm,
+    kind: e.art === 'abholung' ? 'abholung' : 'delivery',
+    firm: e.art === 'abholung' ? sendung.abholung : sendung.firm,
     fee: sendung.fee,
     art: sendung.kind,
     klasse: sendung.klasse,
@@ -389,6 +403,40 @@ function finish(truck) {
   const km = truck.route.km;
   const fuel = km * truckFuel(truck) * dieselFaktor(d) * dieselRabatt();
   if (d.stats) d.stats.diesel += fuel;
+
+  /* Eine Abholung ist keine Zustellung: Es gibt kein Geld, nichts wird
+     gezählt, nur der Diesel schlägt zu Buche und an der Rampe wird
+     geladen. */
+  if (truck.job.kind === 'abholung') {
+    book('Diesel', `${km.toFixed(0)} km Anfahrt · LKW ${truck.nr}`, -fuel);
+    truck.odo = (truck.odo || 0) + km;
+    S.stats.km += km;
+    if (d.km !== undefined) d.km += km;
+
+    const zeit = RULES.LOAD_BASE + (truck.job.paletten || 1) * RULES.LOAD_JE_PAL * 0.7;
+    truck.restMin = Math.min(RULES.LOAD_MAX, Math.round(zeit * rampeFaktor(d)));
+    truck.restKind = 'rampe';
+
+    log(`📦 ${d.name} lädt bei ${truck.job.firm.name}.`);
+
+    truck.pos = { lat: truck.job.target.lat, lon: truck.job.target.lon };
+    truck.place = truck.job.firm.name;
+    truck.progress = 0;
+    truck.route = null;
+    removeTruckLayers(truck);
+
+    if (truck.tour && truck.tour.index + 1 < truck.tour.etappen.length) {
+      truck.tour.index++;
+      truck.job = null;
+      starteEtappe(truck);
+      return;
+    }
+
+    truck.tour = null;
+    truck.job = null;
+    truck.phase = 'idle';
+    return;
+  }
 
   if (truck.job.kind === 'delivery') {
     const fee = truck.job.fee * feeMul(d);

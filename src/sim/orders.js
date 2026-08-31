@@ -7,7 +7,7 @@
 
 import { RULES, CONTRACTS } from '../config.js';
 import { S } from '../state.js';
-import { pick } from '../util.js';
+import { pick, haversine } from '../util.js';
 import { repMul, supplyToday } from './market.js';
 import { currentRate } from './contracts.js';
 import { levelOf, pickPartner } from './partners.js';
@@ -68,11 +68,20 @@ function pickZiel() {
 }
 
 function contractOffer(contract) {
-  /* Die Ladung steht im Vertrag fest — jede Sendung ist dieselbe. */
+  /* Die Ladung steht im Vertrag fest — jede Sendung ist dieselbe.
+
+     Geladen wird beim Verlader, entladen beim Empfänger. Deshalb
+     trägt die Sendung zwei Orte: firm ist das Ziel, abholung der
+     Start. Ohne diese Trennung stünde das Fahrzeug nach der ersten
+     Fahrt am Ziel und lieferte dort ohne Kilometer weiter. */
+  const empf = contract.empfaenger || contract.firm;
+
   return {
-    id: id(), kind: 'vertrag', firm: contract.firm,
+    id: id(), kind: 'vertrag',
+    firm: empf,
+    abholung: contract.firm,
     contractId: contract.id,
-    estKm: contract.firm.km * 1.28,
+    estKm: haversine(contract.firm, empf) * 1.28,
     klasse: contract.klasse || 'stueckgut',
     paletten: contract.paletten || 8,
     gewicht: contract.gewicht || 3200,

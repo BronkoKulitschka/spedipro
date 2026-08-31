@@ -10,6 +10,7 @@ import { onTick } from '../ui/wm.js';
 import { empty, kasseLeiste, kasseAktualisieren } from './shared.js';
 import { klasseVon, passendeFahrzeuge, noetigeKlasse, warumNicht } from '../sim/goods.js';
 import { EQUIPMENT } from '../config.js';
+import { haversine } from '../util.js';
 
 const tageBis = c => Math.max(0, Math.ceil((c.endMinutes - S.minutes) / 1440));
 
@@ -90,6 +91,12 @@ export const ContractsApp = {
             <strong>${esc(c.firm.name)}</strong>
             <span class="money">${fmt(rate)}<span class="muted"> je Fahrt</span></span>
           </div>
+          ${c.empfaenger ? `
+            <div class="relation">
+              📍 ${esc(c.firm.name.slice(0, 22))}
+              <span class="pfeil">→</span>
+              ${esc(c.empfaenger.name.slice(0, 22))}
+            </div>` : ''}
           ${c.klasse ? `
             <div class="ladung-zeile">
               ${klasseVon(c.klasse).icon} ${esc(klasseVon(c.klasse).name)} ·
@@ -148,6 +155,14 @@ function zeigeAusschreibung(o, platzFrei) {
       <strong>${esc(o.firm.name)}</strong>
       <span class="money">${fmt(o.perLoad)}<span class="muted"> je Fahrt</span></span>
     </div>
+
+    ${o.empfaenger ? `
+      <div class="relation">
+        📍 ${esc(o.firm.name.slice(0, 24))}
+        <span class="pfeil">→</span>
+        ${esc(o.empfaenger.name.slice(0, 24))}
+        <span class="muted">· ${Math.round(haversine(o.firm, o.empfaenger) * 1.28)} km je Fahrt</span>
+      </div>` : ''}
 
     <div class="ladung-zeile">
       ${g.icon} ${esc(g.name)} ·

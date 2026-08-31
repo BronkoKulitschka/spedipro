@@ -297,6 +297,13 @@ export const DispoApp = {
           <span class="money">${fmt(o.fee)}</span>
         </div>
 
+        ${o.abholung ? `
+          <div class="relation">
+            📦 laden bei ${esc(o.abholung.name.slice(0, 22))}
+            <span class="pfeil">→</span>
+            ${esc(o.firm.name.slice(0, 22))}
+          </div>` : ''}
+
         <div class="anfahrt">
           <span class="anfahrt-km">📍 ${strasse.toFixed(0)} km</span>
           <span class="muted">ca. ${zeit} Fahrt</span>
