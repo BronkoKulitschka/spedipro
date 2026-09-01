@@ -5,7 +5,8 @@ import { fmt, num, esc } from '../util.js';
 import { TRAITS, staerkenVon, schwaechenVon } from '../sim/persons.js';
 import { tagesLohn, lohnGesamt, einstellen, entlassen, zuteilen, abziehen,
          fahrzeugVon, freieFahrer, leereFahrzeuge, fuelleBoerse,
-         bewertung, urteil, auffaelligkeiten, ABFINDUNG_TAGE } from '../sim/staff.js';
+         bewertung, urteil, auffaelligkeiten, ABFINDUNG_TAGE,
+         geschlechtVon } from '../sim/staff.js';
 import { openApp, onTick } from '../ui/wm.js';
 import { fahrerBild, onBildBereit } from '../ui/sprites.js';
 import { kasseLeiste, kasseAktualisieren, empty } from './shared.js';
@@ -123,7 +124,7 @@ function zeigeTeam() {
 
     return `
     <div class="person person-mit-bild">
-      <span class="person-bildnis">${fahrerBild(d.id)}</span>
+      <span class="person-bildnis">${fahrerBild(d.id, geschlechtVon(d))}</span>
       <div class="person-rumpf">
       <div class="flex-row" style="justify-content:space-between;">
         <span><strong>${esc(d.name)}</strong>
@@ -172,7 +173,7 @@ function zeigeBoerse() {
 
     return `
     <div class="person person-mit-bild">
-      <span class="person-bildnis">${fahrerBild(b.id)}</span>
+      <span class="person-bildnis">${fahrerBild(b.id, geschlechtVon(b))}</span>
       <div class="person-rumpf">
       <div class="flex-row" style="justify-content:space-between;">
         <span><strong>${esc(b.name)}</strong>
@@ -218,7 +219,7 @@ function zeigeUrteil() {
 
     return `
     <div class="person person-mit-bild">
-      <span class="person-bildnis">${fahrerBild(d.id)}</span>
+      <span class="person-bildnis">${fahrerBild(d.id, geschlechtVon(d))}</span>
       <div class="person-rumpf">
       <div class="flex-row" style="justify-content:space-between;">
         <span><strong>${i + 1}. ${esc(d.name)}</strong>

@@ -131,16 +131,94 @@ ok(mitRahmen.includes('<image'), 'Ein echtes Bild wird eingebunden, sobald vorha
 ok(mitRahmen.includes('rahmen-fern.png'), 'Die richtige Datei für diese Klasse');
 ok((mitRahmen.match(/<rect/g) || []).length >= 3, 'Die Stellplätze bleiben über dem Bild sichtbar');
 
+/* Alle elf Klassen haben inzwischen eigene Zeilen; jumbo braucht daher
+   keinen Ersatz mehr — es zeigt jetzt sein eigenes Sattelzug-Blatt. */
 const jumboTruck = { ...t, model: 'jumbo' };
+globalThis.Image = class {
+  set src(v) { setTimeout(() => { if (v.includes('rahmen-sattelzug')) this.onload?.(); else this.onerror?.(); }, 0); }
+};
 ladeBild(jumboTruck, [], null);
 await new Promise(r => setTimeout(r, 20));
-const ersatz = ladeBild(jumboTruck, [], { klasse: 'stueckgut', paletten: 2, gewicht: 800, firm: { name: 'X' } });
-ok(ersatz.includes('rahmen-fern.png'),
-   'Eine Klasse ohne eigenes Bild fällt auf ein ähnliches zurück (jumbo → fern)');
+const eigenesBild = ladeBild(jumboTruck, [], { klasse: 'stueckgut', paletten: 2, gewicht: 800, firm: { name: 'X' } });
+ok(eigenesBild.includes('rahmen-sattelzug.png'),
+   'jumbo zeigt inzwischen sein eigenes Blatt (sattelzug)');
 
 const kompaktTruck = { ...t, model: 'kompakt' };
 const ohneRahmen = ladeBild(kompaktTruck, [], { klasse: 'stueckgut', paletten: 2, gewicht: 500, firm: { name: 'Y' } });
 ok(!ohneRahmen.includes('<image'), 'Ganz ohne Bild und ohne Ersatz bleibt es bei der Zeichnung');
+
+/* ── Mehrere Klassen auf einem gemeinsamen Blatt ────────────────
+   Statt vieler Einzelbilder teilen sich ähnliche Klassen ein Blatt,
+   in Zeilen. Der Beschnitt muss dafür sorgen, dass nur die passende
+   Zeile sichtbar wird — nicht die Nachbarn darüber oder darunter. */
+console.log('\nMehrere Klassen auf einem Blatt\n');
+
+const blattFake = {
+  url: './assets/rahmen-probe.png',
+  reihen: 4,
+  index: 2,
+  seitenverhaeltnis: 2.2,
+  grenzen: [0, 0.25, 0.5, 0.75, 1],      // gleich hohe Zeilen, zu Testzwecken
+  flaeche: { x1: 0.3, x2: 0.9, y1: 0.2, y2: 0.7 },
+};
+
+const geschnitten = ladeBild(t, [],
+  { klasse: 'stueckgut', paletten: 2, gewicht: 500, firm: { name: 'Z' } },
+  blattFake);
+
+ok(geschnitten.includes('<clipPath'), 'Ein Beschnittpfad wird erzeugt');
+ok(geschnitten.includes('rahmen-probe.png'), 'Die Blattdatei wird verwendet');
+ok(geschnitten.includes('clip-path="url(#'), 'Der Beschnitt wird auf das Bild angewendet');
+
+/* Zwei verschiedene Zeilenindizes müssen zu unterschiedlichem
+   senkrechten Versatz führen — sonst zeigten sie dieselbe Zeile. */
+const zeile0 = ladeBild(t, [], null, { ...blattFake, index: 0 });
+const zeile3 = ladeBild(t, [], null, { ...blattFake, index: 3 });
+const yWert = html => html.match(/<image[^>]*\sy="(-?[\d.]+)"/)?.[1];
+ok(yWert(zeile0) !== yWert(zeile3),
+   `Unterschiedliche Zeilen ergeben unterschiedlichen Versatz (${yWert(zeile0)} ≠ ${yWert(zeile3)})`);
+
+/* Ein einzeiliges Blatt (reihen: 1, wie bisher der Sattelzug) braucht
+   keinen Beschnitt — das wäre unnötiger Aufwand. */
+const einzeilig = ladeBild(t, [], null,
+  { url: './assets/rahmen-fern.png', reihen: 1, index: 0,
+    seitenverhaeltnis: 3, grenzen: [0, 1], flaeche: blattFake.flaeche });
+ok(!einzeilig.includes('<clipPath'), 'Bei nur einer Zeile entfällt der Beschnitt');
+
+/* ── Ungleich hohe Zeilen ──────────────────────────────────────
+   Ein von einer KI erzeugtes Blatt hält keine gleichmäßigen
+   Zeilenhöhen ein. Der erste Ansatz (Bildhöhe geteilt durch
+   Zeilenzahl) schnitt mitten durch die nächste Fahrerkabine —
+   dieser Fall bildet genau das nach: eine kurze erste Zeile, eine
+   deutlich höhere zweite. */
+console.log('\nUngleich hohe Zeilen\n');
+
+const ungleich = {
+  url: './assets/rahmen-probe2.png',
+  reihen: 2,
+  seitenverhaeltnis: 2,           // Breite/Gesamthöhe des ganzen Blatts
+  grenzen: [0, 0.2, 1],            // erste Zeile schmal, zweite breit
+  flaeche: { x1: 0.3, x2: 0.9, y1: 0.1, y2: 0.9 },
+};
+
+const zeileSchmal = ladeBild(t, [], null, { ...ungleich, index: 0, flaeche: ungleich.flaeche });
+const zeileBreit = ladeBild(t, [], null, { ...ungleich, index: 1, flaeche: ungleich.flaeche });
+
+const versatzWert = html => Number(html.match(/<image[^>]*\sy="(-?[\d.]+)"/)?.[1]);
+const hoeheWert = html => Number(html.match(/<clipPath[^>]*>\s*<rect[^>]*height="([\d.]+)"/)?.[1]);
+
+ok(hoeheWert(zeileSchmal) < hoeheWert(zeileBreit),
+   `Die schmale Zeile bekommt weniger Höhe als die breite (${hoeheWert(zeileSchmal).toFixed(1)} < ${hoeheWert(zeileBreit).toFixed(1)})`);
+
+/* Bei einer naiven Gleichverteilung (Höhe / Zeilenzahl) läge der
+   Versatz der zweiten Zeile bei der Hälfte der Bildhöhe. Mit der
+   echten 20/80-Aufteilung muss er stattdessen bei einem Fünftel
+   liegen — das ist der Fehler, der beim ersten Versuch auftrat. */
+const bildOben = 16;
+const ganzeHoehe = 320 / ungleich.seitenverhaeltnis;
+const erwarteterVersatzZeile1 = bildOben - 0.2 * ganzeHoehe;
+ok(Math.abs(versatzWert(zeileBreit) - erwarteterVersatzZeile1) < 0.1,
+   `Der Versatz der zweiten Zeile berücksichtigt ihre echte Startgrenze (${versatzWert(zeileBreit).toFixed(1)})`);
 
 console.log(fehler ? `\n${fehler} Fehler\n` : '\nAlles richtig\n');
 process.exit(fehler ? 1 : 0);

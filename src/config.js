@@ -17,10 +17,19 @@ export const SKILLS = {
   calm:  { name: 'Gelassenheit',     icon: '🧘', max: 4, per: '−15 % Stauzeitverlust je Stufe' },
 };
 
-export const DRIVER_NAMES = [
-  'Kurt','Heike','Ali','Renate','Jörg','Mia','Bernd','Sandra','Tomasz',
-  'Fatma','Uwe','Nadine','Piet','Karin','Manfred','Ayla','Detlef','Svenja',
+/* Getrennt nach Geschlecht, damit Name und Bildnis eines Fahrers
+   zusammenpassen — sonst könnte "Heike" mit einem Männerporträt
+   erscheinen. Beide Listen möglichst gleich lang, damit die Auswahl
+   nicht einseitig ausfällt. */
+export const DRIVER_NAMES_M = [
+  'Kurt', 'Ali', 'Jörg', 'Bernd', 'Tomasz', 'Uwe', 'Piet', 'Manfred', 'Detlef',
 ];
+export const DRIVER_NAMES_F = [
+  'Heike', 'Renate', 'Mia', 'Sandra', 'Fatma', 'Nadine', 'Karin', 'Ayla', 'Svenja',
+];
+
+/* Für Stellen, die keine Rücksicht auf Geschlecht nehmen (z. B. Prüfläufe). */
+export const DRIVER_NAMES = [...DRIVER_NAMES_M, ...DRIVER_NAMES_F];
 
 /* Ereignisse aus dem Betriebsalltag.
 

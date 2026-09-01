@@ -12,6 +12,7 @@ import { openApp, onTick } from '../ui/wm.js';
 import { automatikFrei, stufeFuerAutomatik } from '../sim/progress.js';
 import { kasseLeiste, kasseAktualisieren } from './shared.js';
 import { fahrerBild, onBildBereit } from '../ui/sprites.js';
+import { geschlechtVon } from '../sim/staff.js';
 import { traitsVon } from '../sim/persons.js';
 import { focusTruck } from '../ui/map.js';
 
@@ -183,7 +184,7 @@ function row(truck) {
 
     <div class="fahrer-zeile">
       ${d
-        ? `<span class="fahrer-bildnis-klein">${fahrerBild(d.id)}</span>
+        ? `<span class="fahrer-bildnis-klein">${fahrerBild(d.id, geschlechtVon(d))}</span>
            <strong>${esc(d.name)}</strong>
            <span class="muted">· Stufe ${d.level}</span>
            ${d.points ? `<span class="ok">· ${d.points} Pkt. frei</span>` : ''}`

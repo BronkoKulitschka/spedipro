@@ -119,14 +119,40 @@ if (existsSync(gBlatt)) {
 console.log('\nFahrergesichter\n');
 
 const { fahrerSlot, FAHRER_SPALTEN, FAHRER_ZEILEN } = await import('../src/ui/sprites.js');
+const { neuerFahrer, geschlechtVon } = await import('../src/sim/staff.js');
+const { DRIVER_NAMES_M, DRIVER_NAMES_F } = await import('../src/config.js');
 
 const kennungen = Array.from({ length: 40 }, (_, i) => `f${i}xyz${i * 7}`);
-const slots = kennungen.map(fahrerSlot);
+const slotsW = kennungen.map(k => fahrerSlot(k, 'w'));
+const slotsM = kennungen.map(k => fahrerSlot(k, 'm'));
 
-ok(slots.every(s => s >= 0 && s < 8), 'Jeder Platz liegt zwischen 0 und 7');
-ok(new Set(slots).size >= 6, `Gute Streuung über 40 Kennungen (${new Set(slots).size} von 8 genutzt)`);
-ok(fahrerSlot('immerselbe') === fahrerSlot('immerselbe'),
+ok(slotsW.every(s => s >= 0 && s < 4), 'Weibliche Kennungen landen in der oberen Hälfte (0–3)');
+ok(slotsM.every(s => s >= 4 && s < 8), 'Männliche Kennungen landen in der unteren Hälfte (4–7)');
+ok(new Set(slotsW).size >= 3, `Gute Streuung bei weiblich (${new Set(slotsW).size} von 4 genutzt)`);
+ok(fahrerSlot('immerselbe', 'w') === fahrerSlot('immerselbe', 'w'),
    'Dieselbe Kennung ergibt immer denselben Platz');
+ok(fahrerSlot('x', 'w') !== fahrerSlot('x', 'm'),
+   'Dasselbe Muster ergibt je nach Geschlecht einen anderen Platz');
+
+/* Name und Geschlecht passen zusammen */
+const state = await import('../src/state.js');
+const { CITIES } = await import('../src/data/cities.js');
+state.resetState(CITIES[0]);
+state.S.drivers = [];
+
+let alleRichtig = true;
+for (let i = 0; i < 30; i++) {
+  const f = neuerFahrer();
+  state.S.drivers.push(f);
+  const erwartet = DRIVER_NAMES_F.includes(f.name) ? 'w'
+                 : DRIVER_NAMES_M.includes(f.name) ? 'm' : null;
+  if (erwartet && erwartet !== f.geschlecht) alleRichtig = false;
+}
+ok(alleRichtig, '30 erzeugte Fahrer: Name und gewürfeltes Geschlecht stimmen überein');
+
+/* Alte Spielstände ohne das Feld bekommen trotzdem etwas Stabiles */
+ok(geschlechtVon({ id: 'ohne-feld' }) === geschlechtVon({ id: 'ohne-feld' }),
+   'Ohne gespeichertes Geschlecht bleibt die Ableitung stabil');
 
 const fBlatt = join(hier, '..', 'assets', 'fahrer.png');
 if (existsSync(fBlatt)) {

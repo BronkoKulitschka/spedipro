@@ -52,7 +52,7 @@ export const TOPICS = {
       { h: 'Das Auftragsfenster' },
       { p: 'Dort steht alles beisammen — die Ladung mit Güterklasse und nötiger Ausstattung, die Strecke mit Fahrzeit und Erlös je Kilometer, der Auftraggeber mit Bildnis, Charakter und Stimmung.' },
       { p: 'Darunter das <strong>Ladeschema</strong>: der Wagen von oben, die Ladefläche in Stellplätze geteilt. Belegte Plätze sind eingefärbt, je Sendung eine eigene Farbe — bei einer Sammelladung sieht man so, was wem gehört. Die neue Sendung ist gelb hervorgehoben.' },
-      { p: 'Für manche Fahrzeugklassen liegt ein gezeichnetes Bild des tatsächlichen Fahrzeugs vor, die Stellplätze erscheinen dann direkt auf der Ladefläche. Fehlt ein Bild, zeigt eine einfache Zeichnung dasselbe.' },
+      { p: 'Für jede Fahrzeugklasse liegt ein Bild des tatsächlichen Fahrzeugs vor, die Stellplätze erscheinen direkt auf der Ladefläche.' },
       { p: 'Darunter ein zweiter Balken für die Nutzlast. Beide Grenzen gelten gleichzeitig: Bei schwerem Gut ist die Fläche halb leer und der Wagen trotzdem voll. Genau das macht das Bild sichtbar.' },
       { list: [
         '💬 verhandeln — öffnet das Gespräch mit dem Auftraggeber.',
@@ -143,6 +143,7 @@ export const TOPICS = {
       { h: 'Börse' },
       { p: 'Sechs Bewerber, die gelegentlich wechseln. Jeder hat eine bis drei Stärken und null bis zwei Schwächen. Manche bringen schon Erfahrung mit und kosten entsprechend mehr.' },
       { p: 'Zu jeder Eigenheit steht ausgeschrieben, was sie bedeutet und wie sie sich auswirkt — grün hinterlegt die Stärken, rot die Schwächen. „18 % mehr Diesel" ist eindeutiger als ein Vorzeichen, bei dem offenbleibt, ob es gut oder schlecht ist.' },
+      { p: 'Name und Bildnis eines Fahrers passen zusammen: Ein Bewerber mit weiblichem Namen bekommt auch ein weibliches Porträt. Fehlt das Bild noch, zeigt ein Sinnbild dasselbe Geschlecht.' },
       { p: 'Der Lohn beginnt mit dem ersten Tag und läuft weiter, ob gefahren wird oder nicht. Ein Fahrer ohne Fahrzeug kostet also Geld, ohne etwas einzubringen.' },
       { tab: {
         kopf: ['Posten', 'Betrag'],

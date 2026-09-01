@@ -7,7 +7,7 @@
    Der Lohn läuft täglich, unabhängig davon, ob gefahren wird — das ist
    der Grund, warum sich untätiges Personal nicht trägt. */
 
-import { DRIVER_NAMES, RULES } from '../config.js';
+import { DRIVER_NAMES_M, DRIVER_NAMES_F, RULES } from '../config.js';
 import { S, log, book } from '../state.js';
 import { pick, fmt, esc } from '../util.js';
 import { wuerfleTraits, TRAITS, lohnFaktor, istSchwaeche } from './persons.js';
@@ -21,8 +21,13 @@ let laufendeNr = 0;
 
 /* ── Anlegen ── */
 export function neuerFahrer(erfahren = false) {
+  /* Erst das Geschlecht würfeln, dann dazu passend den Namen — so
+     zeigt das Bildnis später immer die richtige Person zum Namen. */
+  const geschlecht = Math.random() < 0.5 ? 'w' : 'm';
+  const pool = geschlecht === 'w' ? DRIVER_NAMES_F : DRIVER_NAMES_M;
+
   const vergeben = new Set((S.drivers || []).map(d => d.name));
-  const frei = DRIVER_NAMES.filter(n => !vergeben.has(n));
+  const frei = pool.filter(n => !vergeben.has(n));
   const name = frei.length ? pick(frei) : 'Aushilfe ' + (++laufendeNr);
 
   /* Wie viele Stärken und Schwächen — der Zufall entscheidet, was für
@@ -36,6 +41,7 @@ export function neuerFahrer(erfahren = false) {
   return {
     id: 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
     name,
+    geschlecht,
     xp: 0,
     level: stufe,
     points: stufe,
@@ -52,6 +58,16 @@ export function neuerFahrer(erfahren = false) {
 }
 
 /* ── Lohn ── */
+/* Ältere Spielstände kennen noch kein Geschlecht — dann wird es aus
+   der Kennung abgeleitet, damit Name und Bildnis wenigstens ab jetzt
+   stabil zusammenbleiben. */
+export function geschlechtVon(d) {
+  if (d.geschlecht === 'w' || d.geschlecht === 'm') return d.geschlecht;
+  let h = 0;
+  for (const c of d.id || '') h = (h * 31 + c.charCodeAt(0)) % 1000;
+  return h % 2 === 0 ? 'w' : 'm';
+}
+
 export const tagesLohn = d =>
   Math.round((LOHN_BASIS + (d.level - 1) * LOHN_JE_STUFE) * lohnFaktor(d));
 

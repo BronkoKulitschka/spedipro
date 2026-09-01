@@ -161,13 +161,15 @@ export const gesichtStand = () => gZustand + ':' + gEinzelne.size;
 
 /* ── Gesichter der Fahrer ───────────────────────────────────────
    Anders als bei den Auftraggebern gibt es hier keinen festen
-   Charakter, an dem sich das Bild festmachen ließe — nur der Name,
-   und Namen wiederholen sich nie. Deshalb bekommt jeder Fahrer über
-   eine feste Streuung seiner Kennung eines von acht Bildnissen
-   zugewiesen. Derselbe Fahrer zeigt so immer dasselbe Gesicht, ohne
-   dass etwas gespeichert werden müsste. */
+   Charakter, an dem sich das Bild festmachen ließe — nur der Name.
+   Damit ein Bildnis nicht dem falschen Geschlecht zugeordnet wird,
+   ist das Sammelbild in zwei Hälften geteilt: obere Reihe weiblich,
+   untere Reihe männlich, je vier Personen. Innerhalb der passenden
+   Hälfte entscheidet eine feste Streuung der Kennung, welche der
+   vier es wird — derselbe Fahrer zeigt so immer dasselbe Gesicht,
+   ohne dass etwas gespeichert werden müsste. */
 
-const FAHRER_SLOTS = 8;
+const FAHRER_JE_GESCHLECHT = 4;
 const F_SPALTEN = 4;
 const F_ZEILEN  = 2;
 const F_BLATT   = './assets/fahrer.png';
@@ -188,7 +190,7 @@ function pruefeFahrer() {
   };
   blatt.src = F_BLATT;
 
-  for (let i = 0; i < FAHRER_SLOTS; i++) {
+  for (let i = 0; i < F_SPALTEN * F_ZEILEN; i++) {
     const bild = new Image();
     bild.onload = () => {
       fEinzelne.add(i);
@@ -199,23 +201,34 @@ function pruefeFahrer() {
   }
 }
 
-/* Ein Bildplatz von 0 bis 7, fest aus der Kennung abgeleitet. */
-export function fahrerSlot(kennung = '') {
+/* Ein Platz innerhalb der vier Bilder eines Geschlechts, fest aus der
+   Kennung abgeleitet. */
+function fahrerBasis(kennung = '') {
   let h = 2166136261;
   for (let i = 0; i < kennung.length; i++) {
     h ^= kennung.charCodeAt(i);
     h = Math.imul(h, 16777619);
   }
   h ^= h >>> 13;
-  return (h >>> 0) % FAHRER_SLOTS;
+  return (h >>> 0) % FAHRER_JE_GESCHLECHT;
 }
 
-const FAHRER_SINNBILD = ['👨‍✈️', '👩‍✈️', '🧔', '👱‍♀️', '🧑🏾', '👩🏽', '🧑‍🦰', '👴'];
+/* Der Bildplatz von 0 bis 7 im Sammelbild: 0–3 weiblich (obere
+   Reihe), 4–7 männlich (untere Reihe). */
+export function fahrerSlot(kennung = '', geschlecht = 'w') {
+  return fahrerBasis(kennung) + (geschlecht === 'm' ? FAHRER_JE_GESCHLECHT : 0);
+}
 
-/* Liefert das Bild für einen Fahrer, anhand seiner Kennung. */
-export function fahrerBild(kennung) {
+const FAHRER_SINNBILD_W = ['👩‍✈️', '👱‍♀️', '👩🏽', '👩🏾'];
+const FAHRER_SINNBILD_M = ['🧔', '👨‍✈️', '🧑‍🦰', '👴'];
+const FAHRER_SINNBILD = [...FAHRER_SINNBILD_W, ...FAHRER_SINNBILD_M];
+
+/* Liefert das Bild für einen Fahrer, passend zu Kennung und
+   Geschlecht. Ohne Angabe des Geschlechts gilt weiblich als
+   Voreinstellung — kommt nur bei sehr alten Spielständen vor. */
+export function fahrerBild(kennung, geschlecht = 'w') {
   pruefeFahrer();
-  const slot = fahrerSlot(kennung);
+  const slot = fahrerSlot(kennung, geschlecht);
 
   if (fZustand === 'blatt') {
     const sp = slot % F_SPALTEN, ze = Math.floor(slot / F_SPALTEN);
@@ -239,54 +252,129 @@ export const FAHRER_ZEILEN = F_ZEILEN;
 
 
 /* ── Fahrzeugrahmen für das Ladeschema ────────────────────────────
-   Ein Bild je Fahrzeugklasse: Fahrerhaus, Außenkontur und Räder von
-   oben, die Ladefläche leer. Die Stellplätze zeichnet das Spiel selbst
-   darüber — das Bild liefert nur den Rahmen, keine Farbe.
+   Fahrerhaus, Außenkontur und Räder von oben, die Ladefläche leer.
+   Die Stellplätze zeichnet das Spiel selbst darüber — das Bild liefert
+   nur den Rahmen, keine Farbe.
 
-   Klassen ohne eigenes Bild fallen auf das ähnlichste zurück, bis
-   weitere Rahmen entstehen. */
+   Mehrere Fahrzeugklassen mit ähnlichem Aufbau teilen sich ein
+   gemeinsames Blatt — dieselbe Idee wie bei den Gesichtern, nur mit
+   Zeilen statt eines Rasters, weil ein Fahrzeug von oben breit und
+   flach ist, kein Quadrat. Jede Zeile zeigt ein Fahrzeug in voller
+   Blattbreite; welche Zeile zu welcher Klasse gehört, steht in
+   RAHMEN_KLASSEN. */
 
-const RAHMEN_ERSATZ = {
-  kastenwagen: 'kurier', maxi: 'kurier',
-  leicht: 'siebenhalb',
-  motorwagen: 'verteiler',
-  jumbo: 'fern', kuehlzug: 'fern', schwer: 'fern',
-};
+/* Ein Blatt aus mehreren Fahrzeugen untereinander.
 
-/* Lage der Ladefläche im Bild, als Anteil von Breite und Höhe, dazu das
-   Seitenverhältnis des Bildes selbst. kastenwagen … schwer nutzen den
-   Rahmen von rahmen-fern.png als Beispiel, bis eigene Bilder für jede
-   Klasse vorliegen — deshalb steht der Eintrag hier bewusst nur einmal. */
-const RAHMEN_DATEN = {
+   WICHTIG: Die Zeilen sind in der Praxis unterschiedlich hoch — ein
+   von einer KI erzeugtes Bild hält sich nicht an ein starres Raster,
+   jedes Fahrzeug bekommt so viel Platz, wie es braucht. Ein erster
+   Versuch mit angenommener Gleichverteilung (Bildhöhe geteilt durch
+   Zeilenzahl) schnitt mitten durch die nächste Fahrerkabine.
+
+   grenzen: reihen+1 Werte, als Anteil der Gesamthöhe — die Ränder
+     zwischen den Zeilen, gelegt in die Lücke zwischen zwei Fahrzeugen.
+   flaechen: ein Eintrag je Zeile mit der Lage der Ladefläche darin,
+     x als Anteil der Bildbreite, y als Anteil der ZEILENEIGENEN Höhe
+     (0 = oberer Rand der Zeile, 1 = unterer Rand). */
+const RAHMEN_BLAETTER = {
   fern: {
-    flaeche: { x1: 0.309, x2: 0.936, y1: 0.179, y2: 0.717 },
+    reihen: 1,
     seitenverhaeltnis: 2178 / 722,
+    grenzen: [0, 1],
+    flaechen: [{ x1: 0.309, x2: 0.936, y1: 0.179, y2: 0.717 }],
+  },
+  klein: {
+    reihen: 4,
+    seitenverhaeltnis: 1008 / 1560,       // Breite durch Gesamthöhe des Blatts
+    grenzen: [0, 0.2077, 0.4372, 0.6808, 1],
+    flaechen: [
+      { x1: 0.406, x2: 0.735, y1: 0.111, y2: 0.929 },   // Kastenwagen
+      { x1: 0.365, x2: 0.816, y1: 0.089, y2: 0.894 },   // Kurier
+      { x1: 0.259, x2: 0.851, y1: 0.105, y2: 0.913 },   // Maxi (ohne Ladebordwand)
+      { x1: 0.312, x2: 0.866, y1: 0.088, y2: 0.759 },   // Kompakt 5.0
+    ],
+  },
+  solo: {
+    reihen: 3,
+    seitenverhaeltnis: 1024 / 1536,
+    grenzen: [0, 0.3294, 0.6354, 1],
+    flaechen: [
+      { x1: 0.282, x2: 0.930, y1: 0.188, y2: 0.909 },   // Nahverkehr 7.5 (ohne Rampe)
+      { x1: 0.257, x2: 0.936, y1: 0.130, y2: 0.874 },   // Verteiler 12
+      { x1: 0.217, x2: 0.957, y1: 0.121, y2: 0.764 },   // Solo 18
+    ],
+  },
+  sattelzug: {
+    reihen: 3,
+    seitenverhaeltnis: 1024 / 1536,
+    grenzen: [0, 0.3555, 0.5944, 1],
+    flaechen: [
+      { x1: 0.267, x2: 0.977, y1: 0.489, y2: 0.859 },   // Jumbo 40
+      { x1: 0.317, x2: 0.979, y1: 0.237, y2: 0.801 },   // Thermo 40 (ohne Kälteaggregat)
+      { x1: 0.367, x2: 0.981, y1: 0.177, y2: 0.435 },   // Schwerlast 620
+    ],
   },
 };
 
-const rahmenGeprueft = new Map();   // key -> 'da' | 'fehlt' | 'prueft'
+/* Welche Zeile welches Blattes zu welcher Fahrzeugklasse gehört.
+   index ist null-basiert, von oben nach unten. */
+const RAHMEN_KLASSEN = {
+  fern: { blatt: 'fern', index: 0 },
 
-function pruefeRahmen(key) {
-  if (!RAHMEN_DATEN[key] || rahmenGeprueft.has(key)) return;
-  rahmenGeprueft.set(key, 'prueft');
+  kastenwagen: { blatt: 'klein', index: 0 },
+  kurier:      { blatt: 'klein', index: 1 },
+  maxi:        { blatt: 'klein', index: 2 },
+  leicht:      { blatt: 'klein', index: 3 },
+
+  siebenhalb:  { blatt: 'solo', index: 0 },
+  verteiler:   { blatt: 'solo', index: 1 },
+  motorwagen:  { blatt: 'solo', index: 2 },
+
+  jumbo:       { blatt: 'sattelzug', index: 0 },
+  kuehlzug:    { blatt: 'sattelzug', index: 1 },
+  schwer:      { blatt: 'sattelzug', index: 2 },
+};
+
+/* Klassen ohne eigene Zeile fallen auf die ähnlichste zurück, bis das
+   passende Blatt vorliegt. */
+/* Alle elf Klassen haben inzwischen eine eigene Zeile — die
+   Ersatzliste bleibt als Absicherung stehen, greift aber nicht mehr. */
+const RAHMEN_ERSATZ = {};
+
+const rahmenGeprueft = new Map();   // blattKey -> 'da' | 'fehlt' | 'prueft'
+
+function pruefeRahmenBlatt(blattKey) {
+  if (!RAHMEN_BLAETTER[blattKey] || rahmenGeprueft.has(blattKey)) return;
+  rahmenGeprueft.set(blattKey, 'prueft');
 
   const bild = new Image();
-  bild.onload = () => { rahmenGeprueft.set(key, 'da'); beiAenderung?.(); };
-  bild.onerror = () => { rahmenGeprueft.set(key, 'fehlt'); };
-  bild.src = `./assets/rahmen-${key}.png`;
+  bild.onload = () => { rahmenGeprueft.set(blattKey, 'da'); beiAenderung?.(); };
+  bild.onerror = () => { rahmenGeprueft.set(blattKey, 'fehlt'); };
+  bild.src = `./assets/rahmen-${blattKey}.png`;
 }
 
-/* Liefert { url, flaeche, seitenverhaeltnis } oder null, wenn (noch)
-   kein Rahmen vorliegt. */
+/* Liefert { url, flaeche, seitenverhaeltnis, reihen, index } oder null,
+   wenn (noch) kein passendes Blatt vorliegt. */
 export function rahmenVon(modelKey) {
-  const ersatz = RAHMEN_ERSATZ[modelKey];
-  const key = rahmenGeprueft.get(modelKey) === 'da' ? modelKey
-            : rahmenGeprueft.get(ersatz) === 'da' ? ersatz
-            : null;
+  const eigene = RAHMEN_KLASSEN[modelKey];
+  const ersatzKlasse = RAHMEN_ERSATZ[modelKey];
+  const ersatz = ersatzKlasse ? RAHMEN_KLASSEN[ersatzKlasse] : null;
 
-  pruefeRahmen(modelKey);
-  if (ersatz) pruefeRahmen(ersatz);
+  const gefunden = eigene && rahmenGeprueft.get(eigene.blatt) === 'da' ? eigene
+                 : ersatz && rahmenGeprueft.get(ersatz.blatt) === 'da' ? ersatz
+                 : null;
 
-  if (!key) return null;
-  return { url: `./assets/rahmen-${key}.png`, ...RAHMEN_DATEN[key] };
+  if (eigene) pruefeRahmenBlatt(eigene.blatt);
+  if (ersatz) pruefeRahmenBlatt(ersatz.blatt);
+
+  if (!gefunden) return null;
+  const blatt = RAHMEN_BLAETTER[gefunden.blatt];
+  return {
+    url: `./assets/rahmen-${gefunden.blatt}.png`,
+    reihen: blatt.reihen,
+    seitenverhaeltnis: blatt.seitenverhaeltnis,
+    grenzen: blatt.grenzen,
+    index: gefunden.index,
+    flaeche: blatt.flaechen[gefunden.index],
+  };
 }

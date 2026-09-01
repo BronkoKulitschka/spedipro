@@ -26,7 +26,7 @@ function reihen(plaetze) {
 
 /* sendungen: was schon auf der Ladeliste liegt
    neu:       die Sendung, um die es gerade geht (wird hervorgehoben) */
-export function ladeBild(truck, sendungen = [], neu = null) {
+export function ladeBild(truck, sendungen = [], neu = null, rahmenTest = undefined) {
   const kap = kapazitaet(truck);
   const m = modelOf(truck);
 
@@ -59,7 +59,7 @@ export function ladeBild(truck, sendungen = [], neu = null) {
   const breite = 320;
   const rand = 10;
 
-  const rahmen = rahmenVon(truck.model);
+  const rahmen = rahmenTest !== undefined ? rahmenTest : rahmenVon(truck.model);
 
   const svgInhalt = rahmen
     ? mitBild(rahmen, plaetze, obenZahl, untenZahl, breite)
@@ -107,10 +107,28 @@ export function ladeBild(truck, sendungen = [], neu = null) {
 /* ── Zeichnung mit echtem Fahrzeugbild ─────────────────────────────
    Das Bild liefert Fahrerhaus, Kontur und Räder; die Stellplätze
    werden darüber in die freie Fläche gezeichnet, an der Stelle, die
-   für dieses Bild vermessen wurde. */
+   für dieses Bild vermessen wurde.
+
+   Liegt das Fahrzeug als eine von mehreren Zeilen auf einem
+   gemeinsamen Blatt vor, wird nur die passende Zeile sichtbar
+   gemacht. Die Zeilen sind dabei nicht gleich hoch — ein von einer
+   KI erzeugtes Bild hält sich nicht an ein starres Raster, jedes
+   Fahrzeug bekommt so viel Platz, wie es braucht. Deshalb steht die
+   Lage jeder Zeile einzeln in rahmen.grenzen, statt sie aus der
+   Zeilenzahl zu errechnen. */
 function mitBild(rahmen, plaetze, obenZahl, untenZahl, breite) {
   const bildOben = 16;                              // Platz für die Beschriftung
-  const bildHoehe = breite / rahmen.seitenverhaeltnis;
+
+  const reihenZahl = rahmen.reihen || 1;
+  const zeilenIndex = rahmen.index || 0;
+  const grenzen = rahmen.grenzen || [0, 1];
+
+  /* Höhe des ganzen Blatts, wäre es auf die Zielbreite skaliert. Eine
+     einzelne Zeile ist der Anteil davon zwischen ihren beiden Grenzen. */
+  const ganzeHoeheSkaliert = breite / rahmen.seitenverhaeltnis;
+  const rowY0 = grenzen[zeilenIndex];
+  const rowY1 = grenzen[zeilenIndex + 1];
+  const bildHoehe = (rowY1 - rowY0) * ganzeHoeheSkaliert;
 
   const f = rahmen.flaeche;
   const flX1 = f.x1 * breite, flX2 = f.x2 * breite;
@@ -138,13 +156,44 @@ function mitBild(rahmen, plaetze, obenZahl, untenZahl, breite) {
                   stroke-width="${p.neu ? 1.2 : 0.6}"/>`;
   };
 
+  const bildMarkup = reihenZahl > 1
+    ? bildAusschnitt(rahmen.url, bildOben, bildHoehe, breite, ganzeHoeheSkaliert, rowY0)
+    : `<image href="${rahmen.url}" x="0" y="${bildOben}" width="${breite}" height="${bildHoehe}"
+              preserveAspectRatio="none"/>`;
+
   const markup = `
-      <image href="${rahmen.url}" x="0" y="${bildOben}" width="${breite}" height="${bildHoehe}"
-             preserveAspectRatio="none"/>
+      ${bildMarkup}
       ${Array.from({ length: obenZahl }, (_, i) => kasten(i, 0)).join('')}
       ${Array.from({ length: untenZahl }, (_, i) => kasten(i, 1)).join('')}`;
 
   return { markup, hoehe: bildOben + bildHoehe + 26 };
+}
+
+/* Zähler für eindeutige Kennungen der Beschnittpfade — mehrere
+   Ladeschemata können gleichzeitig auf der Seite stehen. */
+let beschnittZaehler = 0;
+
+/* Eine Zeile aus einem gemeinsamen Blatt herausschneiden.
+
+   Das ganze Blatt wird auf die Zielbreite skaliert gezeichnet — bei
+   dieser Skalierung landet die gewünschte Zeile an einer bestimmten
+   Stelle, die sich aus ihrer Startgrenze (rowY0) ergibt. Ein
+   Beschnittpfad blendet alles außerhalb der Zeile aus — ohne ihn
+   wären Nachbarzeilen oberhalb oder unterhalb sichtbar, denn die
+   Zeilen sind unterschiedlich hoch und ein einfacher Ausschnitt nach
+   Index träfe die falsche Stelle. */
+function bildAusschnitt(url, bildOben, bildHoehe, breite, ganzeHoeheSkaliert, rowY0) {
+  const yVersatz = bildOben - rowY0 * ganzeHoeheSkaliert;
+  const id = `rahmenAusschnitt${++beschnittZaehler}`;
+
+  return `
+      <clipPath id="${id}">
+        <rect x="0" y="${bildOben}" width="${breite}" height="${bildHoehe}"/>
+      </clipPath>
+      <g clip-path="url(#${id})">
+        <image href="${url}" x="0" y="${yVersatz}" width="${breite}" height="${ganzeHoeheSkaliert}"
+               preserveAspectRatio="none"/>
+      </g>`;
 }
 
 /* ── Gezeichnete Fassung, wenn kein Bild vorliegt ── */

@@ -605,6 +605,20 @@ nicht.
 
 `node test/clients.mjs` prüft die Balance.
 
+## Name und Geschlecht passen zusammen
+
+Die Namensliste ist nach Geschlecht getrennt (`DRIVER_NAMES_M` /
+`DRIVER_NAMES_F` in `config.js`). Beim Anlegen eines Fahrers
+(`neuerFahrer()`) wird zuerst das Geschlecht gewürfelt, danach der Name
+aus der passenden Liste gezogen — und dasselbe Geschlecht bestimmt auch
+den Bildplatz (`fahrerSlot()` in `ui/sprites.js`). Das Sammelbild ist
+dafür in zwei Hälften geteilt: obere Reihe weiblich, untere Reihe
+männlich, je vier Personen.
+
+Ältere Spielstände kennen das Feld noch nicht — `geschlechtVon()` in
+`sim/staff.js` leitet dann etwas Stabiles aus der Kennung ab, statt
+abzustürzen.
+
 ## Fahrergesichter
 
 Anders als bei den Auftraggebern gibt es bei Fahrern keinen festen
@@ -615,8 +629,16 @@ zugewiesen (`fahrerSlot()` in `ui/sprites.js`). Derselbe Fahrer zeigt so
 immer dasselbe Gesicht, in Personalbörse, Mannschaft, Auswertung und
 Fuhrpark, ohne dass etwas gespeichert werden muss.
 
-`assets/fahrer.png`, vier Spalten mal zwei Zeilen. Fehlt die Datei,
-zeigt eines von acht Sinnbildern.
+`assets/fahrer.png`, vier Spalten mal zwei Zeilen — obere Reihe
+weiblich, untere männlich. Fehlt die Datei, zeigt eines von acht
+Sinnbildern.
+
+**Quadratische Felder aus hochkant gelieferten Bildern:** Ein
+gelieferter Rohentwurf hatte hochkant-Felder (Verhältnis 3:4), das
+Anzeigeraster erwartet aber quadratische Felder. Unkorrigiert hätte die
+CSS-Technik (`background-size: 400% 200%`) jedes Gesicht in die Breite
+gezerrt. Jedes Feld wird deshalb vor dem Speichern auf ein Quadrat
+zugeschnitten, mit mehr Raum oben (Kopf, Frisur) als unten (Schultern).
 
 ## Auftragsfenster und Ladeschema
 
@@ -638,9 +660,26 @@ genau liegt, steht als Anteil von Breite und Höhe in `RAHMEN_DATEN`
 (`ui/sprites.js`), damit die Plätze auch bei unterschiedlich
 geschnittenen Bildern exakt sitzen.
 
-Klassen ohne eigenes Bild fallen auf ein ähnliches zurück (`jumbo` und
-`kuehlzug` etwa auf `fern`), ganz ohne Bild bleibt es bei der
-gezeichneten Fassung.
+Alle elf Klassen haben inzwischen ein eigenes Bild, verteilt auf vier
+Blätter: `rahmen-fern.png` (Sattelzug, eine Zeile), `rahmen-klein.png`
+(Kastenwagen bis Kompakt 5.0, vier Zeilen), `rahmen-solo.png`
+(Nahverkehr 7.5 bis Solo 18, drei Zeilen), `rahmen-sattelzug.png`
+(Jumbo, Thermo, Schwerlast, drei Zeilen). Die gezeichnete Fassung bleibt
+als Rückfall bestehen, für den Fall, dass ein Bild einmal fehlt.
+
+**Die Zeilen eines Blatts sind unterschiedlich hoch.** Ein von einer KI
+erzeugtes Bild hält sich nicht an ein starres Raster — jedes Fahrzeug
+bekommt so viel Platz, wie es braucht. Ein erster Ansatz mit angenommener
+Gleichverteilung schnitt mitten durch die nächste Fahrerkabine. Die
+echten Grenzen werden stattdessen an den Lücken zwischen den Fahrzeugen
+vermessen und als `grenzen`-Array (Anteile der Gesamthöhe) hinterlegt.
+
+**Mehrere Fahrzeugklassen auf einem Blatt:** Statt zehn Einzelbildern
+teilen sich ähnliche Klassen ein gemeinsames Bild, in Zeilen statt in
+einem Raster wie bei den Porträts — ein Fahrzeug von oben ist breit und
+flach, kein Quadrat. Ein `<clipPath>` blendet alle Zeilen bis auf die
+gewünschte aus; ohne ihn wären Nachbarzeilen sichtbar. Die Zuordnung
+steht in `RAHMEN_KLASSEN` und `RAHMEN_BLAETTER` (`ui/sprites.js`).
 
 `node test/ladeschema.mjs` prüft beide Grenzen und alle drei Zustände
 des Bildes: eigenes Bild, Ersatzbild, gezeichnete Fassung.
