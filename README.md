@@ -605,6 +605,19 @@ nicht.
 
 `node test/clients.mjs` prüft die Balance.
 
+## Fahrergesichter
+
+Anders als bei den Auftraggebern gibt es bei Fahrern keinen festen
+Charakter, an dem sich ein Bild festmachen ließe — Namen wiederholen
+sich, und neue Fahrer kommen laufend dazu. Deshalb bekommt jeder Fahrer
+über eine feste Streuung seiner Kennung eines von acht Bildnissen
+zugewiesen (`fahrerSlot()` in `ui/sprites.js`). Derselbe Fahrer zeigt so
+immer dasselbe Gesicht, in Personalbörse, Mannschaft, Auswertung und
+Fuhrpark, ohne dass etwas gespeichert werden muss.
+
+`assets/fahrer.png`, vier Spalten mal zwei Zeilen. Fehlt die Datei,
+zeigt eines von acht Sinnbildern.
+
 ## Auftragsfenster und Ladeschema
 
 Die Auftragsliste zeigt nur, was zur Auswahl nötig ist; ein Antippen
@@ -617,7 +630,20 @@ gleichzeitig. Bei Baustoffen ist die Fläche halb leer und der Wagen
 trotzdem voll — als Zahlenpaar ist das abstrakt, als Bild sofort
 verständlich.
 
-`node test/ladeschema.mjs` prüft beide Grenzen.
+**Für einzelne Klassen liegt ein echtes Fahrzeugbild vor**
+(`assets/rahmen-<klasse>.png`): Fahrerhaus, Kontur und Räder von oben,
+die Ladefläche leer. Das Spiel zeichnet die Stellplätze selbst darüber —
+das Bild liefert nur den Rahmen, keine Farbe. Wo die Ladefläche im Bild
+genau liegt, steht als Anteil von Breite und Höhe in `RAHMEN_DATEN`
+(`ui/sprites.js`), damit die Plätze auch bei unterschiedlich
+geschnittenen Bildern exakt sitzen.
+
+Klassen ohne eigenes Bild fallen auf ein ähnliches zurück (`jumbo` und
+`kuehlzug` etwa auf `fern`), ganz ohne Bild bleibt es bei der
+gezeichneten Fassung.
+
+`node test/ladeschema.mjs` prüft beide Grenzen und alle drei Zustände
+des Bildes: eigenes Bild, Ersatzbild, gezeichnete Fassung.
 
 ## Preisverhandlung
 

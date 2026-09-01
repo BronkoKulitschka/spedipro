@@ -7,6 +7,7 @@ import { tagesLohn, lohnGesamt, einstellen, entlassen, zuteilen, abziehen,
          fahrzeugVon, freieFahrer, leereFahrzeuge, fuelleBoerse,
          bewertung, urteil, auffaelligkeiten, ABFINDUNG_TAGE } from '../sim/staff.js';
 import { openApp, onTick } from '../ui/wm.js';
+import { fahrerBild, onBildBereit } from '../ui/sprites.js';
 import { kasseLeiste, kasseAktualisieren, empty } from './shared.js';
 
 export const StaffApp = {
@@ -57,6 +58,8 @@ export const StaffApp = {
       const schule = e.target.closest('[data-schule]');
       if (schule) { openApp('training', { id: schule.dataset.schule }); return; }
     });
+
+    onBildBereit(() => { el.querySelector('#stListe').dataset.sig = ''; onTick(); });
 
     el.addEventListener('change', e => {
       const wahl = e.target.closest('select[data-zuteilen]');
@@ -119,7 +122,9 @@ function zeigeTeam() {
     const frei = leereFahrzeuge();
 
     return `
-    <div class="person">
+    <div class="person person-mit-bild">
+      <span class="person-bildnis">${fahrerBild(d.id)}</span>
+      <div class="person-rumpf">
       <div class="flex-row" style="justify-content:space-between;">
         <span><strong>${esc(d.name)}</strong>
           <span class="muted">· Stufe ${d.level}</span>
@@ -147,6 +152,7 @@ function zeigeTeam() {
           <button class="btn btn-sm" data-raus="${d.id}">entlassen</button>
         </span>
       </div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -165,7 +171,9 @@ function zeigeBoerse() {
     const schwaechen = schwaechenVon(b);
 
     return `
-    <div class="person">
+    <div class="person person-mit-bild">
+      <span class="person-bildnis">${fahrerBild(b.id)}</span>
+      <div class="person-rumpf">
       <div class="flex-row" style="justify-content:space-between;">
         <span><strong>${esc(b.name)}</strong>
           <span class="muted">· Stufe ${b.level}${b.level > 1 ? ', erfahren' : ''}</span></span>
@@ -182,6 +190,7 @@ function zeigeBoerse() {
 
       <div class="flex-end">
         <button class="btn btn-sm" data-ein="${b.id}">einstellen</button>
+      </div>
       </div>
     </div>`;
   }).join('');
@@ -208,7 +217,9 @@ function zeigeUrteil() {
     const auffaellig = auffaelligkeiten(d);
 
     return `
-    <div class="person">
+    <div class="person person-mit-bild">
+      <span class="person-bildnis">${fahrerBild(d.id)}</span>
+      <div class="person-rumpf">
       <div class="flex-row" style="justify-content:space-between;">
         <span><strong>${i + 1}. ${esc(d.name)}</strong>
           <span class="muted">· Stufe ${d.level}</span></span>
@@ -235,6 +246,7 @@ function zeigeUrteil() {
         <div class="auffaellig">
           ${auffaellig.map(a => `<span>${a.icon} ${esc(a.text)}</span>`).join('')}
         </div>` : ''}
+      </div>
     </div>`;
   }).join('');
 }

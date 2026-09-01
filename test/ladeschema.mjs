@@ -77,9 +77,70 @@ ok(schwer.includes('#a02020'), 'Zu viel Gewicht wird rot gemeldet');
 ok(schwer.includes(`2 von ${kap.paletten} Plätzen`),
    'Dabei ist die Fläche noch fast leer — genau der Punkt');
 
+/* Keine Rechenfehler im Bild — das ist der häufigste stille Fehler:
+   Ein Feld heißt anders als gelesen, und es steht NaN im Bild. */
+const proben = [
+  ladeBild(t, [], null),
+  ladeBild(t, [], sendung),
+  ladeBild(t, [sendung], { ...sendung, firm: { name: 'Zweiter' } }),
+  ladeBild(t, [sendung, sendung], null),
+];
+ok(proben.every(p => !/NaN|undefined|Infinity/.test(p)),
+   'Keine Rechenfehler in der Zeichnung');
+
+/* Lange Namen werden nicht abgeschnitten */
+const langerName = 'Petersen Verpackungen & Söhne KG';
+const lang = ladeBild(t, [], { ...sendung, firm: { name: langerName } });
+ok(lang.includes('Petersen Verpackungen'),
+   'Lange Kundennamen bleiben vollständig');
+
+/* Ein NaN-Fehler: das 'dazu'-Objekt wurde mit dem Schlüssel 'kg'
+   erzeugt, aber unter 'gewicht' gelesen — belegt.kg + undefined ergab
+   NaN in der Nutzlastanzeige. */
+const probe = ladeBild(t, [], { klasse: 'papier', paletten: 1, gewicht: 800,
+                                 firm: { name: 'Petersen Verpackungen & Söhne' } });
+ok(!probe.includes('NaN'), 'Keine NaN-Anzeige bei der Nutzlast');
+ok(probe.includes('0.8 von'), 'Die Nutzlast wird richtig berechnet');
+
 /* Die Kurzfassung */
 const text = ladeText(t, [sendung]);
 ok(/\d+\/\d+ Pal\./.test(text), `Kurzfassung lesbar: ${text}`);
+
+/* ── Echtes Fahrzeugbild ─────────────────────────────────────────
+   Ein Bild je Klasse ersetzt die gezeichnete Fassung, sobald es
+   vorliegt. Die Stellplätze müssen weiterhin über das Bild gezeichnet
+   werden — nicht das Bild ersetzt sie, es liegt nur darunter. */
+console.log('\nEchtes Fahrzeugbild\n');
+
+globalThis.Image = class {
+  set src(v) {
+    setTimeout(() => {
+      if (v.includes('rahmen-fern.png')) this.onload?.();
+      else this.onerror?.();
+    }, 0);
+  }
+};
+
+const fernTruck = { ...t, model: 'fern' };
+ladeBild(fernTruck, [], null);           // löst das Laden an
+await new Promise(r => setTimeout(r, 20));
+
+const mitRahmen = ladeBild(fernTruck, [],
+  { klasse: 'stueckgut', paletten: 3, gewicht: 1200, firm: { name: 'Testkunde' } });
+ok(mitRahmen.includes('<image'), 'Ein echtes Bild wird eingebunden, sobald vorhanden');
+ok(mitRahmen.includes('rahmen-fern.png'), 'Die richtige Datei für diese Klasse');
+ok((mitRahmen.match(/<rect/g) || []).length >= 3, 'Die Stellplätze bleiben über dem Bild sichtbar');
+
+const jumboTruck = { ...t, model: 'jumbo' };
+ladeBild(jumboTruck, [], null);
+await new Promise(r => setTimeout(r, 20));
+const ersatz = ladeBild(jumboTruck, [], { klasse: 'stueckgut', paletten: 2, gewicht: 800, firm: { name: 'X' } });
+ok(ersatz.includes('rahmen-fern.png'),
+   'Eine Klasse ohne eigenes Bild fällt auf ein ähnliches zurück (jumbo → fern)');
+
+const kompaktTruck = { ...t, model: 'kompakt' };
+const ohneRahmen = ladeBild(kompaktTruck, [], { klasse: 'stueckgut', paletten: 2, gewicht: 500, firm: { name: 'Y' } });
+ok(!ohneRahmen.includes('<image'), 'Ganz ohne Bild und ohne Ersatz bleibt es bei der Zeichnung');
 
 console.log(fehler ? `\n${fehler} Fehler\n` : '\nAlles richtig\n');
 process.exit(fehler ? 1 : 0);

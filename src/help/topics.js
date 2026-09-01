@@ -52,6 +52,7 @@ export const TOPICS = {
       { h: 'Das Auftragsfenster' },
       { p: 'Dort steht alles beisammen — die Ladung mit Güterklasse und nötiger Ausstattung, die Strecke mit Fahrzeit und Erlös je Kilometer, der Auftraggeber mit Bildnis, Charakter und Stimmung.' },
       { p: 'Darunter das <strong>Ladeschema</strong>: der Wagen von oben, die Ladefläche in Stellplätze geteilt. Belegte Plätze sind eingefärbt, je Sendung eine eigene Farbe — bei einer Sammelladung sieht man so, was wem gehört. Die neue Sendung ist gelb hervorgehoben.' },
+      { p: 'Für manche Fahrzeugklassen liegt ein gezeichnetes Bild des tatsächlichen Fahrzeugs vor, die Stellplätze erscheinen dann direkt auf der Ladefläche. Fehlt ein Bild, zeigt eine einfache Zeichnung dasselbe.' },
       { p: 'Darunter ein zweiter Balken für die Nutzlast. Beide Grenzen gelten gleichzeitig: Bei schwerem Gut ist die Fläche halb leer und der Wagen trotzdem voll. Genau das macht das Bild sichtbar.' },
       { list: [
         '💬 verhandeln — öffnet das Gespräch mit dem Auftraggeber.',
@@ -109,6 +110,7 @@ export const TOPICS = {
     inhalt: [
       { p: 'Der Zustand aller Fahrzeuge auf einen Blick: wo sie stehen, was sie geladen haben, wer sie fährt.' },
       { p: 'Fahrer selbst werden im Personal verwaltet — hier steht nur, wer zugeteilt ist. Ein Fahrzeug ohne Fahrer trägt einen roten Rand und steht still.' },
+      { p: 'Jeder Fahrer trägt ein kleines Bildnis. Es hängt fest an seiner Person, nicht am Namen — derselbe Fahrer zeigt immer dasselbe Gesicht, auch in der Personalbörse und der Auswertung.' },
       { p: 'Über der Liste steht der Bestand nach Bauart — wie viele Fahrzeuge jeder Klasse im Hof stehen, wie viele davon gebraucht sind, und was der Fuhrpark zusammen an Fixkosten je Tag verursacht.' },
       { h: 'Was in einer Zeile steht' },
       { list: [

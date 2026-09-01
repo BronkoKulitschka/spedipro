@@ -11,6 +11,7 @@ import { setAuto, returnToDepot, sellTruck } from '../sim/fleet.js';
 import { openApp, onTick } from '../ui/wm.js';
 import { automatikFrei, stufeFuerAutomatik } from '../sim/progress.js';
 import { kasseLeiste, kasseAktualisieren } from './shared.js';
+import { fahrerBild, onBildBereit } from '../ui/sprites.js';
 import { traitsVon } from '../sim/persons.js';
 import { focusTruck } from '../ui/map.js';
 
@@ -32,6 +33,8 @@ export const FleetApp = {
 
   mount(el) {
     const box = el.querySelector('#fleetBox');
+
+    onBildBereit(() => { box.dataset.sig = ''; onTick(); });
 
     box.addEventListener('click', e => {
       const btn = e.target.closest('button[data-act]');
@@ -180,7 +183,8 @@ function row(truck) {
 
     <div class="fahrer-zeile">
       ${d
-        ? `👤 <strong>${esc(d.name)}</strong>
+        ? `<span class="fahrer-bildnis-klein">${fahrerBild(d.id)}</span>
+           <strong>${esc(d.name)}</strong>
            <span class="muted">· Stufe ${d.level}</span>
            ${d.points ? `<span class="ok">· ${d.points} Pkt. frei</span>` : ''}`
         : '<span class="warn">👤 kein Fahrer — das Fahrzeug steht</span>'}

@@ -115,5 +115,29 @@ if (existsSync(gBlatt)) {
   console.log('  · keine assets/gesichter.png vorhanden, Prüfung übersprungen');
 }
 
+/* ── Fahrergesichter ── */
+console.log('\nFahrergesichter\n');
+
+const { fahrerSlot, FAHRER_SPALTEN, FAHRER_ZEILEN } = await import('../src/ui/sprites.js');
+
+const kennungen = Array.from({ length: 40 }, (_, i) => `f${i}xyz${i * 7}`);
+const slots = kennungen.map(fahrerSlot);
+
+ok(slots.every(s => s >= 0 && s < 8), 'Jeder Platz liegt zwischen 0 und 7');
+ok(new Set(slots).size >= 6, `Gute Streuung über 40 Kennungen (${new Set(slots).size} von 8 genutzt)`);
+ok(fahrerSlot('immerselbe') === fahrerSlot('immerselbe'),
+   'Dieselbe Kennung ergibt immer denselben Platz');
+
+const fBlatt = join(hier, '..', 'assets', 'fahrer.png');
+if (existsSync(fBlatt)) {
+  const daten = readFileSync(fBlatt);
+  const breite = daten.readUInt32BE(16);
+  const hoehe = daten.readUInt32BE(20);
+  ok(breite % FAHRER_SPALTEN === 0, `Breite passt zu ${FAHRER_SPALTEN} Spalten`);
+  ok(hoehe % FAHRER_ZEILEN === 0, `Höhe passt zu ${FAHRER_ZEILEN} Zeilen`);
+} else {
+  console.log('  · keine assets/fahrer.png vorhanden, Prüfung übersprungen');
+}
+
 console.log(fehler ? `\n${fehler} Fehler\n` : '\nAlles richtig\n');
 process.exit(fehler ? 1 : 0);

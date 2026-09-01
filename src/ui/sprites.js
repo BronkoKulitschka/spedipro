@@ -157,3 +157,136 @@ export function gesichtVon(charakterKey) {
 }
 
 export const gesichtStand = () => gZustand + ':' + gEinzelne.size;
+
+
+/* ── Gesichter der Fahrer ───────────────────────────────────────
+   Anders als bei den Auftraggebern gibt es hier keinen festen
+   Charakter, an dem sich das Bild festmachen ließe — nur der Name,
+   und Namen wiederholen sich nie. Deshalb bekommt jeder Fahrer über
+   eine feste Streuung seiner Kennung eines von acht Bildnissen
+   zugewiesen. Derselbe Fahrer zeigt so immer dasselbe Gesicht, ohne
+   dass etwas gespeichert werden müsste. */
+
+const FAHRER_SLOTS = 8;
+const F_SPALTEN = 4;
+const F_ZEILEN  = 2;
+const F_BLATT   = './assets/fahrer.png';
+
+let fZustand = 'ungeprueft';
+let fEinzelne = new Set();
+
+function pruefeFahrer() {
+  if (fZustand !== 'ungeprueft') return;
+  fZustand = 'sinnbild';
+
+  const blatt = new Image();
+  blatt.onload = () => {
+    if (blatt.width >= F_SPALTEN * 16 && blatt.height >= F_ZEILEN * 16) {
+      fZustand = 'blatt';
+      beiAenderung?.();
+    }
+  };
+  blatt.src = F_BLATT;
+
+  for (let i = 0; i < FAHRER_SLOTS; i++) {
+    const bild = new Image();
+    bild.onload = () => {
+      fEinzelne.add(i);
+      if (fZustand === 'sinnbild') fZustand = 'einzeln';
+      beiAenderung?.();
+    };
+    bild.src = `./assets/fahrer-${i}.png`;
+  }
+}
+
+/* Ein Bildplatz von 0 bis 7, fest aus der Kennung abgeleitet. */
+export function fahrerSlot(kennung = '') {
+  let h = 2166136261;
+  for (let i = 0; i < kennung.length; i++) {
+    h ^= kennung.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  h ^= h >>> 13;
+  return (h >>> 0) % FAHRER_SLOTS;
+}
+
+const FAHRER_SINNBILD = ['👨‍✈️', '👩‍✈️', '🧔', '👱‍♀️', '🧑🏾', '👩🏽', '🧑‍🦰', '👴'];
+
+/* Liefert das Bild für einen Fahrer, anhand seiner Kennung. */
+export function fahrerBild(kennung) {
+  pruefeFahrer();
+  const slot = fahrerSlot(kennung);
+
+  if (fZustand === 'blatt') {
+    const sp = slot % F_SPALTEN, ze = Math.floor(slot / F_SPALTEN);
+    const x = F_SPALTEN > 1 ? (sp / (F_SPALTEN - 1)) * 100 : 0;
+    const y = F_ZEILEN  > 1 ? (ze / (F_ZEILEN  - 1)) * 100 : 0;
+
+    return `<span class="fahrer-feld" style="`
+         + `background-image:url('${F_BLATT}');`
+         + `background-position:${x}% ${y}%"></span>`;
+  }
+
+  if (fEinzelne.has(slot)) {
+    return `<img src="./assets/fahrer-${slot}.png" alt="" class="fahrer-bildnis">`;
+  }
+
+  return FAHRER_SINNBILD[slot];
+}
+
+export const FAHRER_SPALTEN = F_SPALTEN;
+export const FAHRER_ZEILEN = F_ZEILEN;
+
+
+/* ── Fahrzeugrahmen für das Ladeschema ────────────────────────────
+   Ein Bild je Fahrzeugklasse: Fahrerhaus, Außenkontur und Räder von
+   oben, die Ladefläche leer. Die Stellplätze zeichnet das Spiel selbst
+   darüber — das Bild liefert nur den Rahmen, keine Farbe.
+
+   Klassen ohne eigenes Bild fallen auf das ähnlichste zurück, bis
+   weitere Rahmen entstehen. */
+
+const RAHMEN_ERSATZ = {
+  kastenwagen: 'kurier', maxi: 'kurier',
+  leicht: 'siebenhalb',
+  motorwagen: 'verteiler',
+  jumbo: 'fern', kuehlzug: 'fern', schwer: 'fern',
+};
+
+/* Lage der Ladefläche im Bild, als Anteil von Breite und Höhe, dazu das
+   Seitenverhältnis des Bildes selbst. kastenwagen … schwer nutzen den
+   Rahmen von rahmen-fern.png als Beispiel, bis eigene Bilder für jede
+   Klasse vorliegen — deshalb steht der Eintrag hier bewusst nur einmal. */
+const RAHMEN_DATEN = {
+  fern: {
+    flaeche: { x1: 0.309, x2: 0.936, y1: 0.179, y2: 0.717 },
+    seitenverhaeltnis: 2178 / 722,
+  },
+};
+
+const rahmenGeprueft = new Map();   // key -> 'da' | 'fehlt' | 'prueft'
+
+function pruefeRahmen(key) {
+  if (!RAHMEN_DATEN[key] || rahmenGeprueft.has(key)) return;
+  rahmenGeprueft.set(key, 'prueft');
+
+  const bild = new Image();
+  bild.onload = () => { rahmenGeprueft.set(key, 'da'); beiAenderung?.(); };
+  bild.onerror = () => { rahmenGeprueft.set(key, 'fehlt'); };
+  bild.src = `./assets/rahmen-${key}.png`;
+}
+
+/* Liefert { url, flaeche, seitenverhaeltnis } oder null, wenn (noch)
+   kein Rahmen vorliegt. */
+export function rahmenVon(modelKey) {
+  const ersatz = RAHMEN_ERSATZ[modelKey];
+  const key = rahmenGeprueft.get(modelKey) === 'da' ? modelKey
+            : rahmenGeprueft.get(ersatz) === 'da' ? ersatz
+            : null;
+
+  pruefeRahmen(modelKey);
+  if (ersatz) pruefeRahmen(ersatz);
+
+  if (!key) return null;
+  return { url: `./assets/rahmen-${key}.png`, ...RAHMEN_DATEN[key] };
+}
