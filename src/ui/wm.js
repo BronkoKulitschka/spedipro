@@ -15,6 +15,7 @@ export function registerApps(liste) { APPS = liste; }
 import { HELP_FOR_APP } from '../help/topics.js';
 import { S, dateText } from '../state.js';
 import { esc } from '../util.js';
+import { spielerBild } from './sprites.js';
 
 const open = new Map();     // key -> Fenstereintrag
 let zCounter = 100;
@@ -342,6 +343,10 @@ export function startMenuHtml() {
 
   return `
     <div class="start-strip">SpeditionsPro<span>95</span></div>
+    <div class="start-kopf">
+      <span class="start-bildnis">${spielerBild(S.spieler?.geschlecht, S.spieler?.bild)}</span>
+      <span class="start-firmenname">${esc(S.name)}</span>
+    </div>
     <div class="start-list">
       ${items}
       <div class="start-sep"></div>

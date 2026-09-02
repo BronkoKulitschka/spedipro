@@ -47,6 +47,9 @@ export const TOPICS = {
       { p: 'Jede Anfrage zeigt deshalb in eigener Zeile, wie weit sie vom gewählten Fahrzeug entfernt ist und wie lange die Fahrt dauert. Die Fahrzeit rechnet mit dem Schnitt dieses Fahrzeugs, also einschließlich der Streckenkenntnis des Fahrers.' },
       { p: 'Die Liste ist nach Anfahrt sortiert, das Nächstgelegene steht oben. Wechselst du das Fahrzeug, ordnet sie sich neu — ein Auftrag, der für den einen weit weg ist, liegt für den anderen um die Ecke.' },
       { p: 'Die Lupe daneben springt zum Fahrzeug und klappt seine Daten auf.' },
+      { h: 'Sortieren' },
+      { p: 'Über der Liste lässt sich nach Entfernung, Erlös oder Erlös je Kilometer sortieren. Ein erneutes Antippen derselben Art kehrt die Richtung um — der Pfeil zeigt an, ob auf- oder absteigend sortiert wird.' },
+
       { h: 'Aufträge annehmen' },
       { p: 'Die Liste zeigt nur, was zur Auswahl nötig ist: Kunde, Preis, Entfernung, Ladung. Ein Antippen öffnet den Auftrag im Einzelnen und zeigt das Ziel auf der Karte.' },
       { h: 'Das Auftragsfenster' },
@@ -83,6 +86,10 @@ export const TOPICS = {
       ] },
       { p: 'Der Kern ist die Reihenfolge: Wer gleich das Höchste verlangt, verschenkt seine Argumente. Wer erst redet, verschiebt die Grenze und bekommt dann mehr.' },
       { tipp: 'Jede Anfrage lässt sich nur einmal verhandeln, und jede hat ihren eigenen Spielraum. Ein Hauskunde bei knappem Markt lässt deutlich mehr zu als ein Fremder in der Flaute.' },
+      { h: 'Zu häufiges Verhandeln' },
+      { p: 'Ein paar Verhandlungen am Tag bleiben folgenlos. Wer öfter feilscht, gilt irgendwann als schwierig — unabhängig davon, ob die einzelne Verhandlung gut oder schlecht ausgeht. Jede weitere Verhandlung über das übliche Maß hinaus kostet etwas Ansehen.' },
+      { h: 'Konkurrenzangebote' },
+      { p: 'Manchmal hat der Verlader bereits ein Angebot einer anderen Spedition vorliegen und nennt es im Gespräch. Das ist kein Bluff: Es schränkt den eigenen Spielraum ein — wer mehr verlangt, als der Mitbewerber ohnehin bietet, braucht ein gutes Argument, nicht nur einen guten Preis.' },
 
       { h: 'Die Ladeliste' },
       { p: 'Sammelst du mehrere Sendungen, zeigt die Ladeliste laufend zwei Balken: belegte Stellplätze und ausgenutzte Nutzlast. Bei jeder weiteren Sendung steht dabei, wie viele Kilometer Umweg sie kostet.' },
@@ -478,6 +485,34 @@ export const TOPICS = {
       { h: 'Jahreslauf' },
       { p: 'Die Nachfrage schwankt über das Jahr. Der November mit dem Weihnachtsgeschäft zahlt 22 Prozent über dem Schnitt, der Januar 12 Prozent darunter. Im Sommer läuft die Bausaison, im Juli sind Werksferien.' },
       { p: 'Die Säulen zeigen den Preisverlauf, der dunkle Balken ist der laufende Monat.' },
+    ],
+  },
+
+  fuehrerschein: {
+    titel: 'Führerschein', icon: '🎓', gruppe: 'Personal',
+    inhalt: [
+      { p: 'Jeder Fahrer beginnt bei Klasse B — reicht für Kastenwagen, Kurier und Maxi, ohne dass ein Lkw-Führerschein nötig wäre. Für größere Fahrzeuge braucht es eine höhere Klasse.' },
+      { tab: {
+        kopf: ['Klasse', 'Reicht für'],
+        zeilen: [
+          ['B', 'bis 3,5 t, kein Lkw-Führerschein'],
+          ['C1', '3,5 bis 7,5 t'],
+          ['C', 'über 7,5 t, solo'],
+          ['CE', 'Zugmaschine mit Auflieger oder Anhänger'],
+        ],
+      } },
+      { p: 'Im Personal lässt sich für jeden Fahrer die nächsthöhere Klasse in der Fahrschule bestellen — ein Sprung direkt zu CE ist nicht möglich, jede Stufe baut auf der vorigen auf.' },
+      { p: 'Die Kosten werden sofort gebucht, das Ergebnis zeigt sich erst nach den vorgesehenen Tagen. Ist dem Fahrer ein Fahrzeug zugeteilt, muss es stehen — er lernt schließlich gerade, statt zu fahren.' },
+      { tipp: 'Ein Fahrer mit zu niedrigem Führerschein lässt sich gar nicht erst einem zu großen Fahrzeug zuteilen — die Auswahlliste im Personal zeigt nur, was er tatsächlich fahren darf.' },
+    ],
+  },
+
+  spieler: {
+    titel: 'Ihr Charakter', icon: '🧑\u200d💼', gruppe: 'Grundlagen',
+    inhalt: [
+      { p: 'Beim Gründen wählen Sie ein Bildnis für sich selbst — Geschlecht und eines von vier Porträts. Anders als bei Fahrern oder Auftraggebern ist das keine zufällige Zuweisung, sondern eine bewusste Wahl.' },
+      { p: 'Das Bildnis erscheint überall dort, wo der Betrieb genannt wird: auf dem Desktop neben dem Firmennamen und im Kopf des Startmenüs.' },
+      { p: 'Es lässt sich nachträglich nicht mehr ändern — nur beim Gründen eines neuen Betriebs erneut wählen.' },
     ],
   },
 

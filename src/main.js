@@ -24,6 +24,7 @@ import { startScreen, bootScreen, desktopShell } from './ui/screens.js';
 import { openApp, onTick, renderTaskbar, toggleStartMenu, closeAll, isNarrow } from './ui/wm.js';
 import { wendeAn } from './ui/wallpaper.js';
 import { starteErinnerung, setzeFreieZaehler, meldeSystemAn } from './ui/notify.js';
+import { spielerBild } from './ui/sprites.js';
 
 const root = () => document.getElementById('root');
 
@@ -31,6 +32,10 @@ const root = () => document.getElementById('root');
 let gewaehlteStadt = 'KS';       // Kassel liegt in der Mitte
 let freierOrt = null;            // frei gewählter Standort, falls vorhanden
 let sucheLaeuft = false;
+
+/* Der gewählte Spielercharakter bleibt über einen Neuaufbau des
+   Startbildschirms hinweg erhalten — etwa wenn man die Stadt wechselt. */
+let spielerWahl = { geschlecht: 'w', bild: 0 };
 
 function showStart() {
   S.screen = 'start';
@@ -70,11 +75,44 @@ function showStart() {
     zeigeStadtInfo(gewaehlteStadt);
   }
 
+  zeichneSpielerwahl();
+
+  document.getElementById('spGeschlW').onclick = () => {
+    spielerWahl = { geschlecht: 'w', bild: 0 };
+    zeichneSpielerwahl();
+  };
+  document.getElementById('spGeschlM').onclick = () => {
+    spielerWahl = { geschlecht: 'm', bild: 0 };
+    zeichneSpielerwahl();
+  };
+
   document.getElementById('startBtnGo').onclick = beginBoot;
   document.getElementById('continueBtn')?.addEventListener('click', continueGame);
   document.getElementById('dropSaveBtn')?.addEventListener('click', () => {
     clearSave();
     showStart();
+  });
+}
+
+/* Vier Bildnisse zur Wahl, passend zum gewählten Geschlecht. Ein
+   Antippen merkt sich die Wahl, sichtbar am hervorgehobenen Rahmen. */
+function zeichneSpielerwahl() {
+  const box = document.getElementById('spielerWahl');
+  if (!box) return;
+
+  document.getElementById('spGeschlW').classList.toggle('pressed', spielerWahl.geschlecht === 'w');
+  document.getElementById('spGeschlM').classList.toggle('pressed', spielerWahl.geschlecht === 'm');
+
+  box.innerHTML = Array.from({ length: 4 }, (_, i) => `
+    <button class="spieler-option ${spielerWahl.bild === i ? 'gewaehlt' : ''}" data-bild="${i}">
+      ${spielerBild(spielerWahl.geschlecht, i)}
+    </button>`).join('');
+
+  box.querySelectorAll('[data-bild]').forEach(btn => {
+    btn.onclick = () => {
+      spielerWahl = { ...spielerWahl, bild: Number(btn.dataset.bild) };
+      zeichneSpielerwahl();
+    };
   });
 }
 
@@ -207,6 +245,7 @@ function beginBoot() {
   resetState({ key: stadt.key, name: stadt.name, lat: stadt.lat, lon: stadt.lon });
   S.stadt = stadt;
   if (name) S.name = name;
+  S.spieler = { ...spielerWahl };
 
   S.screen = 'boot';
   root().innerHTML = bootScreen();

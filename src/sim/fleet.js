@@ -164,6 +164,14 @@ function starteEtappe(truck) {
   const e = truck.tour.etappen[truck.tour.index];
   const sendung = e.sendung;
 
+  /* Bei einer Tour mit mehreren Etappen — Abholung, dann Zustellung,
+     oder mehrere Sendungen nacheinander — hinterließ jede neue Etappe
+     bislang die Streckenlinie der vorigen auf der Karte. Das
+     Fahrzeug fuhr auf seiner neuen, richtigen Route, aber die alte
+     blieb eingezeichnet stehen — der LKW wirkte dadurch neben der
+     sichtbaren Strecke unterwegs. */
+  removeTruckLayers(truck);
+
   truck.route = e.route;
   truck.progress = 0;
   truck.phase = 'driving';

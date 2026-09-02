@@ -104,7 +104,11 @@ function zeichne(el) {
         <span class="stimmung-${st.stufe}">${esc(st.text)}</span>
         ${z ? `<br>${z.icon} <strong>${esc(z.name)}</strong> — ${esc(z.text)}` : ''}
       </span>
-    </div>`;
+    </div>
+    ${g.konkurrenz ? `
+      <div class="konkurrenz-zeile">
+        ⚖️ ${esc(g.konkurrenz.name)} bietet ${fmt(g.konkurrenz.fee)} — das drückt den eigenen Spielraum.
+      </div>` : ''}`;
 
   /* Der Gesprächsverlauf */
   el.querySelector('#vhVerlauf').innerHTML = g.verlauf.map(z => `

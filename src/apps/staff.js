@@ -6,7 +6,8 @@ import { TRAITS, staerkenVon, schwaechenVon } from '../sim/persons.js';
 import { tagesLohn, lohnGesamt, einstellen, entlassen, zuteilen, abziehen,
          fahrzeugVon, freieFahrer, leereFahrzeuge, fuelleBoerse,
          bewertung, urteil, auffaelligkeiten, ABFINDUNG_TAGE,
-         geschlechtVon } from '../sim/staff.js';
+         geschlechtVon, fsReicht, inFahrschule, fahrschuleBeginnen } from '../sim/staff.js';
+import { LICENCE, TRUCK_MODELS } from '../config.js';
 import { openApp, onTick } from '../ui/wm.js';
 import { fahrerBild, onBildBereit } from '../ui/sprites.js';
 import { kasseLeiste, kasseAktualisieren, empty } from './shared.js';
@@ -42,6 +43,22 @@ export const StaffApp = {
 
       const ein = e.target.closest('[data-ein]');
       if (ein) { einstellen(ein.dataset.ein); neu(el); return; }
+
+      const fahrschule = e.target.closest('[data-fahrschule]');
+      if (fahrschule) {
+        const d = S.drivers.find(x => x.id === fahrschule.dataset.fahrschule);
+        const stufe = LICENCE[d.fs || 'B'];
+        const ziel = LICENCE[stufe.naechste];
+        if (confirm(`${d.name} zur Fahrschule anmelden?\n\n${ziel.name} · `
+                  + `${fmt(ziel.kosten)} · ${ziel.tage} Tage`)) {
+          if (!fahrschuleBeginnen(d.id)) {
+            alert('Geht nicht — zu wenig Geld, das Fahrzeug ist unterwegs, '
+                + 'oder er lernt schon.');
+          }
+          neu(el);
+        }
+        return;
+      }
 
       const raus = e.target.closest('[data-raus]');
       if (raus) {
@@ -120,7 +137,12 @@ function zeigeTeam() {
   return S.drivers.map(d => {
     const fz = fahrzeugVon(d);
     const wert = bewertung(d);
-    const frei = leereFahrzeuge();
+    const lernt = inFahrschule(d);
+    const stufe = LICENCE[d.fs || 'B'];
+    /* Nur Fahrzeuge, für die der Führerschein reicht, stehen zur Wahl —
+       sonst bräuchte es einen zweiten Blick, um zu erfahren, warum eine
+       Zuteilung nicht klappt. */
+    const frei = leereFahrzeuge().filter(t => fsReicht(d, TRUCK_MODELS[t.model]?.fs));
 
     return `
     <div class="person person-mit-bild">
@@ -129,9 +151,16 @@ function zeigeTeam() {
       <div class="flex-row" style="justify-content:space-between;">
         <span><strong>${esc(d.name)}</strong>
           <span class="muted">· Stufe ${d.level}</span>
+          <span class="muted">· ${esc(stufe.name)}</span>
           ${d.points ? `<span class="ok">· ${d.points} Pkt.</span>` : ''}</span>
         <span class="muted">${fmt(tagesLohn(d))} je Tag</span>
       </div>
+
+      ${lernt ? `
+        <div class="fahrschule-zeile">
+          🎓 In der Fahrschule für ${esc(LICENCE[d.fsZiel]?.name || '?')} ·
+          noch ${Math.max(1, Math.ceil((d.fsBis - S.minutes) / 1440))} Tage
+        </div>` : ''}
 
       ${eigenheiten(d)}
 
@@ -148,8 +177,12 @@ function zeigeTeam() {
           ${fz ? `<option value="${fz.nr}" selected>LKW ${fz.nr}</option>` : ''}
           ${frei.map(t => `<option value="${t.nr}">LKW ${t.nr} frei</option>`).join('')}
         </select>
-        <span class="flex-row" style="gap:4px;">
+        <span class="flex-row" style="gap:4px;flex-wrap:wrap;">
           <button class="btn btn-sm" data-schule="${d.id}">Schulung</button>
+          ${stufe.naechste ? `
+            <button class="btn btn-sm" data-fahrschule="${d.id}" ${lernt ? 'disabled' : ''}
+              title="${LICENCE[stufe.naechste].name} · ${fmt(LICENCE[stufe.naechste].kosten)} · ${LICENCE[stufe.naechste].tage} Tage">
+              🎓 ${LICENCE[stufe.naechste].name}</button>` : ''}
           <button class="btn btn-sm" data-raus="${d.id}">entlassen</button>
         </span>
       </div>

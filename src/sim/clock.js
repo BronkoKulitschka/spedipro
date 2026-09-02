@@ -19,7 +19,7 @@ import { saveGame } from './save.js';
 import { panneFaktor } from './persons.js';
 import { werkstattRabatt, werkstattZeit } from './goals.js';
 import { tagAbschluss, wochenAbschluss, istSonntag } from './records.js';
-import { lohnGesamt, fuelleBoerse } from './staff.js';
+import { lohnGesamt, fuelleBoerse, fahrschuleTag } from './staff.js';
 import { neuerTag as kundenTag } from './clients.js';
 import { melde } from '../ui/notify.js';
 
@@ -141,6 +141,9 @@ function newDay() {
 
   /* Tagesform, Groll und Zustände der Auftraggeber fortschreiben. */
   kundenTag();
+
+  /* Abgeschlossene Fahrschulen freischalten. */
+  fahrschuleTag();
 
   /* Die Börse wechselt gelegentlich durch. */
   if (Math.random() < 0.35 && S.bewerber?.length > 3) S.bewerber.shift();

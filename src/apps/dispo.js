@@ -59,6 +59,14 @@ export const DispoApp = {
 
         <div class="lade-box" id="ladeBox"></div>
 
+        <div class="sortier-leiste">
+          <span class="muted" style="font-size:10px;">Sortieren:</span>
+          <button class="btn btn-sm" data-sortier="entfernung">Entfernung</button>
+          <button class="btn btn-sm" data-sortier="erloes">Erlös</button>
+          <button class="btn btn-sm" data-sortier="ekm" title="Erlös je Kilometer">€/km</button>
+          <button class="btn btn-sm sortier-richtung" id="sortRichtung" title="Richtung umkehren">▲</button>
+        </div>
+
         <div class="inset-box scroll fill" id="offerBox"></div>
       </div>
 
@@ -68,6 +76,8 @@ export const DispoApp = {
     /* Die Ladeliste lebt im Fenster, nicht im Spielstand — sie ist eine
        Planung, die erst mit dem Start der Tour wirksam wird. */
     el._lade = [];
+    el._sortier = 'entfernung';
+    el._richtung = 1;      // 1 aufsteigend, -1 absteigend
 
 
     el.querySelector('#mapSlot').appendChild(mapHost());
@@ -135,6 +145,24 @@ export const DispoApp = {
         for (const o of sendungen) takeOffer(o.id);
         el._lade = [];
         startTour(nr, sendungen).then(() => { drawOffers(); onTick(); });
+        onTick();
+        return;
+      }
+
+      /* Sortierung wählen — erneutes Antippen derselben Art kehrt die
+         Richtung um, statt nichts zu tun. */
+      const sortBtn = e.target.closest('button[data-sortier]');
+      if (sortBtn) {
+        if (el._sortier === sortBtn.dataset.sortier) el._richtung *= -1;
+        else { el._sortier = sortBtn.dataset.sortier; el._richtung = 1; }
+        el.querySelector('#offerBox').dataset.sig = '';
+        onTick();
+        return;
+      }
+
+      if (e.target.closest('#sortRichtung')) {
+        el._richtung *= -1;
+        el.querySelector('#offerBox').dataset.sig = '';
         onTick();
         return;
       }
@@ -207,15 +235,32 @@ export const DispoApp = {
        wäre der Auftrag verschwunden. */
     const sig = S.offers.map(o => `${o.id}:${o.fee}:${o.verhandelt ? 1 : 0}`).join(',')
               + '|' + (truck?.nr ?? '-')
-              + '|' + el._lade.map(x => x.id).join(',');
+              + '|' + el._lade.map(x => x.id).join(',')
+              + '|' + el._sortier + el._richtung;
     if (box.dataset.sig === sig) return;
     box.dataset.sig = sig;
 
     if (!S.offers.length) { box.innerHTML = empty('Keine offenen Anfragen.'); return; }
 
-    const list = S.offers
-      .map(o => ({ o, km: truck ? distanceFrom(truck, o.firm) : o.estKm }))
-      .sort((a, b) => a.km - b.km);
+    /* Sortierleiste auf den aktuellen Stand bringen */
+    el.querySelectorAll('[data-sortier]').forEach(b =>
+      b.classList.toggle('pressed', b.dataset.sortier === el._sortier));
+    const richtungBtn = el.querySelector('#sortRichtung');
+    if (richtungBtn) richtungBtn.textContent = el._richtung > 0 ? '▲' : '▼';
+
+    const bewertet = S.offers
+      .map(o => ({ o, km: truck ? distanceFrom(truck, o.firm) : o.estKm }));
+
+    /* Der Erlös bezieht sich auf die Straßenkilometer, nicht die
+       Luftlinie — sonst würde die €/km-Sortierung bei weiten
+       Fahrten falsche Werte liefern. */
+    const WERT = {
+      entfernung: x => x.km * 1.28,
+      erloes:     x => x.o.fee,
+      ekm:        x => x.o.fee / Math.max(1, x.km * 1.28),
+    };
+    const wertFn = WERT[el._sortier] || WERT.entfernung;
+    const list = bewertet.sort((a, b) => (wertFn(a) - wertFn(b)) * el._richtung);
 
     box.innerHTML = list.map(({ o, km }) => {
       const art = KIND_LABEL[o.kind || 'spot'];

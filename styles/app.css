@@ -683,3 +683,41 @@
 }
 .fahrer-bildnis-klein .fahrer-feld,
 .fahrer-bildnis-klein .fahrer-bildnis { width: 16px; height: 16px; }
+
+
+/* Auswahl des Spielercharakters beim Gründen */
+.spieler-wahl { display: flex; gap: 6px; flex-wrap: wrap; }
+.spieler-option {
+  width: 56px; height: 56px; font-size: 30px;
+  display: flex; align-items: center; justify-content: center;
+  background: #d4d0c8; padding: 0; overflow: hidden;
+  border-top: 2px solid #fff; border-left: 2px solid #fff;
+  border-right: 2px solid #808080; border-bottom: 2px solid #808080;
+}
+.spieler-option:active { border-color: #808080 #fff #fff #808080; }
+.spieler-option.gewaehlt {
+  border: 2px solid #000080;
+  box-shadow: inset 0 0 0 2px #ffd700;
+}
+
+
+/* Sortierleiste in der Disposition */
+.sortier-leiste {
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+  padding: 3px 2px;
+}
+.sortier-richtung { margin-left: auto; min-width: 26px; }
+
+
+/* Fahrschule */
+.fahrschule-zeile {
+  font-size: 10px; margin: 3px 0; padding: 3px 5px;
+  background: #e0eaf4; border-left: 3px solid #4a6ac0;
+}
+
+
+/* Konkurrenzangebot in der Verhandlung */
+.konkurrenz-zeile {
+  font-size: 10px; margin: 4px 0 0; padding: 3px 6px;
+  background: #f4ecd8; border-left: 3px solid #a06000; color: #603800;
+}

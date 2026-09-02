@@ -312,6 +312,8 @@ node test/contracts.mjs  # Rahmenverträge als Relation
 node test/reputation.mjs # Ansehen in beide Richtungen
 node test/clients.mjs    # Auftraggeber, Zustände, Groll
 node test/ladeschema.mjs # Ladeansicht, Platz und Gewicht
+node test/spieler.mjs    # Spielercharakter
+node test/fuehrerschein.mjs # Führerschein und Fahrschule
 ```
 
 Er hat schon zwei echte Fehler gefunden: fehlende Felder im Spielstart und
@@ -619,6 +621,23 @@ männlich, je vier Personen.
 `sim/staff.js` leitet dann etwas Stabiles aus der Kennung ab, statt
 abzustürzen.
 
+## Der Spielercharakter
+
+Anders als bei Fahrern oder Auftraggebern ist das keine zufällige
+Zuweisung — der Spieler wählt bewusst beim Gründen: Geschlecht, dann
+eines von vier Porträts. Dieselbe Rastertechnik wie bei den
+Fahrerbildern (`spielerBild()` in `ui/sprites.js`), aber mit fest
+gewähltem statt aus der Kennung gestreutem Platz.
+
+`assets/spieler.png`, vier Spalten mal zwei Zeilen, obere Reihe
+weiblich, untere männlich. Erscheint auf dem Desktop und im Kopf des
+Startmenüs — überall dort, wo der Betrieb genannt wird.
+
+`S.spieler = { geschlecht, bild }` wird mit dem Spielstand gesichert;
+alte Spielstände ohne das Feld bekommen beim Laden einen Rückfall.
+
+`node test/spieler.mjs` prüft Auswahl, Anzeige und Wiederherstellung.
+
 ## Fahrergesichter
 
 Anders als bei den Auftraggebern gibt es bei Fahrern keinen festen
@@ -683,6 +702,24 @@ steht in `RAHMEN_KLASSEN` und `RAHMEN_BLAETTER` (`ui/sprites.js`).
 
 `node test/ladeschema.mjs` prüft beide Grenzen und alle drei Zustände
 des Bildes: eigenes Bild, Ersatzbild, gezeichnete Fassung.
+
+## Führerschein
+
+Jeder Fahrer beginnt bei Klasse B. Aufstieg in der Fahrschule geht nur
+Stufe für Stufe (B→C1→C→CE), Kosten und Dauer stehen an der Zielklasse
+(`LICENCE[naechste]`), nicht an der aktuellen — ein früherer Fehler las
+sie an der falschen Klasse ab, wodurch der erste Aufstieg immer
+kostenlos und sofort war. `zuteilen()` verweigert Fahrzeuge, für die
+der Führerschein nicht reicht.
+
+`node test/fuehrerschein.mjs` prüft Rangfolge, Kosten und Sperre.
+
+## Sortierbare Disposition
+
+Die Auftragsliste lässt sich nach Entfernung, Erlös oder Erlös je
+Straßenkilometer sortieren, mit Richtungsumkehr per erneutem Antippen.
+Der Zustand lebt im Fenster (`el._sortier`, `el._richtung`), nicht im
+Spielstand.
 
 ## Preisverhandlung
 

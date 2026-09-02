@@ -185,7 +185,11 @@ export function updateTruckMarker(truck) {
   const richtung = (kurs > 180) ? 'links' : 'rechts';
   truck._richtung = richtung;
 
-  const inhalt = ringInhalt(truck, kurs, richtung, true);
+  /* Ruht der Fahrer gerade (Pause oder Ruhezeit), soll das auch so
+     aussehen — bislang wurde das beim Fahren-Zustand nie weitergegeben,
+     obwohl truck.phase währenddessen weiter 'driving' bleibt. */
+  const ruht = truck.restMin > 0;
+  const inhalt = ringInhalt(truck, kurs, richtung, true, ruht);
 
   if (!truck.marker) {
     truck.marker = L.marker(pos, {

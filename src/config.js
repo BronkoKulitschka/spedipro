@@ -173,13 +173,26 @@ export const EQUIPMENT = {
            text: 'nötig für Gefahrgut' },
 };
 
-/* Führerscheinklassen, nur zur Anzeige und Gruppierung */
+/* Führerscheinklassen. Jeder Fahrer beginnt bei B und kann sich in der
+   Fahrschule hochstufen lassen — jede Stufe baut auf der vorigen auf,
+   ein Sprung von B direkt auf CE ist nicht möglich. */
 export const LICENCE = {
-  B:  { name: 'Klasse B',  text: 'bis 3,5 t, kein Lkw-Führerschein' },
-  C1: { name: 'Klasse C1', text: '3,5 bis 7,5 t' },
-  C:  { name: 'Klasse C',  text: 'über 7,5 t, solo' },
-  CE: { name: 'Klasse CE', text: 'Zugmaschine mit Auflieger oder Anhänger' },
+  /* kosten/tage stehen an jeder Klasse für den Aufstieg DAHIN, nicht
+     für den Verbleib dort — B selbst kostet nichts, niemand muss sich
+     freikaufen, um dort zu bleiben, wo er schon ist. */
+  B:  { name: 'Klasse B',  text: 'bis 3,5 t, kein Lkw-Führerschein',
+        naechste: 'C1', kosten: 0, tage: 0 },
+  C1: { name: 'Klasse C1', text: '3,5 bis 7,5 t',
+        naechste: 'C',  kosten: 1800, tage: 5 },
+  C:  { name: 'Klasse C',  text: 'über 7,5 t, solo',
+        naechste: 'CE', kosten: 2600, tage: 7 },
+  CE: { name: 'Klasse CE', text: 'Zugmaschine mit Auflieger oder Anhänger',
+        naechste: null, kosten: 3400, tage: 9 },
 };
+
+/* Rangfolge, damit sich prüfen lässt, ob ein Führerschein für ein
+   Fahrzeug ausreicht — nicht nur, ob er exakt passt. */
+export const LICENCE_RANG = ['B', 'C1', 'C', 'CE'];
 
 /* Fahrzeuge unter 7,5 t sind vom Sonntagsfahrverbot ausgenommen. */
 export const LEICHT = ['kastenwagen', 'kurier', 'maxi', 'leicht'];
@@ -375,6 +388,15 @@ export const CONTRACTS = {
 };
 
 /* Befreundete Speditionen. Sie geben Aufträge an Subunternehmer weiter. */
+/* Mitbewerber, die während einer Verhandlung gelegentlich als
+   Gegenangebot ins Spiel gebracht werden — andere Namen als PARTNERS,
+   damit sich Kooperation und Konkurrenz nicht vermischen. */
+export const KONKURRENTEN = [
+  'Weserfracht Spedition', 'Elbtor Logistik', 'Süddeutsche Frachtwerke',
+  'Rheinbogen Transporte', 'Nordlicht Spedition KG', 'Mainland Cargo',
+  'Fernblick Logistik GmbH', 'Terminfracht Nord',
+];
+
 export const PARTNERS = [
   { key: 'nordfracht', name: 'Nordfracht Logistik',  ort: 'Bremen'     },
   { key: 'hellweg',    name: 'Ruhrtal Spedition',    ort: 'Dortmund'   },
@@ -401,8 +423,16 @@ export const REP = {
   CONTRACT_FAIL: -3.5,       // Vertrag unter der Mindestquote
   CONTRACT_WEAK: -1.2,       // erfüllt, aber nur zum Teil
   HAGGLE_BREAK: -0.8,        // Verhandlung überzogen
+  HAGGLE_OVERUSE: -0.5,      // zu viele Verhandlungen in kurzer Zeit
   BREAKDOWN: -0.25,          // Panne auf der Strecke
   IDLE_DAY: -0.35,           // ein Tag ohne einzige Zustellung
+
+  /* Wie oft sich in kurzer Zeit verhandeln lässt, ohne dass es auffällt.
+     Wer bei jeder einzelnen Anfrage feilscht, gilt irgendwann als
+     schwierig — unabhängig davon, ob die Verhandlung selbst gut oder
+     schlecht ausgeht. */
+  HAGGLE_FENSTER: 24 * 60,   // Zeitraum in Minuten (ein Spieltag)
+  HAGGLE_FREI: 3,            // so viele Verhandlungen bleiben folgenlos
 
   MIN_MUL: 0.90, MAX_MUL: 1.20,   // Wirkung auf die Preise
 };

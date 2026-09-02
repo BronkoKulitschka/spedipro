@@ -7,7 +7,7 @@
    Der Lohn läuft täglich, unabhängig davon, ob gefahren wird — das ist
    der Grund, warum sich untätiges Personal nicht trägt. */
 
-import { DRIVER_NAMES_M, DRIVER_NAMES_F, RULES } from '../config.js';
+import { DRIVER_NAMES_M, DRIVER_NAMES_F, RULES, LICENCE, LICENCE_RANG, TRUCK_MODELS } from '../config.js';
 import { S, log, book } from '../state.js';
 import { pick, fmt, esc } from '../util.js';
 import { wuerfleTraits, TRAITS, lohnFaktor, istSchwaeche } from './persons.js';
@@ -38,10 +38,19 @@ export function neuerFahrer(erfahren = false) {
 
   const stufe = erfahren ? 1 + Math.floor(Math.random() * 3) : 1;
 
+  /* Erfahrene Bewerber bringen manchmal schon einen höheren
+     Führerschein mit — nie mehr als die Betriebsstufe hergibt, sonst
+     wäre er im eigenen Fuhrpark ohnehin nutzlos. */
+  let fs = 'B';
+  if (erfahren && Math.random() < 0.5) fs = 'C1';
+  if (erfahren && Math.random() < 0.2) fs = 'C';
+
   return {
     id: 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
     name,
     geschlecht,
+    fs,          // Führerscheinklasse: B, C1, C oder CE
+    fsBis: null, // während der Fahrschule: Minute, zu der sie endet
     xp: 0,
     level: stufe,
     points: stufe,
@@ -128,6 +137,8 @@ export function zuteilen(fahrerId, truckNr) {
   const truck = S.trucks.find(t => t.nr === truckNr);
   if (!fahrer || !truck) return false;
   if (truck.phase !== 'idle') return false;
+  if (inFahrschule(fahrer)) return false;         // lernt gerade, fährt nicht
+  if (!fsReicht(fahrer, TRUCK_MODELS[truck.model]?.fs)) return false;
 
   /* Bisherige Zuteilungen lösen */
   const altesFahrzeug = fahrzeugVon(fahrer);
@@ -144,6 +155,70 @@ export function abziehen(truckNr) {
   if (!truck || truck.phase !== 'idle') return false;
   truck.driverId = null;
   return true;
+}
+
+/* ── Führerschein ─────────────────────────────────────────────────
+   Jeder Fahrer beginnt bei Klasse B und kann sich in der Fahrschule
+   hochstufen lassen — Stufe für Stufe, kein Sprung direkt zum
+   Sattelzug. Während der Ausbildung steht das Fahrzeug still, falls
+   dem Fahrer eines zugeteilt ist: Er lernt schließlich gerade, nicht
+   fährt er. */
+
+/* Reicht der Führerschein eines Fahrers für diese Klasse? */
+export function fsReicht(fahrer, benoetigt) {
+  const hat = LICENCE_RANG.indexOf(fahrer.fs || 'B');
+  const braucht = LICENCE_RANG.indexOf(benoetigt || 'B');
+  return hat >= braucht && braucht >= 0;
+}
+
+/* Steckt der Fahrer gerade in der Fahrschule? */
+export const inFahrschule = fahrer => !!fahrer.fsBis && S.minutes < fahrer.fsBis;
+
+/* Den Aufstieg beginnen. Bucht sofort die Kosten, das Ergebnis zeigt
+   sich erst nach den vorgesehenen Tagen. */
+export function fahrschuleBeginnen(fahrerId) {
+  const fahrer = (S.drivers || []).find(d => d.id === fahrerId);
+  if (!fahrer || inFahrschule(fahrer)) return false;
+
+  const jetzt = LICENCE[fahrer.fs || 'B'];
+  if (!jetzt?.naechste) return false;
+
+  /* Kosten und Dauer stehen an der Zielklasse, nicht an der
+     aktuellen — sonst würde jeder Aufstieg mit dem Preis der Klasse
+     bezahlt, die man schon hat. */
+  const ziel = LICENCE[jetzt.naechste];
+  if (S.money < ziel.kosten) return false;
+
+  const truck = fahrzeugVon(fahrer);
+  if (truck && truck.phase !== 'idle') return false;   // erst die Tour beenden
+
+  book('Personal', `Fahrschule ${fahrer.name} · ${ziel.name}`, -ziel.kosten);
+  fahrer.fsBis = S.minutes + Math.max(1, ziel.tage) * 1440;
+  fahrer.fsZiel = jetzt.naechste;
+
+  log(`🎓 ${fahrer.name} beginnt die Fahrschule für ${ziel.name}.`);
+  if (!S.silent) {
+    toast('🎓', `<strong>${esc(fahrer.name)}</strong> beginnt die Fahrschule.`,
+                `<span class="muted">${ziel.name} in ${ziel.tage} Tagen · ${fmt(ziel.kosten)}</span>`);
+  }
+  return true;
+}
+
+/* Läuft täglich: abgeschlossene Fahrschulen freischalten. */
+export function fahrschuleTag() {
+  for (const fahrer of S.drivers || []) {
+    if (fahrer.fsBis && S.minutes >= fahrer.fsBis && fahrer.fsZiel) {
+      fahrer.fs = fahrer.fsZiel;
+      fahrer.fsBis = null;
+      fahrer.fsZiel = null;
+
+      log(`🎓 ${fahrer.name} hat ${LICENCE[fahrer.fs].name} bestanden.`);
+      if (!S.silent) {
+        toast('🎓', `<strong>${esc(fahrer.name)}</strong> hat bestanden!`,
+                    `<span class="ok">${LICENCE[fahrer.fs].name}</span>`);
+      }
+    }
+  }
 }
 
 /* ── Bewertung ─────────────────────────────────────────────────────

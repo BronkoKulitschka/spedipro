@@ -21,7 +21,7 @@ import { fmt, esc } from '../util.js';
 import { fahrtenZu, stufeVon } from './customers.js';
 import { grenzenBonus, verstimmen, beruhigen, charakterVon,
          stimmung, zustandVon } from './clients.js';
-import { GOODS, REP } from '../config.js';
+import { GOODS, REP, KONKURRENTEN } from '../config.js';
 import { toast } from '../ui/toast.js';
 
 /* Wie weit man höchstens gehen kann, ohne alles zu verlieren. */
@@ -134,23 +134,84 @@ export const ARGUMENTE = {
   },
 };
 
+/* ── Zu häufiges Verhandeln ────────────────────────────────────────
+   Wer bei jeder einzelnen Anfrage feilscht, gilt irgendwann als
+   schwierig — unabhängig davon, ob die einzelne Verhandlung gut oder
+   schlecht ausgeht. Gezählt werden die letzten Verhandlungen in einem
+   gleitenden Zeitfenster; ein paar bleiben immer folgenlos. */
+function pruefeHaeufigkeit() {
+  S.verhandlungsZeiten ||= [];
+  const grenze = S.minutes - REP.HAGGLE_FENSTER;
+  S.verhandlungsZeiten = S.verhandlungsZeiten.filter(t => t > grenze);
+  S.verhandlungsZeiten.push(S.minutes);
+
+  if (S.verhandlungsZeiten.length > REP.HAGGLE_FREI) {
+    addRep(REP.HAGGLE_OVERUSE);
+    if (!S.silent && S.verhandlungsZeiten.length === REP.HAGGLE_FREI + 1) {
+      /* Nur beim ersten Überschreiten hinweisen, nicht bei jeder
+         weiteren — das würde schnell nerven. */
+      toast('⚠️', 'Zu häufiges Verhandeln fällt auf.',
+                  '<span class="muted">Jede weitere Verhandlung in kurzer Zeit '
+                + 'kostet etwas Ansehen.</span>');
+    }
+  }
+}
+
+/* ── Konkurrenz ────────────────────────────────────────────────────
+   Manchmal hat der Verlader bereits ein Angebot einer anderen
+   Spedition vorliegen — das ist keine Behauptung ins Blaue, sondern
+   schränkt den eigenen Spielraum spürbar ein: Wer mehr verlangt, als
+   der Mitbewerber ohnehin schon bietet, muss seine Verlässlichkeit
+   ins Feld führen, nicht nur den Preis. */
+function wuerfleKonkurrenz(offer) {
+  if (Math.random() > 0.3) return null;
+
+  const name = KONKURRENTEN[Math.floor(Math.random() * KONKURRENTEN.length)];
+  /* Ihr Preis liegt meist nah am ursprünglichen, gelegentlich sogar
+     etwas darunter — ein ernstzunehmendes Angebot, keine Erfindung. */
+  const faktor = 0.90 + Math.random() * 0.14;
+
+  return { name, fee: Math.round(offer.grundpreis * faktor / 10) * 10, faktor };
+}
+
 /* Ein neues Gespräch beginnen. */
 export function beginne(offerId) {
   const offer = S.offers.find(o => o.id === offerId);
   if (!offer || offer.kind !== 'spot' || offer.verhandelt) return null;
 
   offer.grundpreis ??= offer.fee;
+  pruefeHaeufigkeit();
+
+  const konkurrenz = wuerfleKonkurrenz(offer);
+  let grenze = schmerzgrenze(offer);
+
+  const verlauf = [{
+    wer: 'kunde',
+    text: `Wir hätten da eine Sendung. ${fmt(offer.grundpreis)} sind dafür vorgesehen.`,
+  }];
+
+  if (konkurrenz) {
+    /* Je näher das fremde Angebot am eigenen liegt, desto weniger
+       Spielraum bleibt nach oben — der Verlader hat schließlich eine
+       Alternative in der Hand. Der genannte Preis muss aber immer
+       durchgehen, egal wie günstig die Konkurrenz ist — sonst wäre
+       das Versprechen "der Listenpreis geht immer durch" gebrochen. */
+    grenze -= Math.max(0, (1.15 - konkurrenz.faktor)) * 0.18;
+    grenze = Math.max(1.0, grenze);
+    verlauf.push({
+      wer: 'kunde',
+      text: `Zur Einordnung: ${konkurrenz.name} hat uns ${fmt(konkurrenz.fee)} angeboten.`,
+    });
+  }
 
   return {
     offerId,
     runde: 1,
     fee: offer.grundpreis,
-    grenze: schmerzgrenze(offer),
+    grenze,
+    konkurrenz,
     genutzt: [],                 // schon vorgebrachte Argumente
-    verlauf: [{
-      wer: 'kunde',
-      text: `Wir hätten da eine Sendung. ${fmt(offer.grundpreis)} sind dafür vorgesehen.`,
-    }],
+    verlauf,
     offen: true,
     ergebnis: null,
   };

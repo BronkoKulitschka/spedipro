@@ -42,6 +42,11 @@ export function resetState(depot) {
   S = {
     screen: 'start',
     name: 'Meine Spedition',
+
+    /* Der Spielercharakter — bewusst gewählt beim Gründen, nicht
+       zugewiest. geschlecht: 'w' | 'm', bild: 0 bis 3 innerhalb
+       davon. */
+    spieler: { geschlecht: 'w', bild: 0 },
     depot,
     stadt: null,       // gewählter Standort aus der Städteliste
     money: RULES.START_MONEY,
@@ -257,6 +262,8 @@ export function hydrate(saved) {
   resetState(saved.depot);
   Object.assign(S, saved, {
     level: saved.level || 1,
+    /* Ältere Spielstände kennen noch keinen Spielercharakter. */
+    spieler: saved.spieler || { geschlecht: 'w', bild: 0 },
     tutorial: saved.tutorial || { schritt: 0, aktiv: false },
     hubs: saved.hubs?.length ? saved.hubs : [],
     parking: saved.parking || [],

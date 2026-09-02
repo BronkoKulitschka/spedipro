@@ -6,6 +6,7 @@ import { S, dateText, fullDate } from '../state.js';
 import { esc } from '../util.js';
 import { startMenuHtml } from './wm.js';
 import { VERSION, BUILD, CODENAME } from '../version.js';
+import { spielerBild } from './sprites.js';
 
 export function startScreen(save = null) {
   return `
@@ -66,6 +67,15 @@ export function startScreen(save = null) {
             <input type="text" id="pname" value="Meine Spedition" maxlength="28">
           </div>
 
+          <div class="raised-box" style="margin-bottom:8px;">
+            <div class="section-title">Ihr Charakter</div>
+            <div class="flex-row" style="gap:5px;margin-bottom:6px;">
+              <button class="btn btn-sm pressed" id="spGeschlW" data-geschlecht="w">weiblich</button>
+              <button class="btn btn-sm" id="spGeschlM" data-geschlecht="m">männlich</button>
+            </div>
+            <div class="spieler-wahl" id="spielerWahl"></div>
+          </div>
+
           <div class="muted" style="font-size:10px;line-height:1.5;margin-bottom:8px;">
             Der Betriebshof wird in einem echten Gewerbegebiet am Rand des
             gewählten Ortes angelegt — dort, wo eine Spedition wirklich steht.
@@ -122,10 +132,13 @@ export function desktopShell() {
     <div id="desktop">
       <div class="desk-icons">${icons}</div>
       <div class="desk-brand">
-        <div>${esc(S.name)}</div>
-        <div class="muted">Depot ${esc(S.depot.name)}</div>
-        <div class="muted">${fullDate()}</div>
-        <div class="muted">Version ${VERSION}</div>
+        <span class="desk-brand-bildnis">${spielerBild(S.spieler?.geschlecht, S.spieler?.bild)}</span>
+        <div class="desk-brand-text">
+          <div>${esc(S.name)}</div>
+          <div class="muted">Depot ${esc(S.depot.name)}</div>
+          <div class="muted">${fullDate()}</div>
+          <div class="muted">Version ${VERSION}</div>
+        </div>
       </div>
     </div>
 

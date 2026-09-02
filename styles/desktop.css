@@ -52,10 +52,46 @@ html, body { height: 100%; overflow: hidden; }
 
 .desk-brand {
   position: absolute; right: 10px; bottom: 10px;
-  text-align: right; color: #fff; text-shadow: 1px 1px 1px rgba(0,0,0,.5);
-  font-size: 12px; opacity: .8;
+  display: flex; align-items: center; gap: 8px;
+  color: #fff; text-shadow: 1px 1px 1px rgba(0,0,0,.5);
+  font-size: 12px; opacity: .85;
 }
+.desk-brand-text { text-align: right; }
 .desk-brand .muted { color: #e0e8e8; font-size: 11px; }
+.desk-brand-bildnis {
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; font-size: 24px; flex-shrink: 0;
+  background: rgba(255,255,255,.15);
+  border-top: 1px solid rgba(255,255,255,.5);
+  border-left: 1px solid rgba(255,255,255,.5);
+  border-right: 1px solid rgba(0,0,0,.4);
+  border-bottom: 1px solid rgba(0,0,0,.4);
+  overflow: hidden;
+}
+
+/* Kopf des Startmenüs */
+.start-kopf {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 8px; background: #000080; color: #fff;
+  border-bottom: 1px solid #404080;
+}
+.start-bildnis {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; font-size: 19px; flex-shrink: 0;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.4);
+  overflow: hidden;
+}
+.start-firmenname { font-size: 12px; font-weight: bold; }
+
+/* Sinnbild und echtes Bildnis füllen ihren Rahmen gleichermaßen */
+.spieler-feld {
+  display: block; width: 100%; height: 100%;
+  background-size: 400% 200%;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+.spieler-bildnis { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
 
 /* ── Fenster ── */
 .win {

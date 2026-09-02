@@ -378,3 +378,81 @@ export function rahmenVon(modelKey) {
     flaeche: blatt.flaechen[gefunden.index],
   };
 }
+
+
+/* ── Der Spielercharakter ──────────────────────────────────────────
+   Anders als bei Fahrern oder Auftraggebern ist das keine zufällige
+   Zuweisung, sondern eine bewusste Wahl beim Gründen — deshalb gibt
+   es hier keine Streuung aus einer Kennung, nur einen festen Platz
+   von 0 bis 3 je Geschlecht, wie ihn der Spieler ausgesucht hat.
+
+   Dasselbe Rasterprinzip wie bei den Fahrern: obere Hälfte des
+   Blattes weiblich, untere männlich, vier Personen je Reihe. */
+
+const SPIELER_JE_GESCHLECHT = 4;
+const SP_SPALTEN = 4;
+const SP_ZEILEN  = 2;
+const SP_BLATT   = './assets/spieler.png';
+
+let spZustand = 'ungeprueft';
+let spEinzelne = new Set();
+
+function pruefeSpielerbild() {
+  if (spZustand !== 'ungeprueft') return;
+  spZustand = 'sinnbild';
+
+  const blatt = new Image();
+  blatt.onload = () => {
+    if (blatt.width >= SP_SPALTEN * 16 && blatt.height >= SP_ZEILEN * 16) {
+      spZustand = 'blatt';
+      beiAenderung?.();
+    }
+  };
+  blatt.src = SP_BLATT;
+
+  for (let i = 0; i < SP_SPALTEN * SP_ZEILEN; i++) {
+    const bild = new Image();
+    bild.onload = () => {
+      spEinzelne.add(i);
+      if (spZustand === 'sinnbild') spZustand = 'einzeln';
+      beiAenderung?.();
+    };
+    bild.src = `./assets/spieler-${i}.png`;
+  }
+}
+
+const SPIELER_SINNBILD_W = ['👩‍💼', '👩🏽‍💼', '👩🏾‍💼', '👩‍🦰'];
+const SPIELER_SINNBILD_M = ['👨‍💼', '👨🏽‍💼', '👨🏾‍💼', '🧑‍💼'];
+const SPIELER_SINNBILD = [...SPIELER_SINNBILD_W, ...SPIELER_SINNBILD_M];
+
+/* Slot 0–3 = weiblich, 4–7 = männlich — bild ist der gewählte Platz
+   innerhalb des Geschlechts (0 bis 3), nicht der volle Blattindex. */
+export function spielerSlot(geschlecht, bild) {
+  const b = Math.max(0, Math.min(SPIELER_JE_GESCHLECHT - 1, bild || 0));
+  return b + (geschlecht === 'm' ? SPIELER_JE_GESCHLECHT : 0);
+}
+
+export function spielerBild(geschlecht, bild) {
+  pruefeSpielerbild();
+  const slot = spielerSlot(geschlecht, bild);
+
+  if (spZustand === 'blatt') {
+    const sp = slot % SP_SPALTEN, ze = Math.floor(slot / SP_SPALTEN);
+    const x = SP_SPALTEN > 1 ? (sp / (SP_SPALTEN - 1)) * 100 : 0;
+    const y = SP_ZEILEN  > 1 ? (ze / (SP_ZEILEN  - 1)) * 100 : 0;
+
+    return `<span class="spieler-feld" style="`
+         + `background-image:url('${SP_BLATT}');`
+         + `background-position:${x}% ${y}%"></span>`;
+  }
+
+  if (spEinzelne.has(slot)) {
+    return `<img src="./assets/spieler-${slot}.png" alt="" class="spieler-bildnis">`;
+  }
+
+  return SPIELER_SINNBILD[slot];
+}
+
+export const SPIELER_SPALTEN = SP_SPALTEN;
+export const SPIELER_ZEILEN = SP_ZEILEN;
+export const SPIELER_JE_GESCHLECHT_EXPORT = SPIELER_JE_GESCHLECHT;
