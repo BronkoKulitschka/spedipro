@@ -621,6 +621,29 @@ männlich, je vier Personen.
 `sim/staff.js` leitet dann etwas Stabiles aus der Kennung ab, statt
 abzustürzen.
 
+## Neue Bildsprache (im Aufbau)
+
+Löst sich schrittweise vom Windows-95-Rahmen, inspiriert von SimCity 2000.
+Neue Fenster bekommen die Klasse `sc2000`, alle zugehörigen Regeln stehen
+in `styles/sc2000.css` — bestehende Fenster bleiben unberührt, bis sie
+einzeln umgestellt werden.
+
+**Grundlage:**
+- Palette „Industrie-Blau": feste Hex-Werte als CSS-Variablen (`--sc-*`),
+  keine Verläufe
+- Schrift **Pixelify Sans**, lokal unter `vendor/fonts/` (SIL OFL,
+  Umlaute und Eurozeichen geprüft) — keine weitere CDN-Abhängigkeit
+- Gestufte Pixel-Ecken per `clip-path` (`.sc-pixelrand`,
+  `.sc-pixelrand-klein`) statt eines Bildes — bleibt bei jeder
+  Fenstergröße exakt am Pixelraster
+
+**Umgestellt:** Fuhrpark (`apps/fleet.js`)
+**Noch im alten Stil:** alle übrigen Fenster
+
+**Für Bildinhalte** (Symbole, nicht Rahmen) gilt: immer als Spritemap
+liefern, so viele Symbole wie möglich in einem Bild — dieselbe Praxis
+wie bei Fahrzeugen und Porträts.
+
 ## Der Spielercharakter
 
 Anders als bei Fahrern oder Auftraggebern ist das keine zufällige

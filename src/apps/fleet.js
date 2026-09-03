@@ -21,15 +21,15 @@ export const FleetApp = {
   width: 420, height: 440, desktop: true,
 
   body: () => `
-    <div class="col fill">
+    <div class="col fill sc2000">
       ${kasseLeiste()}
-      <div class="bar-note col" style="gap:4px;">
-        <div class="flex-row" style="justify-content:space-between;gap:6px;">
+      <div class="col" style="gap:0;">
+        <div class="sc-fuss-reihe" style="padding:6px 10px 0;">
           <span id="flNote">—</span>
         </div>
-        <div class="bestand" id="flBestand"></div>
+        <div class="sc-bestand" id="flBestand"></div>
       </div>
-      <div class="inset-box scroll fill" id="fleetBox" style="padding:4px;"></div>
+      <div class="scroll fill" id="fleetBox" style="padding:8px;background:var(--sc-hintergrund);"></div>
     </div>`,
 
   mount(el) {
@@ -83,9 +83,9 @@ export const FleetApp = {
         .sort((a, b) => b[1].gesamt - a[1].gesamt)
         .map(([key, v]) => {
           const m = modelOf({ model: key });
-          return `<span class="bestand-posten" title="${esc(m.klasse)} · Führerschein ${m.fs}">
+          return `<span title="${esc(m.klasse)} · Führerschein ${m.fs}">
             <strong>${v.gesamt}×</strong> ${esc(m.name)}${v.gebraucht ? `
-            <span class="muted">(${v.gebraucht} gebr.)</span>` : ''}
+            (${v.gebraucht} gebr.)` : ''}
           </span>`;
         }).join('');
     }
@@ -109,40 +109,40 @@ export const FleetApp = {
       if (!status || !bar) continue;
 
       if (xp) xp.style.width = Math.min(100, fahrerOderErsatz(truck).xp / xpNeeded(fahrerOderErsatz(truck).level) * 100) + '%';
-      bar.className = 'prog-fill';
+      bar.className = 'sc-balken-fuellung';
 
       if (truck.shopMin > 0) {
-        status.innerHTML = `<span class="warn">🔧 Werkstatt, ${Math.ceil(truck.shopMin / 60)} h</span>`;
-        bar.classList.add('shop');
+        status.innerHTML = `<span class="sc-wert-schlecht">🔧 Werkstatt, ${Math.ceil(truck.shopMin / 60)} h</span>`;
+        bar.classList.add('sc-warnung');
         bar.style.width = '100%';
       } else if (truck.restMin > 0 && truck.restKind === 'rampe') {
-        status.innerHTML = `<span class="muted">📦 ${esc(driveStatus(truck).text)}</span>`;
+        status.innerHTML = `<span class="sc-dim">📦 ${esc(driveStatus(truck).text)}</span>`;
         bar.style.width = '100%';
       } else if (truck.restMin > 0) {
-        status.innerHTML = `<span class="warn">🅿️ ${esc(driveStatus(truck).text)}</span>`;
-        bar.classList.add('shop');
+        status.innerHTML = `<span class="sc-wert-schlecht">🅿️ ${esc(driveStatus(truck).text)}</span>`;
+        bar.classList.add('sc-warnung');
         bar.style.width = truck.route
           ? Math.min(100, truck.progress / truck.route.km * 100) + '%' : '0';
       } else if (truck.phase === 'planning') {
-        status.innerHTML = '<span class="muted">Route wird geplant …</span>';
+        status.innerHTML = '<span class="sc-dim">Route wird geplant …</span>';
         bar.style.width = '0';
       } else if (truck.phase === 'driving' && truck.rastZiel) {
-        status.innerHTML = `<span class="warn">🅿️ ${esc(truck.rastZiel.name.slice(0, 22))}</span>`;
+        status.innerHTML = `<span class="sc-wert-schlecht">🅿️ ${esc(truck.rastZiel.name.slice(0, 22))}</span>`;
         bar.style.width = Math.min(100, truck.progress / truck.route.km * 100) + '%';
       } else if (faehrtLeer(truck)) {
-        status.innerHTML = '<span class="ok">↩ Leerfahrt · verfügbar</span>';
-        bar.classList.add('back');
+        status.innerHTML = '<span class="sc-wert-gut">↩ Leerfahrt · verfügbar</span>';
+        bar.classList.add('sc-zurueck');
         bar.style.width = Math.min(100, truck.progress / truck.route.km * 100) + '%';
       } else if (truck.phase === 'driving' && truck.route) {
         const ziel = truck.job?.kind === 'return' ? 'Depot' : truck.job?.firm?.name || '';
         status.innerHTML = `→ <strong>${esc(ziel.slice(0, 20))}</strong>`;
-        if (truck.job?.kind === 'return') bar.classList.add('back');
+        if (truck.job?.kind === 'return') bar.classList.add('sc-zurueck');
         bar.style.width = Math.min(100, truck.progress / truck.route.km * 100) + '%';
       } else {
         const st = driveStatus(truck);
         status.innerHTML = st.code === 'frei'
-          ? '<span class="muted">steht</span>'
-          : `<span class="warn">${esc(st.text)}</span>`;
+          ? '<span class="sc-dim">steht</span>'
+          : `<span class="sc-wert-schlecht">${esc(st.text)}</span>`;
         bar.style.width = '0';
       }
     }
@@ -154,63 +154,61 @@ function row(truck) {
   const m = modelOf(truck);
   const kap = kapazitaet(truck);
 
-  const stehtWo = truck.phase === 'idle'
-    ? `<span class="muted">bei ${esc(truck.place)}</span>`
-    : '<span class="muted">unterwegs</span>';
+  const stehtWo = truck.phase === 'idle' ? `bei ${esc(truck.place)}` : 'unterwegs';
 
   return `
-  <div class="truck-row mit-hintergrund ${d ? '' : 'ohne-fahrer'}">
-    <div class="flex-row" style="justify-content:space-between;">
-      <span>
-        <span class="farb-marke" style="background:${truckFarbe(truck.nr).kraeftig}"></span>
-        <strong>LKW ${truck.nr}</strong>
-        <span class="muted">· ${esc(m.name)}</span>
-        ${(truck.equip || []).map(k => EQUIPMENT[k]?.icon || '').join('')}
-      </span>
-      <span style="font-size:10px;" id="tst${truck.nr}"></span>
-    </div>
+  <div class="sc-lkw-karte sc-pixelrand">
+    <div class="sc-lkw-karte-innen">
+      <div class="sc-lkw-kopf">
+        <span class="sc-lkw-titel">
+          <span class="sc-farb-punkt" style="background:${truckFarbe(truck.nr).kraeftig}"></span>
+          LKW ${truck.nr} <span class="sc-dim">· ${esc(m.name)}</span>
+          ${(truck.equip || []).map(k => EQUIPMENT[k]?.icon || '').join('')}
+        </span>
+        <span class="sc-lkw-status" id="tst${truck.nr}"></span>
+      </div>
 
-    <div style="font-size:10px;margin:2px 0;">
-      ${truck.used ? '<span class="muted">gebraucht · </span>' : ''}
-      <span class="muted">${num(truck.odo || 0)} km</span> · ${stehtWo}
-    </div>
+      <div class="sc-dim">
+        ${truck.used ? 'gebraucht · ' : ''}${num(truck.odo || 0)} km · ${stehtWo}
+      </div>
 
-    <div class="daten-reihe">
-      <span class="datum"><span class="dl">Nutzlast</span><span class="dw">${(kap.kg / 1000).toFixed(1)} t</span></span>
-      <span class="datum"><span class="dl">Plätze</span><span class="dw">${kap.paletten}</span></span>
-      <span class="datum"><span class="dl">zGG</span><span class="dw">${(m.zgg / 1000).toFixed(1)} t</span></span>
-      <span class="datum"><span class="dl">Fix/Tag</span><span class="dw">${truckFix(truck)} €</span></span>
-    </div>
+      <div class="sc-daten-reihe">
+        <span class="sc-datum"><span class="sc-dl">Nutzlast</span><span class="sc-dw">${(kap.kg / 1000).toFixed(1)} t</span></span>
+        <span class="sc-datum"><span class="sc-dl">Plätze</span><span class="sc-dw">${kap.paletten}</span></span>
+        <span class="sc-datum"><span class="sc-dl">zGG</span><span class="sc-dw">${(m.zgg / 1000).toFixed(1)} t</span></span>
+        <span class="sc-datum"><span class="sc-dl">Fix/Tag</span><span class="sc-dw">${truckFix(truck)} €</span></span>
+      </div>
 
-    <div class="fahrer-zeile">
-      ${d
-        ? `<span class="fahrer-bildnis-klein">${fahrerBild(d.id, geschlechtVon(d))}</span>
-           <strong>${esc(d.name)}</strong>
-           <span class="muted">· Stufe ${d.level}</span>
-           ${d.points ? `<span class="ok">· ${d.points} Pkt. frei</span>` : ''}`
-        : '<span class="warn">👤 kein Fahrer — das Fahrzeug steht</span>'}
-      <button class="btn btn-sm" data-act="personal">Personal</button>
-    </div>
+      <div class="sc-fahrer-zeile">
+        ${d
+          ? `<span class="sc-fahrer-bildnis">${fahrerBild(d.id, geschlechtVon(d))}</span>
+             <strong>${esc(d.name)}</strong>
+             <span class="sc-dim">· Stufe ${d.level}</span>
+             ${d.points ? `<span class="sc-wert-gut">· ${d.points} Pkt. frei</span>` : ''}`
+          : '<span class="sc-wert-schlecht">👤 kein Fahrer — das Fahrzeug steht</span>'}
+        <button class="sc-btn sc-pixelrand-klein" style="margin-left:auto;" data-act="personal">Personal</button>
+      </div>
 
-    ${ladeZeile(truck, kap)}
-    <div class="prog" style="margin:3px 0;"><div class="prog-fill" id="tpg${truck.nr}"></div></div>
+      ${ladeZeile(truck, kap)}
+      <div class="sc-balken"><div class="sc-balken-fuellung" id="tpg${truck.nr}"></div></div>
 
-    <div class="flex-row" style="justify-content:space-between;font-size:10px;flex-wrap:wrap;gap:4px;">
-      ${automatikFrei()
-        ? `<label class="flex-row" style="gap:3px;" title="Sucht sich selbst den nächsten Auftrag">
-             <input type="checkbox" data-nr="${truck.nr}" ${truck.auto ? 'checked' : ''}>
-             Automatik
-           </label>`
-        : `<span class="muted" title="Wird mit der Betriebsstufe frei">
-             🔒 Automatik ab Stufe ${stufeFuerAutomatik()}</span>`}
-      <span class="flex-row" style="gap:4px;">
-        <button class="btn btn-sm" data-act="home" data-nr="${truck.nr}"
-          ${truck.phase === 'idle' && !truck.shopMin && !atDepot(truck) ? '' : 'disabled'}>ins Depot</button>
-        <button class="btn btn-sm" data-act="show"  data-nr="${truck.nr}">zeigen</button>
-        <button class="btn btn-sm" data-act="sell" data-nr="${truck.nr}"
-          title="Wiederverkaufswert ${fmt(resaleValue(truck))}"
-          ${truck.phase === 'idle' && !truck.shopMin && S.trucks.length > 1 ? '' : 'disabled'}>verkaufen</button>
-      </span>
+      <div class="sc-fuss-reihe">
+        ${automatikFrei()
+          ? `<label style="display:flex;align-items:center;gap:4px;" title="Sucht sich selbst den nächsten Auftrag">
+               <input type="checkbox" data-nr="${truck.nr}" ${truck.auto ? 'checked' : ''}>
+               Automatik
+             </label>`
+          : `<span class="sc-dim" title="Wird mit der Betriebsstufe frei">
+               🔒 Automatik ab Stufe ${stufeFuerAutomatik()}</span>`}
+        <span style="display:flex;gap:4px;">
+          <button class="sc-btn sc-pixelrand-klein" data-act="home" data-nr="${truck.nr}"
+            ${truck.phase === 'idle' && !truck.shopMin && !atDepot(truck) ? '' : 'disabled'}>ins Depot</button>
+          <button class="sc-btn sc-pixelrand-klein" data-act="show"  data-nr="${truck.nr}">zeigen</button>
+          <button class="sc-btn sc-pixelrand-klein" data-act="sell" data-nr="${truck.nr}"
+            title="Wiederverkaufswert ${fmt(resaleValue(truck))}"
+            ${truck.phase === 'idle' && !truck.shopMin && S.trucks.length > 1 ? '' : 'disabled'}>verkaufen</button>
+        </span>
+      </div>
     </div>
   </div>`;
 }
@@ -226,13 +224,13 @@ function ladeZeile(truck, kap) {
   const voll = Math.max(pal, kg);
 
   return `
-    <div style="font-size:10px;margin:2px 0;">
+    <div class="sc-dim" style="margin:2px 0;">
       geladen: ${g.icon} ${esc(g.name)} ·
       ${job.paletten} Pal. · ${((job.gewicht || 0) / 1000).toFixed(1)} t
-      <span class="muted">(${Math.round(voll)} % ausgelastet)</span>
-      ${job.stopps > 1 ? `<span class="ok">· Stopp ${job.stopp} von ${job.stopps}</span>` : ''}
+      (${Math.round(voll)} % ausgelastet)
+      ${job.stopps > 1 ? `<span class="sc-wert-gut">· Stopp ${job.stopp} von ${job.stopps}</span>` : ''}
     </div>
-    <div class="prog" style="height:8px;margin-bottom:2px;">
-      <div class="prog-fill ${voll > 92 ? 'voll' : ''}" style="width:${voll}%"></div>
+    <div class="sc-balken" style="height:6px;">
+      <div class="sc-balken-fuellung ${voll > 92 ? 'sc-voll' : ''}" style="width:${voll}%"></div>
     </div>`;
 }

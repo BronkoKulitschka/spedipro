@@ -5,8 +5,8 @@
    und in den Einstellungen, damit sich mit einem Blick prüfen lässt,
    welcher Stand gerade läuft. */
 
-export const VERSION = '0.30.1';
-export const BUILD   = '2026-09-02';
-export const CODENAME = 'Fahrschule';
+export const VERSION = '0.31.0';
+export const BUILD   = '2026-09-03';
+export const CODENAME = 'SC2000';
 
 export const versionLine = () => `Version ${VERSION} · ${BUILD}`;

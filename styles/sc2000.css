@@ -1,0 +1,204 @@
+/* ── Neue Bildsprache, inspiriert von SimCity 2000 ─────────────────
+   Löst sich schrittweise vom Windows-95-Rahmen. Diese Datei enthält
+   die Grundlage — Farbwerte, Schrift, Fensterrahmen ohne Bilddatei —
+   und wird Fenster für Fenster angewendet. Fenster, die noch nicht
+   umgestellt sind, bleiben unberührt im alten Stil; diese Klassen
+   greifen nur dort, wo bewusst .sc2000 gesetzt ist. */
+
+@font-face {
+  font-family: 'Pixelify';
+  src: url('../vendor/fonts/PixelifySans-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pixelify';
+  src: url('../vendor/fonts/PixelifySans-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pixelify';
+  src: url('../vendor/fonts/PixelifySans-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  /* Flächen, dunkel nach hell */
+  --sc-hintergrund:  #1a2028;
+  --sc-panel:        #232a34;
+  --sc-panel-hell:   #2c3440;
+
+  /* Ränder */
+  --sc-rand:         #10141a;
+  --sc-rand-hell:    #4a5868;
+
+  /* Akzent — die Industrie-Blau-Linie */
+  --sc-akzent:       #1a5f7a;
+  --sc-akzent-hell:  #2d84a8;
+  --sc-gold:         #ffd166;
+
+  /* Text */
+  --sc-text:         #d0d8e0;
+  --sc-text-dim:     #7a8896;
+
+  /* Werte */
+  --sc-gruen:        #6bcf7f;
+  --sc-rot:          #e8607a;
+}
+
+/* ── Gestufte Pixel-Ecken ─────────────────────────────────────────
+   Reine CSS-Geometrie statt eines Bildes — bleibt bei jeder
+   Fenstergröße exakt am Pixelraster, kein Dehnen, kein Verzerren. */
+.sc-pixelrand {
+  clip-path: polygon(
+    0 8px, 8px 8px, 8px 0,
+    calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%,
+    8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px)
+  );
+}
+/* Kleinere Ausführung für Knöpfe und schmale Zeilen */
+.sc-pixelrand-klein {
+  clip-path: polygon(
+    0 4px, 4px 4px, 4px 0,
+    calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+    100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+    4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)
+  );
+}
+
+/* ── Grundgerüst eines Fensters ── */
+.sc2000 {
+  font-family: 'Pixelify', monospace;
+  color: var(--sc-text);
+}
+
+.sc-fenster {
+  background: var(--sc-rand);
+  padding: 3px;
+}
+.sc-fenster-innen {
+  background: var(--sc-panel);
+  box-shadow: inset 0 0 0 1px var(--sc-rand-hell);
+}
+.sc-titelleiste {
+  background: var(--sc-akzent);
+  color: var(--sc-gold);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 8px 10px;
+  letter-spacing: 1px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sc-inhalt {
+  padding: 10px;
+}
+
+.sc-zeile {
+  background: var(--sc-panel-hell);
+  padding: 2px;
+  margin-bottom: 6px;
+}
+.sc-zeile-innen {
+  padding: 6px 8px;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 8px;
+}
+
+.sc-btn {
+  background: var(--sc-akzent);
+  color: var(--sc-gold);
+  font-family: 'Pixelify', monospace;
+  font-size: 11px;
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+}
+.sc-btn:hover  { background: var(--sc-akzent-hell); }
+.sc-btn:active { background: var(--sc-rand); }
+.sc-btn:disabled { background: var(--sc-panel-hell); color: var(--sc-text-dim); cursor: default; }
+
+.sc-btn-reihe { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+
+.sc-wert-gut  { color: var(--sc-gruen); font-weight: 700; }
+.sc-wert-schlecht { color: var(--sc-rot); font-weight: 700; }
+.sc-dim { color: var(--sc-text-dim); font-size: 11px; }
+
+/* ── Kassenleiste im neuen Stil ── */
+.sc2000 .kasse-leiste {
+  background: var(--sc-panel-hell);
+  color: var(--sc-text);
+  padding: 6px 10px;
+  font-size: 12px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--sc-rand);
+}
+.sc2000 .kasse-wert { color: var(--sc-gold); font-weight: 700; }
+.sc2000 .kasse-wert.debt { color: var(--sc-rot); }
+.sc2000 .kasse-zusatz { color: var(--sc-text-dim); font-size: 11px; }
+
+/* ── Fuhrpark ── */
+.sc-lkw-karte {
+  background: var(--sc-panel-hell);
+  padding: 2px;
+  margin-bottom: 8px;
+}
+.sc-lkw-karte-innen { padding: 8px; }
+.sc-lkw-kopf {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 4px;
+}
+.sc-lkw-titel { font-size: 13px; font-weight: 700; color: var(--sc-text); }
+.sc-lkw-status { font-size: 11px; }
+
+.sc-farb-punkt {
+  display: inline-block; width: 8px; height: 8px;
+  margin-right: 4px; vertical-align: middle;
+}
+
+.sc-daten-reihe {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  font-size: 11px; margin: 4px 0;
+}
+.sc-datum { display: flex; flex-direction: column; }
+.sc-dl { color: var(--sc-text-dim); font-size: 10px; }
+.sc-dw { color: var(--sc-text); }
+
+.sc-fahrer-zeile {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; margin: 6px 0;
+  background: var(--sc-panel);
+  padding: 4px 6px;
+}
+.sc-fahrer-bildnis {
+  width: 20px; height: 20px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; background: var(--sc-rand);
+  overflow: hidden;
+}
+
+.sc-balken {
+  height: 8px; background: var(--sc-rand);
+  margin: 4px 0; overflow: hidden;
+}
+.sc-balken-fuellung {
+  height: 100%; background: var(--sc-akzent-hell);
+  transition: width .3s;
+}
+.sc-balken-fuellung.sc-warnung { background: var(--sc-gold); }
+.sc-balken-fuellung.sc-voll    { background: var(--sc-rot); }
+.sc-balken-fuellung.sc-zurueck { background: var(--sc-text-dim); }
+
+.sc-fuss-reihe {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 6px; font-size: 11px; margin-top: 6px;
+}
+
+.sc-bestand {
+  display: flex; flex-wrap: wrap; gap: 4px 10px;
+  font-size: 10px; padding: 4px 10px;
+  color: var(--sc-text-dim);
+}
+.sc-bestand strong { color: var(--sc-text); }
