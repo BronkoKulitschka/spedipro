@@ -121,10 +121,10 @@
   .stars .off{color:#9a968c;}
 
   .trio{display:flex;text-align:center;}
-  .trio > div{flex:1;}
+  .trio .trio-item{flex:1;}
   .trio .n{font-size:24px;font-weight:bold;color:var(--blue-text);}
   .trio .l{font-size:15px;color:var(--ink);}
-  .trio-sep{width:1px;background:var(--border-dark);box-shadow:1px 0 0 var(--border-light);margin:2px 6px;}
+  .trio-sep{flex:0 0 1px;width:1px;align-self:stretch;background:var(--border-dark);box-shadow:1px 0 0 var(--border-light);margin:2px 6px;}
 
   .section-title{
     color:var(--blue-text);
@@ -271,11 +271,11 @@
         <div class="divider"></div>
 
         <div class="trio">
-          <div><div class="n">18</div><div class="l">Fahrzeuge</div></div>
+          <div class="trio-item"><div class="n">18</div><div class="l">Fahrzeuge</div></div>
           <div class="trio-sep"></div>
-          <div><div class="n">12</div><div class="l">Aktive Touren</div></div>
+          <div class="trio-item"><div class="n">12</div><div class="l">Aktive Touren</div></div>
           <div class="trio-sep"></div>
-          <div><div class="n">24</div><div class="l">Mitarbeiter</div></div>
+          <div class="trio-item"><div class="n">24</div><div class="l">Mitarbeiter</div></div>
         </div>
       </div>
 
@@ -288,10 +288,11 @@
             <path d="M40 30 L90 20 L140 25 L180 15 L230 25 L270 40 L280 70 L260 110 L230 140 L190 155 L150 150 L110 155 L70 140 L45 110 L30 70 Z" fill="#5c9a4e"/>
             <path d="M60 140 L80 160 L100 158 L95 145 Z" fill="#5c9a4e"/>
             <path d="M15 60 L35 55 L38 90 L20 100 Z" fill="#5c9a4e"/>
-            <g stroke="#e8e4d8" stroke-width="1" opacity="0.55">
+            <g stroke="#e8e4d8" stroke-width="1" stroke-dasharray="3 2" opacity="0.7">
               <line x1="60" y1="30" x2="230" y2="130"/>
               <line x1="230" y1="30" x2="90" y2="140"/>
               <line x1="50" y1="90" x2="270" y2="80"/>
+              <line x1="120" y1="20" x2="140" y2="150"/>
             </g>
             <rect x="70" y="35" width="7" height="7" fill="#e0a83c"/>
             <rect x="150" y="45" width="7" height="7" fill="#c93a3a"/>
