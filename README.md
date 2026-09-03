@@ -1,10 +1,12 @@
-# Spedipro 95 v0.1.2
+# Spedipro 95 v0.1.3
 
-Finalisierung des Smartphone-Hauptmenüs.
+Skalierungs-Korrektur des finalisierten Smartphone-Hauptmenüs.
 
-- Die vom Nutzer festgelegte Master-Vorlage wird als visuelle Grundlage verwendet.
-- Keine Emojis oder browserabhängigen Ersatzsymbole im Hauptmenü.
-- Proportionen, Pixel-Art-Icons, Karte, Rahmen, Beschriftungen und Statusleiste stammen direkt aus der Master-Vorlage.
-- Alle 12 Hauptmenü-Felder sowie der Tourenplanungsbutton sind echte anklickbare Elemente.
-- Hilfe und Schließen reagieren ebenfalls.
-- Noch keine neue Fachlogik in den Untermenüs; dies bleibt bewusst einem späteren kleinen Entwicklungsschritt vorbehalten.
+Geändert wurde ausschließlich die Darstellung:
+- Master-Design bleibt unverändert.
+- Das komplette UI wird proportional in die tatsächlich verfügbare Browserbreite UND Browserhöhe eingepasst.
+- Kein horizontales Abschneiden mehr.
+- Keine neue Spiellogik.
+- Alle Hotspots/Buttons behalten ihre Position relativ zur Master-Vorlage.
+
+Master-Raster: 557 × 1197.
