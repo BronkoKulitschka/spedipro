@@ -11,31 +11,5 @@
     "activeTours": 12,
     "employees": 24
   },
-  "messages": [
-    {
-      "from": "Werkstatt",
-      "text": "Reparatur fällig",
-      "read": false
-    },
-    {
-      "from": "Kunde Meyer GmbH",
-      "text": "Lieferzeit geändert",
-      "read": false
-    },
-    {
-      "from": "Dispo Team",
-      "text": "Neue Tour zugewiesen",
-      "read": false
-    },
-    {
-      "from": "Fahrer A. Becker",
-      "text": "Pausenzeit überschritten",
-      "read": false
-    },
-    {
-      "from": "Versicherung",
-      "text": "Beitrag fällig",
-      "read": false
-    }
-  ]
+  "unreadMessages": 5
 }
