@@ -147,5 +147,6 @@ body{
 }
 .statusbar .dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 0 1px #04500e;}
 .statusbar .fill{flex:1;}
+.statusbar .version{color:var(--border-dark);opacity:0.9;margin-right:2px;}
 .statusbar .signal{display:flex;align-items:flex-end;gap:1px;height:12px;}
 .statusbar .signal span{width:3px;background:var(--green);}

@@ -8,7 +8,7 @@
    zwischengespeicherte Version aus.
    ================================================================ */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `spedipro-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -17,9 +17,11 @@ const APP_SHELL = [
   './manifest.json',
   './css/theme.css',
   './css/dashboard.css',
+  './src/version.js',
   './js/icons.js',
   './js/nav-data.js',
   './js/dashboard.js',
+  './js/version-display.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-192-maskable.png',

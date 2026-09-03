@@ -118,6 +118,7 @@
     <div class="statusbar">
       <span class="dot"></span>
       <span class="fill">Verbunden mit Spedipro-Netz</span>
+      <span class="version" id="versionTag"></span>
       <span class="signal">
         <span style="height:4px"></span><span style="height:6px"></span>
         <span style="height:8px"></span><span style="height:11px"></span>
@@ -128,9 +129,11 @@
 </div>
 
 <!-- Reihenfolge wichtig: icons.js und nav-data.js zuerst, dashboard.js nutzt beide -->
+<script src="src/version.js"></script>
 <script src="js/icons.js"></script>
 <script src="js/nav-data.js"></script>
 <script src="js/dashboard.js"></script>
+<script src="js/version-display.js"></script>
 <script src="js/register-sw.js"></script>
 </body>
 </html>
