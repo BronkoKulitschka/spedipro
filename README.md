@@ -1,12 +1,15 @@
-# Spedipro 95 v0.1.3
+# Spedipro 95 v0.1.4
 
-Skalierungs-Korrektur des finalisierten Smartphone-Hauptmenüs.
+Das Hauptmenü ist nun eine echte responsive Web-Oberfläche.
 
-Geändert wurde ausschließlich die Darstellung:
-- Master-Design bleibt unverändert.
-- Das komplette UI wird proportional in die tatsächlich verfügbare Browserbreite UND Browserhöhe eingepasst.
-- Kein horizontales Abschneiden mehr.
-- Keine neue Spiellogik.
-- Alle Hotspots/Buttons behalten ihre Position relativ zur Master-Vorlage.
+Wichtigste Änderung gegenüber v0.1.3:
+- kein Screenshot als Hintergrund mehr
+- alle Texte sind echte DOM-Elemente
+- alle Zahlen sind echte Daten
+- alle Buttons sind echte Buttons
+- alle Menüfelder sind echte CSS-Grid-Elemente
+- die Pixelgrafiken werden einzeln als Assets verwendet
+- Layout skaliert natürlich mit der Gerätebreite
+- Scrollen ist möglich, falls der Browser weniger Höhe zur Verfügung stellt
 
-Master-Raster: 557 × 1197.
+Noch keine neue Fachlogik.

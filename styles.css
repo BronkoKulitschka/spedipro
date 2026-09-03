@@ -1,79 +1,64 @@
+
+:root{
+ --blue:#0000a8;
+ --panel:#cfcfcf;
+ --panel2:#d8d8d8;
+ --dark:#555;
+ --light:#fff;
+ --text:#171717;
+}
 *{box-sizing:border-box}
-html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:#101010;
-  font-family:"Courier New",monospace;
+html,body{margin:0;min-height:100%;background:#111;color:var(--text);font-family:"Courier New",monospace}
+body{display:flex;justify-content:center}
+button{font:inherit;color:inherit}
+#app{width:100%;max-width:430px;min-height:100dvh;background:#bfbfbf}
+.app{min-height:100dvh;background:#c7c7c7;border-left:1px solid #444;border-right:1px solid #444;padding:6px}
+.titlebar{
+ height:42px;background:linear-gradient(90deg,#00009a,#001ac4);color:#fff;
+ border:2px solid #fff;outline:1px solid #333;display:flex;align-items:center;gap:8px;
+ padding:0 8px;font-weight:900
 }
-button{font:inherit}
-#app{
-  width:100%;
-  height:100dvh;
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
-  overflow:hidden;
-  padding:
-    env(safe-area-inset-top,0px)
-    env(safe-area-inset-right,0px)
-    env(safe-area-inset-bottom,0px)
-    env(safe-area-inset-left,0px);
+.titlebar img{width:34px;height:28px;object-fit:contain;image-rendering:pixelated}
+.title{flex:1;font-size:19px;letter-spacing:.2px}
+.ctrl{width:30px;height:29px;background:#c9c9c9;border:3px outset #eee;font-weight:900;color:#10107c;padding:0;font-size:17px}
+.clock{font-size:18px}
+.window{margin-top:8px;background:#d2d2d2;border:2px inset #eee}
+.company-head{display:grid;grid-template-columns:116px 1fr;align-items:center;padding:10px 12px;border-bottom:1px solid #777}
+.company-head img{width:104px;height:58px;object-fit:contain;image-rendering:pixelated}
+.company-name,.hq{font-weight:900;color:#08179b}.company-name{font-size:16px}.hq{font-size:15px;margin-top:5px}
+.finance{padding:12px 13px 8px}
+.finance-row{display:grid;grid-template-columns:1.05fr .95fr;align-items:center;font-size:15px;line-height:1.55}
+.finance-row .value{text-align:center}
+.green{color:#087b21;font-weight:900}
+.stars{font-size:21px;line-height:1;color:#158118;letter-spacing:0;text-shadow:1px 1px #444}
+.off{color:#9b9b9b}
+.metrics{border-top:1px solid #888;margin-top:7px;padding-top:8px;display:grid;grid-template-columns:repeat(3,1fr)}
+.metric{text-align:center;font-size:13px;border-right:1px solid #999}.metric:last-child{border-right:0}.metric b{display:block;font-size:16px;margin-top:2px}
+.section-title{padding:5px 8px;color:#061598;font-weight:900;font-size:14px;border-top:1px solid #888;border-bottom:1px solid #777}
+.map{display:block;width:100%;height:auto;max-height:185px;object-fit:cover}
+.plan-row{padding:10px 16%;border-top:1px solid #777}
+.plan-btn{width:100%;min-height:44px;background:#d0d0d0;border:3px outset #eee;font-weight:900;display:flex;justify-content:center;align-items:center;gap:10px;font-size:13px}
+.plan-btn img{width:34px;height:30px;object-fit:contain;image-rendering:pixelated}
+.menu{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}
+.tile{
+ min-width:0;height:111px;background:#d0d0d0;border:3px outset #eee;padding:7px 3px 4px;
+ display:flex;flex-direction:column;align-items:center;position:relative
 }
-
-/*
-  Master design: 557 × 1197.
-  The complete UI is always fitted inside BOTH the available width
-  and the available viewport height. No horizontal cropping.
-*/
-.master-shell{
-  width:min(
-    557px,
-    100vw,
-    calc(100dvh * 557 / 1197)
-  );
-  aspect-ratio:557 / 1197;
-  flex:0 0 auto;
-  position:relative;
-  background:#c8c8c8 url("./assets/ui/mainmenu-master.jpg") 0 0/100% 100% no-repeat;
-  overflow:hidden;
-  image-rendering:auto;
-  box-shadow:0 0 0 1px #222;
+.tile .label{color:#061598;font-weight:900;font-size:11px;line-height:1.05;white-space:nowrap}
+.tile img{margin-top:auto;margin-bottom:auto;max-width:88%;height:68px;object-fit:contain;image-rendering:pixelated}
+.badge{position:absolute;right:8px;bottom:11px;background:#e31c23;color:#fff;border:2px solid #fff;outline:1px solid #b00;border-radius:4px;padding:1px 5px;font-weight:900}
+.statusbar{margin-top:9px;height:38px;border:2px inset #eee;display:flex;align-items:center;gap:8px;padding:0 10px;font-size:13px}
+.dot{width:11px;height:11px;border-radius:50%;background:#22a321;border:1px solid #08630a}
+.signal{margin-left:auto;color:#179416;font-size:18px;font-weight:900}
+.sub{min-height:100dvh;background:#c7c7c7;padding:6px}
+.subhead{height:42px;background:#0000a8;color:white;display:flex;align-items:center;padding:0 8px;font-weight:900;border:2px solid #fff;outline:1px solid #333}
+.back{margin-right:8px;background:#c9c9c9;border:3px outset #eee;padding:5px 9px;color:#000080;font-weight:900}
+.panel{margin-top:12px;background:#d0d0d0;border:3px outset #eee;padding:12px}
+.panel h2{margin:0 0 8px;color:#061598}
+@media (max-width:380px){
+ .title{font-size:17px}.clock{font-size:16px}
+ .company-head{grid-template-columns:100px 1fr}.company-head img{width:92px}
+ .company-name{font-size:14px}.hq{font-size:13px}
+ .finance-row{font-size:14px}
+ .tile{height:102px}.tile .label{font-size:10px}.tile img{height:61px}
 }
-.hotspot{
-  position:absolute;
-  appearance:none;
-  border:0;
-  padding:0;
-  margin:0;
-  background:transparent;
-  cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-}
-.hotspot:active{background:rgba(0,0,128,.12)}
-/* Titlebar */
-.help{left:69.0%;top:1.0%;width:6.5%;height:4.2%}
-.close{left:76.2%;top:1.0%;width:6.5%;height:4.2%}
-/* Tour planning CTA */
-.cta{left:16.2%;top:47.6%;width:67.7%;height:4.6%}
-/* 3 x 4 menu grid */
-.tile{width:30.4%;height:9.8%}
-.c1{left:2.6%}.c2{left:34.8%}.c3{left:67.0%}
-.r1{top:54.0%}.r2{top:64.2%}.r3{top:74.4%}.r4{top:84.6%}
-
-.subscreen{
-  width:min(100vw,557px);min-height:100dvh;margin:0 auto;background:#c8c8c8;color:#111;
-  border-left:2px solid #fff;border-right:2px solid #555;
-}
-.sub-title{
-  height:52px;background:#0000a8;color:#fff;display:flex;align-items:center;gap:10px;
-  padding:6px 10px;border:2px solid #fff;outline:1px solid #222;font-weight:900;
-}
-.back{background:#c8c8c8;border:3px outset #eee;padding:6px 10px;color:#000080;font-weight:900}
-.sub-content{padding:14px}
-.panel{border:3px outset #eee;background:#d0d0d0;padding:12px;margin-top:10px}
-.panel h2{margin:0 0 10px;color:#000080;font-size:18px}
-.panel p{font-size:14px;line-height:1.45}
-.version{font-size:12px;color:#555;margin-top:16px}

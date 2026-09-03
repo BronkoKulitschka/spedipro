@@ -1,68 +1,59 @@
 
-import { VERSION } from './version.js';
-
-const screens = {
-  fuhrpark:'FUHRPARK',
-  auftraege:'AUFTRÄGE',
-  touren:'TOURENPLANUNG',
-  personal:'PERSONAL',
-  werkstatt:'WERKSTATT',
-  kassenbuch:'KASSENBUCH',
-  kunden:'KUNDEN',
-  statistik:'STATISTIK',
-  nachrichten:'NACHRICHTEN',
-  niederlassungen:'NIEDERLASSUNGEN',
-  karte:'KARTENÜBERSICHT',
-  einstellungen:'EINSTELLUNGEN'
-};
-
+import {VERSION} from './version.js';
+const data=await fetch('./data/game.json').then(r=>r.json());
 let current='home';
+const items=[
+ ['fuhrpark','FUHRPARK'],['auftraege','AUFTRÄGE'],['touren','TOURENPLANUNG'],
+ ['personal','PERSONAL'],['werkstatt','WERKSTATT'],['kassenbuch','KASSENBUCH'],
+ ['kunden','KUNDEN'],['statistik','STATISTIK'],['nachrichten','NACHRICHTEN'],
+ ['niederlassungen','NIEDERLASSUNGEN'],['karte','KARTENÜBERSICHT'],['einstellungen','EINSTELLUNGEN']
+];
+const euro=n=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(n);
 
-function mainMenu(){
-  return `<div class="master-shell" aria-label="Spedipro 95 Hauptmenü">
-    <button class="hotspot help" data-action="help" aria-label="Hilfe"></button>
-    <button class="hotspot close" data-action="close" aria-label="Schließen"></button>
-    <button class="hotspot cta" data-screen="touren" aria-label="Tourenplanung starten"></button>
-
-    <button class="hotspot tile c1 r1" data-screen="fuhrpark" aria-label="Fuhrpark"></button>
-    <button class="hotspot tile c2 r1" data-screen="auftraege" aria-label="Aufträge"></button>
-    <button class="hotspot tile c3 r1" data-screen="touren" aria-label="Tourenplanung"></button>
-
-    <button class="hotspot tile c1 r2" data-screen="personal" aria-label="Personal"></button>
-    <button class="hotspot tile c2 r2" data-screen="werkstatt" aria-label="Werkstatt"></button>
-    <button class="hotspot tile c3 r2" data-screen="kassenbuch" aria-label="Kassenbuch"></button>
-
-    <button class="hotspot tile c1 r3" data-screen="kunden" aria-label="Kunden"></button>
-    <button class="hotspot tile c2 r3" data-screen="statistik" aria-label="Statistik"></button>
-    <button class="hotspot tile c3 r3" data-screen="nachrichten" aria-label="Nachrichten"></button>
-
-    <button class="hotspot tile c1 r4" data-screen="niederlassungen" aria-label="Niederlassungen"></button>
-    <button class="hotspot tile c2 r4" data-screen="karte" aria-label="Kartenübersicht"></button>
-    <button class="hotspot tile c3 r4" data-screen="einstellungen" aria-label="Einstellungen"></button>
-  </div>`;
-}
-
-function subScreen(id){
-  const title=screens[id];
-  return `<section class="subscreen">
-    <header class="sub-title"><button class="back" data-home>←</button><span>SPEDIPRO 95 · ${title}</span></header>
-    <div class="sub-content">
-      <div class="panel">
-        <h2>${title}</h2>
-        <p>Der Hauptmenü-Button funktioniert. Die Fachlogik dieses Bereichs wird im nächsten dafür vorgesehenen kleinen Entwicklungsschritt umgesetzt.</p>
-      </div>
-      <div class="version">Version ${VERSION}</div>
+function home(){
+ return `<main class="app">
+   <div class="titlebar">
+    <img src="./assets/ui/titletruck.png" alt=""><span class="title">SPEDIPRO 95</span>
+    <button class="ctrl" data-help>?</button><button class="ctrl" data-close>×</button><span class="clock">09:15</span>
+   </div>
+   <section class="window">
+    <div class="company-head">
+      <img src="./assets/ui/company.png" alt="">
+      <div><div class="company-name">${data.company.name}</div><div class="hq">Hauptsitz: ${data.company.hq}</div></div>
     </div>
-  </section>`;
+    <div class="finance">
+      <div class="finance-row"><span>Kontostand:</span><span class="value green">${euro(data.company.balance)}</span></div>
+      <div class="finance-row"><span>Unternehmenswert:</span><span class="value">${euro(data.company.value)}</span></div>
+      <div class="finance-row"><span>Ruf:</span><span class="value stars">★★★★<span class="off">☆</span></span></div>
+      <div class="metrics">
+        <div class="metric">Fahrzeuge:<b>${data.summary.vehicles}</b></div>
+        <div class="metric">Aktive Touren:<b>${data.summary.activeTours}</b></div>
+        <div class="metric">Mitarbeiter:<b>${data.summary.employees}</b></div>
+      </div>
+    </div>
+    <div class="section-title">AKTIVE TOUREN</div>
+    <img class="map" src="./assets/ui/map.png" alt="Aktive Touren in Europa">
+    <div class="plan-row"><button class="plan-btn" data-go="touren"><img src="./assets/ui/planicon.png" alt="">TOURENPLANUNG STARTEN</button></div>
+   </section>
+   <section class="menu">
+    ${items.map(([id,label])=>`<button class="tile" data-go="${id}">
+      <span class="label">${label}</span><img src="./assets/ui/${id}.png" alt="">
+      ${id==='nachrichten'?`<span class="badge">${data.messages}</span>`:''}
+    </button>`).join('')}
+   </section>
+   <div class="statusbar"><span class="dot"></span>Verbunden mit Spedipro-Netz<span class="signal">▂▄▆█</span></div>
+ </main>`;
 }
-
+function sub(id){
+ const title=items.find(x=>x[0]===id)?.[1]??id.toUpperCase();
+ return `<main class="sub"><div class="subhead"><button class="back" data-home>←</button>SPEDIPRO 95 · ${title}</div>
+ <section class="panel"><h2>${title}</h2><p>Bereich geöffnet. Die Fachlogik folgt in einem eigenen kleinen Entwicklungsschritt.</p><p>Version ${VERSION}</p></section></main>`;
+}
 function render(){
-  document.querySelector('#app').innerHTML=current==='home'?mainMenu():subScreen(current);
-  document.querySelectorAll('[data-screen]').forEach(el=>el.addEventListener('click',()=>{
-    current=el.dataset.screen; render(); window.scrollTo(0,0);
-  }));
-  document.querySelector('[data-home]')?.addEventListener('click',()=>{current='home';render();window.scrollTo(0,0)});
-  document.querySelector('[data-action="help"]')?.addEventListener('click',()=>alert(`Spedipro 95\nVersion ${VERSION}`));
-  document.querySelector('[data-action="close"]')?.addEventListener('click',()=>alert('Spedipro 95 läuft als Web-App und bleibt geöffnet.'));
+ document.querySelector('#app').innerHTML=current==='home'?home():sub(current);
+ document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{current=b.dataset.go;render();scrollTo(0,0)});
+ document.querySelector('[data-home]')?.addEventListener('click',()=>{current='home';render();scrollTo(0,0)});
+ document.querySelector('[data-help]')?.addEventListener('click',()=>alert(`Spedipro 95\nVersion ${VERSION}`));
+ document.querySelector('[data-close]')?.addEventListener('click',()=>alert('Spedipro 95 läuft als Web-App.'));
 }
 render();
