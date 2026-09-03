@@ -1,0 +1,41 @@
+{
+  "company": {
+    "name": "Spedition Müller GmbH",
+    "hq": "Halle (DE)",
+    "balance": 118270.75,
+    "value": 2845600,
+    "reputation": 4
+  },
+  "summary": {
+    "vehicles": 18,
+    "activeTours": 12,
+    "employees": 24
+  },
+  "messages": [
+    {
+      "from": "Werkstatt",
+      "text": "Reparatur fällig",
+      "read": false
+    },
+    {
+      "from": "Kunde Meyer GmbH",
+      "text": "Lieferzeit geändert",
+      "read": false
+    },
+    {
+      "from": "Dispo Team",
+      "text": "Neue Tour zugewiesen",
+      "read": false
+    },
+    {
+      "from": "Fahrer A. Becker",
+      "text": "Pausenzeit überschritten",
+      "read": false
+    },
+    {
+      "from": "Versicherung",
+      "text": "Beitrag fällig",
+      "read": false
+    }
+  ]
+}
