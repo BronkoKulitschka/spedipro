@@ -1,0 +1,77 @@
+/* ================================================================
+   DASHBOARD.CSS
+   Nur Styles, die es ausschließlich auf der Startseite gibt.
+   Fenster-Chrome, Panels, Buttons -> siehe theme.css
+   ================================================================ */
+
+/* Company header */
+.company{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.company svg{flex-shrink:0;}
+.company .name{color:var(--blue-text);font-size:22px;line-height:1;font-weight:bold;}
+.company .seat{font-size:18px;color:var(--ink);}
+
+.stat-row{display:flex;justify-content:space-between;font-size:19px;padding:2px 0;}
+.stat-row .label{color:var(--ink);}
+.stat-row .value{font-weight:bold;}
+.value.money{color:var(--green);}
+.value.neutral{color:var(--ink);}
+.stars{letter-spacing:2px;color:var(--amber);font-size:16px;}
+.stars .off{color:#9a968c;}
+
+.trio{display:flex;text-align:center;}
+.trio .trio-item{flex:1;}
+.trio .n{font-size:24px;font-weight:bold;color:var(--blue-text);}
+.trio .l{font-size:15px;color:var(--ink);}
+.trio-sep{flex:0 0 1px;width:1px;align-self:stretch;background:var(--border-dark);box-shadow:1px 0 0 var(--border-light);margin:2px 6px;}
+
+/* Map */
+.map-frame{
+  border:1px solid var(--border-darker);
+  box-shadow: inset 1px 1px 0 var(--border-dark), inset -1px -1px 0 var(--border-light);
+  overflow:hidden;
+  margin-bottom:8px;
+}
+.map-frame svg{display:block;width:100%;height:auto;background:#3f6fb0;}
+
+/* Nav grid */
+.nav-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+.nav-btn{
+  background:var(--panel-bg-alt);
+  border:none;
+  box-shadow:
+    inset 1px 1px 0 var(--border-light),
+    inset -2px -2px 0 var(--border-dark);
+  padding:10px 4px 8px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  cursor:pointer;
+  position:relative;
+}
+.nav-btn:active{
+  box-shadow: inset -1px -1px 0 var(--border-light), inset 2px 2px 0 var(--border-dark);
+}
+.nav-btn .lbl{
+  color:var(--blue-text);
+  font-weight:bold;
+  font-size:16px;
+  text-align:center;
+  line-height:1.05;
+}
+.nav-btn .icon-wrap{width:42px;height:38px;display:flex;align-items:center;justify-content:center;}
+.nav-btn .badge{
+  position:absolute;top:4px;right:4px;
+  background:var(--red);color:#fff;
+  font-family:'Press Start 2P',monospace;
+  font-size:9px;
+  min-width:16px;height:16px;
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid #7a0808;
+}

@@ -1,0 +1,145 @@
+/* ================================================================
+   THEME.CSS
+   Grundbausteine im Windows-95-Look: Farben, Fenster-Rahmen,
+   Titelleiste, Panels, Buttons. Wird von JEDER Seite eingebunden.
+   Seiten-spezifisches Aussehen (Dashboard, Fuhrpark, ...) gehört
+   NICHT hierher, sondern in eine eigene <seite>.css.
+   ================================================================ */
+
+:root{
+  --win-bg:#c8c4bc;
+  --panel-bg:#d8d4cb;
+  --panel-bg-alt:#e4e0d6;
+  --border-light:#fdfbf3;
+  --border-dark:#7a766c;
+  --border-darker:#4a4740;
+  --titlebar-1:#0a0e6e;
+  --titlebar-2:#2244cc;
+  --blue-text:#101090;
+  --green:#0a7a1e;
+  --red:#b81818;
+  --amber:#a86a10;
+  --ink:#1c1a16;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  padding:24px 12px 60px;
+  background:#3c3a34 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%233c3a34'/%3E%3Crect width='2' height='2' fill='%23434038'/%3E%3Crect x='2' y='2' width='2' height='2' fill='%23434038'/%3E%3C/svg%3E");
+  font-family:'VT323', monospace;
+  display:flex;
+  justify-content:center;
+  min-height:100vh;
+}
+
+.device{
+  width:100%;
+  max-width:400px;
+}
+
+.window{
+  background:var(--win-bg);
+  border:2px solid var(--border-darker);
+  box-shadow:
+    inset 1px 1px 0 var(--border-light),
+    inset -2px -2px 0 var(--border-dark),
+    4px 4px 0 rgba(0,0,0,.35);
+}
+
+/* ---- Titlebar ---- */
+.titlebar{
+  background:linear-gradient(90deg, var(--titlebar-1), var(--titlebar-2) 70%, #5578e8);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 8px;
+  font-family:'Press Start 2P', monospace;
+  font-size:11px;
+  letter-spacing:0.5px;
+}
+.titlebar .truck-icon{width:20px;height:16px;flex-shrink:0;}
+.titlebar .title{flex:1;}
+.titlebar .win-btn{
+  width:20px;height:18px;
+  background:var(--win-bg);
+  color:var(--ink);
+  border:none;
+  box-shadow:
+    inset 1px 1px 0 var(--border-light),
+    inset -1px -1px 0 var(--border-dark);
+  font-family:'Press Start 2P', monospace;
+  font-size:9px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.titlebar .win-btn:active{
+  box-shadow:
+    inset -1px -1px 0 var(--border-light),
+    inset 1px 1px 0 var(--border-dark);
+}
+.titlebar .clock{
+  font-family:'Press Start 2P', monospace;
+  font-size:10px;
+  margin-left:4px;
+}
+
+/* ---- Generic content / panels ---- */
+.content{padding:10px;}
+
+.panel{
+  background:var(--panel-bg);
+  border:1px solid var(--border-darker);
+  box-shadow:
+    inset 1px 1px 0 var(--border-light),
+    inset -1px -1px 0 var(--border-dark);
+  padding:10px;
+  margin-bottom:10px;
+}
+
+.divider{height:1px;background:var(--border-dark);box-shadow:0 1px 0 var(--border-light);margin:8px 0;}
+
+.section-title{
+  color:var(--blue-text);
+  font-size:20px;
+  font-weight:bold;
+  letter-spacing:0.5px;
+  margin-bottom:6px;
+  display:flex;align-items:center;gap:6px;
+}
+
+/* ---- Generic buttons ---- */
+.btn-primary{
+  width:100%;
+  background:var(--panel-bg-alt);
+  border:none;
+  box-shadow:
+    inset 1px 1px 0 var(--border-light),
+    inset -1px -1px 0 var(--border-dark);
+  padding:9px;
+  font-family:'VT323', monospace;
+  font-size:19px;
+  color:var(--blue-text);
+  font-weight:bold;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  cursor:pointer;
+}
+.btn-primary:active{
+  box-shadow: inset -1px -1px 0 var(--border-light), inset 1px 1px 0 var(--border-dark);
+}
+
+/* ---- Status bar (footer, used on every page) ---- */
+.statusbar{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 10px;
+  font-size:16px;
+  color:var(--green);
+  border-top:1px solid var(--border-dark);
+  box-shadow: 0 -1px 0 var(--border-light);
+}
+.statusbar .dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 0 1px #04500e;}
+.statusbar .fill{flex:1;}
+.statusbar .signal{display:flex;align-items:flex-end;gap:1px;height:12px;}
+.statusbar .signal span{width:3px;background:var(--green);}
