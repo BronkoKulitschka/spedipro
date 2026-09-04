@@ -2,8 +2,8 @@
 
 Speditions-Manager-Simulator als PWA. Läuft auf Smartphone, Tablet und Desktop.
 
-**Ausbaustufe 3:** Karte, Routing, Kostenberechnung, Fuhrpark, Auftragsbörse,
-**Sammelladung mit drei Planungsstufen**. Der Kern-Loop ist spielbar.
+Karte, Routing, Kostenberechnung, Fuhrpark, Auftragsbörse, Sammelladung mit
+drei Planungsstufen, **Hauptmenü**.
 
 ## Loslegen
 
@@ -53,6 +53,10 @@ src/
     win95.tsx    Fenster, Schaltflächen, Rahmen, Kennzahlen
     MapCanvas.tsx     Karte auf Canvas
     TourPlanner.tsx   Tourenplanung mit Sammelladung
+    MainMenu.tsx      Hauptmenü
+    StaticMap.tsx     Unbewegliche Übersichtskarte
+    PixelText.tsx     Pixelschrift als Bauteil
+    pixelFont.ts      5×7-Bitmapschrift, selbst gezeichnet
     FleetView.tsx     Fuhrpark
     OrderBoard.tsx    Auftragsbörse
     serviceWorker.tsx  Anmeldung und Aktualisierungshinweis
@@ -62,6 +66,7 @@ public/
   sw.js          Service Worker
   manifest.webmanifest
   icons/         App-Symbole
+  assets/tiles/  Platzhalter-Symbole des Hauptmenüs (austauschbar)
   data/
     cities.json  289 Städte
     roads.json   958 Strecken
@@ -89,6 +94,14 @@ davon erreicht ist:
 Die Automatik erreicht bewusst nicht das Optimum. Sie sucht keine eleganten
 Ketten und wartet nie auf ein besseres Angebot — die letzten zehn bis fünfzehn
 Prozent holt nur heraus, wer selbst plant.
+
+## Symbole austauschen
+
+Die Symbole im Hauptmenü sind Platzhalter. Sie liegen unter
+`public/assets/tiles/` und werden nur über den Dateinamen angesprochen.
+Eine neue Datei mit gleichem Namen und 96 × 64 Pixel ersetzt sie, ohne dass
+im Code etwas geändert werden muss. `update.sh` bewahrt eigene Dateien in
+diesem Ordner bei einem Update.
 
 ## Zwei Regeln
 

@@ -10,7 +10,7 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import type { City, Edge, Optimization } from "./core/types";
-import { fmtEur, loadGameData } from "./core/data";
+import { loadGameData } from "./core/data";
 import { buildGraph } from "./core/routing";
 import { vehicleById } from "./core/economy";
 import { createGame, refreshOrders, type GameState } from "./core/state";
@@ -28,13 +28,15 @@ import { MapCanvas } from "./ui/MapCanvas";
 import { TourPlanner, type PlanMode } from "./ui/TourPlanner";
 import { FleetView } from "./ui/FleetView";
 import { OrderBoard } from "./ui/OrderBoard";
+import { MainMenu, READY, type MenuTarget } from "./ui/MainMenu";
 import { APP_VERSION, UpdateBar, useServiceWorker } from "./ui/serviceWorker";
 
 const MOBILE_BREAKPOINT = 860;
 
-type ViewId = "map" | "plan" | "fleet" | "orders";
+type ViewId = "menu" | "map" | "plan" | "fleet" | "orders";
 
 const VIEW_TITLE: Record<ViewId, string> = {
+  menu: "Hauptmenü",
   map: "Europa-Karte",
   plan: "Tourenplanung",
   fleet: "Fuhrpark",
@@ -42,6 +44,7 @@ const VIEW_TITLE: Record<ViewId, string> = {
 };
 
 const NAV_LABEL: Record<ViewId, string> = {
+  menu: "Start",
   map: "Karte",
   plan: "Touren",
   fleet: "Fuhrpark",
@@ -49,13 +52,14 @@ const NAV_LABEL: Record<ViewId, string> = {
 };
 
 const NAV_GLYPH: Record<ViewId, string> = {
+  menu: "⌂",
   map: "◍",
   plan: "▤",
   fleet: "▦",
   orders: "▣",
 };
 
-const VIEW_ORDER: ViewId[] = ["map", "plan", "orders", "fleet"];
+const VIEW_ORDER: ViewId[] = ["menu", "map", "plan", "orders", "fleet"];
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(
@@ -82,7 +86,12 @@ export function App() {
   const [cityFilter, setCityFilter] = useState<string | null>(null);
 
   const isMobile = useIsMobile();
-  const [tab, setTab] = useState<ViewId>("map");
+  const [tab, setTab] = useState<ViewId>("menu");
+  const [pending, setPending] = useState<string | null>(null);
+  const [openSignal, setOpenSignal] = useState<{ id: string; n: number }>({
+    id: "",
+    n: 0,
+  });
   const sw = useServiceWorker();
 
   useEffect(() => {
@@ -203,6 +212,20 @@ export function App() {
     );
   };
 
+  /**
+   * Hauptmenü: fertige Module öffnen, offene melden sich.
+   * Auf dem Desktop wird ein Fenster geöffnet, auf dem Handy umgeschaltet.
+   */
+  const openMenu = (target: MenuTarget) => {
+    if (!READY.includes(target)) {
+      setPending(target);
+      return;
+    }
+    setPending(null);
+    if (isMobile) setTab(target as ViewId);
+    else setOpenSignal({ id: target, n: openSignal.n + 1 });
+  };
+
   /** Karte antippen filtert die Auftragsliste auf diese Stadt. */
   const pickCity = (c: City) => {
     setCityFilter((prev) => (prev === c.id ? null : c.id));
@@ -232,33 +255,16 @@ export function App() {
     );
   }
 
-  const home = cities.find((c) => c.id === game.company.home_id);
-
-  const companyBar = (
-    <div class="company-bar raised">
-      <span>
-        <b>{game.company.name}</b>
-      </span>
-      <span>
-        Sitz: <b>{home ? `${home.city} (${home.iso2})` : "–"}</b>
-      </span>
-      <span>
-        Kontostand: <b class="good">{fmtEur(game.company.cash_eur)}</b>
-      </span>
-      <span>
-        Ruf:{" "}
-        <b class="stars">
-          {"★".repeat(game.company.reputation)}
-          {"☆".repeat(5 - game.company.reputation)}
-        </b>
-      </span>
-      <span>
-        Spieltag: <b>{game.day}</b>
-      </span>
-    </div>
-  );
-
   const views: Record<ViewId, ComponentChildren> = {
+    menu: (
+      <MainMenu
+        game={game}
+        cities={cities}
+        edges={edges}
+        tour={result}
+        onOpen={openMenu}
+      />
+    ),
     map: (
       <>
         <MapCanvas
@@ -308,11 +314,17 @@ export function App() {
   if (isMobile) {
     return (
       <div class="mobile-shell">
-        <div class="mobile-title">
-          <span class="spread">SPEDIPRO 95 · {VIEW_TITLE[tab]}</span>
-          <span>{fmtEur(game.company.cash_eur)}</span>
+        {tab !== "menu" && (
+          <div class="mobile-title">
+            <span class="spread">{VIEW_TITLE[tab]}</span>
+          </div>
+        )}
+        <div class={`mobile-body ${tab === "menu" ? "flush" : ""}`}>
+          {views[tab]}
         </div>
-        <div class="mobile-body">{views[tab]}</div>
+        {pending && (
+          <PendingNotice target={pending} onClose={() => setPending(null)} />
+        )}
         <nav class="bottom-nav">
           {VIEW_ORDER.map((id) => (
             <Button
@@ -337,9 +349,12 @@ export function App() {
     <>
       <Desktop
         views={views}
-        companyBar={companyBar}
         note={`v${APP_VERSION} · ${game.orders.length} Aufträge · ${result?.order_ids.length ?? 0} in Tour`}
+        openSignal={openSignal}
       />
+      {pending && (
+        <PendingNotice target={pending} onClose={() => setPending(null)} />
+      )}
       {sw.updateAvailable && (
         <UpdateBar onApply={sw.applyUpdate} onDismiss={sw.dismiss} />
       )}
@@ -358,6 +373,34 @@ function Shell({
     <div class="mobile-shell">
       <div class="mobile-title">{title}</div>
       <div class="mobile-body">{children}</div>
+    </div>
+  );
+}
+
+const PENDING_LABEL: Record<string, string> = {
+  personal: "Personal",
+  workshop: "Werkstatt",
+  ledger: "Kassenbuch",
+  customers: "Kunden",
+  stats: "Statistik",
+  messages: "Nachrichten",
+  settings: "Einstellungen",
+};
+
+/** Meldung für Module, die es noch nicht gibt. */
+function PendingNotice({
+  target,
+  onClose,
+}: {
+  target: string;
+  onClose: () => void;
+}) {
+  return (
+    <div class="update-bar raised" role="status">
+      <span class="spread">
+        {PENDING_LABEL[target] ?? target} ist noch nicht gebaut.
+      </span>
+      <Button onClick={onClose}>Schließen</Button>
     </div>
   );
 }
@@ -392,67 +435,51 @@ function MapLegend() {
 
 /* ------------------------------------------------------ Fensterverwaltung */
 
+/**
+ * Desktop-Ansicht.
+ *
+ * Das Hauptmenü liegt als Grundebene fest im Hintergrund - es ist selbst
+ * schon ein Fenster im 95er-Stil. Die Modulfenster öffnen sich darüber und
+ * lassen sich verschieben, in der Größe ändern und minimieren.
+ */
 function Desktop({
   views,
-  companyBar,
   note,
+  openSignal,
 }: {
   views: Record<ViewId, ComponentChildren>;
-  companyBar: ComponentChildren;
   note: string;
+  openSignal: { id: string; n: number };
 }) {
   const [windows, setWindows] = useState<WindowState[]>(() => {
     const w = window.innerWidth;
     const h = window.innerHeight - 28;
-    const side = Math.min(400, Math.max(330, w * 0.28));
+    const side = Math.min(420, Math.max(340, w * 0.3));
+    const make = (
+      id: ViewId,
+      x: number,
+      y: number,
+      width: number,
+      z: number,
+    ): WindowState => ({
+      id,
+      title: VIEW_TITLE[id],
+      x,
+      y,
+      w: width,
+      h: Math.max(320, h - y - 16),
+      z,
+      minimized: true,
+      maximized: false,
+    });
     return [
-      {
-        id: "map",
-        title: VIEW_TITLE.map,
-        x: 12,
-        y: 12,
-        w: Math.max(420, w - side - 40),
-        h: Math.max(320, h - 24),
-        z: 1,
-        minimized: false,
-        maximized: false,
-      },
-      {
-        id: "plan",
-        title: VIEW_TITLE.plan,
-        x: Math.max(440, w - side - 16),
-        y: 12,
-        w: side,
-        h: Math.max(320, h - 24),
-        z: 2,
-        minimized: false,
-        maximized: false,
-      },
-      {
-        id: "orders",
-        title: VIEW_TITLE.orders,
-        x: 60,
-        y: 60,
-        w: side,
-        h: Math.max(320, h - 120),
-        z: 3,
-        minimized: true,
-        maximized: false,
-      },
-      {
-        id: "fleet",
-        title: VIEW_TITLE.fleet,
-        x: 100,
-        y: 90,
-        w: side,
-        h: Math.max(320, h - 160),
-        z: 4,
-        minimized: true,
-        maximized: false,
-      },
+      make("map", Math.round(w * 0.3), 20, Math.max(460, w * 0.55), 1),
+      make("plan", Math.max(24, w - side - 24), 14, side, 2),
+      make("orders", Math.round(w * 0.24), 44, side, 3),
+      make("fleet", Math.round(w * 0.3), 70, side, 4),
     ];
   });
-  const [activeId, setActiveId] = useState<string>("plan");
+  const [activeId, setActiveId] = useState<string>("");
 
   const patch = (id: string, p: Partial<WindowState>) =>
     setWindows((prev) => prev.map((w) => (w.id === id ? { ...w, ...p } : w)));
@@ -465,8 +492,18 @@ function Desktop({
     });
   };
 
+  // Öffnen aus dem Hauptmenü heraus
+  useEffect(() => {
+    if (!openSignal.id) return;
+    patch(openSignal.id, { minimized: false });
+    focus(openSignal.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSignal.n]);
+
   return (
     <>
+      <div class="desktop-base">{views.menu}</div>
+
       {windows.map((w) => (
         <Window
           key={w.id}
@@ -474,15 +511,9 @@ function Desktop({
           active={activeId === w.id}
           onChange={(p) => patch(w.id, p)}
           onFocus={() => focus(w.id)}
+          onClose={() => patch(w.id, { minimized: true })}
         >
-          {w.id === "map" ? (
-            <>
-              {companyBar}
-              {views.map}
-            </>
-          ) : (
-            views[w.id as ViewId]
-          )}
+          {views[w.id as ViewId]}
         </Window>
       ))}
 
@@ -493,8 +524,14 @@ function Desktop({
             class="task-item"
             pressed={activeId === w.id && !w.minimized}
             onClick={() => {
-              if (w.minimized) patch(w.id, { minimized: false });
-              focus(w.id);
+              if (w.minimized) {
+                patch(w.id, { minimized: false });
+                focus(w.id);
+              } else if (activeId === w.id) {
+                patch(w.id, { minimized: true });
+              } else {
+                focus(w.id);
+              }
             }}
           >
             {w.title}

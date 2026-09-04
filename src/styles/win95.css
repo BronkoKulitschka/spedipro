@@ -747,3 +747,234 @@ hr.sep {
   font-family: var(--mono);
   font-size: 11px;
 }
+
+/* --- Hauptmenü ----------------------------------------------------------- */
+/*
+ * Ein einziges Fenster, das die volle Höhe füllt. Die obere Hälfte trägt
+ * Firma, Kennzahlen und Karte, die untere das Raster der Module.
+ */
+
+:root {
+  --pixel-ink: #000080;
+}
+
+.menu-window {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 3px;
+  background: var(--face);
+  border: 1px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: inset 1px 1px 0 var(--face), inset -1px -1px 0 var(--shadow);
+}
+
+.menu-titlebar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  background: var(--title);
+  user-select: none;
+}
+
+/* Obere Hälfte */
+.menu-upper {
+  flex: 1 1 50%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 5px 4px 4px;
+}
+
+.menu-company {
+  flex: none;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.menu-company-home {
+  opacity: 0.9;
+}
+
+.menu-figures {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 7px 8px;
+}
+
+.menu-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.menu-stars {
+  display: flex;
+  gap: 3px;
+}
+
+/* Stern als Pixelform, damit er zur Schrift passt */
+.pixel-star {
+  width: 11px;
+  height: 11px;
+  background: var(--good);
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+}
+
+.pixel-star.off {
+  background: var(--shadow);
+}
+
+.menu-map {
+  flex: 1 1 auto;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  padding: 3px;
+}
+
+.static-map {
+  flex: 1 1 auto;
+  min-height: 0;
+  border: 1px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+  box-shadow: inset 1px 1px 0 var(--dark);
+  background: var(--sea);
+  overflow: hidden;
+}
+
+.static-map canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.menu-map-caption {
+  flex: none;
+  padding: 3px 2px 0;
+}
+
+/* Untere Hälfte: Raster der Module */
+.menu-lower {
+  flex: 1 1 50%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 4px 4px;
+}
+
+.menu-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.menu-settings-row {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.menu-settings-row > * {
+  grid-column: 2;
+}
+
+/* Kachel: harte Kanten, kein Rundschliff, kein Farbverlauf */
+.menu-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 0;
+  padding: 4px 2px;
+  font: inherit;
+  background: var(--face);
+  border: 1px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: inset 1px 1px 0 var(--face), inset -1px -1px 0 var(--shadow);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.menu-tile:active {
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+  box-shadow: inset 1px 1px 0 var(--shadow), inset -1px -1px 0 var(--face);
+  padding: 5px 1px 3px 3px;
+}
+
+.menu-tile:focus-visible {
+  outline: 1px dotted var(--dark);
+  outline-offset: -4px;
+}
+
+.menu-tile-icon {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 96px;
+  max-height: 100%;
+  min-height: 0;
+  image-rendering: pixelated;
+  flex: 0 1 auto;
+}
+
+.menu-tile-label {
+  flex: none;
+}
+
+/* Noch nicht gebaute Module bleiben sichtbar, melden sich aber beim Antippen */
+.menu-tile.pending .menu-tile-icon,
+.menu-tile.pending .menu-tile-label {
+  opacity: 0.55;
+}
+
+/* Auf schmalen Geräten wird das Raster enger, nicht kleiner gestapelt */
+@media (max-height: 620px) {
+  .menu-tile-icon {
+    max-width: 64px;
+  }
+}
+
+/* Grundebene des Desktops: das Hauptmenü liegt unter allen Fenstern */
+.desktop-base {
+  position: absolute;
+  inset: 0 0 28px 0;
+  display: flex;
+  justify-content: center;
+  padding: 8px;
+  z-index: 0;
+}
+
+.desktop-base > * {
+  width: min(560px, 100%);
+}
+
+/* Das Hauptmenü bringt seinen Rahmen selbst mit */
+.mobile-body.flush {
+  padding: 0;
+  gap: 0;
+}
