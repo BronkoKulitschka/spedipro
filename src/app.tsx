@@ -1,21 +1,53 @@
 /**
- * SpediPro 95 - Ausbaustufe 1: Karte, Routing, Kostenberechnung.
+ * SpediPro 95
+ *
+ * Ausbaustufe 1: Karte, Routing, Kostenberechnung.
+ * Ausbaustufe 2: Fuhrpark, Auftragsbörse.
  *
  * Grundregel des Projekts: Nichts ist Dekoration. Was noch nicht funktioniert,
- * erscheint auch nicht. Deshalb gibt es hier bewusst nur zwei Fenster.
+ * erscheint auch nicht.
  */
 import { useEffect, useMemo, useState } from "preact/hooks";
+import type { ComponentChildren } from "preact";
 import type { City, Edge, Optimization } from "./core/types";
-import { loadGameData } from "./core/data";
+import { fmtEur, loadGameData } from "./core/data";
 import { buildGraph, planRoute } from "./core/routing";
 import { vehicleById } from "./core/economy";
+import { createGame, refreshOrders, type GameState } from "./core/state";
+import { truckModel } from "./core/fleet";
+import type { Order } from "./core/orders";
 import { Button, Clock, Window, type WindowState } from "./ui/win95";
 import { MapCanvas } from "./ui/MapCanvas";
 import { RoutePlanner } from "./ui/RoutePlanner";
+import { FleetView } from "./ui/FleetView";
+import { OrderBoard } from "./ui/OrderBoard";
 
 const MOBILE_BREAKPOINT = 860;
 
-type MobileTab = "map" | "plan";
+type ViewId = "map" | "plan" | "fleet" | "orders";
+
+const VIEW_TITLE: Record<ViewId, string> = {
+  map: "Europa-Karte",
+  plan: "Tourenplanung",
+  fleet: "Fuhrpark",
+  orders: "Aufträge",
+};
+
+const NAV_LABEL: Record<ViewId, string> = {
+  map: "Karte",
+  plan: "Touren",
+  fleet: "Fuhrpark",
+  orders: "Aufträge",
+};
+
+const NAV_GLYPH: Record<ViewId, string> = {
+  map: "◍",
+  plan: "▤",
+  fleet: "▦",
+  orders: "▣",
+};
+
+const VIEW_ORDER: ViewId[] = ["map", "plan", "orders", "fleet"];
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(
@@ -33,19 +65,31 @@ export function App() {
   const [cities, setCities] = useState<City[] | null>(null);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [game, setGame] = useState<GameState | null>(null);
 
   const [stops, setStops] = useState<string[]>([]);
   const [optimization, setOptimization] = useState<Optimization>("balanced");
   const [vehicleId, setVehicleId] = useState("semi");
 
   const isMobile = useIsMobile();
-  const [tab, setTab] = useState<MobileTab>("map");
+  const [tab, setTab] = useState<ViewId>("map");
 
   useEffect(() => {
     loadGameData(import.meta.env.BASE_URL)
       .then((d) => {
         setCities(d.cities);
         setEdges(d.edges);
+        // Heimatstandort: erste geeignete Stadt. Frei wählbar ab Stufe 3.
+        const home =
+          d.cities.find((c) => c.starting_city_suitable) ?? d.cities[0];
+        setGame(
+          createGame(d.cities, {
+            home_id: home.id,
+            difficulty: "normal",
+            company_name: "Spedition Müller GmbH",
+            seed: 20260904,
+          }),
+        );
       })
       .catch((e: Error) => setError(e.message));
   }, []);
@@ -77,41 +121,152 @@ export function App() {
       return next;
     });
 
-  /* ------------------------------------------------------------- Ladezustand */
+  /** Auftrag in die Tourenplanung übernehmen und dorthin wechseln. */
+  const planOrder = (o: Order) => {
+    setStops([o.from_id, o.to_id]);
+    if (game && game.vehicles.length > 0) {
+      setVehicleId(truckModel(game.vehicles[0].model_id).class_id);
+    }
+    setTab("plan");
+  };
+
+  const refresh = () => {
+    if (!game || !cities) return;
+    const next: GameState = { ...game, day: game.day + 1 };
+    setGame({ ...next, orders: refreshOrders(next, cities) });
+  };
 
   if (error) {
     return (
-      <div class="mobile-shell">
-        <div class="mobile-title">SPEDIPRO 95</div>
-        <div class="mobile-body">
-          <div class="notice error">{error}</div>
-        </div>
-      </div>
+      <Shell title="SPEDIPRO 95">
+        <div class="notice error">{error}</div>
+      </Shell>
     );
   }
 
-  if (!cities || !graph) {
+  if (!cities || !graph || !game) {
     return (
-      <div class="mobile-shell">
-        <div class="mobile-title">SPEDIPRO 95</div>
-        <div class="mobile-body">
-          <div class="notice">Kartendaten werden geladen …</div>
-        </div>
-      </div>
+      <Shell title="SPEDIPRO 95">
+        <div class="notice">Spieldaten werden geladen …</div>
+      </Shell>
     );
   }
 
-  const mapView = (
-    <MapCanvas
-      cities={cities}
-      edges={edges}
-      stops={stops}
-      route={route}
-      onPickCity={pickCity}
-    />
+  const home = cities.find((c) => c.id === game.company.home_id);
+
+  const companyBar = (
+    <div class="company-bar raised">
+      <span>
+        <b>{game.company.name}</b>
+      </span>
+      <span>
+        Sitz: <b>{home ? `${home.city} (${home.iso2})` : "–"}</b>
+      </span>
+      <span>
+        Kontostand: <b class="good">{fmtEur(game.company.cash_eur)}</b>
+      </span>
+      <span>
+        Ruf:{" "}
+        <b class="stars">
+          {"★".repeat(game.company.reputation)}
+          {"☆".repeat(5 - game.company.reputation)}
+        </b>
+      </span>
+      <span>
+        Spieltag: <b>{game.day}</b>
+      </span>
+    </div>
   );
 
-  const legend = (
+  const views: Record<ViewId, ComponentChildren> = {
+    map: (
+      <>
+        <MapCanvas
+          cities={cities}
+          edges={edges}
+          stops={stops}
+          route={route}
+          onPickCity={pickCity}
+        />
+        <MapLegend />
+      </>
+    ),
+    plan: (
+      <RoutePlanner
+        cities={cities}
+        stops={stops}
+        route={route}
+        optimization={optimization}
+        vehicle={vehicle}
+        onRemoveStop={removeStop}
+        onMoveStop={moveStop}
+        onClearStops={() => setStops([])}
+        onOptimization={setOptimization}
+        onVehicle={setVehicleId}
+      />
+    ),
+    fleet: <FleetView vehicles={game.vehicles} cities={cities} />,
+    orders: (
+      <OrderBoard
+        orders={game.orders}
+        cities={cities}
+        onPlan={planOrder}
+        onRefresh={refresh}
+      />
+    ),
+  };
+
+  if (isMobile) {
+    return (
+      <div class="mobile-shell">
+        <div class="mobile-title">
+          <span class="spread">SPEDIPRO 95 · {VIEW_TITLE[tab]}</span>
+          <span>{fmtEur(game.company.cash_eur)}</span>
+        </div>
+        <div class="mobile-body">{views[tab]}</div>
+        <nav class="bottom-nav">
+          {VIEW_ORDER.map((id) => (
+            <Button
+              key={id}
+              class="nav-btn"
+              pressed={tab === id}
+              onClick={() => setTab(id)}
+            >
+              <span class="nav-glyph">{NAV_GLYPH[id]}</span>
+              <span>{NAV_LABEL[id]}</span>
+            </Button>
+          ))}
+        </nav>
+      </div>
+    );
+  }
+
+  return (
+    <Desktop
+      views={views}
+      companyBar={companyBar}
+      note={`Ausbaustufe 2 · ${cities.length} Städte · ${edges.length} Strecken · ${game.orders.length} Aufträge`}
+    />
+  );
+}
+
+function Shell({
+  title,
+  children,
+}: {
+  title: string;
+  children: ComponentChildren;
+}) {
+  return (
+    <div class="mobile-shell">
+      <div class="mobile-title">{title}</div>
+      <div class="mobile-body">{children}</div>
+    </div>
+  );
+}
+
+function MapLegend() {
+  return (
     <div class="map-legend raised">
       <span>
         <i class="swatch" style="background:#008000" /> Start
@@ -136,108 +291,30 @@ export function App() {
       </span>
     </div>
   );
-
-  const planner = (
-    <RoutePlanner
-      cities={cities}
-      stops={stops}
-      route={route}
-      optimization={optimization}
-      vehicle={vehicle}
-      onRemoveStop={removeStop}
-      onMoveStop={moveStop}
-      onClearStops={() => setStops([])}
-      onOptimization={setOptimization}
-      onVehicle={setVehicleId}
-    />
-  );
-
-  /* ----------------------------------------------------------------- Mobil */
-
-  if (isMobile) {
-    return (
-      <div class="mobile-shell">
-        <div class="mobile-title">
-          <span class="spread">
-            SPEDIPRO 95 · {tab === "map" ? "KARTE" : "TOURENPLANUNG"}
-          </span>
-          <span>{cities.length} Städte</span>
-        </div>
-
-        <div class="mobile-body">
-          {tab === "map" ? (
-            <>
-              {mapView}
-              {legend}
-            </>
-          ) : (
-            planner
-          )}
-        </div>
-
-        <nav class="bottom-nav">
-          <Button
-            class="nav-btn"
-            pressed={tab === "map"}
-            onClick={() => setTab("map")}
-          >
-            <span class="nav-glyph">◍</span>
-            <span>Karte</span>
-          </Button>
-          <Button
-            class="nav-btn"
-            pressed={tab === "plan"}
-            onClick={() => setTab("plan")}
-          >
-            <span class="nav-glyph">▤</span>
-            <span>Touren</span>
-          </Button>
-        </nav>
-      </div>
-    );
-  }
-
-  /* --------------------------------------------------------------- Desktop */
-
-  return (
-    <Desktop
-      mapView={
-        <>
-          {mapView}
-          {legend}
-        </>
-      }
-      planner={planner}
-      cityCount={cities.length}
-      edgeCount={edges.length}
-    />
-  );
 }
 
 /* ------------------------------------------------------ Fensterverwaltung */
 
 function Desktop({
-  mapView,
-  planner,
-  cityCount,
-  edgeCount,
+  views,
+  companyBar,
+  note,
 }: {
-  mapView: preact.ComponentChildren;
-  planner: preact.ComponentChildren;
-  cityCount: number;
-  edgeCount: number;
+  views: Record<ViewId, ComponentChildren>;
+  companyBar: ComponentChildren;
+  note: string;
 }) {
   const [windows, setWindows] = useState<WindowState[]>(() => {
     const w = window.innerWidth;
     const h = window.innerHeight - 28;
-    const planW = Math.min(380, Math.max(320, w * 0.28));
+    const side = Math.min(400, Math.max(330, w * 0.28));
     return [
       {
         id: "map",
-        title: "Europa-Karte",
+        title: VIEW_TITLE.map,
         x: 12,
         y: 12,
-        w: Math.max(420, w - planW - 40),
+        w: Math.max(420, w - side - 40),
         h: Math.max(320, h - 24),
         z: 1,
         minimized: false,
@@ -245,18 +322,40 @@ function Desktop({
       },
       {
         id: "plan",
-        title: "Tourenplanung",
-        x: Math.max(440, w - planW - 16),
+        title: VIEW_TITLE.plan,
+        x: Math.max(440, w - side - 16),
         y: 12,
-        w: planW,
+        w: side,
         h: Math.max(320, h - 24),
         z: 2,
         minimized: false,
         maximized: false,
       },
+      {
+        id: "orders",
+        title: VIEW_TITLE.orders,
+        x: 60,
+        y: 60,
+        w: side,
+        h: Math.max(320, h - 120),
+        z: 3,
+        minimized: true,
+        maximized: false,
+      },
+      {
+        id: "fleet",
+        title: VIEW_TITLE.fleet,
+        x: 100,
+        y: 90,
+        w: side,
+        h: Math.max(320, h - 160),
+        z: 4,
+        minimized: true,
+        maximized: false,
+      },
     ];
   });
-  const [activeId, setActiveId] = useState("plan");
+  const [activeId, setActiveId] = useState<string>("plan");
 
   const patch = (id: string, p: Partial<WindowState>) =>
     setWindows((prev) => prev.map((w) => (w.id === id ? { ...w, ...p } : w)));
@@ -269,11 +368,6 @@ function Desktop({
     });
   };
 
-  const content: Record<string, preact.ComponentChildren> = {
-    map: mapView,
-    plan: planner,
-  };
-
   return (
     <>
       {windows.map((w) => (
@@ -284,14 +378,18 @@ function Desktop({
           onChange={(p) => patch(w.id, p)}
           onFocus={() => focus(w.id)}
         >
-          {content[w.id]}
+          {w.id === "map" ? (
+            <>
+              {companyBar}
+              {views.map}
+            </>
+          ) : (
+            views[w.id as ViewId]
+          )}
         </Window>
       ))}
 
       <div class="taskbar raised">
-        <Button disabled title="Kommt in Ausbaustufe 2">
-          Start
-        </Button>
         {windows.map((w) => (
           <Button
             key={w.id}
@@ -305,9 +403,7 @@ function Desktop({
             {w.title}
           </Button>
         ))}
-        <span class="stage-note spread">
-          Ausbaustufe 1 · {cityCount} Städte · {edgeCount} Strecken
-        </span>
+        <span class="stage-note spread">{note}</span>
         <Clock />
       </div>
     </>

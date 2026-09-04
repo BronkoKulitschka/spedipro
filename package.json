@@ -1,6 +1,6 @@
 {
   "name": "spedipro95",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit",
-    "test:core": "tsx scripts/test-core.ts"
+    "test:core": "tsx scripts/test-core.ts",
+    "test:orders": "tsx scripts/test-orders.ts",
+    "test:state": "tsx scripts/test-state.ts"
   },
   "dependencies": {
     "@preact/signals": "^1.3.0",

@@ -2,7 +2,7 @@
 
 Speditions-Manager-Simulator als PWA. Läuft auf Smartphone, Tablet und Desktop.
 
-**Ausbaustufe 1:** Karte, Routing, Kostenberechnung.
+**Ausbaustufe 2:** Karte, Routing, Kostenberechnung, Fuhrpark, Auftragsbörse.
 
 ## Loslegen
 
@@ -20,6 +20,8 @@ npm run dev
 | `npm run preview` | Gebautes Ergebnis lokal ansehen |
 | `npm run check` | Nur Typprüfung |
 | `npm run test:core` | Routing und Kalkulation im Terminal prüfen |
+| `npm run test:orders` | Auftragsgenerierung prüfen |
+| `npm run test:state` | Spielzustand und Wirtschaftlichkeit prüfen |
 
 ## Veröffentlichen
 
@@ -39,11 +41,17 @@ src/
     types.ts     Datentypen
     economy.ts   Wirtschaftliche Kennwerte, Lenk- und Ruhezeiten
     routing.ts   Graph, Dijkstra, Tourberechnung
+    cargo.ts     Frachtkatalog: 40 Arten mit Dichte und Anforderungen
+    fleet.ts     Fahrzeugmodelle, Auflieger, Zustand, Restwert
+    orders.ts    Auftragsgenerierung mit gesätem Zufall
+    state.ts     Spielzustand, Startfuhrpark, Auftragsbörse
     data.ts      Laden, Projektion, Formatierung
   ui/            Anzeigeschicht
     win95.tsx    Fenster, Schaltflächen, Rahmen, Kennzahlen
-    MapCanvas.tsx  Karte auf Canvas
+    MapCanvas.tsx     Karte auf Canvas
     RoutePlanner.tsx  Tourenplanung
+    FleetView.tsx     Fuhrpark
+    OrderBoard.tsx    Auftragsbörse
   styles/
     win95.css    Farben und Kantenprofile
 public/data/
@@ -61,13 +69,14 @@ Standalone-Version und lässt sich ohne Browser testen.
 einer Berechnung. Eine Wirtschaftszahl im Anzeigecode ist ein Fehler — alle
 Kennwerte stehen ausschließlich in `core/economy.ts`.
 
-**Was nicht funktioniert, erscheint nicht.** Deshalb gibt es in Stufe 1 nur
-zwei Fenster und zwei Navigationseinträge. Die Oberfläche wächst mit dem
-Funktionsumfang.
+**Was nicht funktioniert, erscheint nicht.** Deshalb gibt es in Stufe 2 vier
+Fenster. Die Oberfläche wächst mit dem Funktionsumfang.
 
 ## Bedienung
 
 - Stadt antippen oder anklicken → wird als Stopp angehängt
+- In den Aufträgen „In Tourenplanung übernehmen" setzt Start und Ziel
+- „Aktualisieren" rückt einen Spieltag vor und erzeugt neue Aufträge
 - Ziehen verschiebt die Karte, Mausrad oder zwei Finger zoomen
 - Fenster lassen sich verschieben, in der Größe ändern, minimieren und maximieren
 - Unter 860 px Breite schaltet die Oberfläche auf die mobile Ansicht um
@@ -76,7 +85,6 @@ Funktionsumfang.
 
 | Stufe | Inhalt |
 |---|---|
-| 2 | Fuhrpark, Auftragsgenerierung |
 | 3 | Tourenplanung mit Sammelladung — dann ist der Kern-Loop spielbar |
 | 4 | Zeitsystem, laufende Touren, Zwischenfälle |
 | 5 | Personal, Lenkzeiten, Kassenbuch |

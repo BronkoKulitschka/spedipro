@@ -567,3 +567,60 @@ hr.sep {
     animation: none !important;
   }
 }
+
+/* --- Fuhrpark und Auftragsbörse ----------------------------------------- */
+
+.vehicle-row,
+.order-row {
+  padding: 6px 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.vehicle-row + .vehicle-row,
+.order-row + .order-row {
+  border-top: 1px solid var(--shadow);
+}
+
+.vehicle-row strong,
+.order-row strong {
+  color: var(--text-accent);
+  font-size: 13px;
+}
+
+.route-line {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin: 4px 0 6px;
+}
+
+.route-line .arrow {
+  color: var(--text-dim);
+  margin: 0 2px;
+}
+
+.order-plan {
+  width: 100%;
+  margin-top: 7px;
+}
+
+.company-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.company-bar b {
+  color: var(--text-accent);
+  font-weight: normal;
+}
+
+.stars {
+  letter-spacing: 1px;
+  color: var(--good);
+}
