@@ -21,6 +21,7 @@ import { MapCanvas } from "./ui/MapCanvas";
 import { RoutePlanner } from "./ui/RoutePlanner";
 import { FleetView } from "./ui/FleetView";
 import { OrderBoard } from "./ui/OrderBoard";
+import { APP_VERSION, UpdateBar, useServiceWorker } from "./ui/serviceWorker";
 
 const MOBILE_BREAKPOINT = 860;
 
@@ -73,6 +74,7 @@ export function App() {
 
   const isMobile = useIsMobile();
   const [tab, setTab] = useState<ViewId>("map");
+  const sw = useServiceWorker();
 
   useEffect(() => {
     loadGameData(import.meta.env.BASE_URL)
@@ -237,16 +239,24 @@ export function App() {
             </Button>
           ))}
         </nav>
+        {sw.updateAvailable && (
+          <UpdateBar onApply={sw.applyUpdate} onDismiss={sw.dismiss} />
+        )}
       </div>
     );
   }
 
   return (
-    <Desktop
-      views={views}
-      companyBar={companyBar}
-      note={`Ausbaustufe 2 · ${cities.length} Städte · ${edges.length} Strecken · ${game.orders.length} Aufträge`}
-    />
+    <>
+      <Desktop
+        views={views}
+        companyBar={companyBar}
+        note={`v${APP_VERSION} · ${cities.length} Städte · ${edges.length} Strecken · ${game.orders.length} Aufträge`}
+      />
+      {sw.updateAvailable && (
+        <UpdateBar onApply={sw.applyUpdate} onDismiss={sw.dismiss} />
+      )}
+    </>
   );
 }
 

@@ -2,7 +2,8 @@
 
 Speditions-Manager-Simulator als PWA. Läuft auf Smartphone, Tablet und Desktop.
 
-**Ausbaustufe 2:** Karte, Routing, Kostenberechnung, Fuhrpark, Auftragsbörse.
+**Ausbaustufe 2 + PWA:** Karte, Routing, Kostenberechnung, Fuhrpark,
+Auftragsbörse, Offline-Betrieb.
 
 ## Loslegen
 
@@ -52,11 +53,16 @@ src/
     RoutePlanner.tsx  Tourenplanung
     FleetView.tsx     Fuhrpark
     OrderBoard.tsx    Auftragsbörse
+    serviceWorker.tsx  Anmeldung und Aktualisierungshinweis
   styles/
     win95.css    Farben und Kantenprofile
-public/data/
-  cities.json    289 Städte
-  roads.json     958 Strecken
+public/
+  sw.js          Service Worker
+  manifest.webmanifest
+  icons/         App-Symbole
+  data/
+    cities.json  289 Städte
+    roads.json   958 Strecken
 ```
 
 **Der Simulationskern kennt die Anzeigeschicht nicht.** Er bekommt Daten und
@@ -71,6 +77,23 @@ Kennwerte stehen ausschließlich in `core/economy.ts`.
 
 **Was nicht funktioniert, erscheint nicht.** Deshalb gibt es in Stufe 2 vier
 Fenster. Die Oberfläche wächst mit dem Funktionsumfang.
+
+## Offline und Aktualisierung
+
+Die App läuft als PWA und lässt sich zum Startbildschirm hinzufügen.
+
+Der Service Worker holt Seitenaufrufe **immer erst aus dem Netz** und nur
+im Notfall aus dem Cache. Dadurch gibt es das Problem nicht mehr, dass eine
+gespeicherte `index.html` auf Asset-Namen zeigt, die nach einem neuen Build
+nicht mehr existieren.
+
+Steht eine neue Fassung bereit, erscheint unten eine Leiste. Übernommen wird
+erst auf Klick — sonst könnte mitten in einer Tourenplanung neu geladen
+werden.
+
+Die Cache-Version hängt an `version` in der `package.json`. **Bei jeder
+Veröffentlichung die Versionsnummer erhöhen**, sonst merkt der Browser nicht,
+dass sich der Service Worker geändert hat.
 
 ## Bedienung
 

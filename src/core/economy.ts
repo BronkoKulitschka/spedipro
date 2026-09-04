@@ -26,6 +26,32 @@ export const ECONOMY = {
   handling_hours_hub: 0.5,
 } as const;
 
+/**
+ * Verbrauchsaufschlaege.
+ *
+ * Ein Sattelzug verbraucht auf einer Alpenetappe deutlich mehr als in der
+ * Ebene: Steigungen kosten Kraftstoff, den die Talfahrt nicht zurueckgibt.
+ * Landstrassen kosten durch Anfahren und Bremsen ebenfalls mehr als eine
+ * gleichmaessig befahrene Autobahn.
+ */
+export const CONSUMPTION = {
+  /** Aufschlag je Gebirgszone */
+  mountain: {
+    Alpen: 1.28,
+    Pyrenäen: 1.24,
+    Karpaten: 1.18,
+    Dinariden: 1.2,
+    Skanden: 1.14,
+    Apennin: 1.15,
+    Kantabrien: 1.16,
+    "Schottl. HL": 1.12,
+  } as Record<string, number>,
+  /** Falls eine Zone nicht in der Liste steht */
+  mountain_default: 1.18,
+  /** Landstrasse gegenueber Autobahn */
+  trunk: 1.07,
+} as const;
+
 /** Lenk- und Ruhezeiten nach EU-Verordnung 561/2006. */
 export const DRIVING_RULES = {
   /** Lenkzeit bis zur vorgeschriebenen Pause */

@@ -151,6 +151,16 @@ export function RoutePlanner({
             <hr class="sep" />
             <KeyValues
               rows={[
+                [
+                  "Verbrauch",
+                  `${Math.round(route.fuel_liters).toLocaleString("de-DE")} l · ${(
+                    (route.fuel_liters / route.distance_km) *
+                    100
+                  )
+                    .toFixed(1)
+                    .replace(".", ",")} l/100 km`,
+                  "dim",
+                ],
                 ["Kraftstoff", fmtEur(route.fuel_eur), "bad"],
                 ["Maut", fmtEur(route.toll_eur), "bad"],
                 ...(route.ferry_eur > 0

@@ -13,7 +13,7 @@ import type {
   RouteResult,
   VehicleClass,
 } from "./types";
-import { ECONOMY, applyRestPeriods } from "./economy";
+import { CONSUMPTION, ECONOMY, applyRestPeriods } from "./economy";
 
 export interface Graph {
   cities: Map<string, City>;
@@ -34,15 +34,36 @@ export function buildGraph(cities: City[], edges: Edge[]): Graph {
   return { cities: cityMap, adjacency };
 }
 
+/**
+ * Verbrauch auf einem Abschnitt in Litern.
+ *
+ * Der Klassenwert gilt für ebene Autobahn. Gebirge und Landstraße kosten
+ * spürbar mehr, Fähren gar nichts - der Motor steht.
+ */
+export function fuelLiters(
+  edge: Edge,
+  vehicle: VehicleClass,
+  laden: boolean,
+): number {
+  if (edge.type === "ferry") return 0;
+
+  const base = laden ? vehicle.consumption_laden : vehicle.consumption_empty;
+  const terrain = edge.mountain_zone
+    ? (CONSUMPTION.mountain[edge.mountain_zone] ??
+      CONSUMPTION.mountain_default)
+    : 1;
+  const roadType = edge.type === "trunk" ? CONSUMPTION.trunk : 1;
+
+  return (edge.distance_km * base * terrain * roadType) / 100;
+}
+
 /** Kosten eines Abschnitts fuer ein bestimmtes Fahrzeug. */
 export function legCost(edge: Edge, vehicle: VehicleClass, laden: boolean) {
   const km = edge.distance_km;
-  const consumption = laden
-    ? vehicle.consumption_laden
-    : vehicle.consumption_empty;
+  const liters = fuelLiters(edge, vehicle, laden);
 
   const fuel =
-    (km * consumption) / 100 *
+    liters *
     ECONOMY.diesel_eur_per_liter *
     (1 + ECONOMY.adblue_surcharge);
 
@@ -52,7 +73,7 @@ export function legCost(edge: Edge, vehicle: VehicleClass, laden: boolean) {
   const driver = hours * ECONOMY.driver_eur_per_hour;
   const wear = km * ECONOMY.maintenance_eur_per_km * edge.wear_factor;
 
-  return { km, fuel, toll, ferry, hours, driver, wear };
+  return { km, liters, fuel, toll, ferry, hours, driver, wear };
 }
 
 /** Gewichtsfunktion je Optimierungsziel. */
@@ -185,6 +206,7 @@ export function planRoute(
   let fuel = 0;
   let ferry = 0;
   let wear = 0;
+  let liters = 0;
   let ferryCount = 0;
 
   const first = graph.cities.get(stopIds[0]);
@@ -215,6 +237,7 @@ export function planRoute(
       });
 
       distance += c.km;
+      liters += c.liters;
       driving += c.hours;
       toll += c.toll;
       fuel += c.fuel;
@@ -259,6 +282,7 @@ export function planRoute(
     rest_hours: rest,
     toll_eur: toll,
     fuel_eur: fuel,
+    fuel_liters: liters,
     ferry_eur: ferry,
     driver_eur: driverCost + perDiem,
     wear_eur: wear,

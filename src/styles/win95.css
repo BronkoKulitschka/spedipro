@@ -624,3 +624,26 @@ hr.sep {
   letter-spacing: 1px;
   color: var(--good);
 }
+
+/* --- Aktualisierungshinweis --------------------------------------------- */
+
+.update-bar {
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  bottom: 36px;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 7px 9px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+@media (max-width: 859px) {
+  .update-bar {
+    bottom: calc(58px + env(safe-area-inset-bottom));
+  }
+}

@@ -98,6 +98,8 @@ export interface RouteResult {
   rest_hours: number;
   toll_eur: number;
   fuel_eur: number;
+  /** Verbrauchte Liter Diesel auf der gesamten Tour */
+  fuel_liters: number;
   ferry_eur: number;
   driver_eur: number;
   wear_eur: number;
