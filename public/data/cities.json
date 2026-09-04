@@ -1,0 +1,8633 @@
+{
+ "schema_version": "2.0",
+ "description": "Gameplay-oriented city database for Spedipro 95. Economic factors are balancing values, not real-world statistics.",
+ "city_count": 289,
+ "cities": [
+  {
+   "id": "AL-212",
+   "city": "Tirana",
+   "country": "Albanien",
+   "iso2": "AL",
+   "latitude": 41.3275,
+   "longitude": 19.8187,
+   "size_class": 3,
+   "order_demand": 23,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Textilien",
+    "Bekleidung"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "AL-213",
+   "city": "Durrës",
+   "country": "Albanien",
+   "iso2": "AL",
+   "latitude": 41.3236,
+   "longitude": 19.4547,
+   "size_class": 3,
+   "order_demand": 23,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Baustoffe",
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Baustoffe",
+    "Zement",
+    "Baustahl",
+    "Möbel",
+    "Holzwaren"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "AL-214",
+   "city": "Vlorë",
+   "country": "Albanien",
+   "iso2": "AL",
+   "latitude": 40.4661,
+   "longitude": 19.4914,
+   "size_class": 2,
+   "order_demand": 14,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Textilien",
+    "Bekleidung"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "AT-026",
+   "city": "Wien",
+   "country": "Österreich",
+   "iso2": "AT",
+   "latitude": 48.2082,
+   "longitude": 16.3738,
+   "size_class": 5,
+   "order_demand": 94,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Maschinenbau",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Alpenraum"
+  },
+  {
+   "id": "AT-027",
+   "city": "Graz",
+   "country": "Österreich",
+   "iso2": "AT",
+   "latitude": 47.0707,
+   "longitude": 15.4395,
+   "size_class": 4,
+   "order_demand": 64,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Maschinenbau",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Alpenraum"
+  },
+  {
+   "id": "AT-028",
+   "city": "Linz",
+   "country": "Österreich",
+   "iso2": "AT",
+   "latitude": 48.3069,
+   "longitude": 14.2858,
+   "size_class": 4,
+   "order_demand": 62,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Stahl",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl",
+    "Konsumgüter",
+    "Palettenware"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Alpenraum"
+  },
+  {
+   "id": "AT-029",
+   "city": "Salzburg",
+   "country": "Österreich",
+   "iso2": "AT",
+   "latitude": 47.8095,
+   "longitude": 13.055,
+   "size_class": 3,
+   "order_demand": 42,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Getränke",
+    "Baustoffe"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen",
+    "Baustoffe",
+    "Zement",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Alpenraum"
+  },
+  {
+   "id": "AT-030",
+   "city": "Innsbruck",
+   "country": "Österreich",
+   "iso2": "AT",
+   "latitude": 47.2692,
+   "longitude": 11.4041,
+   "size_class": 3,
+   "order_demand": 42,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Handel",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Konsumgüter",
+    "Palettenware",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Alpenraum"
+  },
+  {
+   "id": "AT-031",
+   "city": "Klagenfurt",
+   "country": "Österreich",
+   "iso2": "AT",
+   "latitude": 46.6365,
+   "longitude": 14.3122,
+   "size_class": 3,
+   "order_demand": 42,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Getränke",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Alpenraum"
+  },
+  {
+   "id": "AT-032",
+   "city": "Bregenz",
+   "country": "Österreich",
+   "iso2": "AT",
+   "latitude": 47.5031,
+   "longitude": 9.7471,
+   "size_class": 3,
+   "order_demand": 42,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Lebensmittel",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter",
+    "Palettenware"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Alpenraum"
+  },
+  {
+   "id": "BA-199",
+   "city": "Sarajevo",
+   "country": "Bosnien und Herzegowina",
+   "iso2": "BA",
+   "latitude": 43.8563,
+   "longitude": 18.4131,
+   "size_class": 3,
+   "order_demand": 25,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar",
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel",
+    "Möbel",
+    "Holzwaren"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "BA-200",
+   "city": "Mostar",
+   "country": "Bosnien und Herzegowina",
+   "iso2": "BA",
+   "latitude": 43.3438,
+   "longitude": 17.8078,
+   "size_class": 2,
+   "order_demand": 15,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Baustoffe",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Baustoffe",
+    "Zement",
+    "Baustahl",
+    "Textilien",
+    "Bekleidung"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "BA-201",
+   "city": "Banja Luka",
+   "country": "Bosnien und Herzegowina",
+   "iso2": "BA",
+   "latitude": 44.7722,
+   "longitude": 17.191,
+   "size_class": 2,
+   "order_demand": 15,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Textil",
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Textilien",
+    "Bekleidung",
+    "Möbel",
+    "Holzwaren"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "BA-202",
+   "city": "Tuzla",
+   "country": "Bosnien und Herzegowina",
+   "iso2": "BA",
+   "latitude": 44.5375,
+   "longitude": 18.6735,
+   "size_class": 2,
+   "order_demand": 15,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Textil",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Textilien",
+    "Bekleidung",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "BE-040",
+   "city": "Brüssel",
+   "country": "Belgien",
+   "iso2": "BE",
+   "latitude": 50.8503,
+   "longitude": 4.3517,
+   "size_class": 4,
+   "order_demand": 84,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.13,
+   "diesel_price_factor": 1.01,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Lebensmittel",
+    "Kühlware"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "BE-041",
+   "city": "Lüttich",
+   "country": "Belgien",
+   "iso2": "BE",
+   "latitude": 50.6326,
+   "longitude": 5.5797,
+   "size_class": 3,
+   "order_demand": 47,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Stahl"
+   ],
+   "typical_cargo": [
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "BE-258",
+   "city": "Antwerpen",
+   "country": "Belgien",
+   "iso2": "BE",
+   "latitude": 51.2194,
+   "longitude": 4.4025,
+   "size_class": 5,
+   "order_demand": 100,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Chemie",
+    "Hafen",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "BE-259",
+   "city": "Gent",
+   "country": "Belgien",
+   "iso2": "BE",
+   "latitude": 51.0543,
+   "longitude": 3.7174,
+   "size_class": 4,
+   "order_demand": 95,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Automobil",
+    "Hafen",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "BE-260",
+   "city": "Zeebrugge",
+   "country": "Belgien",
+   "iso2": "BE",
+   "latitude": 51.3306,
+   "longitude": 3.2069,
+   "size_class": 3,
+   "order_demand": 64,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "BE-261",
+   "city": "Charleroi",
+   "country": "Belgien",
+   "iso2": "BE",
+   "latitude": 50.4108,
+   "longitude": 4.4446,
+   "size_class": 3,
+   "order_demand": 47,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Stahl"
+   ],
+   "typical_cargo": [
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "BG-223",
+   "city": "Sofia",
+   "country": "Bulgarien",
+   "iso2": "BG",
+   "latitude": 42.6977,
+   "longitude": 23.3219,
+   "size_class": 4,
+   "order_demand": 52,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Möbel",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Möbel",
+    "Holzwaren",
+    "Textilien"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "BG-224",
+   "city": "Plovdiv",
+   "country": "Bulgarien",
+   "iso2": "BG",
+   "latitude": 42.1354,
+   "longitude": 24.7453,
+   "size_class": 3,
+   "order_demand": 30,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Textil",
+    "Getränke",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Textilien",
+    "Bekleidung",
+    "Getränke",
+    "Wein & Spirituosen",
+    "Getreide",
+    "Obst & Gemüse"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "BG-225",
+   "city": "Varna",
+   "country": "Bulgarien",
+   "iso2": "BG",
+   "latitude": 43.2141,
+   "longitude": 27.9147,
+   "size_class": 3,
+   "order_demand": 38,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Agrar",
+    "Baustoffe"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Getreide"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "BG-226",
+   "city": "Burgas",
+   "country": "Bulgarien",
+   "iso2": "BG",
+   "latitude": 42.5048,
+   "longitude": 27.4626,
+   "size_class": 3,
+   "order_demand": 38,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Chemie",
+    "Energie",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Mineralöl",
+    "Industrieanlagen",
+    "Container"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "BG-227",
+   "city": "Ruse",
+   "country": "Bulgarien",
+   "iso2": "BG",
+   "latitude": 43.8356,
+   "longitude": 25.9657,
+   "size_class": 2,
+   "order_demand": 17,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Chemie"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "BG-228",
+   "city": "Pleven",
+   "country": "Bulgarien",
+   "iso2": "BG",
+   "latitude": 43.417,
+   "longitude": 24.6067,
+   "size_class": 2,
+   "order_demand": 17,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "CH-033",
+   "city": "Zürich",
+   "country": "Schweiz",
+   "iso2": "CH",
+   "latitude": 47.3769,
+   "longitude": 8.5417,
+   "size_class": 4,
+   "order_demand": 62,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Maschinenbau",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Konsumgüter",
+    "Palettenware"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Alpenraum"
+  },
+  {
+   "id": "CH-034",
+   "city": "Basel",
+   "country": "Schweiz",
+   "iso2": "CH",
+   "latitude": 47.5596,
+   "longitude": 7.5886,
+   "size_class": 4,
+   "order_demand": 64,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Chemie",
+    "Pharma",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Pharmaprodukte",
+    "Medizintechnik",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Alpenraum"
+  },
+  {
+   "id": "CH-035",
+   "city": "Bern",
+   "country": "Schweiz",
+   "iso2": "CH",
+   "latitude": 46.948,
+   "longitude": 7.4474,
+   "size_class": 3,
+   "order_demand": 41,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Alpenraum"
+  },
+  {
+   "id": "CH-036",
+   "city": "Genf",
+   "country": "Schweiz",
+   "iso2": "CH",
+   "latitude": 46.2044,
+   "longitude": 6.1432,
+   "size_class": 3,
+   "order_demand": 41,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Pharma"
+   ],
+   "typical_cargo": [
+    "Pharmaprodukte",
+    "Medizintechnik"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Alpenraum"
+  },
+  {
+   "id": "CZ-181",
+   "city": "Prag",
+   "country": "Tschechien",
+   "iso2": "CZ",
+   "latitude": 50.0755,
+   "longitude": 14.4378,
+   "size_class": 4,
+   "order_demand": 69,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Maschinenbau",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "CZ-182",
+   "city": "Brno",
+   "country": "Tschechien",
+   "iso2": "CZ",
+   "latitude": 49.1951,
+   "longitude": 16.6068,
+   "size_class": 4,
+   "order_demand": 69,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Maschinenbau",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "CZ-183",
+   "city": "Ostrava",
+   "country": "Tschechien",
+   "iso2": "CZ",
+   "latitude": 49.8209,
+   "longitude": 18.2625,
+   "size_class": 3,
+   "order_demand": 39,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Chemie",
+    "Stahl"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "CZ-286",
+   "city": "Plzeň",
+   "country": "Tschechien",
+   "iso2": "CZ",
+   "latitude": 49.7384,
+   "longitude": 13.3736,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Automobil",
+    "Maschinenbau",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "DE-001",
+   "city": "Berlin",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 52.52,
+   "longitude": 13.405,
+   "size_class": 5,
+   "order_demand": 100,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Lebensmittel",
+    "Kühlware"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-002",
+   "city": "Hamburg",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 53.5511,
+   "longitude": 9.9937,
+   "size_class": 5,
+   "order_demand": 100,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Baustoffe"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Baustoffe"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-003",
+   "city": "Bremen",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 53.0793,
+   "longitude": 8.8017,
+   "size_class": 4,
+   "order_demand": 93,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Hafen",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-004",
+   "city": "Hannover",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 52.3759,
+   "longitude": 9.732,
+   "size_class": 4,
+   "order_demand": 83,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Maschinenbau",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-005",
+   "city": "Kiel",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 54.3233,
+   "longitude": 10.1228,
+   "size_class": 3,
+   "order_demand": 63,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Maschinenteile"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-006",
+   "city": "Rostock",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 54.0924,
+   "longitude": 12.0991,
+   "size_class": 3,
+   "order_demand": 63,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Getränke",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Getränke"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-007",
+   "city": "Dortmund",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 51.5136,
+   "longitude": 7.4653,
+   "size_class": 4,
+   "order_demand": 71,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Stahl",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl",
+    "Konsumgüter",
+    "Palettenware"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-008",
+   "city": "Duisburg",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 51.4344,
+   "longitude": 6.7623,
+   "size_class": 5,
+   "order_demand": 91,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Stahl",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl",
+    "Konsumgüter",
+    "Palettenware"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-009",
+   "city": "Düsseldorf",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 51.2277,
+   "longitude": 6.7735,
+   "size_class": 4,
+   "order_demand": 85,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Baustoffe",
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Baustoffe",
+    "Zement",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-010",
+   "city": "Köln",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 50.9375,
+   "longitude": 6.9603,
+   "size_class": 5,
+   "order_demand": 100,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Automobil",
+    "Chemie",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-011",
+   "city": "Frankfurt am Main",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 50.1109,
+   "longitude": 8.6821,
+   "size_class": 5,
+   "order_demand": 100,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Pharma",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Pharmaprodukte",
+    "Medizintechnik",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-012",
+   "city": "Kassel",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 51.3127,
+   "longitude": 9.4797,
+   "size_class": 3,
+   "order_demand": 48,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Maschinenbau",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-013",
+   "city": "Erfurt",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 50.9848,
+   "longitude": 11.0299,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-014",
+   "city": "Leipzig",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 51.3397,
+   "longitude": 12.3731,
+   "size_class": 4,
+   "order_demand": 85,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Chemie",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-015",
+   "city": "Dresden",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 51.0504,
+   "longitude": 13.7373,
+   "size_class": 4,
+   "order_demand": 83,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Elektronik",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-016",
+   "city": "Magdeburg",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 52.1205,
+   "longitude": 11.6276,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-017",
+   "city": "Mannheim",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 49.4875,
+   "longitude": 8.466,
+   "size_class": 4,
+   "order_demand": 75,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Chemie",
+    "Maschinenbau",
+    "Getränke",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-018",
+   "city": "Stuttgart",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 48.7758,
+   "longitude": 9.1829,
+   "size_class": 4,
+   "order_demand": 85,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Elektronik",
+    "Maschinenbau",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-019",
+   "city": "Nürnberg",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 49.4521,
+   "longitude": 11.0767,
+   "size_class": 4,
+   "order_demand": 85,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Elektronik",
+    "Maschinenbau",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-020",
+   "city": "München",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 48.1351,
+   "longitude": 11.582,
+   "size_class": 5,
+   "order_demand": 100,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Automobil",
+    "Elektronik",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-021",
+   "city": "Osnabrück",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 52.2799,
+   "longitude": 8.0472,
+   "size_class": 3,
+   "order_demand": 48,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Maschinenbau",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-022",
+   "city": "Wolfsburg",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 52.4227,
+   "longitude": 10.7865,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-023",
+   "city": "Ingolstadt",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 48.7665,
+   "longitude": 11.4258,
+   "size_class": 3,
+   "order_demand": 48,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Pharma"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Pharmaprodukte",
+    "Medizintechnik"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-024",
+   "city": "Regensburg",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 49.0134,
+   "longitude": 12.1016,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-025",
+   "city": "Heilbronn",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 49.1427,
+   "longitude": 9.2109,
+   "size_class": 3,
+   "order_demand": 48,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Maschinenbau",
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Getränke",
+    "Wein & Spirituosen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-268",
+   "city": "Ludwigshafen",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 49.4875,
+   "longitude": 8.466,
+   "size_class": 4,
+   "order_demand": 83,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Chemie",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-269",
+   "city": "Saarbrücken",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 49.2402,
+   "longitude": 6.9969,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Automobil"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-270",
+   "city": "Bielefeld",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 52.0302,
+   "longitude": 8.5325,
+   "size_class": 3,
+   "order_demand": 49,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Maschinenbau",
+    "Möbel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Möbel",
+    "Holzwaren",
+    "Lebensmittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DE-271",
+   "city": "Freiburg",
+   "country": "Deutschland",
+   "iso2": "DE",
+   "latitude": 47.999,
+   "longitude": 7.8421,
+   "size_class": 3,
+   "order_demand": 48,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Maschinenbau",
+    "Baustoffe"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Baustoffe",
+    "Zement",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": true,
+   "unlock_region": "Deutschland"
+  },
+  {
+   "id": "DK-136",
+   "city": "Kopenhagen",
+   "country": "Dänemark",
+   "iso2": "DK",
+   "latitude": 55.6761,
+   "longitude": 12.5683,
+   "size_class": 4,
+   "order_demand": 79,
+   "price_level_factor": 1.1,
+   "wage_level_factor": 1.13,
+   "diesel_price_factor": 1.01,
+   "industries": [
+    "Pharma",
+    "Hafen",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Pharmaprodukte",
+    "Medizintechnik",
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "DK-137",
+   "city": "Odense",
+   "country": "Dänemark",
+   "iso2": "DK",
+   "latitude": 55.4038,
+   "longitude": 10.4024,
+   "size_class": 3,
+   "order_demand": 40,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "DK-138",
+   "city": "Esbjerg",
+   "country": "Dänemark",
+   "iso2": "DK",
+   "latitude": 55.4765,
+   "longitude": 8.4594,
+   "size_class": 3,
+   "order_demand": 54,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Energie",
+    "Lebensmittel",
+    "Fisch",
+    "Hafen"
+   ],
+   "typical_cargo": [
+    "Mineralöl",
+    "Gefahrgut",
+    "Industrieanlagen",
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "DK-139",
+   "city": "Aalborg",
+   "country": "Dänemark",
+   "iso2": "DK",
+   "latitude": 57.0488,
+   "longitude": 9.9217,
+   "size_class": 3,
+   "order_demand": 54,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier",
+    "Lebensmittel",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial",
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "DK-140",
+   "city": "Aarhus",
+   "country": "Dänemark",
+   "iso2": "DK",
+   "latitude": 56.1629,
+   "longitude": 10.2039,
+   "size_class": 3,
+   "order_demand": 52,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Lebensmittel",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "EE-232",
+   "city": "Tallinn",
+   "country": "Estland",
+   "iso2": "EE",
+   "latitude": 59.437,
+   "longitude": 24.7536,
+   "size_class": 4,
+   "order_demand": 64,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Elektronik",
+    "Hafen",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "EE-233",
+   "city": "Tartu",
+   "country": "Estland",
+   "iso2": "EE",
+   "latitude": 58.3776,
+   "longitude": 26.729,
+   "size_class": 3,
+   "order_demand": 32,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "EE-234",
+   "city": "Pärnu",
+   "country": "Estland",
+   "iso2": "EE",
+   "latitude": 58.3859,
+   "longitude": 24.4971,
+   "size_class": 3,
+   "order_demand": 42,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Fisch",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Kühlware",
+    "Frischfisch",
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "EE-235",
+   "city": "Narva",
+   "country": "Estland",
+   "iso2": "EE",
+   "latitude": 59.3797,
+   "longitude": 28.1791,
+   "size_class": 1,
+   "order_demand": 15,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Baustoffe",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Baustoffe"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "ES-103",
+   "city": "Madrid",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 40.4168,
+   "longitude": -3.7038,
+   "size_class": 5,
+   "order_demand": 90,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Agrar",
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-104",
+   "city": "Barcelona",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 41.3851,
+   "longitude": 2.1734,
+   "size_class": 5,
+   "order_demand": 98,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Pharma",
+    "Hafen",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Pharmaprodukte",
+    "Medizintechnik",
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-105",
+   "city": "Valencia",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 39.4699,
+   "longitude": -0.3763,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Lebensmittel",
+    "Hafen",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-106",
+   "city": "Sevilla",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 37.3891,
+   "longitude": -5.9845,
+   "size_class": 4,
+   "order_demand": 68,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-107",
+   "city": "Málaga",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 36.7213,
+   "longitude": -4.4214,
+   "size_class": 3,
+   "order_demand": 50,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Lebensmittel",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-108",
+   "city": "Zaragoza",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 41.6488,
+   "longitude": -0.8891,
+   "size_class": 4,
+   "order_demand": 58,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Konsumgüter",
+    "Palettenware"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-109",
+   "city": "Bilbao",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 43.263,
+   "longitude": -2.935,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Stahl",
+    "Maschinenbau",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-110",
+   "city": "A Coruña",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 43.3623,
+   "longitude": -8.4115,
+   "size_class": 3,
+   "order_demand": 50,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Fisch",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Kühlware",
+    "Frischfisch",
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-111",
+   "city": "Vigo",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 42.2406,
+   "longitude": -8.7207,
+   "size_class": 3,
+   "order_demand": 51,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Fisch",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Kühlware",
+    "Frischfisch",
+    "Container"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-112",
+   "city": "León",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 42.5987,
+   "longitude": -5.5671,
+   "size_class": 3,
+   "order_demand": 38,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-113",
+   "city": "Santander",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 43.4623,
+   "longitude": -3.8099,
+   "size_class": 3,
+   "order_demand": 51,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Lebensmittel",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-114",
+   "city": "Pamplona",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 42.8125,
+   "longitude": -1.6458,
+   "size_class": 3,
+   "order_demand": 39,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Getränke",
+    "Wein & Spirituosen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-115",
+   "city": "Tarragona",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 41.1189,
+   "longitude": 1.2445,
+   "size_class": 3,
+   "order_demand": 50,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Chemie",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-116",
+   "city": "Alicante",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 38.3452,
+   "longitude": -0.481,
+   "size_class": 3,
+   "order_demand": 50,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Lebensmittel",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-117",
+   "city": "Murcia",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 37.9922,
+   "longitude": -1.1307,
+   "size_class": 3,
+   "order_demand": 39,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel",
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-118",
+   "city": "Albacete",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 38.9943,
+   "longitude": -1.8585,
+   "size_class": 2,
+   "order_demand": 23,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-119",
+   "city": "Salamanca",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 40.9701,
+   "longitude": -5.6635,
+   "size_class": 2,
+   "order_demand": 23,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-120",
+   "city": "Valladolid",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 41.6523,
+   "longitude": -4.7245,
+   "size_class": 3,
+   "order_demand": 39,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-121",
+   "city": "Burgos",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 42.3439,
+   "longitude": -3.6969,
+   "size_class": 3,
+   "order_demand": 39,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Getränke",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-122",
+   "city": "Badajoz",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 38.8794,
+   "longitude": -6.9707,
+   "size_class": 2,
+   "order_demand": 23,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-123",
+   "city": "Córdoba",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 37.8882,
+   "longitude": -4.7794,
+   "size_class": 3,
+   "order_demand": 38,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-124",
+   "city": "Almería",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 36.834,
+   "longitude": -2.4637,
+   "size_class": 3,
+   "order_demand": 50,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-125",
+   "city": "Granada",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 37.1773,
+   "longitude": -3.5986,
+   "size_class": 3,
+   "order_demand": 38,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-126",
+   "city": "Jaén",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 37.7796,
+   "longitude": -3.7849,
+   "size_class": 2,
+   "order_demand": 23,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-127",
+   "city": "Ciudad Real",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 38.9848,
+   "longitude": -3.9274,
+   "size_class": 2,
+   "order_demand": 23,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-128",
+   "city": "Algeciras",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 36.1408,
+   "longitude": -5.4562,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-282",
+   "city": "Bilbao-Irun",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 43.3378,
+   "longitude": -1.7888,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Logistik",
+    "Lebensmittel",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Lebensmittel",
+    "Kühlware",
+    "Textilien"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "ES-283",
+   "city": "Gijón",
+   "country": "Spanien",
+   "iso2": "ES",
+   "latitude": 43.5322,
+   "longitude": -5.6611,
+   "size_class": 3,
+   "order_demand": 44,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Automobil",
+    "Stahl",
+    "Hafen"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "FI-160",
+   "city": "Helsinki",
+   "country": "Finnland",
+   "iso2": "FI",
+   "latitude": 60.1699,
+   "longitude": 24.9384,
+   "size_class": 4,
+   "order_demand": 70,
+   "price_level_factor": 1.1,
+   "wage_level_factor": 1.13,
+   "diesel_price_factor": 1.01,
+   "industries": [
+    "Elektronik",
+    "Hafen",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "FI-161",
+   "city": "Turku",
+   "country": "Finnland",
+   "iso2": "FI",
+   "latitude": 60.4518,
+   "longitude": 22.2666,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Elektronik",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "FI-162",
+   "city": "Tampere",
+   "country": "Finnland",
+   "iso2": "FI",
+   "latitude": 61.4978,
+   "longitude": 23.761,
+   "size_class": 3,
+   "order_demand": 36,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Elektronik",
+    "Papier"
+   ],
+   "typical_cargo": [
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware",
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "FI-163",
+   "city": "Pori",
+   "country": "Finnland",
+   "iso2": "FI",
+   "latitude": 61.4851,
+   "longitude": 21.7974,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "FI-164",
+   "city": "Kotka",
+   "country": "Finnland",
+   "iso2": "FI",
+   "latitude": 60.4666,
+   "longitude": 26.9459,
+   "size_class": 3,
+   "order_demand": 47,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier",
+    "Fisch",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial",
+    "Kühlware",
+    "Frischfisch",
+    "Container"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "FI-165",
+   "city": "Vaasa",
+   "country": "Finnland",
+   "iso2": "FI",
+   "latitude": 63.0951,
+   "longitude": 21.6165,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "FI-166",
+   "city": "Jyväskylä",
+   "country": "Finnland",
+   "iso2": "FI",
+   "latitude": 62.2426,
+   "longitude": 25.7473,
+   "size_class": 2,
+   "order_demand": 21,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "FI-167",
+   "city": "Oulu",
+   "country": "Finnland",
+   "iso2": "FI",
+   "latitude": 65.0121,
+   "longitude": 25.4651,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "FI-168",
+   "city": "Rovaniemi",
+   "country": "Finnland",
+   "iso2": "FI",
+   "latitude": 66.5039,
+   "longitude": 25.7294,
+   "size_class": 2,
+   "order_demand": 21,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "FI-169",
+   "city": "Tornio",
+   "country": "Finnland",
+   "iso2": "FI",
+   "latitude": 65.8481,
+   "longitude": 24.1466,
+   "size_class": 2,
+   "order_demand": 28,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.01,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "FR-043",
+   "city": "Paris",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 48.8566,
+   "longitude": 2.3522,
+   "size_class": 5,
+   "order_demand": 100,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 1.01,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Baustoffe",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Baustoffe",
+    "Zement",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-044",
+   "city": "Calais",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 50.9513,
+   "longitude": 1.8587,
+   "size_class": 3,
+   "order_demand": 58,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Getränke",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Getränke"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-045",
+   "city": "Lille",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 50.6292,
+   "longitude": 3.0573,
+   "size_class": 4,
+   "order_demand": 78,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Baustoffe",
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Baustoffe",
+    "Zement",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-046",
+   "city": "Reims",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 49.2583,
+   "longitude": 4.0317,
+   "size_class": 3,
+   "order_demand": 43,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-047",
+   "city": "Metz",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 49.1193,
+   "longitude": 6.1757,
+   "size_class": 3,
+   "order_demand": 44,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Baustoffe",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Baustoffe",
+    "Zement",
+    "Baustahl",
+    "Konsumgüter",
+    "Palettenware"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-048",
+   "city": "Straßburg",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 48.5734,
+   "longitude": 7.7521,
+   "size_class": 4,
+   "order_demand": 65,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Handel",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Konsumgüter",
+    "Palettenware",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-049",
+   "city": "Dijon",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 47.322,
+   "longitude": 5.0415,
+   "size_class": 3,
+   "order_demand": 43,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-050",
+   "city": "Lyon",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 45.764,
+   "longitude": 4.8357,
+   "size_class": 4,
+   "order_demand": 78,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Baustoffe",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Baustoffe",
+    "Zement",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-051",
+   "city": "Clermont-Ferrand",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 45.7772,
+   "longitude": 3.087,
+   "size_class": 3,
+   "order_demand": 43,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-052",
+   "city": "Bordeaux",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 44.8378,
+   "longitude": -0.5792,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Getränke",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-053",
+   "city": "Toulouse",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 43.6047,
+   "longitude": 1.4442,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Agrar",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-054",
+   "city": "Montpellier",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 43.6108,
+   "longitude": 3.8767,
+   "size_class": 3,
+   "order_demand": 43,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-055",
+   "city": "Marseille",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 43.2965,
+   "longitude": 5.3698,
+   "size_class": 4,
+   "order_demand": 85,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Chemie",
+    "Hafen",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-056",
+   "city": "Nizza",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 43.7102,
+   "longitude": 7.262,
+   "size_class": 3,
+   "order_demand": 43,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-057",
+   "city": "Brest",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 48.3904,
+   "longitude": -4.4861,
+   "size_class": 2,
+   "order_demand": 34,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Lebensmittel",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-058",
+   "city": "Nantes",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 47.2184,
+   "longitude": -1.5536,
+   "size_class": 3,
+   "order_demand": 58,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Agrar",
+    "Lebensmittel",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel",
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-059",
+   "city": "Rennes",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 48.1173,
+   "longitude": -1.6778,
+   "size_class": 3,
+   "order_demand": 44,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Automobil",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-060",
+   "city": "Le Mans",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 48.0061,
+   "longitude": 0.1996,
+   "size_class": 2,
+   "order_demand": 26,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Automobil"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-061",
+   "city": "Tours",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 47.3941,
+   "longitude": 0.6848,
+   "size_class": 3,
+   "order_demand": 43,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-062",
+   "city": "Limoges",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 45.8336,
+   "longitude": 1.2611,
+   "size_class": 2,
+   "order_demand": 26,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-063",
+   "city": "La Rochelle",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 46.1603,
+   "longitude": -1.1511,
+   "size_class": 3,
+   "order_demand": 56,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Lebensmittel",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-064",
+   "city": "Bayonne",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 43.4929,
+   "longitude": -1.4748,
+   "size_class": 2,
+   "order_demand": 26,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-272",
+   "city": "Le Havre",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 49.4944,
+   "longitude": 0.1079,
+   "size_class": 4,
+   "order_demand": 85,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Getränke"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-273",
+   "city": "Dunkerque",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 51.0344,
+   "longitude": 2.3768,
+   "size_class": 4,
+   "order_demand": 85,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "FR-274",
+   "city": "Mulhouse",
+   "country": "Frankreich",
+   "iso2": "FR",
+   "latitude": 47.7508,
+   "longitude": 7.3359,
+   "size_class": 3,
+   "order_demand": 43,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Automobil"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Frankreich"
+  },
+  {
+   "id": "GB-065",
+   "city": "London",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 51.5074,
+   "longitude": -0.1278,
+   "size_class": 5,
+   "order_demand": 99,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Möbel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Möbel",
+    "Holzwaren",
+    "Lebensmittel"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-066",
+   "city": "Dover",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 51.1279,
+   "longitude": 1.3134,
+   "size_class": 3,
+   "order_demand": 56,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Agrar",
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Getreide"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-067",
+   "city": "Southampton",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 50.9097,
+   "longitude": -1.4044,
+   "size_class": 3,
+   "order_demand": 56,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Lebensmittel",
+    "Papier"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-068",
+   "city": "Plymouth",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 50.3755,
+   "longitude": -4.1427,
+   "size_class": 2,
+   "order_demand": 34,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Lebensmittel",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-069",
+   "city": "Cardiff",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 51.4816,
+   "longitude": -3.1791,
+   "size_class": 3,
+   "order_demand": 56,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Maschinenbau",
+    "Papier"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Maschinenteile"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-070",
+   "city": "Swansea",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 51.6214,
+   "longitude": -3.9436,
+   "size_class": 2,
+   "order_demand": 34,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Baustoffe",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Baustoffe"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-071",
+   "city": "Birmingham",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 52.4862,
+   "longitude": -1.8904,
+   "size_class": 4,
+   "order_demand": 74,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-072",
+   "city": "Cambridge",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 52.2053,
+   "longitude": 0.1218,
+   "size_class": 3,
+   "order_demand": 43,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Pharma",
+    "Elektronik"
+   ],
+   "typical_cargo": [
+    "Pharmaprodukte",
+    "Medizintechnik",
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-073",
+   "city": "Felixstowe",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 51.9617,
+   "longitude": 1.3513,
+   "size_class": 4,
+   "order_demand": 83,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-074",
+   "city": "Grimsby",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 53.5675,
+   "longitude": -0.0808,
+   "size_class": 2,
+   "order_demand": 33,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Fisch",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Kühlware",
+    "Frischfisch",
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-075",
+   "city": "Sheffield",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 53.3811,
+   "longitude": -1.4701,
+   "size_class": 3,
+   "order_demand": 42,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Stahl"
+   ],
+   "typical_cargo": [
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-076",
+   "city": "Liverpool",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 53.4084,
+   "longitude": -2.9916,
+   "size_class": 4,
+   "order_demand": 83,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-077",
+   "city": "Manchester",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 53.4808,
+   "longitude": -2.2426,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Getränke",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Getränke",
+    "Wein & Spirituosen",
+    "Maschinenteile"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-078",
+   "city": "Newcastle",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 54.9783,
+   "longitude": -1.6178,
+   "size_class": 3,
+   "order_demand": 56,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Getränke",
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Getränke"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-079",
+   "city": "Carlisle",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 54.8925,
+   "longitude": -2.9329,
+   "size_class": 2,
+   "order_demand": 26,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Getränke",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen",
+    "Textilien",
+    "Bekleidung"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-080",
+   "city": "Edinburgh",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 55.9533,
+   "longitude": -3.1883,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Möbel",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Möbel",
+    "Holzwaren",
+    "Textilien"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-081",
+   "city": "Glasgow",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 55.8642,
+   "longitude": -4.2518,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Maschinenbau",
+    "Baustoffe"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-082",
+   "city": "Aberdeen",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 57.1497,
+   "longitude": -2.0943,
+   "size_class": 2,
+   "order_demand": 34,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Chemie",
+    "Energie",
+    "Fisch",
+    "Hafen"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Mineralöl",
+    "Industrieanlagen",
+    "Kühlware"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-275",
+   "city": "Leeds",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 53.8008,
+   "longitude": -1.5491,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Maschinenbau",
+    "Baustoffe"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-276",
+   "city": "Bristol",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 51.4545,
+   "longitude": -2.5879,
+   "size_class": 3,
+   "order_demand": 48,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Hafen",
+    "Agrar",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GB-277",
+   "city": "Hull",
+   "country": "Vereinigtes Königreich",
+   "iso2": "GB",
+   "latitude": 53.7676,
+   "longitude": -0.3274,
+   "size_class": 3,
+   "order_demand": 56,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Lebensmittel",
+    "Papier"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Großbritannien"
+  },
+  {
+   "id": "GR-246",
+   "city": "Athen",
+   "country": "Griechenland",
+   "iso2": "GR",
+   "latitude": 37.9838,
+   "longitude": 23.7275,
+   "size_class": 4,
+   "order_demand": 54,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Getränke",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Getränke",
+    "Wein & Spirituosen",
+    "Getreide"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Griechenland"
+  },
+  {
+   "id": "GR-247",
+   "city": "Thessaloniki",
+   "country": "Griechenland",
+   "iso2": "GR",
+   "latitude": 40.6401,
+   "longitude": 22.9444,
+   "size_class": 4,
+   "order_demand": 59,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Textilien"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Griechenland"
+  },
+  {
+   "id": "GR-248",
+   "city": "Patras",
+   "country": "Griechenland",
+   "iso2": "GR",
+   "latitude": 38.2466,
+   "longitude": 21.7346,
+   "size_class": 3,
+   "order_demand": 39,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Getränke",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen",
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Griechenland"
+  },
+  {
+   "id": "GR-249",
+   "city": "Larissa",
+   "country": "Griechenland",
+   "iso2": "GR",
+   "latitude": 39.639,
+   "longitude": 22.4191,
+   "size_class": 3,
+   "order_demand": 30,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Getränke",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Griechenland"
+  },
+  {
+   "id": "GR-250",
+   "city": "Trikala",
+   "country": "Griechenland",
+   "iso2": "GR",
+   "latitude": 39.5557,
+   "longitude": 21.7679,
+   "size_class": 2,
+   "order_demand": 18,
+   "price_level_factor": 0.97,
+   "wage_level_factor": 0.96,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Getränke",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Griechenland"
+  },
+  {
+   "id": "GR-251",
+   "city": "Ioannina",
+   "country": "Griechenland",
+   "iso2": "GR",
+   "latitude": 39.665,
+   "longitude": 20.8537,
+   "size_class": 2,
+   "order_demand": 18,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Lebensmittel",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter",
+    "Textilien",
+    "Bekleidung"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Griechenland"
+  },
+  {
+   "id": "GR-252",
+   "city": "Lamia",
+   "country": "Griechenland",
+   "iso2": "GR",
+   "latitude": 38.9,
+   "longitude": 22.4333,
+   "size_class": 2,
+   "order_demand": 18,
+   "price_level_factor": 0.97,
+   "wage_level_factor": 0.96,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Griechenland"
+  },
+  {
+   "id": "GR-253",
+   "city": "Kavala",
+   "country": "Griechenland",
+   "iso2": "GR",
+   "latitude": 40.9396,
+   "longitude": 24.4069,
+   "size_class": 3,
+   "order_demand": 40,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Baustoffe",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Baustoffe"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Griechenland"
+  },
+  {
+   "id": "GR-254",
+   "city": "Kalamata",
+   "country": "Griechenland",
+   "iso2": "GR",
+   "latitude": 37.0389,
+   "longitude": 22.1142,
+   "size_class": 2,
+   "order_demand": 18,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Griechenland"
+  },
+  {
+   "id": "GR-255",
+   "city": "Heraklion",
+   "country": "Griechenland",
+   "iso2": "GR",
+   "latitude": 35.3387,
+   "longitude": 25.1442,
+   "size_class": 3,
+   "order_demand": 40,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Lebensmittel",
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Griechenland"
+  },
+  {
+   "id": "GR-256",
+   "city": "Chania",
+   "country": "Griechenland",
+   "iso2": "GR",
+   "latitude": 35.5138,
+   "longitude": 24.018,
+   "size_class": 2,
+   "order_demand": 24,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Textil",
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Textilien"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Griechenland"
+  },
+  {
+   "id": "HR-194",
+   "city": "Zagreb",
+   "country": "Kroatien",
+   "iso2": "HR",
+   "latitude": 45.815,
+   "longitude": 15.9819,
+   "size_class": 4,
+   "order_demand": 56,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Pharma",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Pharmaprodukte",
+    "Medizintechnik",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "HR-195",
+   "city": "Rijeka",
+   "country": "Kroatien",
+   "iso2": "HR",
+   "latitude": 45.3271,
+   "longitude": 14.4422,
+   "size_class": 3,
+   "order_demand": 42,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Möbel",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Möbel"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "HR-196",
+   "city": "Zadar",
+   "country": "Kroatien",
+   "iso2": "HR",
+   "latitude": 44.1194,
+   "longitude": 15.2314,
+   "size_class": 2,
+   "order_demand": 26,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Maschinenbau",
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Maschinenteile"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "HR-197",
+   "city": "Split",
+   "country": "Kroatien",
+   "iso2": "HR",
+   "latitude": 43.5081,
+   "longitude": 16.4402,
+   "size_class": 3,
+   "order_demand": 42,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Baustoffe",
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Baustoffe"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "HR-198",
+   "city": "Osijek",
+   "country": "Kroatien",
+   "iso2": "HR",
+   "latitude": 45.555,
+   "longitude": 18.6955,
+   "size_class": 2,
+   "order_demand": 20,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Möbel",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "HU-187",
+   "city": "Budapest",
+   "country": "Ungarn",
+   "iso2": "HU",
+   "latitude": 47.4979,
+   "longitude": 19.0402,
+   "size_class": 4,
+   "order_demand": 64,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Pharma",
+    "Elektronik",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Pharmaprodukte",
+    "Medizintechnik",
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware",
+    "Palettenware"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "HU-188",
+   "city": "Debrecen",
+   "country": "Ungarn",
+   "iso2": "HU",
+   "latitude": 47.5316,
+   "longitude": 21.6273,
+   "size_class": 2,
+   "order_demand": 22,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Pharma",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Pharmaprodukte",
+    "Medizintechnik",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "HU-189",
+   "city": "Pécs",
+   "country": "Ungarn",
+   "iso2": "HU",
+   "latitude": 46.0727,
+   "longitude": 18.2323,
+   "size_class": 2,
+   "order_demand": 21,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "HU-190",
+   "city": "Szeged",
+   "country": "Ungarn",
+   "iso2": "HU",
+   "latitude": 46.253,
+   "longitude": 20.1414,
+   "size_class": 2,
+   "order_demand": 21,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "HU-287",
+   "city": "Győr",
+   "country": "Ungarn",
+   "iso2": "HU",
+   "latitude": 47.6875,
+   "longitude": 17.6504,
+   "size_class": 3,
+   "order_demand": 41,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Automobil",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "IT-083",
+   "city": "Turin",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 45.0703,
+   "longitude": 7.6869,
+   "size_class": 4,
+   "order_demand": 74,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-084",
+   "city": "Mailand",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 45.4642,
+   "longitude": 9.19,
+   "size_class": 5,
+   "order_demand": 96,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Pharma",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Pharmaprodukte",
+    "Medizintechnik",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-085",
+   "city": "Genua",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 44.4056,
+   "longitude": 8.9463,
+   "size_class": 4,
+   "order_demand": 83,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Textilien"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-086",
+   "city": "Verona",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 45.4384,
+   "longitude": 10.9916,
+   "size_class": 4,
+   "order_demand": 63,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Getränke",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen",
+    "Konsumgüter",
+    "Palettenware"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-087",
+   "city": "Venedig",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 45.4408,
+   "longitude": 12.3155,
+   "size_class": 4,
+   "order_demand": 83,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Baustoffe"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Baustoffe"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-088",
+   "city": "Bologna",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 44.4949,
+   "longitude": 11.3426,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Maschinenbau",
+    "Lebensmittel",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-089",
+   "city": "Parma",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 44.8015,
+   "longitude": 10.3279,
+   "size_class": 3,
+   "order_demand": 43,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Maschinenbau",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-090",
+   "city": "Florenz",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 43.7696,
+   "longitude": 11.2558,
+   "size_class": 3,
+   "order_demand": 42,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Textilien",
+    "Bekleidung"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-091",
+   "city": "Livorno",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 43.5485,
+   "longitude": 10.3106,
+   "size_class": 3,
+   "order_demand": 56,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Getränke",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Getränke"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-092",
+   "city": "Ancona",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 43.6158,
+   "longitude": 13.5189,
+   "size_class": 3,
+   "order_demand": 56,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Baustoffe",
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Baustoffe"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-093",
+   "city": "Rom",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 41.9028,
+   "longitude": 12.4964,
+   "size_class": 5,
+   "order_demand": 99,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Lebensmittel",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Lebensmittel",
+    "Kühlware",
+    "Textilien"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-094",
+   "city": "Neapel",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 40.8518,
+   "longitude": 14.2681,
+   "size_class": 4,
+   "order_demand": 83,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Textilien"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-095",
+   "city": "Bari",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 41.1171,
+   "longitude": 16.8719,
+   "size_class": 3,
+   "order_demand": 56,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Textil",
+    "Baustoffe"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Textilien"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-096",
+   "city": "Taranto",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 40.4644,
+   "longitude": 17.247,
+   "size_class": 3,
+   "order_demand": 55,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Stahl",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-097",
+   "city": "Catanzaro",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 38.9098,
+   "longitude": 16.5877,
+   "size_class": 2,
+   "order_demand": 26,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Getränke",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Getränke",
+    "Wein & Spirituosen",
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-098",
+   "city": "Palermo",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 38.1157,
+   "longitude": 13.3615,
+   "size_class": 3,
+   "order_demand": 56,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Baustoffe",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Baustoffe"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-099",
+   "city": "Catania",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 37.5079,
+   "longitude": 15.083,
+   "size_class": 3,
+   "order_demand": 56,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Lebensmittel",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-100",
+   "city": "Messina",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 38.1938,
+   "longitude": 15.554,
+   "size_class": 2,
+   "order_demand": 34,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Lebensmittel",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-101",
+   "city": "Sassari",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 40.7259,
+   "longitude": 8.5557,
+   "size_class": 2,
+   "order_demand": 26,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel",
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-102",
+   "city": "Cagliari",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 39.2238,
+   "longitude": 9.1217,
+   "size_class": 3,
+   "order_demand": 56,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Agrar",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Getreide"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-278",
+   "city": "Padua",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 45.4064,
+   "longitude": 11.8768,
+   "size_class": 4,
+   "order_demand": 74,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Maschinenbau",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-279",
+   "city": "Brescia",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 45.5416,
+   "longitude": 10.2118,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Automobil",
+    "Stahl",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-280",
+   "city": "Modena",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 44.6471,
+   "longitude": 10.9252,
+   "size_class": 3,
+   "order_demand": 44,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Automobil",
+    "Maschinenbau",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "IT-281",
+   "city": "Trieste",
+   "country": "Italien",
+   "iso2": "IT",
+   "latitude": 45.6495,
+   "longitude": 13.7768,
+   "size_class": 4,
+   "order_demand": 83,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Chemie",
+    "Hafen",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Italien"
+  },
+  {
+   "id": "LT-241",
+   "city": "Vilnius",
+   "country": "Litauen",
+   "iso2": "LT",
+   "latitude": 54.6872,
+   "longitude": 25.2797,
+   "size_class": 4,
+   "order_demand": 59,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Agrar",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "LT-242",
+   "city": "Kaunas",
+   "country": "Litauen",
+   "iso2": "LT",
+   "latitude": 54.8985,
+   "longitude": 23.9036,
+   "size_class": 3,
+   "order_demand": 33,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Möbel",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "LT-243",
+   "city": "Klaipėda",
+   "country": "Litauen",
+   "iso2": "LT",
+   "latitude": 55.7033,
+   "longitude": 21.1443,
+   "size_class": 3,
+   "order_demand": 44,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Möbel",
+    "Fisch",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren",
+    "Kühlware",
+    "Frischfisch",
+    "Container",
+    "Importwaren"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "LT-244",
+   "city": "Šiauliai",
+   "country": "Litauen",
+   "iso2": "LT",
+   "latitude": 55.9349,
+   "longitude": 23.3137,
+   "size_class": 2,
+   "order_demand": 20,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "LT-245",
+   "city": "Panevėžys",
+   "country": "Litauen",
+   "iso2": "LT",
+   "latitude": 55.7348,
+   "longitude": 24.3575,
+   "size_class": 2,
+   "order_demand": 20,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Möbel",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "LU-042",
+   "city": "Luxemburg",
+   "country": "Luxemburg",
+   "iso2": "LU",
+   "latitude": 49.6116,
+   "longitude": 6.1319,
+   "size_class": 3,
+   "order_demand": 44,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Baustoffe",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Baustoffe",
+    "Zement",
+    "Baustahl",
+    "Konsumgüter",
+    "Palettenware"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "LV-236",
+   "city": "Riga",
+   "country": "Lettland",
+   "iso2": "LV",
+   "latitude": 56.9496,
+   "longitude": 24.1052,
+   "size_class": 4,
+   "order_demand": 62,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Maschinenteile"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "LV-237",
+   "city": "Daugavpils",
+   "country": "Lettland",
+   "iso2": "LV",
+   "latitude": 55.8747,
+   "longitude": 26.5362,
+   "size_class": 2,
+   "order_demand": 19,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "LV-238",
+   "city": "Liepāja",
+   "country": "Lettland",
+   "iso2": "LV",
+   "latitude": 56.5047,
+   "longitude": 21.0108,
+   "size_class": 3,
+   "order_demand": 41,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Fisch",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Kühlware",
+    "Frischfisch",
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "LV-239",
+   "city": "Ventspils",
+   "country": "Lettland",
+   "iso2": "LV",
+   "latitude": 57.3894,
+   "longitude": 21.5606,
+   "size_class": 3,
+   "order_demand": 42,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Chemie",
+    "Energie",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Mineralöl",
+    "Industrieanlagen",
+    "Container"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "LV-240",
+   "city": "Rēzekne",
+   "country": "Lettland",
+   "iso2": "LV",
+   "latitude": 56.5099,
+   "longitude": 27.3337,
+   "size_class": 1,
+   "order_demand": 11,
+   "price_level_factor": 0.97,
+   "wage_level_factor": 0.96,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Baustoffe",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Baustoffe",
+    "Zement",
+    "Baustahl",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Baltikum"
+  },
+  {
+   "id": "ME-207",
+   "city": "Podgorica",
+   "country": "Montenegro",
+   "iso2": "ME",
+   "latitude": 42.4304,
+   "longitude": 19.2594,
+   "size_class": 2,
+   "order_demand": 14,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Maschinenbau",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "ME-208",
+   "city": "Nikšić",
+   "country": "Montenegro",
+   "iso2": "ME",
+   "latitude": 42.7731,
+   "longitude": 18.9445,
+   "size_class": 1,
+   "order_demand": 8,
+   "price_level_factor": 0.97,
+   "wage_level_factor": 0.96,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel",
+    "Textilien",
+    "Bekleidung"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "MK-210",
+   "city": "Skopje",
+   "country": "Nordmazedonien",
+   "iso2": "MK",
+   "latitude": 41.9981,
+   "longitude": 21.4254,
+   "size_class": 3,
+   "order_demand": 24,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar",
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel",
+    "Möbel",
+    "Holzwaren"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "MK-211",
+   "city": "Bitola",
+   "country": "Nordmazedonien",
+   "iso2": "MK",
+   "latitude": 41.0297,
+   "longitude": 21.3292,
+   "size_class": 1,
+   "order_demand": 8,
+   "price_level_factor": 0.97,
+   "wage_level_factor": 0.96,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Baustoffe",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Baustoffe",
+    "Zement",
+    "Baustahl",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "NL-037",
+   "city": "Amsterdam",
+   "country": "Niederlande",
+   "iso2": "NL",
+   "latitude": 52.3676,
+   "longitude": 4.9041,
+   "size_class": 5,
+   "order_demand": 100,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.13,
+   "diesel_price_factor": 1.01,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "NL-038",
+   "city": "Rotterdam",
+   "country": "Niederlande",
+   "iso2": "NL",
+   "latitude": 51.9244,
+   "longitude": 4.4777,
+   "size_class": 5,
+   "order_demand": 100,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.13,
+   "diesel_price_factor": 1.01,
+   "industries": [
+    "Chemie",
+    "Energie",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Mineralöl",
+    "Industrieanlagen",
+    "Container"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "NL-039",
+   "city": "Groningen",
+   "country": "Niederlande",
+   "iso2": "NL",
+   "latitude": 53.2194,
+   "longitude": 6.5665,
+   "size_class": 3,
+   "order_demand": 47,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "NL-262",
+   "city": "Eindhoven",
+   "country": "Niederlande",
+   "iso2": "NL",
+   "latitude": 51.4416,
+   "longitude": 5.4697,
+   "size_class": 4,
+   "order_demand": 87,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Automobil",
+    "Elektronik",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "NL-263",
+   "city": "Utrecht",
+   "country": "Niederlande",
+   "iso2": "NL",
+   "latitude": 52.0907,
+   "longitude": 5.1214,
+   "size_class": 4,
+   "order_demand": 84,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Lebensmittel",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter",
+    "Palettenware",
+    "Stückgut"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "NL-264",
+   "city": "Den Haag",
+   "country": "Niederlande",
+   "iso2": "NL",
+   "latitude": 52.0705,
+   "longitude": 4.3007,
+   "size_class": 3,
+   "order_demand": 47,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "NL-265",
+   "city": "Venlo",
+   "country": "Niederlande",
+   "iso2": "NL",
+   "latitude": 51.3704,
+   "longitude": 6.1724,
+   "size_class": 4,
+   "order_demand": 84,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "NL-266",
+   "city": "Tilburg",
+   "country": "Niederlande",
+   "iso2": "NL",
+   "latitude": 51.5555,
+   "longitude": 5.0913,
+   "size_class": 4,
+   "order_demand": 84,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Lebensmittel",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter",
+    "Palettenware",
+    "Stückgut"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "NL-267",
+   "city": "Arnheim",
+   "country": "Niederlande",
+   "iso2": "NL",
+   "latitude": 51.9851,
+   "longitude": 5.8987,
+   "size_class": 3,
+   "order_demand": 47,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Benelux"
+  },
+  {
+   "id": "NO-141",
+   "city": "Oslo",
+   "country": "Norwegen",
+   "iso2": "NO",
+   "latitude": 59.9139,
+   "longitude": 10.7522,
+   "size_class": 4,
+   "order_demand": 70,
+   "price_level_factor": 1.1,
+   "wage_level_factor": 1.13,
+   "diesel_price_factor": 1.01,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "NO-142",
+   "city": "Bergen",
+   "country": "Norwegen",
+   "iso2": "NO",
+   "latitude": 60.3913,
+   "longitude": 5.3221,
+   "size_class": 3,
+   "order_demand": 47,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Chemie",
+    "Energie",
+    "Fisch",
+    "Hafen"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Mineralöl",
+    "Industrieanlagen",
+    "Kühlware"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "NO-143",
+   "city": "Stavanger",
+   "country": "Norwegen",
+   "iso2": "NO",
+   "latitude": 58.97,
+   "longitude": 5.7331,
+   "size_class": 3,
+   "order_demand": 47,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Chemie",
+    "Energie",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Mineralöl",
+    "Industrieanlagen",
+    "Container"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "NO-144",
+   "city": "Kristiansand",
+   "country": "Norwegen",
+   "iso2": "NO",
+   "latitude": 58.1467,
+   "longitude": 7.9956,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Energie",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Mineralöl",
+    "Gefahrgut",
+    "Industrieanlagen",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "NO-145",
+   "city": "Ålesund",
+   "country": "Norwegen",
+   "iso2": "NO",
+   "latitude": 62.4722,
+   "longitude": 6.1495,
+   "size_class": 2,
+   "order_demand": 28,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Fisch",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Kühlware",
+    "Frischfisch",
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "NO-146",
+   "city": "Trondheim",
+   "country": "Norwegen",
+   "iso2": "NO",
+   "latitude": 63.4305,
+   "longitude": 10.3951,
+   "size_class": 3,
+   "order_demand": 46,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.09,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "NO-147",
+   "city": "Bodø",
+   "country": "Norwegen",
+   "iso2": "NO",
+   "latitude": 67.2804,
+   "longitude": 14.4049,
+   "size_class": 2,
+   "order_demand": 28,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Fisch",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Kühlware",
+    "Frischfisch",
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "NO-148",
+   "city": "Narvik",
+   "country": "Norwegen",
+   "iso2": "NO",
+   "latitude": 68.4385,
+   "longitude": 17.4273,
+   "size_class": 2,
+   "order_demand": 28,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Fisch",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Kühlware",
+    "Frischfisch",
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "NO-149",
+   "city": "Tromsø",
+   "country": "Norwegen",
+   "iso2": "NO",
+   "latitude": 69.6492,
+   "longitude": 18.9553,
+   "size_class": 1,
+   "order_demand": 16,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Fisch",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Kühlware",
+    "Frischfisch",
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "NO-150",
+   "city": "Alta",
+   "country": "Norwegen",
+   "iso2": "NO",
+   "latitude": 69.9689,
+   "longitude": 23.2716,
+   "size_class": 1,
+   "order_demand": 13,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Fisch",
+    "Papier"
+   ],
+   "typical_cargo": [
+    "Kühlware",
+    "Frischfisch",
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "PL-170",
+   "city": "Warschau",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 52.2297,
+   "longitude": 21.0122,
+   "size_class": 5,
+   "order_demand": 90,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Baustoffe",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Baustoffe",
+    "Zement",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PL-171",
+   "city": "Krakau",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 50.0647,
+   "longitude": 19.945,
+   "size_class": 4,
+   "order_demand": 69,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Pharma",
+    "Elektronik",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Pharmaprodukte",
+    "Medizintechnik",
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware",
+    "Palettenware"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PL-172",
+   "city": "Łódź",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 51.7592,
+   "longitude": 19.456,
+   "size_class": 3,
+   "order_demand": 38,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Textilien",
+    "Bekleidung"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PL-173",
+   "city": "Wrocław",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 51.1079,
+   "longitude": 17.0385,
+   "size_class": 4,
+   "order_demand": 69,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Chemie",
+    "Elektronik",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PL-174",
+   "city": "Poznań",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 52.4064,
+   "longitude": 16.9252,
+   "size_class": 4,
+   "order_demand": 59,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Möbel",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Möbel",
+    "Holzwaren",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PL-175",
+   "city": "Gdańsk",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 54.352,
+   "longitude": 18.6466,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Baustoffe"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Baustoffe"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PL-176",
+   "city": "Szczecin",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 53.4285,
+   "longitude": 14.5528,
+   "size_class": 3,
+   "order_demand": 51,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Maschinenbau",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Maschinenteile"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PL-177",
+   "city": "Katowice",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 50.2649,
+   "longitude": 19.0238,
+   "size_class": 4,
+   "order_demand": 59,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Stahl",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PL-178",
+   "city": "Olsztyn",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 53.7784,
+   "longitude": 20.4801,
+   "size_class": 2,
+   "order_demand": 23,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PL-179",
+   "city": "Białystok",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 53.1325,
+   "longitude": 23.1688,
+   "size_class": 2,
+   "order_demand": 23,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PL-180",
+   "city": "Lublin",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 51.2465,
+   "longitude": 22.5684,
+   "size_class": 3,
+   "order_demand": 38,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PL-284",
+   "city": "Wrocław-Legnica",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 51.207,
+   "longitude": 16.1619,
+   "size_class": 3,
+   "order_demand": 44,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Automobil",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PL-285",
+   "city": "Rzeszów",
+   "country": "Polen",
+   "iso2": "PL",
+   "latitude": 50.0412,
+   "longitude": 21.9991,
+   "size_class": 3,
+   "order_demand": 38,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "PT-129",
+   "city": "Lissabon",
+   "country": "Portugal",
+   "iso2": "PT",
+   "latitude": 38.7223,
+   "longitude": -9.1393,
+   "size_class": 4,
+   "order_demand": 68,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Getränke"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Getränke"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "PT-130",
+   "city": "Porto",
+   "country": "Portugal",
+   "iso2": "PT",
+   "latitude": 41.1579,
+   "longitude": -8.6291,
+   "size_class": 4,
+   "order_demand": 68,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Textil",
+    "Getränke",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Textilien",
+    "Bekleidung",
+    "Getränke",
+    "Wein & Spirituosen",
+    "Container",
+    "Importwaren"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "PT-131",
+   "city": "Coimbra",
+   "country": "Portugal",
+   "iso2": "PT",
+   "latitude": 40.2033,
+   "longitude": -8.4103,
+   "size_class": 3,
+   "order_demand": 34,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Textilien",
+    "Bekleidung"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "PT-132",
+   "city": "Guarda",
+   "country": "Portugal",
+   "iso2": "PT",
+   "latitude": 40.5373,
+   "longitude": -7.2676,
+   "size_class": 2,
+   "order_demand": 21,
+   "price_level_factor": 0.97,
+   "wage_level_factor": 0.96,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Lebensmittel",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Lebensmittel",
+    "Kühlware",
+    "Konsumgüter",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "PT-133",
+   "city": "Évora",
+   "country": "Portugal",
+   "iso2": "PT",
+   "latitude": 38.5714,
+   "longitude": -7.9135,
+   "size_class": 2,
+   "order_demand": 21,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "PT-134",
+   "city": "Sines",
+   "country": "Portugal",
+   "iso2": "PT",
+   "latitude": 37.9562,
+   "longitude": -8.8698,
+   "size_class": 2,
+   "order_demand": 27,
+   "price_level_factor": 0.97,
+   "wage_level_factor": 0.96,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Energie",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Mineralöl",
+    "Gefahrgut",
+    "Industrieanlagen",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "PT-135",
+   "city": "Faro",
+   "country": "Portugal",
+   "iso2": "PT",
+   "latitude": 37.0194,
+   "longitude": -7.9304,
+   "size_class": 3,
+   "order_demand": 45,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Iberia"
+  },
+  {
+   "id": "RO-215",
+   "city": "Bukarest",
+   "country": "Rumänien",
+   "iso2": "RO",
+   "latitude": 44.4268,
+   "longitude": 26.1025,
+   "size_class": 4,
+   "order_demand": 54,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Elektronik",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "RO-216",
+   "city": "Constanța",
+   "country": "Rumänien",
+   "iso2": "RO",
+   "latitude": 44.1598,
+   "longitude": 28.6348,
+   "size_class": 3,
+   "order_demand": 41,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Chemie",
+    "Energie",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut",
+    "Mineralöl",
+    "Industrieanlagen",
+    "Container"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "RO-217",
+   "city": "Craiova",
+   "country": "Rumänien",
+   "iso2": "RO",
+   "latitude": 44.3302,
+   "longitude": 23.7949,
+   "size_class": 2,
+   "order_demand": 19,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "RO-218",
+   "city": "Timișoara",
+   "country": "Rumänien",
+   "iso2": "RO",
+   "latitude": 45.7489,
+   "longitude": 21.2087,
+   "size_class": 3,
+   "order_demand": 38,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Elektronik",
+    "Agrar",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "RO-219",
+   "city": "Cluj-Napoca",
+   "country": "Rumänien",
+   "iso2": "RO",
+   "latitude": 46.7712,
+   "longitude": 23.6236,
+   "size_class": 3,
+   "order_demand": 36,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Elektronik",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Elektrogeräte",
+    "Elektronikbauteile",
+    "Weiße Ware",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "RO-220",
+   "city": "Brașov",
+   "country": "Rumänien",
+   "iso2": "RO",
+   "latitude": 45.6427,
+   "longitude": 25.5887,
+   "size_class": 3,
+   "order_demand": 31,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Möbel",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "RO-221",
+   "city": "Iași",
+   "country": "Rumänien",
+   "iso2": "RO",
+   "latitude": 47.1585,
+   "longitude": 27.6014,
+   "size_class": 2,
+   "order_demand": 18,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "RO-222",
+   "city": "Galați",
+   "country": "Rumänien",
+   "iso2": "RO",
+   "latitude": 45.4353,
+   "longitude": 28.008,
+   "size_class": 3,
+   "order_demand": 40,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Stahl",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "RO-289",
+   "city": "Ploiești",
+   "country": "Rumänien",
+   "iso2": "RO",
+   "latitude": 44.9469,
+   "longitude": 26.0367,
+   "size_class": 3,
+   "order_demand": 32,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Automobil",
+    "Chemie",
+    "Energie"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Chemikalien",
+    "Kunststoffe",
+    "Gefahrgut"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "RS-203",
+   "city": "Belgrad",
+   "country": "Serbien",
+   "iso2": "RS",
+   "latitude": 44.7866,
+   "longitude": 20.4489,
+   "size_class": 4,
+   "order_demand": 50,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Logistik",
+    "Handel",
+    "Maschinenbau",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "RS-204",
+   "city": "Novi Sad",
+   "country": "Serbien",
+   "iso2": "RS",
+   "latitude": 45.2671,
+   "longitude": 19.8335,
+   "size_class": 2,
+   "order_demand": 17,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "RS-205",
+   "city": "Niš",
+   "country": "Serbien",
+   "iso2": "RS",
+   "latitude": 43.3209,
+   "longitude": 21.8958,
+   "size_class": 2,
+   "order_demand": 17,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Möbel",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "RS-206",
+   "city": "Kragujevac",
+   "country": "Serbien",
+   "iso2": "RS",
+   "latitude": 44.0128,
+   "longitude": 20.9114,
+   "size_class": 2,
+   "order_demand": 17,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "SE-151",
+   "city": "Malmö",
+   "country": "Schweden",
+   "iso2": "SE",
+   "latitude": 55.605,
+   "longitude": 13.0038,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.09,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Maschinenteile"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "SE-152",
+   "city": "Göteborg",
+   "country": "Schweden",
+   "iso2": "SE",
+   "latitude": 57.7089,
+   "longitude": 11.9746,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.09,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "SE-153",
+   "city": "Stockholm",
+   "country": "Schweden",
+   "iso2": "SE",
+   "latitude": 59.3293,
+   "longitude": 18.0686,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.1,
+   "wage_level_factor": 1.13,
+   "diesel_price_factor": 1.01,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Lebensmittel"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Lebensmittel"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "SE-154",
+   "city": "Gävle",
+   "country": "Schweden",
+   "iso2": "SE",
+   "latitude": 60.6749,
+   "longitude": 17.1413,
+   "size_class": 3,
+   "order_demand": 50,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "SE-155",
+   "city": "Sundsvall",
+   "country": "Schweden",
+   "iso2": "SE",
+   "latitude": 62.3908,
+   "longitude": 17.3069,
+   "size_class": 3,
+   "order_demand": 50,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "SE-156",
+   "city": "Umeå",
+   "country": "Schweden",
+   "iso2": "SE",
+   "latitude": 63.8258,
+   "longitude": 20.263,
+   "size_class": 3,
+   "order_demand": 50,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial",
+    "Container",
+    "Importwaren",
+    "Stückgut"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "SE-157",
+   "city": "Skellefteå",
+   "country": "Schweden",
+   "iso2": "SE",
+   "latitude": 64.7507,
+   "longitude": 20.9528,
+   "size_class": 2,
+   "order_demand": 23,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Papier"
+   ],
+   "typical_cargo": [
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "SE-158",
+   "city": "Luleå",
+   "country": "Schweden",
+   "iso2": "SE",
+   "latitude": 65.5848,
+   "longitude": 22.1567,
+   "size_class": 3,
+   "order_demand": 51,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Stahl",
+    "Papier",
+    "Hafen",
+    "Logistik"
+   ],
+   "typical_cargo": [
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl",
+    "Papierrollen",
+    "Zellstoff",
+    "Verpackungsmaterial"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "SE-159",
+   "city": "Kiruna",
+   "country": "Schweden",
+   "iso2": "SE",
+   "latitude": 67.8558,
+   "longitude": 20.2253,
+   "size_class": 2,
+   "order_demand": 23,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.05,
+   "diesel_price_factor": 0.99,
+   "industries": [
+    "Stahl"
+   ],
+   "typical_cargo": [
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "SE-290",
+   "city": "Malmö-Trelleborg",
+   "country": "Schweden",
+   "iso2": "SE",
+   "latitude": 55.3753,
+   "longitude": 13.1569,
+   "size_class": 4,
+   "order_demand": 76,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Baustoffe"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Baustoffe"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Skandinavien"
+  },
+  {
+   "id": "SI-191",
+   "city": "Ljubljana",
+   "country": "Slowenien",
+   "iso2": "SI",
+   "latitude": 46.0569,
+   "longitude": 14.5058,
+   "size_class": 4,
+   "order_demand": 55,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Pharma",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Pharmaprodukte",
+    "Medizintechnik",
+    "Konsumgüter",
+    "Palettenware"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "SI-192",
+   "city": "Maribor",
+   "country": "Slowenien",
+   "iso2": "SI",
+   "latitude": 46.5547,
+   "longitude": 15.6459,
+   "size_class": 2,
+   "order_demand": 22,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Möbel"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "SI-193",
+   "city": "Koper",
+   "country": "Slowenien",
+   "iso2": "SI",
+   "latitude": 45.5481,
+   "longitude": 13.7302,
+   "size_class": 4,
+   "order_demand": 72,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Baustoffe"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Baustoffe"
+   ],
+   "has_port": true,
+   "has_airport": false,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  },
+  {
+   "id": "SK-184",
+   "city": "Bratislava",
+   "country": "Slowakei",
+   "iso2": "SK",
+   "latitude": 48.1486,
+   "longitude": 17.1077,
+   "size_class": 4,
+   "order_demand": 61,
+   "price_level_factor": 1.04,
+   "wage_level_factor": 1.04,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Automobil",
+    "Logistik",
+    "Handel"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen",
+    "Palettenware",
+    "Stückgut",
+    "Konsumgüter"
+   ],
+   "has_port": false,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "SK-185",
+   "city": "Banská Bystrica",
+   "country": "Slowakei",
+   "iso2": "SK",
+   "latitude": 48.7363,
+   "longitude": 19.1462,
+   "size_class": 2,
+   "order_demand": 21,
+   "price_level_factor": 0.97,
+   "wage_level_factor": 0.96,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Möbel",
+    "Maschinenbau"
+   ],
+   "typical_cargo": [
+    "Möbel",
+    "Holzwaren",
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "SK-186",
+   "city": "Košice",
+   "country": "Slowakei",
+   "iso2": "SK",
+   "latitude": 48.7164,
+   "longitude": 21.2611,
+   "size_class": 3,
+   "order_demand": 34,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Stahl"
+   ],
+   "typical_cargo": [
+    "Stahlcoils",
+    "Metallteile",
+    "Baustahl"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "SK-288",
+   "city": "Trnava",
+   "country": "Slowakei",
+   "iso2": "SK",
+   "latitude": 48.3774,
+   "longitude": 17.5872,
+   "size_class": 3,
+   "order_demand": 34,
+   "price_level_factor": 1.0,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 1.0,
+   "industries": [
+    "Automobil"
+   ],
+   "typical_cargo": [
+    "Fahrzeuge",
+    "Autoteile",
+    "Reifen"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Osteuropa"
+  },
+  {
+   "id": "TR-229",
+   "city": "Edirne",
+   "country": "Türkei",
+   "iso2": "TR",
+   "latitude": 41.6771,
+   "longitude": 26.5557,
+   "size_class": 3,
+   "order_demand": 33,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Textilien",
+    "Bekleidung"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "TR-230",
+   "city": "Tekirdağ",
+   "country": "Türkei",
+   "iso2": "TR",
+   "latitude": 40.978,
+   "longitude": 27.511,
+   "size_class": 3,
+   "order_demand": 34,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Maschinenbau",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Maschinenteile",
+    "Industrieanlagen",
+    "Werkzeuge",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "TR-231",
+   "city": "Istanbul",
+   "country": "Türkei",
+   "iso2": "TR",
+   "latitude": 41.0082,
+   "longitude": 28.9784,
+   "size_class": 5,
+   "order_demand": 86,
+   "price_level_factor": 1.07,
+   "wage_level_factor": 1.08,
+   "diesel_price_factor": 0.97,
+   "industries": [
+    "Hafen",
+    "Logistik",
+    "Handel",
+    "Textil"
+   ],
+   "typical_cargo": [
+    "Container",
+    "Importwaren",
+    "Stückgut",
+    "Palettenware",
+    "Konsumgüter",
+    "Textilien"
+   ],
+   "has_port": true,
+   "has_airport": true,
+   "logistics_hub": true,
+   "starting_city_suitable": false,
+   "unlock_region": "Südosteuropa"
+  },
+  {
+   "id": "XK-209",
+   "city": "Pristina",
+   "country": "Kosovo",
+   "iso2": "XK",
+   "latitude": 42.6629,
+   "longitude": 21.1655,
+   "size_class": 2,
+   "order_demand": 14,
+   "price_level_factor": 1.01,
+   "wage_level_factor": 1.0,
+   "diesel_price_factor": 0.95,
+   "industries": [
+    "Textil",
+    "Agrar"
+   ],
+   "typical_cargo": [
+    "Textilien",
+    "Bekleidung",
+    "Getreide",
+    "Obst & Gemüse",
+    "Düngemittel"
+   ],
+   "has_port": false,
+   "has_airport": false,
+   "logistics_hub": false,
+   "starting_city_suitable": false,
+   "unlock_region": "Balkan"
+  }
+ ]
+}

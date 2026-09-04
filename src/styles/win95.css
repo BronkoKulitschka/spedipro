@@ -1,0 +1,569 @@
+/*
+ * SpediPro 95 - Oberflaechenstil
+ *
+ * Die Farben stammen aus der Asset-Spezifikation und stehen ausschliesslich
+ * hier. Kein Bauteil definiert eigene Farbwerte.
+ */
+
+:root {
+  --face: #c0c0c0;
+  --face-dark: #a8a8a8;
+  --light: #ffffff;
+  --shadow: #808080;
+  --dark: #000000;
+  --title: #000080;
+  --title-inactive: #808080;
+  --title-text: #ffffff;
+  --desktop: #008080;
+  --field: #ffffff;
+
+  --text: #000000;
+  --text-accent: #0000c0;
+  --text-dim: #606060;
+
+  --good: #008000;
+  --warn: #c08000;
+  --bad: #c00000;
+  --special: #800080;
+
+  --sea: #3060a8;
+  --land: #7ba05b;
+  --land-hi: #96b872;
+  --road: #d8d8c0;
+  --motorway: #f0e8a0;
+
+  --ui: "MS Sans Serif", "Segoe UI", Tahoma, Verdana, sans-serif;
+  --mono: "Consolas", "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--desktop);
+  color: var(--text);
+  font-family: var(--ui);
+  font-size: 13px;
+  line-height: 1.35;
+  -webkit-font-smoothing: none;
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+img,
+canvas {
+  image-rendering: pixelated;
+}
+
+/* --- Kantenprofile: das Herz des 95er-Looks ------------------------------ */
+
+.raised {
+  border: 1px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: inset 1px 1px 0 var(--face), inset -1px -1px 0 var(--shadow);
+  background: var(--face);
+}
+
+.sunken {
+  border: 1px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+  box-shadow: inset 1px 1px 0 var(--dark), inset -1px -1px 0 var(--face);
+  background: var(--field);
+}
+
+.groove {
+  border: 1px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+  background: transparent;
+}
+
+/* --- Fenster ------------------------------------------------------------- */
+
+.window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;
+  min-height: 140px;
+  padding: 3px;
+  background: var(--face);
+  border: 1px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: inset 1px 1px 0 var(--face), inset -1px -1px 0 var(--shadow);
+}
+
+.window.maximized {
+  inset: 0 0 28px 0;
+  width: auto !important;
+  height: auto !important;
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 2px 2px 4px;
+  background: var(--title);
+  color: var(--title-text);
+  font-weight: bold;
+  cursor: default;
+  user-select: none;
+  flex: none;
+}
+
+.window.inactive .titlebar {
+  background: var(--title-inactive);
+}
+
+.titlebar-text {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.titlebar-buttons {
+  display: flex;
+  gap: 2px;
+}
+
+.window-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  overflow: auto;
+}
+
+.resize-grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+/* --- Schaltflaechen ------------------------------------------------------ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 26px;
+  padding: 3px 10px;
+  font: inherit;
+  color: var(--text);
+  background: var(--face);
+  border: 1px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: inset 1px 1px 0 var(--face), inset -1px -1px 0 var(--shadow);
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn:active:not(:disabled),
+.btn.pressed {
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+  box-shadow: inset 1px 1px 0 var(--shadow), inset -1px -1px 0 var(--face);
+  padding: 4px 9px 2px 11px;
+}
+
+.btn:focus-visible {
+  outline: 1px dotted var(--dark);
+  outline-offset: -4px;
+}
+
+.btn:disabled {
+  color: var(--shadow);
+  text-shadow: 1px 1px 0 var(--light);
+  cursor: default;
+}
+
+.btn-sys {
+  width: 20px;
+  min-height: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.btn-sys:active {
+  padding: 0;
+}
+
+/* --- Beschriftete Rahmen ------------------------------------------------- */
+
+.panel {
+  border: 1px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+  padding: 0;
+  margin: 0;
+  background: var(--face);
+}
+
+.panel > legend {
+  padding: 0 4px;
+  color: var(--title);
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.panel-body {
+  padding: 6px 8px 8px;
+}
+
+/* --- Formularelemente ---------------------------------------------------- */
+
+.field {
+  width: 100%;
+  padding: 3px 5px;
+  font: inherit;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+  box-shadow: inset 1px 1px 0 var(--dark);
+}
+
+select.field {
+  min-height: 26px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.spread {
+  flex: 1;
+}
+
+/* --- Kennzahlen ---------------------------------------------------------- */
+
+.kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.kv dt {
+  color: var(--text);
+}
+
+.kv dd {
+  margin: 0;
+  text-align: right;
+  color: var(--text-accent);
+  white-space: nowrap;
+}
+
+.kv dd.good {
+  color: var(--good);
+}
+
+.kv dd.bad {
+  color: var(--bad);
+}
+
+.kv dd.warn {
+  color: var(--warn);
+}
+
+.kv dd.dim {
+  color: var(--text-dim);
+}
+
+hr.sep {
+  border: 0;
+  border-top: 1px solid var(--shadow);
+  border-bottom: 1px solid var(--light);
+  margin: 6px 0;
+}
+
+/* --- Listen -------------------------------------------------------------- */
+
+.list {
+  background: var(--field);
+  border: 1px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+  box-shadow: inset 1px 1px 0 var(--dark);
+  overflow: auto;
+  min-height: 0;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  cursor: default;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.list-item + .list-item {
+  border-top: 1px solid #e4e4e4;
+}
+
+.list-item.selected {
+  background: var(--title);
+  color: var(--title-text);
+}
+
+.list-item.clickable {
+  cursor: pointer;
+}
+
+.list-item.clickable:hover:not(.selected) {
+  background: #e8e8f4;
+}
+
+.stop-index {
+  width: 16px;
+  text-align: right;
+  color: var(--text-dim);
+}
+
+.list-item.selected .stop-index {
+  color: var(--title-text);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border: 1px solid var(--dark);
+}
+
+.dot-start {
+  background: var(--good);
+}
+
+.dot-stop {
+  background: var(--warn);
+}
+
+.dot-end {
+  background: var(--bad);
+}
+
+/* --- Karte --------------------------------------------------------------- */
+
+.map-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 200px;
+  border: 1px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+  box-shadow: inset 1px 1px 0 var(--dark);
+  overflow: hidden;
+  background: var(--sea);
+}
+
+.map-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.map-tools {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.map-tools .btn {
+  width: 28px;
+  min-height: 28px;
+  padding: 0;
+  font-weight: bold;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-family: var(--mono);
+}
+
+.map-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.swatch {
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--dark);
+}
+
+.line-swatch {
+  width: 14px;
+  height: 3px;
+  border: 0;
+}
+
+/* --- Taskleiste ---------------------------------------------------------- */
+
+.taskbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  background: var(--face);
+  border-top: 1px solid var(--light);
+  z-index: 9000;
+}
+
+.taskbar .btn {
+  min-height: 22px;
+  padding: 2px 8px;
+}
+
+.task-item {
+  max-width: 180px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  justify-content: flex-start;
+}
+
+.clock {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 3px 8px;
+}
+
+/* --- Mobile Navigation --------------------------------------------------- */
+
+.mobile-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--face);
+}
+
+.mobile-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: var(--title);
+  color: var(--title-text);
+  font-weight: bold;
+  flex: none;
+}
+
+.mobile-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 5px;
+  overflow: auto;
+}
+
+.bottom-nav {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  padding: 3px;
+  border-top: 1px solid var(--light);
+  background: var(--face);
+  padding-bottom: max(3px, env(safe-area-inset-bottom));
+}
+
+.nav-btn {
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-height: 46px;
+  padding: 3px 2px;
+  font-size: 10px;
+}
+
+.nav-btn .nav-glyph {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.badge {
+  display: inline-block;
+  min-width: 15px;
+  padding: 0 3px;
+  background: var(--bad);
+  color: var(--light);
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+  border: 1px solid var(--dark);
+}
+
+/* --- Zustandsmeldungen --------------------------------------------------- */
+
+.notice {
+  padding: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.notice.error {
+  color: var(--bad);
+}
+
+.stage-note {
+  padding: 6px 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

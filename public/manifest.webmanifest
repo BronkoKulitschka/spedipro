@@ -1,0 +1,13 @@
+{
+  "name": "SpediPro 95",
+  "short_name": "SpediPro 95",
+  "description": "Speditions-Manager-Simulator",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#008080",
+  "theme_color": "#000080",
+  "lang": "de",
+  "icons": []
+}
