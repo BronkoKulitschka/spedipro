@@ -165,10 +165,46 @@ export function generateOrders(
   const pool = sources.length > 0 ? sources : cities;
   const orders: Order[] = [];
 
-  for (let i = 0; i < opts.count; i++) {
-    const from = pickWeighted(rng, pool, (c) => c.order_demand);
+  // Fracht läuft in Korridoren, nicht gleichmäßig in alle Richtungen.
+  // Deshalb wird die Zielregion für mehrere Aufträge beibehalten - erst
+  // dadurch entstehen Ladungen, die sich sinnvoll zusammenlegen lassen.
+  const regions = [...new Set(cities.map((c) => c.unlock_region))];
+  let corridor = "";
+  let corridorLeft = 0;
 
-    const candidates = cities.filter((c) => c.id !== from.id);
+  for (let i = 0; i < opts.count; i++) {
+    if (corridorLeft <= 0) {
+      corridor = pickWeighted(rng, regions, (r) =>
+        cities
+          .filter((c) => c.unlock_region === r)
+          .reduce((s, c) => s + c.order_demand, 0),
+      );
+      // Zwei bis vier Aufträge je Korridor
+      corridorLeft = 2 + Math.floor(rng() * 3);
+    }
+    corridorLeft--;
+
+    // Rund vier von zehn Aufträgen laufen in die Gegenrichtung: aus dem
+    // Zielgebiet zurück in die Heimatregion. Ohne diese Rückfrachten gäbe
+    // es keine Rundtouren - und Rückfracht ist der Kern des Spiels.
+    const backhaul = opts.home !== undefined && rng() < 0.4;
+
+    const fromPool = backhaul
+      ? cities.filter((c) => c.unlock_region === corridor)
+      : pool;
+    const from = pickWeighted(
+      rng,
+      fromPool.length > 0 ? fromPool : pool,
+      (c) => c.order_demand,
+    );
+
+    const toPool = backhaul
+      ? pool.filter((c) => c.id !== from.id)
+      : cities.filter(
+          (c) => c.id !== from.id && c.unlock_region === corridor,
+        );
+    const candidates = toPool.length > 0 ? toPool : cities.filter((c) => c.id !== from.id);
+
     const to = pickWeighted(rng, candidates, (c) =>
       destinationWeight(from, c),
     );
@@ -184,7 +220,11 @@ export function generateOrders(
       ...cargo.trailers.map((t) => TRAILER_VOLUME[t]),
     );
     const maxLdm = 13.6;
-    const fillGrade = 0.25 + rng() * 0.75;
+    // Teilladungen sind der Normalfall: rund zwei Drittel der Aufträge
+    // füllen weniger als die Hälfte des Aufliegers. Erst dadurch lohnt es
+    // sich, mehrere Ladungen zu kombinieren.
+    const fillGrade =
+      rng() < 0.65 ? 0.12 + rng() * 0.38 : 0.5 + rng() * 0.5;
     const volume = Math.round(maxVolume * fillGrade * 10) / 10;
     const weight = Math.min(
       24_000,

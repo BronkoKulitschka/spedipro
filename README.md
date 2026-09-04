@@ -2,8 +2,8 @@
 
 Speditions-Manager-Simulator als PWA. Läuft auf Smartphone, Tablet und Desktop.
 
-**Ausbaustufe 2 + PWA:** Karte, Routing, Kostenberechnung, Fuhrpark,
-Auftragsbörse, Offline-Betrieb.
+**Ausbaustufe 3:** Karte, Routing, Kostenberechnung, Fuhrpark, Auftragsbörse,
+**Sammelladung mit drei Planungsstufen**. Der Kern-Loop ist spielbar.
 
 ## Loslegen
 
@@ -23,6 +23,7 @@ npm run dev
 | `npm run test:core` | Routing und Kalkulation im Terminal prüfen |
 | `npm run test:orders` | Auftragsgenerierung prüfen |
 | `npm run test:state` | Spielzustand und Wirtschaftlichkeit prüfen |
+| `npm run test:tour` | Sammelladung und Kapazitätsprüfung |
 
 ## Veröffentlichen
 
@@ -46,11 +47,12 @@ src/
     fleet.ts     Fahrzeugmodelle, Auflieger, Zustand, Restwert
     orders.ts    Auftragsgenerierung mit gesätem Zufall
     state.ts     Spielzustand, Startfuhrpark, Auftragsbörse
+    tour.ts      Sammelladung: Stoppfolgen, Kapazitäten, Planungsheuristik
     data.ts      Laden, Projektion, Formatierung
   ui/            Anzeigeschicht
     win95.tsx    Fenster, Schaltflächen, Rahmen, Kennzahlen
     MapCanvas.tsx     Karte auf Canvas
-    RoutePlanner.tsx  Tourenplanung
+    TourPlanner.tsx   Tourenplanung mit Sammelladung
     FleetView.tsx     Fuhrpark
     OrderBoard.tsx    Auftragsbörse
     serviceWorker.tsx  Anmeldung und Aktualisierungshinweis
@@ -68,6 +70,25 @@ public/
 **Der Simulationskern kennt die Anzeigeschicht nicht.** Er bekommt Daten und
 gibt Ergebnisse zurück. Dadurch läuft derselbe Code später unverändert in der
 Standalone-Version und lässt sich ohne Browser testen.
+
+## Sammelladung
+
+Ein Auftrag ist keine Fahrt, sondern zwei Punkte: aufnehmen und abliefern.
+Eine Tour ist eine Folge solcher Punkte, und der Laderaum muss an **jedem
+einzelnen Punkt** reichen.
+
+Drei Grenzen, die gleichzeitig gelten. Voll ist der Auflieger, sobald eine
+davon erreicht ist:
+
+| Grenze | Sattelzug | Erreicht zuerst bei |
+|---|---|---|
+| Gewicht | 24 t | Stahl, Baustoffe, Getränke |
+| Volumen | 90 m³ | Möbel, Textilien, Verpackungen |
+| Lademeter | 13,6 LDM | Palettenware, nicht Stapelbarem |
+
+Die Automatik erreicht bewusst nicht das Optimum. Sie sucht keine eleganten
+Ketten und wartet nie auf ein besseres Angebot — die letzten zehn bis fünfzehn
+Prozent holt nur heraus, wer selbst plant.
 
 ## Zwei Regeln
 
@@ -97,8 +118,9 @@ dass sich der Service Worker geändert hat.
 
 ## Bedienung
 
-- Stadt antippen oder anklicken → wird als Stopp angehängt
-- In den Aufträgen „In Tourenplanung übernehmen" setzt Start und Ziel
+- In den Aufträgen „Zur Tour hinzufügen" lädt eine Ladung auf den LKW
+- Stadt auf der Karte antippen filtert die Auftragsliste auf diese Stadt
+- Drei Planungsstufen: Automatik, Assistiert, Manuell — pro Tour umschaltbar
 - „Aktualisieren" rückt einen Spieltag vor und erzeugt neue Aufträge
 - Ziehen verschiebt die Karte, Mausrad oder zwei Finger zoomen
 - Fenster lassen sich verschieben, in der Größe ändern, minimieren und maximieren

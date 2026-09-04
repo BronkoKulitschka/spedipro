@@ -14,8 +14,13 @@ import { Button, KeyValues, Panel, type ValueTone } from "./win95";
 interface Props {
   orders: Order[];
   cities: City[];
-  onPlan: (order: Order) => void;
+  /** Bereits in der Tour enthaltene Aufträge */
+  chosen: string[];
+  /** Filter auf eine auf der Karte angetippte Stadt */
+  cityFilter: string | null;
+  onAdd: (order: Order) => void;
   onRefresh: () => void;
+  onClearCityFilter: () => void;
 }
 
 type SortKey = "revenue" | "per_km" | "distance";
@@ -32,7 +37,15 @@ const URGENCY_TONE: Record<Order["urgency"], ValueTone> = {
   flexible: "good",
 };
 
-export function OrderBoard({ orders, cities, onPlan, onRefresh }: Props) {
+export function OrderBoard({
+  orders,
+  cities,
+  chosen,
+  cityFilter,
+  onAdd,
+  onRefresh,
+  onClearCityFilter,
+}: Props) {
   const [sort, setSort] = useState<SortKey>("per_km");
   const [onlyGood, setOnlyGood] = useState(false);
   const cityById = useMemo(
@@ -41,9 +54,13 @@ export function OrderBoard({ orders, cities, onPlan, onRefresh }: Props) {
   );
 
   const visible = useMemo(() => {
-    const list = onlyGood
-      ? orders.filter((o) => revenuePerKm(o) >= 1.6)
-      : orders.slice();
+    let list = orders.slice();
+    if (cityFilter) {
+      list = list.filter(
+        (o) => o.from_id === cityFilter || o.to_id === cityFilter,
+      );
+    }
+    if (onlyGood) list = list.filter((o) => revenuePerKm(o) >= 1.6);
     list.sort((a, b) => {
       switch (sort) {
         case "revenue":
@@ -55,7 +72,7 @@ export function OrderBoard({ orders, cities, onPlan, onRefresh }: Props) {
       }
     });
     return list;
-  }, [orders, sort, onlyGood]);
+  }, [orders, sort, onlyGood, cityFilter]);
 
   return (
     <>
@@ -84,6 +101,16 @@ export function OrderBoard({ orders, cities, onPlan, onRefresh }: Props) {
           </Button>
         </div>
       </Panel>
+
+      {cityFilter && (
+        <div class="filter-chip raised">
+          <span class="spread">
+            Nur Aufträge mit{" "}
+            <b>{cityById.get(cityFilter)?.city ?? cityFilter}</b>
+          </span>
+          <Button onClick={onClearCityFilter}>Filter aufheben</Button>
+        </div>
+      )}
 
       <Panel title={`Verfügbare Aufträge (${visible.length})`}>
         {visible.length === 0 ? (
@@ -136,10 +163,13 @@ export function OrderBoard({ orders, cities, onPlan, onRefresh }: Props) {
                   />
                   <Button
                     class="order-plan"
-                    onClick={() => onPlan(o)}
-                    title="Start und Ziel in die Tourenplanung übernehmen"
+                    disabled={chosen.includes(o.id)}
+                    onClick={() => onAdd(o)}
+                    title="Diese Ladung der Tour hinzufügen"
                   >
-                    In Tourenplanung übernehmen
+                    {chosen.includes(o.id)
+                      ? "Bereits in der Tour"
+                      : "Zur Tour hinzufügen"}
                   </Button>
                 </div>
               );
@@ -147,8 +177,7 @@ export function OrderBoard({ orders, cities, onPlan, onRefresh }: Props) {
           </div>
         )}
         <div class="stage-note">
-          Aufträge annehmen und mehrere gleichzeitig laden folgt in
-          Ausbaustufe 3.
+          Stadt auf der Karte antippen filtert diese Liste.
         </div>
       </Panel>
     </>

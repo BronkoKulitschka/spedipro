@@ -11,7 +11,10 @@ import { boundsOf, project } from "../core/data";
 interface Props {
   cities: City[];
   edges: Edge[];
+  /** Städte der geplanten Tour in Reihenfolge */
   stops: string[];
+  /** Auf der Karte angetippte Stadt, dient als Auftragsfilter */
+  highlight: string | null;
   route: RouteResult | null;
   onPickCity: (city: City) => void;
 }
@@ -38,7 +41,14 @@ const COLOR = {
   labelHalo: "#ffffff",
 };
 
-export function MapCanvas({ cities, edges, stops, route, onPickCity }: Props) {
+export function MapCanvas({
+  cities,
+  edges,
+  stops,
+  highlight,
+  route,
+  onPickCity,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const view = useRef<View>({ scale: 1, offsetX: 0, offsetY: 0 });
@@ -193,6 +203,20 @@ export function MapCanvas({ cities, edges, stops, route, onPickCity }: Props) {
       ctx.strokeRect(Math.round(p.x) - 5.5, Math.round(p.y) - 5.5, 11, 11);
     });
 
+    // Angetippte Stadt hervorheben
+    if (highlight) {
+      const c = cityById.current.get(highlight);
+      if (c) {
+        const p = toScreen(c.latitude, c.longitude);
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(Math.round(p.x) - 8.5, Math.round(p.y) - 8.5, 17, 17);
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(Math.round(p.x) - 10.5, Math.round(p.y) - 10.5, 21, 21);
+      }
+    }
+
     // Beschriftungen: nur so viele, wie lesbar bleiben
     ctx.font = "bold 11px 'MS Sans Serif', Tahoma, sans-serif";
     ctx.textBaseline = "middle";
@@ -236,7 +260,7 @@ export function MapCanvas({ cities, edges, stops, route, onPickCity }: Props) {
     if (wrapRef.current) ro.observe(wrapRef.current);
     return () => ro.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cities, edges, stops, route]);
+  }, [cities, edges, stops, highlight, route]);
 
   const zoomBy = (factor: number, cx?: number, cy?: number) => {
     const wrap = wrapRef.current;

@@ -11,14 +11,21 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import type { City, Edge, Optimization } from "./core/types";
 import { fmtEur, loadGameData } from "./core/data";
-import { buildGraph, planRoute } from "./core/routing";
+import { buildGraph } from "./core/routing";
 import { vehicleById } from "./core/economy";
 import { createGame, refreshOrders, type GameState } from "./core/state";
-import { truckModel } from "./core/fleet";
+import { capacityOf, truckModel } from "./core/fleet";
+import {
+  autoPlan,
+  evaluateTour,
+  naiveStops,
+  optimizeStopOrder,
+  type TourStop,
+} from "./core/tour";
 import type { Order } from "./core/orders";
 import { Button, Clock, Window, type WindowState } from "./ui/win95";
 import { MapCanvas } from "./ui/MapCanvas";
-import { RoutePlanner } from "./ui/RoutePlanner";
+import { TourPlanner, type PlanMode } from "./ui/TourPlanner";
 import { FleetView } from "./ui/FleetView";
 import { OrderBoard } from "./ui/OrderBoard";
 import { APP_VERSION, UpdateBar, useServiceWorker } from "./ui/serviceWorker";
@@ -68,9 +75,11 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [game, setGame] = useState<GameState | null>(null);
 
-  const [stops, setStops] = useState<string[]>([]);
+  const [stops, setStops] = useState<TourStop[]>([]);
   const [optimization, setOptimization] = useState<Optimization>("balanced");
-  const [vehicleId, setVehicleId] = useState("semi");
+  const [vehicleId, setVehicleId] = useState<string>("");
+  const [mode, setMode] = useState<PlanMode>("assisted");
+  const [cityFilter, setCityFilter] = useState<string | null>(null);
 
   const isMobile = useIsMobile();
   const [tab, setTab] = useState<ViewId>("map");
@@ -101,18 +110,62 @@ export function App() {
     [cities, edges],
   );
 
-  const vehicle = useMemo(() => vehicleById(vehicleId), [vehicleId]);
+  /** Aktuell gewähltes Fahrzeug, mit Rückfall auf das erste im Fuhrpark. */
+  const vehicle = useMemo(() => {
+    if (!game) return null;
+    return game.vehicles.find((v) => v.id === vehicleId) ?? game.vehicles[0] ?? null;
+  }, [game, vehicleId]);
 
-  const route = useMemo(() => {
-    if (!graph || stops.length < 2) return null;
-    return planRoute(graph, stops, optimization, vehicle);
-  }, [graph, stops, optimization, vehicle]);
+  const capacity = useMemo(
+    () => (vehicle ? capacityOf(vehicle) : null),
+    [vehicle],
+  );
 
-  const pickCity = (c: City) =>
-    setStops((prev) => (prev.includes(c.id) ? prev : [...prev, c.id]));
+  const vehicleClass = useMemo(
+    () => (vehicle ? vehicleById(truckModel(vehicle.model_id).class_id) : null),
+    [vehicle],
+  );
 
-  const removeStop = (i: number) =>
-    setStops((prev) => prev.filter((_, idx) => idx !== i));
+  const cityMap = useMemo(
+    () => new Map((cities ?? []).map((c) => [c.id, c])),
+    [cities],
+  );
+
+  /** Das gesamte Tourergebnis - einzige Quelle für alle angezeigten Zahlen. */
+  const result = useMemo(() => {
+    if (!graph || !game || !capacity || !vehicleClass) return null;
+    if (stops.length === 0) return null;
+    return evaluateTour(
+      graph,
+      stops,
+      game.orders,
+      capacity,
+      vehicleClass,
+      optimization,
+    );
+  }, [graph, game, stops, capacity, vehicleClass, optimization]);
+
+  /** Für die Karte: die Städte der Tour in Reihenfolge. */
+  const routeStops = result?.route_stop_ids ?? [];
+
+  const addOrder = (o: Order) => {
+    if (!game || !capacity) return;
+    const ids = [...new Set([...stops.map((s) => s.order_id), o.id])];
+    setStops(
+      mode === "manual"
+        ? naiveStops(ids, game.orders)
+        : optimizeStopOrder(
+            ids,
+            game.orders,
+            cityMap,
+            capacity,
+            game.company.home_id,
+          ),
+    );
+  };
+
+  const removeOrder = (orderId: string) =>
+    setStops((prev) => prev.filter((s) => s.order_id !== orderId));
 
   const moveStop = (i: number, delta: number) =>
     setStops((prev) => {
@@ -123,19 +176,44 @@ export function App() {
       return next;
     });
 
-  /** Auftrag in die Tourenplanung übernehmen und dorthin wechseln. */
-  const planOrder = (o: Order) => {
-    setStops([o.from_id, o.to_id]);
-    if (game && game.vehicles.length > 0) {
-      setVehicleId(truckModel(game.vehicles[0].model_id).class_id);
-    }
-    setTab("plan");
+  const runAutoPlan = () => {
+    if (!graph || !game || !capacity || !vehicleClass) return;
+    const plan = autoPlan(
+      graph,
+      game.orders,
+      cityMap,
+      capacity,
+      vehicleClass,
+      optimization,
+      { startCityId: game.company.home_id },
+    );
+    setStops(plan.stops);
+  };
+
+  const optimizeOrder = () => {
+    if (!game || !capacity) return;
+    setStops(
+      optimizeStopOrder(
+        [...new Set(stops.map((s) => s.order_id))],
+        game.orders,
+        cityMap,
+        capacity,
+        game.company.home_id,
+      ),
+    );
+  };
+
+  /** Karte antippen filtert die Auftragsliste auf diese Stadt. */
+  const pickCity = (c: City) => {
+    setCityFilter((prev) => (prev === c.id ? null : c.id));
+    if (isMobile) setTab("orders");
   };
 
   const refresh = () => {
     if (!game || !cities) return;
     const next: GameState = { ...game, day: game.day + 1 };
     setGame({ ...next, orders: refreshOrders(next, cities) });
+    setStops([]);
   };
 
   if (error) {
@@ -186,25 +264,31 @@ export function App() {
         <MapCanvas
           cities={cities}
           edges={edges}
-          stops={stops}
-          route={route}
+          stops={routeStops}
+          highlight={cityFilter}
+          route={result?.route ?? null}
           onPickCity={pickCity}
         />
         <MapLegend />
       </>
     ),
     plan: (
-      <RoutePlanner
+      <TourPlanner
         cities={cities}
-        stops={stops}
-        route={route}
+        orders={game.orders}
+        vehicles={game.vehicles}
+        vehicleId={vehicle?.id ?? ""}
+        mode={mode}
         optimization={optimization}
-        vehicle={vehicle}
-        onRemoveStop={removeStop}
-        onMoveStop={moveStop}
-        onClearStops={() => setStops([])}
-        onOptimization={setOptimization}
+        result={result}
         onVehicle={setVehicleId}
+        onMode={setMode}
+        onOptimization={setOptimization}
+        onRemoveOrder={removeOrder}
+        onMoveStop={moveStop}
+        onClear={() => setStops([])}
+        onAutoPlan={runAutoPlan}
+        onOptimizeOrder={optimizeOrder}
       />
     ),
     fleet: <FleetView vehicles={game.vehicles} cities={cities} />,
@@ -212,8 +296,11 @@ export function App() {
       <OrderBoard
         orders={game.orders}
         cities={cities}
-        onPlan={planOrder}
+        chosen={result?.order_ids ?? []}
+        cityFilter={cityFilter}
+        onAdd={addOrder}
         onRefresh={refresh}
+        onClearCityFilter={() => setCityFilter(null)}
       />
     ),
   };
@@ -251,7 +338,7 @@ export function App() {
       <Desktop
         views={views}
         companyBar={companyBar}
-        note={`v${APP_VERSION} · ${cities.length} Städte · ${edges.length} Strecken · ${game.orders.length} Aufträge`}
+        note={`v${APP_VERSION} · ${game.orders.length} Aufträge · ${result?.order_ids.length ?? 0} in Tour`}
       />
       {sw.updateAvailable && (
         <UpdateBar onApply={sw.applyUpdate} onDismiss={sw.dismiss} />

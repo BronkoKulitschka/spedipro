@@ -109,7 +109,7 @@ export function refreshOrders(state: GameState, cities: City[]): Order[] {
   const home = cities.find((c) => c.id === state.company.home_id);
   if (!home) return [];
   return generateOrders(cities, {
-    count: 24,
+    count: 30,
     seed: state.seed + state.day * 7919,
     home,
     radius_km: 250 + state.company.reputation * 80,
