@@ -6,7 +6,6 @@
  * in einer Tourenplanung die Seite neu laden.
  */
 import { useEffect, useState } from "preact/hooks";
-import { Button } from "./win95";
 
 /** Wird von Vite aus der package.json gesetzt. */
 declare const __APP_VERSION__: string;
@@ -66,20 +65,4 @@ export function useServiceWorker() {
     applyUpdate: () => waiting?.postMessage("uebernehmen"),
     dismiss: () => setWaiting(null),
   };
-}
-
-export function UpdateBar({
-  onApply,
-  onDismiss,
-}: {
-  onApply: () => void;
-  onDismiss: () => void;
-}) {
-  return (
-    <div class="update-bar raised">
-      <span class="spread">Eine neue Fassung von SpediPro 95 ist bereit.</span>
-      <Button onClick={onApply}>Jetzt laden</Button>
-      <Button onClick={onDismiss}>Später</Button>
-    </div>
-  );
 }

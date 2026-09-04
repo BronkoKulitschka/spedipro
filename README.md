@@ -2,8 +2,12 @@
 
 Speditions-Manager-Simulator als PWA. Läuft auf Smartphone, Tablet und Desktop.
 
-Karte, Routing, Kostenberechnung, Fuhrpark, Auftragsbörse, Sammelladung mit
-drei Planungsstufen, **Hauptmenü**.
+Die Oberfläche ist ein virtueller Rechner im Stil von **Windows 3.11**.
+Jedes Modul ist ein eigenes Programm mit eigenem Fenster und eigener
+Menüleiste. Der Programm-Manager ist die Schaltzentrale.
+
+Vorhanden: Karte, Routing, Kostenberechnung, Fuhrpark, Auftragsbörse,
+Sammelladung mit drei Planungsstufen.
 
 ## Loslegen
 
@@ -53,20 +57,18 @@ src/
     win95.tsx    Fenster, Schaltflächen, Rahmen, Kennzahlen
     MapCanvas.tsx     Karte auf Canvas
     TourPlanner.tsx   Tourenplanung mit Sammelladung
-    MainMenu.tsx      Hauptmenü
-    StaticMap.tsx     Unbewegliche Übersichtskarte
-    PixelText.tsx     Pixelschrift als Bauteil
-    pixelFont.ts      5×7-Bitmapschrift, selbst gezeichnet
+    Win311.tsx        Fenster, Menüleiste, Dialoge
+    ProgramManager.tsx  Schaltzentrale mit Programmsymbolen
     FleetView.tsx     Fuhrpark
     OrderBoard.tsx    Auftragsbörse
     serviceWorker.tsx  Anmeldung und Aktualisierungshinweis
   styles/
-    win95.css    Farben und Kantenprofile
+    win311.css   Farben und Kantenprofile
 public/
   sw.js          Service Worker
   manifest.webmanifest
   icons/         App-Symbole
-  assets/tiles/  Platzhalter-Symbole des Hauptmenüs (austauschbar)
+  assets/icons/  Programmsymbole, 32 × 32 (austauschbar)
   data/
     cities.json  289 Städte
     roads.json   958 Strecken
@@ -95,13 +97,26 @@ Die Automatik erreicht bewusst nicht das Optimum. Sie sucht keine eleganten
 Ketten und wartet nie auf ein besseres Angebot — die letzten zehn bis fünfzehn
 Prozent holt nur heraus, wer selbst plant.
 
+## Der virtuelle Rechner
+
+Der Programm-Manager läuft immer und lässt sich nicht schließen. Ein Symbol
+antippen wählt aus, erneutes Antippen startet das Programm — auf
+Berührungsgeräten ist ein echter Doppelklick unzuverlässig.
+
+Was Windows 3.11 von Windows 95 unterscheidet und hier umgesetzt ist:
+zentrierter Fenstertitel, Systemmenüfeld links, Verkleinern und Vergrößern
+als Pfeile rechts, keine Taskleiste — verkleinerte Programme werden zu
+Symbolen am unteren Rand.
+
+Unter 820 Pixel Breite füllt jedes Fenster den Bildschirm, und die
+Symbolzeile am unteren Rand dient zum Wechseln.
+
 ## Symbole austauschen
 
-Die Symbole im Hauptmenü sind Platzhalter. Sie liegen unter
-`public/assets/tiles/` und werden nur über den Dateinamen angesprochen.
-Eine neue Datei mit gleichem Namen und 96 × 64 Pixel ersetzt sie, ohne dass
-im Code etwas geändert werden muss. `update.sh` bewahrt eigene Dateien in
-diesem Ordner bei einem Update.
+Die Programmsymbole sind Platzhalter unter `public/assets/icons/`, jeweils
+32 × 32 Pixel im PNG-Format mit Transparenz. Eine neue Datei mit gleichem
+Namen ersetzt sie, ohne dass im Code etwas geändert werden muss.
+`update.sh` bewahrt eigene Dateien unter `public/assets/` bei einem Update.
 
 ## Zwei Regeln
 

@@ -25,18 +25,22 @@ interface View {
   offsetY: number;
 }
 
+/**
+ * 16-Farben-VGA-Palette. Windows 3.11 lief im Standardtreiber mit genau
+ * diesen Farben - deshalb wirkt jede zusätzliche Zwischenfarbe falsch.
+ */
 const COLOR = {
-  sea: "#3060a8",
-  road: "#b8b8a0",
-  motorway: "#e8e0a8",
-  ferry: "#5a8ac0",
-  city: "#c04040",
-  cityBig: "#e05050",
-  route: "#2040d0",
-  routeCasing: "#ffffff",
-  start: "#008000",
-  stop: "#c08000",
-  end: "#c00000",
+  sea: "#0000a8",
+  road: "#c0c0c0",
+  motorway: "#ffff00",
+  ferry: "#00a8a8",
+  city: "#a80000",
+  cityBig: "#ff5555",
+  route: "#5555ff",
+  routeCasing: "#000000",
+  start: "#00a800",
+  stop: "#a8a800",
+  end: "#a80000",
   label: "#000000",
   labelHalo: "#ffffff",
 };

@@ -14,7 +14,7 @@ import {
   truckModel,
 } from "../core/fleet";
 import { fmtEur, fmtKm } from "../core/data";
-import { KeyValues, Panel, type ValueTone } from "./win95";
+import { KeyValues, Panel, type ValueTone } from "./Win311";
 
 interface Props {
   vehicles: Vehicle[];

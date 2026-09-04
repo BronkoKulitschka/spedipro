@@ -1,11 +1,13 @@
 /**
- * SpediPro 95
+ * SPEDIPRO 95 — der virtuelle Rechner.
  *
- * Ausbaustufe 1: Karte, Routing, Kostenberechnung.
- * Ausbaustufe 2: Fuhrpark, Auftragsbörse.
+ * Die Anwendung stellt eine Arbeitsfläche im Stil von Windows 3.11 dar.
+ * Der Programm-Manager läuft immer; jedes Modul ist ein eigenes Programm
+ * in einem eigenen Fenster.
  *
- * Grundregel des Projekts: Nichts ist Dekoration. Was noch nicht funktioniert,
- * erscheint auch nicht.
+ * Grundregel des Projekts: Nichts ist Dekoration. Jede angezeigte Zahl wird
+ * aus dem Spielzustand berechnet, und was nicht funktioniert, lässt sich
+ * nicht starten.
  */
 import { useEffect, useMemo, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
@@ -23,54 +25,43 @@ import {
   type TourStop,
 } from "./core/tour";
 import type { Order } from "./core/orders";
-import { Button, Clock, Window, type WindowState } from "./ui/win95";
+import {
+  Button,
+  Dialog,
+  Win311Window,
+  type Menu,
+  type WindowState,
+} from "./ui/Win311";
+import {
+  PROGRAMS,
+  ProgramManager,
+  programById,
+  type ProgramId,
+} from "./ui/ProgramManager";
 import { MapCanvas } from "./ui/MapCanvas";
 import { TourPlanner, type PlanMode } from "./ui/TourPlanner";
 import { FleetView } from "./ui/FleetView";
 import { OrderBoard } from "./ui/OrderBoard";
-import { MainMenu, READY, type MenuTarget } from "./ui/MainMenu";
-import { APP_VERSION, UpdateBar, useServiceWorker } from "./ui/serviceWorker";
+import { APP_VERSION, useServiceWorker } from "./ui/serviceWorker";
 
-const MOBILE_BREAKPOINT = 860;
+/** Unter dieser Breite füllt jedes Fenster den Bildschirm. */
+const NARROW = 820;
 
-type ViewId = "menu" | "map" | "plan" | "fleet" | "orders";
+/** Der Programm-Manager hat eine feste Kennung und lässt sich nicht schließen. */
+const PM = "progman";
 
-const VIEW_TITLE: Record<ViewId, string> = {
-  menu: "Hauptmenü",
-  map: "Europa-Karte",
-  plan: "Tourenplanung",
-  fleet: "Fuhrpark",
-  orders: "Aufträge",
-};
+interface OpenWindow extends WindowState {
+  program: ProgramId | null;
+}
 
-const NAV_LABEL: Record<ViewId, string> = {
-  menu: "Start",
-  map: "Karte",
-  plan: "Touren",
-  fleet: "Fuhrpark",
-  orders: "Aufträge",
-};
-
-const NAV_GLYPH: Record<ViewId, string> = {
-  menu: "⌂",
-  map: "◍",
-  plan: "▤",
-  fleet: "▦",
-  orders: "▣",
-};
-
-const VIEW_ORDER: ViewId[] = ["menu", "map", "plan", "orders", "fleet"];
-
-function useIsMobile() {
-  const [mobile, setMobile] = useState(
-    () => window.innerWidth < MOBILE_BREAKPOINT,
-  );
+function useNarrow() {
+  const [narrow, setNarrow] = useState(() => window.innerWidth < NARROW);
   useEffect(() => {
-    const onResize = () => setMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    const onResize = () => setNarrow(window.innerWidth < NARROW);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  return mobile;
+  return narrow;
 }
 
 export function App() {
@@ -84,22 +75,92 @@ export function App() {
   const [vehicleId, setVehicleId] = useState<string>("");
   const [mode, setMode] = useState<PlanMode>("assisted");
   const [cityFilter, setCityFilter] = useState<string | null>(null);
+  const [dialog, setDialog] = useState<{ title: string; text: string } | null>(
+    null,
+  );
 
-  const isMobile = useIsMobile();
-  const [tab, setTab] = useState<ViewId>("menu");
-  const [pending, setPending] = useState<string | null>(null);
-  const [openSignal, setOpenSignal] = useState<{ id: string; n: number }>({
-    id: "",
-    n: 0,
-  });
-  const sw = useServiceWorker();
+  const narrow = useNarrow();
+
+  /* ── Fensterverwaltung ────────────────────────────────────────── */
+
+  const [windows, setWindows] = useState<OpenWindow[]>(() => [
+    {
+      id: PM,
+      program: null,
+      title: "Programm-Manager",
+      x: 24,
+      y: 20,
+      w: Math.min(560, Math.max(300, window.innerWidth - 60)),
+      h: Math.min(520, Math.max(280, window.innerHeight - 120)),
+      z: 1,
+      minimized: false,
+      maximized: false,
+    },
+  ]);
+  const [activeId, setActiveId] = useState<string>(PM);
+
+  const patch = (id: string, p: Partial<OpenWindow>) =>
+    setWindows((prev) => prev.map((w) => (w.id === id ? { ...w, ...p } : w)));
+
+  const focus = (id: string) => {
+    setActiveId(id);
+    setWindows((prev) => {
+      const top = Math.max(...prev.map((w) => w.z));
+      return prev.map((w) => (w.id === id ? { ...w, z: top + 1 } : w));
+    });
+  };
+
+  const closeWindow = (id: string) => {
+    if (id === PM) return;
+    setWindows((prev) => prev.filter((w) => w.id !== id));
+    setActiveId(PM);
+  };
+
+  /** Programm starten oder, falls es schon läuft, nach vorn holen. */
+  const launch = (id: ProgramId) => {
+    const program = programById(id);
+    if (!program.ready) {
+      setDialog({
+        title: "Programm nicht gefunden",
+        text: `${program.file} ist auf diesem Rechner noch nicht installiert.`,
+      });
+      return;
+    }
+
+    const existing = windows.find((w) => w.program === id);
+    if (existing) {
+      if (existing.minimized) patch(existing.id, { minimized: false });
+      focus(existing.id);
+      return;
+    }
+
+    const n = windows.length;
+    const top = Math.max(...windows.map((w) => w.z));
+    setWindows((prev) => [
+      ...prev,
+      {
+        id: `win-${id}`,
+        program: id,
+        title: program.title,
+        x: 60 + (n % 5) * 26,
+        y: 44 + (n % 5) * 24,
+        w: Math.min(620, Math.max(320, window.innerWidth - 120)),
+        h: Math.min(560, Math.max(300, window.innerHeight - 140)),
+        z: top + 1,
+        minimized: false,
+        maximized: false,
+      },
+    ]);
+    setActiveId(`win-${id}`);
+  };
+
+  /* ── Spieldaten ───────────────────────────────────────────────── */
 
   useEffect(() => {
     loadGameData(import.meta.env.BASE_URL)
       .then((d) => {
         setCities(d.cities);
         setEdges(d.edges);
-        // Heimatstandort: erste geeignete Stadt. Frei wählbar ab Stufe 3.
         const home =
           d.cities.find((c) => c.starting_city_suitable) ?? d.cities[0];
         setGame(
@@ -119,10 +180,11 @@ export function App() {
     [cities, edges],
   );
 
-  /** Aktuell gewähltes Fahrzeug, mit Rückfall auf das erste im Fuhrpark. */
   const vehicle = useMemo(() => {
     if (!game) return null;
-    return game.vehicles.find((v) => v.id === vehicleId) ?? game.vehicles[0] ?? null;
+    return (
+      game.vehicles.find((v) => v.id === vehicleId) ?? game.vehicles[0] ?? null
+    );
   }, [game, vehicleId]);
 
   const capacity = useMemo(
@@ -140,7 +202,7 @@ export function App() {
     [cities],
   );
 
-  /** Das gesamte Tourergebnis - einzige Quelle für alle angezeigten Zahlen. */
+  /** Einzige Quelle für alle Tourzahlen. */
   const result = useMemo(() => {
     if (!graph || !game || !capacity || !vehicleClass) return null;
     if (stops.length === 0) return null;
@@ -154,8 +216,7 @@ export function App() {
     );
   }, [graph, game, stops, capacity, vehicleClass, optimization]);
 
-  /** Für die Karte: die Städte der Tour in Reihenfolge. */
-  const routeStops = result?.route_stop_ids ?? [];
+  /* ── Tourbearbeitung ──────────────────────────────────────────── */
 
   const addOrder = (o: Order) => {
     if (!game || !capacity) return;
@@ -171,6 +232,7 @@ export function App() {
             game.company.home_id,
           ),
     );
+    launch("touren");
   };
 
   const removeOrder = (orderId: string) =>
@@ -187,16 +249,11 @@ export function App() {
 
   const runAutoPlan = () => {
     if (!graph || !game || !capacity || !vehicleClass) return;
-    const plan = autoPlan(
-      graph,
-      game.orders,
-      cityMap,
-      capacity,
-      vehicleClass,
-      optimization,
-      { startCityId: game.company.home_id },
+    setStops(
+      autoPlan(graph, game.orders, cityMap, capacity, vehicleClass, optimization, {
+        startCityId: game.company.home_id,
+      }).stops,
     );
-    setStops(plan.stops);
   };
 
   const optimizeOrder = () => {
@@ -212,334 +269,290 @@ export function App() {
     );
   };
 
-  /**
-   * Hauptmenü: fertige Module öffnen, offene melden sich.
-   * Auf dem Desktop wird ein Fenster geöffnet, auf dem Handy umgeschaltet.
-   */
-  const openMenu = (target: MenuTarget) => {
-    if (!READY.includes(target)) {
-      setPending(target);
-      return;
-    }
-    setPending(null);
-    if (isMobile) setTab(target as ViewId);
-    else setOpenSignal({ id: target, n: openSignal.n + 1 });
-  };
-
-  /** Karte antippen filtert die Auftragsliste auf diese Stadt. */
   const pickCity = (c: City) => {
     setCityFilter((prev) => (prev === c.id ? null : c.id));
-    if (isMobile) setTab("orders");
+    launch("auftraege");
   };
 
-  const refresh = () => {
+  const nextDay = () => {
     if (!game || !cities) return;
     const next: GameState = { ...game, day: game.day + 1 };
     setGame({ ...next, orders: refreshOrders(next, cities) });
     setStops([]);
   };
 
-  if (error) {
-    return (
-      <Shell title="SPEDIPRO 95">
-        <div class="notice error">{error}</div>
-      </Shell>
-    );
-  }
+  const sw = useServiceWorker();
 
-  if (!cities || !graph || !game) {
-    return (
-      <Shell title="SPEDIPRO 95">
-        <div class="notice">Spieldaten werden geladen …</div>
-      </Shell>
-    );
-  }
+  /* ── Ladezustand ──────────────────────────────────────────────── */
 
-  const views: Record<ViewId, ComponentChildren> = {
-    menu: (
-      <MainMenu
-        game={game}
-        cities={cities}
-        edges={edges}
-        tour={result}
-        onOpen={openMenu}
-      />
-    ),
-    map: (
-      <>
-        <MapCanvas
-          cities={cities}
-          edges={edges}
-          stops={routeStops}
-          highlight={cityFilter}
-          route={result?.route ?? null}
-          onPickCity={pickCity}
-        />
-        <MapLegend />
-      </>
-    ),
-    plan: (
-      <TourPlanner
-        cities={cities}
-        orders={game.orders}
-        vehicles={game.vehicles}
-        vehicleId={vehicle?.id ?? ""}
-        mode={mode}
-        optimization={optimization}
-        result={result}
-        onVehicle={setVehicleId}
-        onMode={setMode}
-        onOptimization={setOptimization}
-        onRemoveOrder={removeOrder}
-        onMoveStop={moveStop}
-        onClear={() => setStops([])}
-        onAutoPlan={runAutoPlan}
-        onOptimizeOrder={optimizeOrder}
-      />
-    ),
-    fleet: <FleetView vehicles={game.vehicles} cities={cities} />,
-    orders: (
-      <OrderBoard
-        orders={game.orders}
-        cities={cities}
-        chosen={result?.order_ids ?? []}
-        cityFilter={cityFilter}
-        onAdd={addOrder}
-        onRefresh={refresh}
-        onClearCityFilter={() => setCityFilter(null)}
-      />
-    ),
-  };
-
-  if (isMobile) {
+  if (error || !cities || !graph || !game) {
     return (
-      <div class="mobile-shell">
-        {tab !== "menu" && (
-          <div class="mobile-title">
-            <span class="spread">{VIEW_TITLE[tab]}</span>
+      <div class="desktop">
+        <div
+          class="window"
+          style="left:50%;top:40%;transform:translate(-50%,-50%);width:min(340px,90%);height:auto;min-height:0"
+        >
+          <div class="titlebar">
+            <span class="titlebar-text">Spedipro 95</span>
           </div>
-        )}
-        <div class={`mobile-body ${tab === "menu" ? "flush" : ""}`}>
-          {views[tab]}
+          <div class="window-body">
+            <div class={`notice ${error ? "error" : ""}`}>
+              {error ?? "Spieldaten werden geladen …"}
+            </div>
+          </div>
         </div>
-        {pending && (
-          <PendingNotice target={pending} onClose={() => setPending(null)} />
-        )}
-        <nav class="bottom-nav">
-          {VIEW_ORDER.map((id) => (
-            <Button
-              key={id}
-              class="nav-btn"
-              pressed={tab === id}
-              onClick={() => setTab(id)}
-            >
-              <span class="nav-glyph">{NAV_GLYPH[id]}</span>
-              <span>{NAV_LABEL[id]}</span>
-            </Button>
-          ))}
-        </nav>
-        {sw.updateAvailable && (
-          <UpdateBar onApply={sw.applyUpdate} onDismiss={sw.dismiss} />
-        )}
       </div>
     );
   }
 
-  return (
-    <>
-      <Desktop
-        views={views}
-        note={`v${APP_VERSION} · ${game.orders.length} Aufträge · ${result?.order_ids.length ?? 0} in Tour`}
-        openSignal={openSignal}
-      />
-      {pending && (
-        <PendingNotice target={pending} onClose={() => setPending(null)} />
-      )}
-      {sw.updateAvailable && (
-        <UpdateBar onApply={sw.applyUpdate} onDismiss={sw.dismiss} />
-      )}
-    </>
-  );
-}
+  const home = cities.find((c) => c.id === game.company.home_id);
 
-function Shell({
-  title,
-  children,
-}: {
-  title: string;
-  children: ComponentChildren;
-}) {
-  return (
-    <div class="mobile-shell">
-      <div class="mobile-title">{title}</div>
-      <div class="mobile-body">{children}</div>
-    </div>
-  );
-}
+  /* ── Inhalte und Menüs der Programme ──────────────────────────── */
 
-const PENDING_LABEL: Record<string, string> = {
-  personal: "Personal",
-  workshop: "Werkstatt",
-  ledger: "Kassenbuch",
-  customers: "Kunden",
-  stats: "Statistik",
-  messages: "Nachrichten",
-  settings: "Einstellungen",
-};
-
-/** Meldung für Module, die es noch nicht gibt. */
-function PendingNotice({
-  target,
-  onClose,
-}: {
-  target: string;
-  onClose: () => void;
-}) {
-  return (
-    <div class="update-bar raised" role="status">
-      <span class="spread">
-        {PENDING_LABEL[target] ?? target} ist noch nicht gebaut.
-      </span>
-      <Button onClick={onClose}>Schließen</Button>
-    </div>
-  );
-}
-
-function MapLegend() {
-  return (
-    <div class="map-legend raised">
-      <span>
-        <i class="swatch" style="background:#008000" /> Start
-      </span>
-      <span>
-        <i class="swatch" style="background:#c08000" /> Zwischenstopp
-      </span>
-      <span>
-        <i class="swatch" style="background:#c00000" /> Ziel
-      </span>
-      <span>
-        <i class="swatch line-swatch" style="background:#2040d0" /> Route
-      </span>
-      <span>
-        <i class="swatch line-swatch" style="background:#e8e0a8" /> Autobahn
-      </span>
-      <span>
-        <i class="swatch line-swatch" style="background:#b8b8a0" /> Landstraße
-      </span>
-      <span>
-        <i class="swatch line-swatch" style="background:#5a8ac0" /> Fähre
-      </span>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------ Fensterverwaltung */
-
-/**
- * Desktop-Ansicht.
- *
- * Das Hauptmenü liegt als Grundebene fest im Hintergrund - es ist selbst
- * schon ein Fenster im 95er-Stil. Die Modulfenster öffnen sich darüber und
- * lassen sich verschieben, in der Größe ändern und minimieren.
- */
-function Desktop({
-  views,
-  note,
-  openSignal,
-}: {
-  views: Record<ViewId, ComponentChildren>;
-  note: string;
-  openSignal: { id: string; n: number };
-}) {
-  const [windows, setWindows] = useState<WindowState[]>(() => {
-    const w = window.innerWidth;
-    const h = window.innerHeight - 28;
-    const side = Math.min(420, Math.max(340, w * 0.3));
-    const make = (
-      id: ViewId,
-      x: number,
-      y: number,
-      width: number,
-      z: number,
-    ): WindowState => ({
-      id,
-      title: VIEW_TITLE[id],
-      x,
-      y,
-      w: width,
-      h: Math.max(320, h - y - 16),
-      z,
-      minimized: true,
-      maximized: false,
-    });
-    return [
-      make("map", Math.round(w * 0.3), 20, Math.max(460, w * 0.55), 1),
-      make("plan", Math.max(24, w - side - 24), 14, side, 2),
-      make("orders", Math.round(w * 0.24), 44, side, 3),
-      make("fleet", Math.round(w * 0.3), 70, side, 4),
-    ];
-  });
-  const [activeId, setActiveId] = useState<string>("");
-
-  const patch = (id: string, p: Partial<WindowState>) =>
-    setWindows((prev) => prev.map((w) => (w.id === id ? { ...w, ...p } : w)));
-
-  const focus = (id: string) => {
-    setActiveId(id);
-    setWindows((prev) => {
-      const top = Math.max(...prev.map((w) => w.z));
-      return prev.map((w) => (w.id === id ? { ...w, z: top + 1 } : w));
-    });
+  const content = (id: ProgramId | null): ComponentChildren => {
+    switch (id) {
+      case null:
+        return (
+          <ProgramManager game={game} home={home} onLaunch={launch} />
+        );
+      case "karte":
+        return (
+          <>
+            <MapCanvas
+              cities={cities}
+              edges={edges}
+              stops={result?.route_stop_ids ?? []}
+              highlight={cityFilter}
+              route={result?.route ?? null}
+              onPickCity={pickCity}
+            />
+            <div class="map-legend groove">
+              <span>
+                <i class="swatch" style="background:#00a800" /> Start
+              </span>
+              <span>
+                <i class="swatch" style="background:#a8a800" /> Zwischenstopp
+              </span>
+              <span>
+                <i class="swatch" style="background:#a80000" /> Ziel
+              </span>
+              <span>
+                <i class="swatch line-swatch" style="background:#5555ff" /> Route
+              </span>
+              <span>
+                <i class="swatch line-swatch" style="background:#ffff00" />{" "}
+                Autobahn
+              </span>
+              <span>
+                <i class="swatch line-swatch" style="background:#c0c0c0" />{" "}
+                Landstraße
+              </span>
+              <span>
+                <i class="swatch line-swatch" style="background:#00a8a8" /> Fähre
+              </span>
+            </div>
+          </>
+        );
+      case "touren":
+        return (
+          <TourPlanner
+            cities={cities}
+            orders={game.orders}
+            vehicles={game.vehicles}
+            vehicleId={vehicle?.id ?? ""}
+            mode={mode}
+            optimization={optimization}
+            result={result}
+            onVehicle={setVehicleId}
+            onMode={setMode}
+            onOptimization={setOptimization}
+            onRemoveOrder={removeOrder}
+            onMoveStop={moveStop}
+            onClear={() => setStops([])}
+            onAutoPlan={runAutoPlan}
+            onOptimizeOrder={optimizeOrder}
+          />
+        );
+      case "fuhrpark":
+        return <FleetView vehicles={game.vehicles} cities={cities} />;
+      case "auftraege":
+        return (
+          <OrderBoard
+            orders={game.orders}
+            cities={cities}
+            chosen={result?.order_ids ?? []}
+            cityFilter={cityFilter}
+            onAdd={addOrder}
+            onRefresh={nextDay}
+            onClearCityFilter={() => setCityFilter(null)}
+          />
+        );
+      default:
+        return <div class="notice">Dieses Programm ist nicht installiert.</div>;
+    }
   };
 
-  // Öffnen aus dem Hauptmenü heraus
-  useEffect(() => {
-    if (!openSignal.id) return;
-    patch(openSignal.id, { minimized: false });
-    focus(openSignal.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openSignal.n]);
+  const menusFor = (w: OpenWindow): Menu[] => {
+    const hilfe: Menu = {
+      label: "Hilfe",
+      options: [
+        {
+          label: "Info …",
+          onSelect: () =>
+            setDialog({
+              title: "Info",
+              text: `Spedipro 95, Fassung ${APP_VERSION}. ${cities.length} Städte, ${edges.length} Strecken.`,
+            }),
+        },
+      ],
+    };
+
+    if (w.program === null) {
+      return [
+        {
+          label: "Datei",
+          options: [
+            ...PROGRAMS.filter((p) => p.ready).map((p) => ({
+              label: `${p.title} starten`,
+              onSelect: () => launch(p.id),
+            })),
+            {
+              label: "Nächster Spieltag",
+              shortcut: "F5",
+              separatorBefore: true,
+              onSelect: nextDay,
+            },
+          ],
+        },
+        {
+          label: "Fenster",
+          options: windows
+            .filter((x) => x.id !== PM)
+            .map((x) => ({
+              label: x.title,
+              onSelect: () => {
+                patch(x.id, { minimized: false });
+                focus(x.id);
+              },
+            })),
+        },
+        hilfe,
+      ];
+    }
+
+    if (w.program === "touren") {
+      return [
+        {
+          label: "Tour",
+          options: [
+            { label: "Automatisch planen", onSelect: runAutoPlan },
+            { label: "Reihenfolge optimieren", onSelect: optimizeOrder },
+            {
+              label: "Tour leeren",
+              separatorBefore: true,
+              onSelect: () => setStops([]),
+            },
+          ],
+        },
+        {
+          label: "Datei",
+          options: [{ label: "Schließen", onSelect: () => closeWindow(w.id) }],
+        },
+        hilfe,
+      ];
+    }
+
+    if (w.program === "auftraege") {
+      return [
+        {
+          label: "Datei",
+          options: [
+            { label: "Nächster Spieltag", shortcut: "F5", onSelect: nextDay },
+            {
+              label: "Schließen",
+              separatorBefore: true,
+              onSelect: () => closeWindow(w.id),
+            },
+          ],
+        },
+        hilfe,
+      ];
+    }
+
+    return [
+      {
+        label: "Datei",
+        options: [{ label: "Schließen", onSelect: () => closeWindow(w.id) }],
+      },
+      hilfe,
+    ];
+  };
+
+  const minimized = windows.filter((w) => w.minimized);
 
   return (
-    <>
-      <div class="desktop-base">{views.menu}</div>
-
+    <div class="desktop">
       {windows.map((w) => (
-        <Window
+        <Win311Window
           key={w.id}
           state={w}
           active={activeId === w.id}
+          fullscreen={narrow}
+          menus={menusFor(w)}
           onChange={(p) => patch(w.id, p)}
           onFocus={() => focus(w.id)}
-          onClose={() => patch(w.id, { minimized: true })}
+          onClose={w.id === PM ? undefined : () => closeWindow(w.id)}
         >
-          {views[w.id as ViewId]}
-        </Window>
+          {content(w.program)}
+        </Win311Window>
       ))}
 
-      <div class="taskbar raised">
-        {windows.map((w) => (
-          <Button
-            key={w.id}
-            class="task-item"
-            pressed={activeId === w.id && !w.minimized}
-            onClick={() => {
-              if (w.minimized) {
-                patch(w.id, { minimized: false });
-                focus(w.id);
-              } else if (activeId === w.id) {
-                patch(w.id, { minimized: true });
-              } else {
-                focus(w.id);
-              }
-            }}
-          >
-            {w.title}
-          </Button>
-        ))}
-        <span class="stage-note spread">{note}</span>
-        <Clock />
-      </div>
-    </>
+      {/* Auf schmalen Geräten liegen alle Fenster übereinander. Die
+          Symbolzeile ist dort der einzige Weg zurück. */}
+      {(minimized.length > 0 || narrow) && (
+        <div class="icon-tray">
+          {(narrow ? windows : minimized).map((w) => {
+            const icon = w.program ? programById(w.program).icon : "gruppe";
+            const isFront = activeId === w.id && !w.minimized;
+            if (narrow && isFront) return null;
+            return (
+              <button
+                key={w.id}
+                type="button"
+                class="tray-icon"
+                onClick={() => {
+                  patch(w.id, { minimized: false });
+                  focus(w.id);
+                }}
+              >
+                <img
+                  src={`${import.meta.env.BASE_URL}assets/icons/${icon}.png`}
+                  alt=""
+                  width={32}
+                  height={32}
+                />
+                <span class="tray-label">{w.title}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {dialog && (
+        <Dialog
+          title={dialog.title}
+          message={dialog.text}
+          onClose={() => setDialog(null)}
+        />
+      )}
+
+      {sw.updateAvailable && (
+        <div class="update-bar raised">
+          <span class="spread">Eine neue Fassung ist bereit.</span>
+          <Button onClick={sw.applyUpdate}>Jetzt laden</Button>
+          <Button onClick={sw.dismiss}>Später</Button>
+        </div>
+      )}
+    </div>
   );
 }

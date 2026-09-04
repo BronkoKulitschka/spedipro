@@ -1,0 +1,1007 @@
+/*
+ * SPEDIPRO 95 — Oberfläche im Stil von Windows 3.11
+ *
+ * Unterschiede zu Windows 95, die den Charakter ausmachen:
+ *   • Titeltext ist zentriert, nicht linksbündig
+ *   • links das Systemmenüfeld, rechts Verkleinern und Vergrößern als Pfeile
+ *   • keine Taskleiste — verkleinerte Programme werden zu Symbolen am
+ *     unteren Rand der Arbeitsfläche
+ *   • Menüleiste unter dem Titel gehört zum Programm, nicht zum System
+ *   • kräftigere, doppelte Kantenprofile
+ */
+
+:root {
+  --face: #c0c0c0;
+  --light: #ffffff;
+  --shadow: #808080;
+  --dark: #000000;
+  --title: #000080;
+  --title-inactive: #808080;
+  --title-text: #ffffff;
+  --desktop: #008080;
+  --field: #ffffff;
+  --highlight: #000080;
+
+  --text: #000000;
+  --text-accent: #000080;
+  --text-dim: #606060;
+  --disabled: #808080;
+
+  --good: #008000;
+  --warn: #808000;
+  --bad: #800000;
+  --special: #800080;
+
+  --sea: #0000a8;
+  --land: #008000;
+  --road: #c0c0c0;
+  --motorway: #ffff00;
+
+  --pixel-ink: #000080;
+
+  --ui: "MS Sans Serif", Tahoma, Geneva, Verdana, sans-serif;
+  --mono: "Courier New", Courier, monospace;
+
+  /* Höhe der Symbolzeile am unteren Rand */
+  --tray: 62px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--desktop);
+  color: var(--text);
+  font-family: var(--ui);
+  font-size: 13px;
+  line-height: 1.3;
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-font-smoothing: none;
+}
+
+img,
+canvas {
+  image-rendering: pixelated;
+}
+
+/* ── Kantenprofile ─────────────────────────────────────────────── */
+
+.raised {
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+}
+
+.sunken {
+  background: var(--field);
+  border: 2px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+}
+
+.groove {
+  border: 1px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+}
+
+/* ── Arbeitsfläche ─────────────────────────────────────────────── */
+
+.desktop {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--desktop);
+}
+
+/* Verkleinerte Programme liegen als Symbole unten */
+.icon-tray {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: var(--tray);
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
+  z-index: 50;
+}
+
+.tray-icon {
+  width: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 2px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--title-text);
+}
+
+.tray-icon img {
+  width: 32px;
+  height: 32px;
+}
+
+.tray-icon .tray-label {
+  padding: 1px 3px;
+  background: var(--desktop);
+  text-align: center;
+  word-break: break-word;
+}
+
+.tray-icon:focus-visible .tray-label {
+  outline: 1px dotted var(--light);
+}
+
+/* ── Fenster ───────────────────────────────────────────────────── */
+
+.window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;
+  min-height: 150px;
+  background: var(--face);
+  /* Windows 3.11 hatte einen breiten Rahmen zum Ziehen */
+  border: 1px solid var(--dark);
+  box-shadow:
+    inset 1px 1px 0 var(--light),
+    inset -1px -1px 0 var(--shadow),
+    inset 2px 2px 0 var(--face),
+    inset -2px -2px 0 var(--face),
+    inset 3px 3px 0 var(--light),
+    inset -3px -3px 0 var(--shadow);
+  padding: 4px;
+}
+
+.window.maximized {
+  inset: 0 0 var(--tray) 0 !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.window.fullscreen {
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.titlebar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 1px;
+  background: var(--title);
+  color: var(--title-text);
+  user-select: none;
+  touch-action: none;
+}
+
+.window.inactive .titlebar {
+  background: var(--title-inactive);
+}
+
+/* Titel steht mittig — das kennzeichnet Windows 3.11 */
+.titlebar-text {
+  flex: 1;
+  text-align: center;
+  font-weight: bold;
+  font-size: 13px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+
+.sysbox,
+.sysbtn {
+  flex: none;
+  width: 20px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: var(--face);
+  border: 1px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  cursor: pointer;
+  color: var(--dark);
+}
+
+.sysbox:active,
+.sysbtn:active {
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+/* Systemmenüfeld: waagerechter Balken im Kasten */
+.sysbox .bar {
+  width: 12px;
+  height: 3px;
+  background: var(--dark);
+  border-top: 1px solid var(--shadow);
+}
+
+.sysbtn .arrow {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+}
+
+.sysbtn .arrow.down {
+  border-top: 6px solid var(--dark);
+}
+
+.sysbtn .arrow.up {
+  border-bottom: 6px solid var(--dark);
+}
+
+.sysbtn .restore {
+  font-size: 11px;
+  line-height: 1;
+  font-weight: bold;
+}
+
+.titlebar-right {
+  display: flex;
+  gap: 1px;
+}
+
+/* ── Menüleiste des Programms ──────────────────────────────────── */
+
+.menubar {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 2px 2px 3px;
+  border-bottom: 1px solid var(--shadow);
+  box-shadow: 0 1px 0 var(--light);
+  margin-bottom: 3px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.menubar::-webkit-scrollbar {
+  display: none;
+}
+
+.menu-item {
+  padding: 2px 8px;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.menu-item:disabled {
+  color: var(--disabled);
+  cursor: default;
+}
+
+.menu-item:not(:disabled):hover,
+.menu-item.open {
+  background: var(--highlight);
+  color: var(--title-text);
+}
+
+.menu-item u {
+  text-decoration: underline;
+}
+
+/* Aufgeklapptes Menü */
+.menu-popup {
+  position: absolute;
+  z-index: 200;
+  min-width: 170px;
+  padding: 2px;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.menu-option {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  padding: 3px 10px;
+  background: none;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.menu-option:disabled {
+  color: var(--disabled);
+  cursor: default;
+}
+
+.menu-option:not(:disabled):hover {
+  background: var(--highlight);
+  color: var(--title-text);
+}
+
+.menu-option .shortcut {
+  margin-left: auto;
+  color: var(--text-dim);
+}
+
+.menu-option:hover .shortcut {
+  color: var(--title-text);
+}
+
+.menu-sep {
+  height: 2px;
+  margin: 3px 2px;
+  border-top: 1px solid var(--shadow);
+  border-bottom: 1px solid var(--light);
+}
+
+/* ── Fensterinhalt ─────────────────────────────────────────────── */
+
+.window-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 2px;
+  overflow: auto;
+}
+
+.window-body.plain {
+  background: var(--face);
+}
+
+.resize-grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 18px;
+  height: 18px;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+/* ── Programm-Manager ──────────────────────────────────────────── */
+
+.group-window {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--field);
+  border: 2px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+}
+
+.group-title {
+  flex: none;
+  padding: 2px 6px;
+  background: var(--title);
+  color: var(--title-text);
+  font-weight: bold;
+  text-align: center;
+  font-size: 12px;
+}
+
+.group-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  align-content: start;
+  gap: 6px;
+  padding: 10px 8px;
+  overflow: auto;
+}
+
+.prog-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 2px;
+  background: none;
+  border: 1px solid transparent;
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.prog-icon img {
+  width: 32px;
+  height: 32px;
+  flex: none;
+}
+
+.prog-icon .prog-label {
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.15;
+  padding: 1px 3px;
+  word-break: break-word;
+}
+
+.prog-icon:focus-visible,
+.prog-icon.selected {
+  border-color: var(--dark);
+  border-style: dotted;
+}
+
+.prog-icon.selected .prog-label {
+  background: var(--highlight);
+  color: var(--title-text);
+}
+
+.prog-icon.pending img,
+.prog-icon.pending .prog-label {
+  opacity: 0.45;
+}
+
+/* Kopfbereich des Programm-Managers: Firma, Kasse, Ruf */
+.pm-status {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 18px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  background: var(--face);
+  border: 1px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+}
+
+.pm-status .field-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pm-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.pm-star {
+  width: 10px;
+  height: 10px;
+  background: var(--good);
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+}
+
+.pm-star.off {
+  background: var(--shadow);
+}
+
+/* ── Schaltflächen ─────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 26px;
+  padding: 3px 12px;
+  font: inherit;
+  color: var(--text);
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn:active:not(:disabled),
+.btn.pressed {
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+  padding: 4px 11px 2px 13px;
+}
+
+.btn:focus-visible {
+  outline: 1px dotted var(--dark);
+  outline-offset: -5px;
+}
+
+.btn:disabled {
+  color: var(--disabled);
+  text-shadow: 1px 1px 0 var(--light);
+  cursor: default;
+}
+
+.btn.wide {
+  width: 100%;
+}
+
+.btn-sys {
+  min-height: 22px;
+  width: 22px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.btn-sys:active {
+  padding: 0;
+}
+
+/* ── Beschriftete Rahmen ───────────────────────────────────────── */
+
+.panel {
+  border: 1px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+  padding: 0;
+  margin: 0;
+  background: var(--face);
+}
+
+.panel > legend {
+  padding: 0 4px;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.panel-body {
+  padding: 7px 8px 8px;
+}
+
+/* ── Formularelemente ──────────────────────────────────────────── */
+
+.field {
+  width: 100%;
+  padding: 3px 5px;
+  font: inherit;
+  color: var(--text);
+  background: var(--field);
+  border: 2px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+}
+
+select.field {
+  min-height: 26px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.spread {
+  flex: 1;
+}
+
+/* ── Kennzahlen ────────────────────────────────────────────────── */
+
+.kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  margin: 0;
+}
+
+.kv dt {
+  color: var(--text);
+}
+
+.kv dd {
+  margin: 0;
+  text-align: right;
+  color: var(--text-accent);
+  white-space: nowrap;
+}
+
+.kv dd.good {
+  color: var(--good);
+}
+.kv dd.bad {
+  color: var(--bad);
+}
+.kv dd.warn {
+  color: var(--warn);
+}
+.kv dd.dim {
+  color: var(--text-dim);
+}
+
+hr.sep {
+  border: 0;
+  border-top: 1px solid var(--shadow);
+  border-bottom: 1px solid var(--light);
+  margin: 6px 0;
+}
+
+.good {
+  color: var(--good);
+}
+.bad {
+  color: var(--bad);
+}
+.warn {
+  color: var(--warn);
+}
+.dim {
+  color: var(--text-dim);
+}
+
+/* ── Listen ────────────────────────────────────────────────────── */
+
+.list {
+  background: var(--field);
+  border: 2px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+  overflow: auto;
+  min-height: 0;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.list-item + .list-item {
+  border-top: 1px solid #e0e0e0;
+}
+
+.list-item.selected {
+  background: var(--highlight);
+  color: var(--title-text);
+}
+
+.stop-index {
+  width: 16px;
+  text-align: right;
+  color: var(--text-dim);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border: 1px solid var(--dark);
+}
+
+.dot-start {
+  background: #00a800;
+}
+.dot-stop {
+  background: #a8a800;
+}
+.dot-end {
+  background: #a80000;
+}
+
+/* ── Karte ─────────────────────────────────────────────────────── */
+
+.map-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 180px;
+  border: 2px solid;
+  border-color: var(--shadow) var(--light) var(--light) var(--shadow);
+  overflow: hidden;
+  background: var(--sea);
+}
+
+.map-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.map-tools {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.map-tools .btn {
+  width: 28px;
+  min-height: 28px;
+  padding: 0;
+  font-weight: bold;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 14px;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-family: var(--mono);
+}
+
+.map-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.swatch {
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--dark);
+}
+
+.line-swatch {
+  width: 14px;
+  height: 3px;
+  border: 0;
+}
+
+/* ── Fuhrpark und Aufträge ─────────────────────────────────────── */
+
+.vehicle-row,
+.order-row {
+  padding: 6px 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.vehicle-row + .vehicle-row,
+.order-row + .order-row {
+  border-top: 1px solid var(--shadow);
+}
+
+.vehicle-row strong,
+.order-row strong {
+  color: var(--text-accent);
+  font-size: 13px;
+}
+
+.route-line {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin: 4px 0 6px;
+}
+
+.route-line .arrow {
+  color: var(--text-dim);
+}
+
+.order-plan {
+  width: 100%;
+  margin-top: 7px;
+}
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+/* ── Auslastungsbalken ─────────────────────────────────────────── */
+
+.loadbar {
+  margin-bottom: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.loadbar:last-child {
+  margin-bottom: 0;
+}
+
+.loadbar-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.loadbar-pct.ok {
+  color: var(--good);
+}
+.loadbar-pct.high {
+  color: var(--warn);
+}
+.loadbar-pct.over {
+  color: var(--bad);
+  font-weight: bold;
+}
+
+.loadbar-track {
+  height: 14px;
+  padding: 1px;
+}
+
+.loadbar-fill {
+  height: 100%;
+  background: var(--good);
+}
+
+.loadbar-fill.high {
+  background: #808000;
+}
+.loadbar-fill.over {
+  background: var(--bad);
+}
+
+.loadbar-detail {
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+
+/* ── Stoppliste ────────────────────────────────────────────────── */
+
+.stop-row {
+  padding: 4px 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.stop-row + .stop-row {
+  border-top: 1px solid #e0e0e0;
+}
+
+.stop-detail {
+  color: var(--text-dim);
+  font-size: 11px;
+  padding-left: 32px;
+}
+
+.problems {
+  margin: 0;
+  padding-left: 18px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--bad);
+}
+
+.problems li + li {
+  margin-top: 3px;
+}
+
+/* ── Meldungen ─────────────────────────────────────────────────── */
+
+.notice {
+  padding: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.notice.error {
+  color: var(--bad);
+}
+
+.stage-note {
+  padding: 5px 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+}
+
+/* Modaler Meldungsdialog */
+.dialog-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.dialog {
+  width: min(340px, 100%);
+  padding: 4px;
+  background: var(--face);
+  border: 1px solid var(--dark);
+  box-shadow:
+    inset 1px 1px 0 var(--light),
+    inset -1px -1px 0 var(--shadow),
+    inset 2px 2px 0 var(--face),
+    inset -2px -2px 0 var(--face),
+    inset 3px 3px 0 var(--light),
+    inset -3px -3px 0 var(--shadow),
+    3px 3px 0 rgba(0, 0, 0, 0.4);
+}
+
+.dialog-body {
+  display: flex;
+  gap: 12px;
+  padding: 14px 12px;
+  font-size: 13px;
+}
+
+.dialog-body .sign {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--field);
+  border: 2px solid var(--dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 20px;
+  color: var(--title);
+}
+
+.dialog-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.dialog-buttons .btn {
+  min-width: 82px;
+}
+
+/* Hinweis auf eine neue Fassung */
+.update-bar {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: calc(var(--tray) + 8px);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
