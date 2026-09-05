@@ -1,18 +1,18 @@
 /**
  * SPEDIPRO 95 — der virtuelle Rechner.
  *
- * Die Anwendung stellt eine Arbeitsfläche im Stil von Windows 3.11 dar.
- * Der Programm-Manager läuft immer; jedes Modul ist ein eigenes Programm
- * in einem eigenen Fenster.
+ * Die Anwendung stellt einen Arbeitsplatz im Stil von Windows 98 dar:
+ * Symbole auf der Arbeitsfläche, Startleiste mit Startmenü und Uhr, und
+ * für jedes Modul ein eigenes Programmfenster mit eigener Menüleiste.
  *
  * Grundregel des Projekts: Nichts ist Dekoration. Jede angezeigte Zahl wird
- * aus dem Spielzustand berechnet, und was nicht funktioniert, lässt sich
+ * aus dem Spielzustand berechnet, und was nicht installiert ist, lässt sich
  * nicht starten.
  */
 import { useEffect, useMemo, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import type { City, Edge, Optimization } from "./core/types";
-import { loadGameData } from "./core/data";
+import { fmtEur, loadGameData } from "./core/data";
 import { buildGraph } from "./core/routing";
 import { vehicleById } from "./core/economy";
 import { createGame, refreshOrders, type GameState } from "./core/state";
@@ -28,16 +28,13 @@ import type { Order } from "./core/orders";
 import {
   Button,
   Dialog,
-  Win311Window,
+  Win98Window,
   type Menu,
   type WindowState,
-} from "./ui/Win311";
-import {
-  PROGRAMS,
-  ProgramManager,
-  programById,
-  type ProgramId,
-} from "./ui/ProgramManager";
+} from "./ui/Win98";
+import { Icon } from "./ui/Icon";
+import { Taskbar } from "./ui/Taskbar";
+import { PROGRAMS, programById, type ProgramId } from "./ui/programs";
 import { MapCanvas } from "./ui/MapCanvas";
 import { TourPlanner, type PlanMode } from "./ui/TourPlanner";
 import { FleetView } from "./ui/FleetView";
@@ -47,11 +44,8 @@ import { APP_VERSION, useServiceWorker } from "./ui/serviceWorker";
 /** Unter dieser Breite füllt jedes Fenster den Bildschirm. */
 const NARROW = 820;
 
-/** Der Programm-Manager hat eine feste Kennung und lässt sich nicht schließen. */
-const PM = "progman";
-
 interface OpenWindow extends WindowState {
-  program: ProgramId | null;
+  program: ProgramId;
 }
 
 function useNarrow() {
@@ -78,26 +72,14 @@ export function App() {
   const [dialog, setDialog] = useState<{ title: string; text: string } | null>(
     null,
   );
+  const [selectedIcon, setSelectedIcon] = useState<ProgramId | null>(null);
 
   const narrow = useNarrow();
 
   /* ── Fensterverwaltung ────────────────────────────────────────── */
 
-  const [windows, setWindows] = useState<OpenWindow[]>(() => [
-    {
-      id: PM,
-      program: null,
-      title: "Programm-Manager",
-      x: 24,
-      y: 20,
-      w: Math.min(560, Math.max(300, window.innerWidth - 60)),
-      h: Math.min(520, Math.max(280, window.innerHeight - 120)),
-      z: 1,
-      minimized: false,
-      maximized: false,
-    },
-  ]);
-  const [activeId, setActiveId] = useState<string>(PM);
+  const [windows, setWindows] = useState<OpenWindow[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const patch = (id: string, p: Partial<OpenWindow>) =>
     setWindows((prev) => prev.map((w) => (w.id === id ? { ...w, ...p } : w)));
@@ -105,24 +87,23 @@ export function App() {
   const focus = (id: string) => {
     setActiveId(id);
     setWindows((prev) => {
-      const top = Math.max(...prev.map((w) => w.z));
+      const top = Math.max(0, ...prev.map((w) => w.z));
       return prev.map((w) => (w.id === id ? { ...w, z: top + 1 } : w));
     });
   };
 
   const closeWindow = (id: string) => {
-    if (id === PM) return;
     setWindows((prev) => prev.filter((w) => w.id !== id));
-    setActiveId(PM);
+    setActiveId(null);
   };
 
   /** Programm starten oder, falls es schon läuft, nach vorn holen. */
   const launch = (id: ProgramId) => {
     const program = programById(id);
-    if (!program.ready) {
+    if (!program.installed) {
       setDialog({
-        title: "Programm nicht gefunden",
-        text: `${program.file} ist auf diesem Rechner noch nicht installiert.`,
+        title: "Programm kann nicht gestartet werden",
+        text: `${program.file} wurde auf diesem Rechner nicht gefunden. Das Programm ist noch nicht installiert.`,
       });
       return;
     }
@@ -135,23 +116,24 @@ export function App() {
     }
 
     const n = windows.length;
-    const top = Math.max(...windows.map((w) => w.z));
+    const top = Math.max(0, ...windows.map((w) => w.z));
+    const wid = `win-${id}`;
     setWindows((prev) => [
       ...prev,
       {
-        id: `win-${id}`,
+        id: wid,
         program: id,
         title: program.title,
-        x: 60 + (n % 5) * 26,
-        y: 44 + (n % 5) * 24,
-        w: Math.min(620, Math.max(320, window.innerWidth - 120)),
-        h: Math.min(560, Math.max(300, window.innerHeight - 140)),
+        x: 40 + (n % 6) * 28,
+        y: 30 + (n % 6) * 26,
+        w: Math.min(640, Math.max(320, window.innerWidth - 140)),
+        h: Math.min(580, Math.max(300, window.innerHeight - 150)),
         z: top + 1,
         minimized: false,
         maximized: false,
       },
     ]);
-    setActiveId(`win-${id}`);
+    setActiveId(wid);
   };
 
   /* ── Spieldaten ───────────────────────────────────────────────── */
@@ -250,9 +232,15 @@ export function App() {
   const runAutoPlan = () => {
     if (!graph || !game || !capacity || !vehicleClass) return;
     setStops(
-      autoPlan(graph, game.orders, cityMap, capacity, vehicleClass, optimization, {
-        startCityId: game.company.home_id,
-      }).stops,
+      autoPlan(
+        graph,
+        game.orders,
+        cityMap,
+        capacity,
+        vehicleClass,
+        optimization,
+        { startCityId: game.company.home_id },
+      ).stops,
     );
   };
 
@@ -307,14 +295,10 @@ export function App() {
 
   const home = cities.find((c) => c.id === game.company.home_id);
 
-  /* ── Inhalte und Menüs der Programme ──────────────────────────── */
+  /* ── Programminhalte ──────────────────────────────────────────── */
 
-  const content = (id: ProgramId | null): ComponentChildren => {
+  const content = (id: ProgramId): ComponentChildren => {
     switch (id) {
-      case null:
-        return (
-          <ProgramManager game={game} home={home} onLaunch={launch} />
-        );
       case "karte":
         return (
           <>
@@ -392,56 +376,34 @@ export function App() {
     }
   };
 
+  const infoOption = {
+    label: "Info …",
+    onSelect: () =>
+      setDialog({
+        title: "Info",
+        text: `Spedipro 95, Fassung ${APP_VERSION}. ${game.company.name}, Sitz ${
+          home ? home.city : "unbekannt"
+        }. Kontostand ${fmtEur(game.company.cash_eur)}, Spieltag ${game.day}.`,
+      }),
+  };
+
   const menusFor = (w: OpenWindow): Menu[] => {
-    const hilfe: Menu = {
-      label: "Hilfe",
+    const datei: Menu = {
+      label: "Datei",
       options: [
+        { label: "Nächster Spieltag", shortcut: "F5", onSelect: nextDay },
         {
-          label: "Info …",
-          onSelect: () =>
-            setDialog({
-              title: "Info",
-              text: `Spedipro 95, Fassung ${APP_VERSION}. ${cities.length} Städte, ${edges.length} Strecken.`,
-            }),
+          label: "Beenden",
+          separatorBefore: true,
+          onSelect: () => closeWindow(w.id),
         },
       ],
     };
-
-    if (w.program === null) {
-      return [
-        {
-          label: "Datei",
-          options: [
-            ...PROGRAMS.filter((p) => p.ready).map((p) => ({
-              label: `${p.title} starten`,
-              onSelect: () => launch(p.id),
-            })),
-            {
-              label: "Nächster Spieltag",
-              shortcut: "F5",
-              separatorBefore: true,
-              onSelect: nextDay,
-            },
-          ],
-        },
-        {
-          label: "Fenster",
-          options: windows
-            .filter((x) => x.id !== PM)
-            .map((x) => ({
-              label: x.title,
-              onSelect: () => {
-                patch(x.id, { minimized: false });
-                focus(x.id);
-              },
-            })),
-        },
-        hilfe,
-      ];
-    }
+    const hilfe: Menu = { label: "?", options: [infoOption] };
 
     if (w.program === "touren") {
       return [
+        datei,
         {
           label: "Tour",
           options: [
@@ -454,24 +416,20 @@ export function App() {
             },
           ],
         },
-        {
-          label: "Datei",
-          options: [{ label: "Schließen", onSelect: () => closeWindow(w.id) }],
-        },
         hilfe,
       ];
     }
 
-    if (w.program === "auftraege") {
+    if (w.program === "karte") {
       return [
+        datei,
         {
-          label: "Datei",
+          label: "Ansicht",
           options: [
-            { label: "Nächster Spieltag", shortcut: "F5", onSelect: nextDay },
             {
-              label: "Schließen",
-              separatorBefore: true,
-              onSelect: () => closeWindow(w.id),
+              label: "Filter aufheben",
+              disabled: cityFilter === null,
+              onSelect: () => setCityFilter(null),
             },
           ],
         },
@@ -479,21 +437,51 @@ export function App() {
       ];
     }
 
-    return [
-      {
-        label: "Datei",
-        options: [{ label: "Schließen", onSelect: () => closeWindow(w.id) }],
-      },
-      hilfe,
-    ];
+    return [datei, hilfe];
   };
 
-  const minimized = windows.filter((w) => w.minimized);
-
   return (
-    <div class="desktop">
+    <div
+      class="desktop"
+      onPointerDown={(e) => {
+        if ((e.target as HTMLElement).classList.contains("desktop-icons")) {
+          setSelectedIcon(null);
+        }
+      }}
+    >
+      <div class="desktop-icons">
+        {PROGRAMS.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            class={[
+              "desk-icon",
+              selectedIcon === p.id ? "selected" : "",
+              p.installed ? "" : "pending",
+            ]
+              .join(" ")
+              .trim()}
+            title={
+              p.installed
+                ? `${p.file} starten`
+                : `${p.file} — nicht installiert`
+            }
+            onClick={() => {
+              // Erstes Antippen wählt aus, das zweite startet. Ein echter
+              // Doppelklick ist auf Berührungsgeräten unzuverlässig.
+              if (selectedIcon === p.id) launch(p.id);
+              else setSelectedIcon(p.id);
+            }}
+            onDblClick={() => launch(p.id)}
+          >
+            <Icon id={p.icon} size={48} />
+            <span class="desk-label">{p.label}</span>
+          </button>
+        ))}
+      </div>
+
       {windows.map((w) => (
-        <Win311Window
+        <Win98Window
           key={w.id}
           state={w}
           active={activeId === w.id}
@@ -501,42 +489,11 @@ export function App() {
           menus={menusFor(w)}
           onChange={(p) => patch(w.id, p)}
           onFocus={() => focus(w.id)}
-          onClose={w.id === PM ? undefined : () => closeWindow(w.id)}
+          onClose={() => closeWindow(w.id)}
         >
           {content(w.program)}
-        </Win311Window>
+        </Win98Window>
       ))}
-
-      {/* Auf schmalen Geräten liegen alle Fenster übereinander. Die
-          Symbolzeile ist dort der einzige Weg zurück. */}
-      {(minimized.length > 0 || narrow) && (
-        <div class="icon-tray">
-          {(narrow ? windows : minimized).map((w) => {
-            const icon = w.program ? programById(w.program).icon : "gruppe";
-            const isFront = activeId === w.id && !w.minimized;
-            if (narrow && isFront) return null;
-            return (
-              <button
-                key={w.id}
-                type="button"
-                class="tray-icon"
-                onClick={() => {
-                  patch(w.id, { minimized: false });
-                  focus(w.id);
-                }}
-              >
-                <img
-                  src={`${import.meta.env.BASE_URL}assets/icons/${icon}.png`}
-                  alt=""
-                  width={32}
-                  height={32}
-                />
-                <span class="tray-label">{w.title}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       {dialog && (
         <Dialog
@@ -553,6 +510,39 @@ export function App() {
           <Button onClick={sw.dismiss}>Später</Button>
         </div>
       )}
+
+      <Taskbar
+        tasks={windows.map((w) => ({
+          id: w.id,
+          title: w.title,
+          icon: programById(w.program).icon,
+          active: activeId === w.id,
+          minimized: w.minimized,
+        }))}
+        programs={PROGRAMS.map((p) => ({
+          id: p.id,
+          label: p.label,
+          icon: p.icon,
+          enabled: p.installed,
+        }))}
+        extras={[
+          {
+            label: "Nächster Spieltag",
+            icon: "einstellungen",
+            onSelect: nextDay,
+          },
+        ]}
+        onTask={(id) => {
+          const w = windows.find((x) => x.id === id);
+          if (!w) return;
+          if (activeId === id && !w.minimized) patch(id, { minimized: true });
+          else {
+            patch(id, { minimized: false });
+            focus(id);
+          }
+        }}
+        onStart={(id) => launch(id as ProgramId)}
+      />
     </div>
   );
 }

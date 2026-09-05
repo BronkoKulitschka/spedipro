@@ -2,9 +2,9 @@
 
 Speditions-Manager-Simulator als PWA. Läuft auf Smartphone, Tablet und Desktop.
 
-Die Oberfläche ist ein virtueller Rechner im Stil von **Windows 3.11**.
-Jedes Modul ist ein eigenes Programm mit eigenem Fenster und eigener
-Menüleiste. Der Programm-Manager ist die Schaltzentrale.
+Die Oberfläche ist ein virtueller Rechner im Stil von **Windows 98**:
+Symbole auf der Arbeitsfläche, Startleiste mit Startmenü und Uhr, und für
+jedes Modul ein eigenes Programmfenster mit eigener Menüleiste.
 
 Vorhanden: Karte, Routing, Kostenberechnung, Fuhrpark, Auftragsbörse,
 Sammelladung mit drei Planungsstufen.
@@ -28,6 +28,7 @@ npm run dev
 | `npm run test:orders` | Auftragsgenerierung prüfen |
 | `npm run test:state` | Spielzustand und Wirtschaftlichkeit prüfen |
 | `npm run test:tour` | Sammelladung und Kapazitätsprüfung |
+| `npm run icons` | Spritemap aus `assets-src/icons/` bauen |
 
 ## Veröffentlichen
 
@@ -57,18 +58,21 @@ src/
     win95.tsx    Fenster, Schaltflächen, Rahmen, Kennzahlen
     MapCanvas.tsx     Karte auf Canvas
     TourPlanner.tsx   Tourenplanung mit Sammelladung
-    Win311.tsx        Fenster, Menüleiste, Dialoge
-    ProgramManager.tsx  Schaltzentrale mit Programmsymbolen
+    Win98.tsx         Fenster, Menüleiste, Dialoge
+    Taskbar.tsx       Startleiste, Startmenü, Uhr
+    Icon.tsx          Symbol aus der Spritemap
+    programs.ts       Programmverzeichnis des Rechners
     FleetView.tsx     Fuhrpark
     OrderBoard.tsx    Auftragsbörse
     serviceWorker.tsx  Anmeldung und Aktualisierungshinweis
   styles/
-    win311.css   Farben und Kantenprofile
+    win98.css    Farben und Kantenprofile
 public/
   sw.js          Service Worker
   manifest.webmanifest
   icons/         App-Symbole
-  assets/icons/  Programmsymbole, 32 × 32 (austauschbar)
+  assets/icons.png   Spritemap der Programmsymbole
+  assets/icons.json  Zuordnung Name → Zelle
   data/
     cities.json  289 Städte
     roads.json   958 Strecken
@@ -99,24 +103,31 @@ Prozent holt nur heraus, wer selbst plant.
 
 ## Der virtuelle Rechner
 
-Der Programm-Manager läuft immer und lässt sich nicht schließen. Ein Symbol
-antippen wählt aus, erneutes Antippen startet das Programm — auf
-Berührungsgeräten ist ein echter Doppelklick unzuverlässig.
+Ein Symbol antippen wählt aus, erneutes Antippen startet das Programm — auf
+Berührungsgeräten ist ein echter Doppelklick unzuverlässig. Läuft ein
+Programm bereits, wird es nach vorn geholt statt doppelt gestartet.
 
-Was Windows 3.11 von Windows 95 unterscheidet und hier umgesetzt ist:
-zentrierter Fenstertitel, Systemmenüfeld links, Verkleinern und Vergrößern
-als Pfeile rechts, keine Taskleiste — verkleinerte Programme werden zu
-Symbolen am unteren Rand.
+Nicht installierte Programme melden sich mit einem Dialog, so wie ein echter
+Rechner es täte.
 
-Unter 820 Pixel Breite füllt jedes Fenster den Bildschirm, und die
-Symbolzeile am unteren Rand dient zum Wechseln.
+Unter 820 Pixel Breite füllt jedes Fenster den Bildschirm; gewechselt wird
+über die Startleiste.
 
 ## Symbole austauschen
 
-Die Programmsymbole sind Platzhalter unter `public/assets/icons/`, jeweils
-32 × 32 Pixel im PNG-Format mit Transparenz. Eine neue Datei mit gleichem
-Namen ersetzt sie, ohne dass im Code etwas geändert werden muss.
-`update.sh` bewahrt eigene Dateien unter `public/assets/` bei einem Update.
+```
+assets-src/icons/<name>.png   →   npm run icons   →   public/assets/icons.png
+```
+
+Einzelbilder mit 48 × 48 Pixeln und Transparenz in `assets-src/icons/`
+ablegen und `npm run icons` aufrufen. Stimmt eine Größe nicht oder fehlt
+eine Datei, bricht das Skript ab und nennt den Grund.
+
+Im Code wird nie ein Dateiname genannt, sondern nur eine Kennung:
+`<Icon id="fuhrpark" size={48} />`.
+
+Aufbau, Farbpalette und die Prompts für Leonardo.ai stehen im Dokument
+„SpediPro95 Icons".
 
 ## Zwei Regeln
 

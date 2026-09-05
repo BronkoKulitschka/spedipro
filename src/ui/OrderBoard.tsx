@@ -9,7 +9,7 @@ import type { City } from "../core/types";
 import { cargoById } from "../core/cargo";
 import { URGENCY_LABEL, revenuePerKm, type Order } from "../core/orders";
 import { fmtEur, fmtKm } from "../core/data";
-import { Button, KeyValues, Panel, type ValueTone } from "./Win311";
+import { Button, KeyValues, Panel, type ValueTone } from "./Win98";
 
 interface Props {
   orders: Order[];

@@ -1,5 +1,5 @@
 /**
- * Oberflächenbausteine im Stil von Windows 3.11.
+ * Oberflächenbausteine im Stil von Windows 98.
  *
  * Rein darstellend: Diese Bauteile berechnen nichts und halten keine
  * Spielwerte (Grundregel, Konzept Kapitel 2).
@@ -167,10 +167,10 @@ interface WindowProps {
 }
 
 /**
- * Verschiebbares Fenster mit Systemmenüfeld links und den Pfeilschaltflächen
- * für Verkleinern und Vergrößern rechts — der Aufbau von Windows 3.11.
+ * Verschiebbares Fenster. Titel linksbündig, rechts die drei Schaltflächen
+ * Verkleinern, Vergrößern und Schließen — der Aufbau von Windows 98.
  */
-export function Win311Window({
+export function Win98Window({
   state,
   active,
   fullscreen,
@@ -189,8 +189,6 @@ export function Win311Window({
     origW: number;
     origH: number;
   } | null>(null);
-
-  const [sysOpen, setSysOpen] = useState(false);
 
   const begin = (mode: "move" | "resize") => (e: PointerEvent) => {
     if (fullscreen || (state.maximized && mode === "move")) return;
@@ -216,7 +214,7 @@ export function Win311Window({
       if (d.mode === "move") {
         onChange({
           x: Math.max(-40, Math.min(window.innerWidth - 90, d.origX + dx)),
-          y: Math.max(0, Math.min(window.innerHeight - 60, d.origY + dy)),
+          y: Math.max(0, Math.min(window.innerHeight - 70, d.origY + dy)),
         });
       } else {
         onChange({
@@ -263,85 +261,46 @@ export function Win311Window({
         onPointerMove={move}
         onPointerUp={end}
         onPointerCancel={end}
-        onDblClick={() => !fullscreen && onChange({ maximized: !state.maximized })}
+        onDblClick={() =>
+          !fullscreen && onChange({ maximized: !state.maximized })
+        }
       >
-        <div style="position:relative">
-          <button
-            type="button"
-            class="sysbox"
-            title="Systemmenü"
-            aria-label="Systemmenü"
-            onClick={() => setSysOpen(!sysOpen)}
-          >
-            <span class="bar" />
-          </button>
-          {sysOpen && (
-            <div class="menu-popup" style="top:20px;left:0">
-              <button
-                type="button"
-                class="menu-option"
-                disabled={fullscreen}
-                onClick={() => {
-                  setSysOpen(false);
-                  onChange({ minimized: true });
-                }}
-              >
-                <span>Symbol</span>
-              </button>
-              <button
-                type="button"
-                class="menu-option"
-                disabled={fullscreen}
-                onClick={() => {
-                  setSysOpen(false);
-                  onChange({ maximized: !state.maximized });
-                }}
-              >
-                <span>{state.maximized ? "Wiederherstellen" : "Vollbild"}</span>
-              </button>
-              <div class="menu-sep" />
-              <button
-                type="button"
-                class="menu-option"
-                disabled={!onClose}
-                onClick={() => {
-                  setSysOpen(false);
-                  onClose?.();
-                }}
-              >
-                <span>Schließen</span>
-                <span class="shortcut">Alt+F4</span>
-              </button>
-            </div>
-          )}
-        </div>
-
         <span class="titlebar-text">{state.title}</span>
 
         <div class="titlebar-right">
           <button
             type="button"
             class="sysbtn"
-            title="Als Symbol"
-            aria-label="Als Symbol"
+            title="Minimieren"
+            aria-label="Minimieren"
             disabled={fullscreen}
             onClick={() => onChange({ minimized: true })}
           >
-            <span class="arrow down" />
+            <span class="bar" />
           </button>
           <button
             type="button"
             class="sysbtn"
-            title={state.maximized ? "Wiederherstellen" : "Vollbild"}
-            aria-label={state.maximized ? "Wiederherstellen" : "Vollbild"}
+            title={state.maximized ? "Wiederherstellen" : "Maximieren"}
+            aria-label={state.maximized ? "Wiederherstellen" : "Maximieren"}
             disabled={fullscreen}
             onClick={() => onChange({ maximized: !state.maximized })}
           >
             {state.maximized ? (
-              <span class="restore">◆</span>
+              <span class="glyph">❐</span>
             ) : (
-              <span class="arrow up" />
+              <span class="box" />
             )}
+          </button>
+          <button
+            type="button"
+            class="sysbtn"
+            title="Schließen"
+            aria-label="Schließen"
+            disabled={!onClose}
+            onClick={() => onClose?.()}
+          >
+            <span class="glyph">✕</span>
           </button>
         </div>
       </div>

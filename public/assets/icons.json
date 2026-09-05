@@ -1,0 +1,62 @@
+{
+ "schema_version": "1.0",
+ "description": "Spritemap der Programmsymbole. Reihenfolge zeilenweise von links oben.",
+ "cell": 48,
+ "columns": 4,
+ "rows": 4,
+ "sheet": "icons.png",
+ "icons": {
+  "fuhrpark": {
+   "column": 0,
+   "row": 0
+  },
+  "auftraege": {
+   "column": 1,
+   "row": 0
+  },
+  "touren": {
+   "column": 2,
+   "row": 0
+  },
+  "karte": {
+   "column": 3,
+   "row": 0
+  },
+  "personal": {
+   "column": 0,
+   "row": 1
+  },
+  "werkstatt": {
+   "column": 1,
+   "row": 1
+  },
+  "kassenbuch": {
+   "column": 2,
+   "row": 1
+  },
+  "kunden": {
+   "column": 3,
+   "row": 1
+  },
+  "statistik": {
+   "column": 0,
+   "row": 2
+  },
+  "nachrichten": {
+   "column": 1,
+   "row": 2
+  },
+  "einstellungen": {
+   "column": 2,
+   "row": 2
+  },
+  "arbeitsplatz": {
+   "column": 3,
+   "row": 2
+  },
+  "papierkorb": {
+   "column": 0,
+   "row": 3
+  }
+ }
+}

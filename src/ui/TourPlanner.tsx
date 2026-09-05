@@ -15,7 +15,7 @@ import type { Vehicle } from "../core/fleet";
 import { capacityOf, displayName } from "../core/fleet";
 import { cargoById } from "../core/cargo";
 import { fmtEur, fmtHours, fmtKm } from "../core/data";
-import { Button, KeyValues, Panel, type ValueTone } from "./Win311";
+import { Button, KeyValues, Panel, type ValueTone } from "./Win98";
 
 export type PlanMode = "auto" | "assisted" | "manual";
 
