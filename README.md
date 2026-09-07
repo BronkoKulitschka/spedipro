@@ -3,7 +3,19 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.2.0)
+## Aktueller Stand (v0.3.0)
+
+- **Bugfix:** `#window-layer` blockierte unsichtbar Klicks auf Desktop-
+  Icons (lag im Dokument nach ihnen, ohne selbst Inhalt zu haben). Jetzt
+  `pointer-events: none` auf dem leeren Layer, `auto` auf echten Fenstern.
+- **Neu:** `AppRegistry` (`js/core/appregistry.js`) – Programme tragen
+  sich hier selbst ein (`id`, `name`, `icon`, `open()`), statt zentral
+  verdrahtet zu werden. Startmenü liest diese Liste zur Laufzeit.
+- Startmenü: "Programme »" ist jetzt ein aufklappbares Untermenü
+  (Klick, kein Hover-Zwang - funktioniert auch auf Touch/Handy), zeigt
+  alle registrierten Programme, aktuell also Fuhrpark.
+- Fuhrpark ist damit auf zwei Wegen startbar: Desktop-Icon oder
+  Start → Programme → Fuhrpark.
 
 Windows-98-Desktop plus erstes Programm:
 - Taskbar mit Start-Button, Uhr

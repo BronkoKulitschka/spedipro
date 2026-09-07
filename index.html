@@ -40,7 +40,12 @@
   <div id="start-menu" class="hidden bevel-out">
     <div class="start-menu-side">SpediPro 95</div>
     <ul class="start-menu-items">
-      <li class="disabled">Programme &raquo;</li>
+      <li class="has-submenu" id="programme-item">
+        Programme &raquo;
+        <ul class="submenu" id="programme-submenu">
+          <!-- wird zur Laufzeit aus AppRegistry befüllt -->
+        </ul>
+      </li>
       <li class="disabled">Dokumente &raquo;</li>
       <li class="disabled">Einstellungen &raquo;</li>
       <li class="separator"></li>
@@ -51,6 +56,7 @@
   <script src="js/core/clock.js"></script>
   <script src="js/core/startmenu.js"></script>
   <script src="js/core/windowmanager.js"></script>
+  <script src="js/core/appregistry.js"></script>
   <script src="js/core/verschleiss.js"></script>
   <script src="js/data/fahrzeugtypen.js"></script>
   <script src="js/apps/fuhrpark/fuhrpark.js"></script>

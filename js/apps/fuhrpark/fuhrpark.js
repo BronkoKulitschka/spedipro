@@ -190,6 +190,13 @@ const FuhrparkApp = (function () {
   return { open };
 })();
 
+AppRegistry.register({
+  id: "fuhrpark",
+  name: "Fuhrpark",
+  icon: "🚛",
+  open: FuhrparkApp.open
+});
+
 // ---------- Desktop-Icon verknüpfen ----------
 document.addEventListener("DOMContentLoaded", () => {
   const icon = document.getElementById("icon-fuhrpark");
