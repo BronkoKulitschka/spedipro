@@ -3,7 +3,24 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.6.0)
+## Aktueller Stand (v0.7.0)
+
+**Fuhrpark komplett neu als Blätter-Ansicht statt Liste:**
+- Ein Fahrzeug pro Bildschirm, isometrische Pixelart-Grafik (dieselbe
+  Grafik für alle Fahrzeuge) statt Statusbalken-Liste -
+  `assets/sprites/lkw-generisch.png`
+- Floating-Callouts mit Verbindungslinie zum jeweiligen Bauteil,
+  farbcodiert nach Zustand (grün/gelb/rot)
+- Fünf Verschleißteile statt drei: Reifen, Bremsen, Motor, **Antrieb**,
+  **Karosserie** - inkl. eigener Gelände-/Straßen-/Jahreszeit-Faktoren
+  (Winter wirkt sich z.B. durch Streusalz besonders auf die Karosserie aus)
+- Gesamtzustand-Balken unter dem Bild, farbcodiert, aktualisiert sich live
+- Durchblättern per Pfeil-Buttons oder Wisch-Geste (links/rechts),
+  mit Rundum-Navigation
+- Debug-Buttons (Tour simulieren / Teil reparieren) wirken auf das
+  gerade angezeigte Fahrzeug
+
+## Vorheriger Stand (v0.6.0)
 
 **Pixelart-Design** für Fenster und Taskleiste:
 - Feine Pixel-Schrift ("Pixelify Sans" von Google Fonts) als Standard-

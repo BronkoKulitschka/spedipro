@@ -8,34 +8,39 @@
 const Verschleiss = (function () {
 
   // Basis-Abnutzung in Prozentpunkten pro gefahrenem km (vor Faktoren).
-  // Grobe Richtwerte: Reifen ~90.000 km Lebensdauer, Bremsen ~65.000 km,
-  // Motor (als Gesamtzustand) ~550.000 km bis Generalüberholung.
+  // Grobe Richtwerte: Reifen ~90.000 km, Bremsen ~65.000 km,
+  // Motor ~550.000 km, Antrieb (Getriebe/Achsen) ~450.000 km,
+  // Karosserie (Rahmen/Aufbau) ~700.000 km bis Generalüberholung/Verschrottung.
   const BASISRATE = {
     reifen: 100 / 90000,
     bremsen: 100 / 65000,
-    motor: 100 / 550000
+    motor: 100 / 550000,
+    antrieb: 100 / 450000,
+    karosserie: 100 / 700000
   };
 
-  const TEILE = ["reifen", "bremsen", "motor"];
+  const TEILE = ["reifen", "bremsen", "motor", "antrieb", "karosserie"];
 
   const GELAENDE_FAKTOR = {
-    flachland: { reifen: 0.9, bremsen: 0.8, motor: 0.9 },
-    huegelland: { reifen: 1.0, bremsen: 1.2, motor: 1.1 },
-    mittelgebirge: { reifen: 1.1, bremsen: 1.5, motor: 1.3 },
-    hochgebirge: { reifen: 1.2, bremsen: 2.0, motor: 1.5 }
+    flachland: { reifen: 0.9, bremsen: 0.8, motor: 0.9, antrieb: 0.9, karosserie: 0.9 },
+    huegelland: { reifen: 1.0, bremsen: 1.2, motor: 1.1, antrieb: 1.1, karosserie: 1.0 },
+    mittelgebirge: { reifen: 1.1, bremsen: 1.5, motor: 1.3, antrieb: 1.3, karosserie: 1.05 },
+    hochgebirge: { reifen: 1.2, bremsen: 2.0, motor: 1.5, antrieb: 1.5, karosserie: 1.1 }
   };
 
   const STRASSE_FAKTOR = {
-    autobahn: { reifen: 0.9, bremsen: 0.9, motor: 0.95 },
-    landstrasse: { reifen: 1.0, bremsen: 1.0, motor: 1.0 },
-    marode: { reifen: 1.4, bremsen: 1.1, motor: 1.15 }
+    autobahn: { reifen: 0.9, bremsen: 0.9, motor: 0.95, antrieb: 0.9, karosserie: 0.9 },
+    landstrasse: { reifen: 1.0, bremsen: 1.0, motor: 1.0, antrieb: 1.0, karosserie: 1.0 },
+    marode: { reifen: 1.4, bremsen: 1.1, motor: 1.15, antrieb: 1.2, karosserie: 1.3 }
   };
 
   const JAHRESZEIT_FAKTOR = {
-    fruehling: { reifen: 1.0, bremsen: 1.05, motor: 1.0 },
-    sommer: { reifen: 0.9, bremsen: 0.9, motor: 1.05 },
-    herbst: { reifen: 1.05, bremsen: 1.1, motor: 1.0 },
-    winter: { reifen: 1.3, bremsen: 1.1, motor: 1.15 }
+    fruehling: { reifen: 1.0, bremsen: 1.05, motor: 1.0, antrieb: 1.0, karosserie: 1.05 },
+    sommer: { reifen: 0.9, bremsen: 0.9, motor: 1.05, antrieb: 1.0, karosserie: 0.9 },
+    herbst: { reifen: 1.05, bremsen: 1.1, motor: 1.0, antrieb: 1.0, karosserie: 1.0 },
+    // Streusalz war/ist historisch einer der Hauptgründe für Rahmen-/
+    // Karosserie-Korrosion im Winter - deutlich höherer Faktor hier.
+    winter: { reifen: 1.3, bremsen: 1.1, motor: 1.15, antrieb: 1.1, karosserie: 1.4 }
   };
 
   /**
@@ -107,11 +112,7 @@ const Verschleiss = (function () {
   function gesamtzustand(fahrzeug) {
     // Schwächstes Teil bestimmt den Gesamtzustand (ein Bremsschaden
     // legt das Fahrzeug still, egal wie gut der Motor ist).
-    return Math.min(
-      fahrzeug.verschleiss.reifen,
-      fahrzeug.verschleiss.bremsen,
-      fahrzeug.verschleiss.motor
-    );
+    return Math.min(...TEILE.map((teil) => fahrzeug.verschleiss[teil]));
   }
 
   function teilReparieren(fahrzeug, teil) {

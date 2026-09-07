@@ -1,80 +1,174 @@
 /* fuhrpark.css - spezifisch für das Fuhrpark-Programmfenster */
 
-.fuhrpark-liste {
+.fuhrpark-pager {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  height: 100%;
+  gap: 6px;
 }
 
-.fuhrpark-karte {
-  padding: 6px 8px;
-  background: var(--win-grey-light);
-}
-
-.fuhrpark-karte-kopf {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  margin-bottom: 2px;
+.fuhrpark-kopfzeile {
+  flex-shrink: 0;
 }
 
 .fuhrpark-kennzeichen {
   font-family: monospace;
+  margin-left: 8px;
+}
+
+.fuhrpark-gesamt {
+  margin-left: 8px;
+  padding: 1px 6px;
+  font-size: 11px;
+  border: 1px solid var(--win-grey-darker);
 }
 
 .fuhrpark-karte-info {
   font-size: 11px;
   color: var(--win-grey-darker);
-  margin-bottom: 6px;
+  margin-top: 2px;
 }
 
-.verschleiss-zeile {
+.fuhrpark-blaetter-zeile {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 3px;
+  gap: 4px;
+  min-height: 0;
 }
 
-.verschleiss-label {
-  width: 90px;
-  font-size: 11px;
+.fuhrpark-nav {
   flex-shrink: 0;
+  width: 36px;
+  height: 48px;
+  font-size: 18px;
 }
 
-.verschleiss-balken-hintergrund {
+.fuhrpark-visual-spalte {
   flex: 1;
-  height: 10px;
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fuhrpark-visual {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: 560 / 436;
+  margin: 0 auto;
   background: var(--win-white);
   border: 1px solid var(--win-grey-darker);
 }
 
-.verschleiss-balken-fuellung {
+.fuhrpark-visual-bild {
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
 }
 
-.zustand-gut {
+.fuhrpark-visual-linien {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.callout-linie {
+  stroke: var(--win-grey-darker);
+  stroke-width: 0.4;
+  stroke-dasharray: 1.5 1;
+}
+
+.callout-punkt {
+  fill: var(--win-blue-title);
+}
+
+.fuhrpark-callout {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+  padding: 2px 5px;
+  background: var(--win-grey);
+  border: 1px solid var(--win-grey-darker);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.4);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.fuhrpark-callout-label {
+  font-weight: bold;
+}
+
+.fuhrpark-callout-wert {
+  font-size: 10px;
+}
+
+.fuhrpark-callout.zustand-gut .fuhrpark-callout-wert { color: #1a5c1a; }
+.fuhrpark-callout.zustand-warnung .fuhrpark-callout-wert { color: #8a6400; }
+.fuhrpark-callout.zustand-kritisch .fuhrpark-callout-wert { color: #a01818; }
+
+.fuhrpark-pager-indikator {
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}
+
+.fuhrpark-gesamtbalken {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+}
+
+.fuhrpark-gesamtbalken-label {
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.fuhrpark-gesamtbalken-hintergrund {
+  flex: 1;
+  height: 14px;
+  background: var(--win-white);
+  border: 1px solid var(--win-grey-darker);
+}
+
+.fuhrpark-gesamtbalken-fuellung {
+  height: 100%;
+}
+
+.fuhrpark-gesamtbalken-fuellung.zustand-gut {
   background: #2e8b2e;
 }
 
-.zustand-warnung {
+.fuhrpark-gesamtbalken-fuellung.zustand-warnung {
   background: #d4a017;
 }
 
-.zustand-kritisch {
+.fuhrpark-gesamtbalken-fuellung.zustand-kritisch {
   background: #b22222;
 }
 
-.verschleiss-wert {
-  width: 34px;
+.fuhrpark-gesamtbalken-wert {
   font-size: 11px;
+  width: 32px;
   text-align: right;
   flex-shrink: 0;
 }
 
 .fuhrpark-debug-leiste {
+  flex-shrink: 0;
   display: flex;
   gap: 4px;
-  margin-top: 6px;
+  align-items: center;
   padding-top: 6px;
   border-top: 1px dashed var(--win-grey-dark);
 }
@@ -83,6 +177,5 @@
   content: "DEBUG";
   font-size: 9px;
   color: var(--win-grey-dark);
-  align-self: center;
   margin-right: 2px;
 }
