@@ -96,11 +96,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 3px 4px;
+  padding: 7px 6px;
   background: linear-gradient(90deg, var(--win-blue-title), var(--win-blue-title-light));
   color: var(--win-white);
   font-weight: bold;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .win98-titlebar-controls {
@@ -109,9 +109,9 @@ body {
 }
 
 .win98-titlebar-controls button {
-  width: 16px;
-  height: 14px;
-  font-size: 10px;
+  width: 28px;
+  height: 24px;
+  font-size: 13px;
   line-height: 1;
   padding: 0;
 }
@@ -124,7 +124,7 @@ body {
 
 .win98-window-content {
   padding: 8px;
-  height: calc(100% - 24px);
+  height: calc(100% - 38px);
   overflow: auto;
   background: var(--win-grey);
 }

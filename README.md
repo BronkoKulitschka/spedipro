@@ -3,7 +3,24 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.11.0)
+## Aktueller Stand (v0.12.0)
+
+**Titelleiste:** höher (Padding 3→7px), größere Schrift, und deutlich
+größere Minimieren-/Schließen-Buttons (16×14 → 28×24px) für bessere
+Fingerbedienung. Fensterinhalt-Höhe entsprechend nachgezogen.
+
+**Bild sitzt jetzt direkt unter dem Kopfzeilen-Text:** Der Bildrahmen
+füllt nicht mehr den Restplatz (was das Bild mittig zentrierte und den
+Balken nach unten drückte), sondern schmiegt sich eng ans Bild. Balken
+und Navigation folgen direkt darunter, ungenutzter Platz landet unten,
+Debug-Leiste bleibt am Fensterende.
+- Verfügbare Höhe wird aus dem Fensterinhalt minus Geschwisterelemente
+  berechnet (der Rahmen hat keine eigene Höhe mehr)
+- `ResizeObserver` beobachtet jetzt den Container statt den Rahmen -
+  sonst hätte die Größenänderung des Bildes sich endlos selbst neu
+  ausgelöst
+
+## Vorheriger Stand (v0.11.0)
 
 **Layout umgestellt.** Reihenfolge von oben nach unten:
 1. Kopfzeile (Fahrzeugname, Kennzeichen, Daten)

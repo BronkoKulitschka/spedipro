@@ -123,26 +123,36 @@ const FuhrparkApp = (function () {
   // eigene Mindestgröße mehr und kollabiert auf 0 - das reißt dann auch
   // alle nachfolgenden Elemente (Balken, Pager) aus ihrer Position.
   function visualGroesseAnpassen() {
+    const pager = fensterElement.querySelector(".fuhrpark-pager");
     const rahmen = fensterElement.querySelector(".fuhrpark-visual-rahmen");
     const visual = fensterElement.querySelector("#fuhrpark-visual");
-    if (!rahmen || !visual) return false;
+    if (!pager || !rahmen || !visual) return false;
 
-    const verfuegbareBreite = rahmen.clientWidth;
-    const verfuegbareHoehe = rahmen.clientHeight;
+    const verfuegbareBreite = rahmen.clientWidth || pager.clientWidth;
 
     // Ohne Breite ist noch gar nichts gelayoutet - dann später erneut
     // versuchen (siehe ResizeObserver unten), statt stillschweigend
     // aufzugeben und das Bild unsichtbar zu lassen.
     if (verfuegbareBreite === 0) return false;
 
+    // Der Rahmen schmiegt sich jetzt ans Bild, hat also keine eigene
+    // Höhe, aus der sich der Platz ableiten ließe. Stattdessen: Höhe des
+    // Fensterinhalts minus alle Geschwister (Kopfzeile, Balken,
+    // Navigation, Debug-Leiste).
+    let belegteHoehe = 0;
+    Array.from(pager.children).forEach((kind) => {
+      if (kind !== rahmen) belegteHoehe += kind.offsetHeight;
+    });
+    const abstaende = 6 * (pager.children.length - 1); // gap zwischen den Blöcken
+    const verfuegbareHoehe = pager.clientHeight - belegteHoehe - abstaende;
+
     const seitenverhaeltnis = 560 / 436;
     let breite = verfuegbareBreite;
     let hoehe = breite / seitenverhaeltnis;
 
-    // Höhe nur begrenzen, wenn der Rahmen überhaupt eine kennt. Sonst
-    // die volle Breite ausnutzen - das Bild soll waagerecht komplett
-    // ausfüllen.
-    if (verfuegbareHoehe > 0 && hoehe > verfuegbareHoehe) {
+    // Höhe nur begrenzen, wenn sinnvoll Platz bekannt ist. Sonst die
+    // volle Breite ausnutzen - das Bild soll waagerecht ausfüllen.
+    if (verfuegbareHoehe > 40 && hoehe > verfuegbareHoehe) {
       hoehe = verfuegbareHoehe;
       breite = hoehe * seitenverhaeltnis;
     }
@@ -160,8 +170,11 @@ const FuhrparkApp = (function () {
   function groessenBeobachtungStarten() {
     if (typeof ResizeObserver === "undefined") return;
 
-    const rahmen = fensterElement.querySelector(".fuhrpark-visual-rahmen");
-    if (!rahmen) return;
+    // Bewusst den Pager (Fensterinhalt) beobachten, NICHT den Rahmen:
+    // der Rahmen ändert seine Größe durch unsere eigene Anpassung mit,
+    // das würde sich endlos selbst neu auslösen.
+    const pager = fensterElement.querySelector(".fuhrpark-pager");
+    if (!pager) return;
 
     if (groessenBeobachter) groessenBeobachter.disconnect();
 
@@ -170,7 +183,7 @@ const FuhrparkApp = (function () {
         linienPositionieren();
       }
     });
-    groessenBeobachter.observe(rahmen);
+    groessenBeobachter.observe(pager);
   }
 
   function linienPositionieren() {

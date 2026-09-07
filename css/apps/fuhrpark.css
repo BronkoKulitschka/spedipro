@@ -30,11 +30,13 @@
 }
 
 .fuhrpark-visual-rahmen {
-  flex: 1;
-  min-height: 0;
+  /* Nicht flex:1 - der Rahmen soll sich eng ans Bild anschmiegen,
+     damit Balken und Navigation direkt darunter sitzen statt ans
+     Fensterende gedrückt zu werden. */
+  flex: 0 0 auto;
   min-width: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   overflow: hidden;
 }
@@ -173,6 +175,9 @@
 
 .fuhrpark-debug-leiste {
   flex-shrink: 0;
+  /* Schiebt die Debug-Leiste ans Fensterende - der ungenutzte Platz
+     landet damit unten statt zwischen Bild und Balken. */
+  margin-top: auto;
   display: flex;
   gap: 4px;
   align-items: center;
