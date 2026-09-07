@@ -46,21 +46,31 @@
 
 .fuhrpark-visual-spalte {
   flex: 1;
-  height: 100%;
+  min-height: 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.fuhrpark-visual {
-  position: relative;
+.fuhrpark-visual-rahmen {
   flex: 1;
   min-height: 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.fuhrpark-visual {
+  position: relative;
   aspect-ratio: 560 / 436;
-  margin: 0 auto;
+  max-width: 100%;
+  max-height: 100%;
   background: var(--win-white);
   border: 1px solid var(--win-grey-darker);
+  touch-action: pan-y;
 }
 
 .fuhrpark-visual-bild {
@@ -78,13 +88,7 @@
 }
 
 .callout-linie {
-  stroke: var(--win-grey-darker);
-  stroke-width: 0.4;
-  stroke-dasharray: 1.5 1;
-}
-
-.callout-punkt {
-  fill: var(--win-blue-title);
+  stroke-width: 0.45;
 }
 
 .fuhrpark-callout {
@@ -104,15 +108,16 @@
 
 .fuhrpark-callout-label {
   font-weight: bold;
+  text-decoration: underline;
 }
 
 .fuhrpark-callout-wert {
   font-size: 10px;
 }
 
-.fuhrpark-callout.zustand-gut .fuhrpark-callout-wert { color: #1a5c1a; }
-.fuhrpark-callout.zustand-warnung .fuhrpark-callout-wert { color: #8a6400; }
-.fuhrpark-callout.zustand-kritisch .fuhrpark-callout-wert { color: #a01818; }
+.fuhrpark-callout-wert.zustand-gut { color: #1a5c1a; }
+.fuhrpark-callout-wert.zustand-warnung { color: #8a6400; }
+.fuhrpark-callout-wert.zustand-kritisch { color: #a01818; }
 
 .fuhrpark-pager-indikator {
   flex-shrink: 0;

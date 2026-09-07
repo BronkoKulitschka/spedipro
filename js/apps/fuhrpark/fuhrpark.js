@@ -28,11 +28,11 @@ const FuhrparkApp = (function () {
   // Verbindungslinie (SVG) und Beschriftungs-Box exakt zusammenpassen.
   // Ermittelt am tatsächlichen Sprite assets/sprites/lkw-generisch.png.
   const CALLOUT_LAYOUT = {
-    motor: { anker: [21.4, 78.0], label: [4, 60] },
-    reifen: { anker: [27.7, 81.4], label: [4, 95] },
-    bremsen: { anker: [78.6, 60.8], label: [95, 78] },
-    antrieb: { anker: [56.2, 71.1], label: [60, 97] },
-    karosserie: { anker: [76.8, 34.4], label: [95, 15] }
+    motor: { anker: [19.6, 52.8], label: [4, 30] },
+    bremsen: { anker: [27.7, 81.4], label: [4, 95] },
+    reifen: { anker: [78.6, 60.8], label: [95, 60] },
+    karosserie: { anker: [30.4, 61.9], label: [30, 4] },
+    antrieb: { anker: [48.2, 75.7], label: [48, 97] }
   };
 
   function typZuFinden(typId) {
@@ -105,33 +105,81 @@ const FuhrparkApp = (function () {
     return "zustand-gut";
   }
 
+  // Stufenlose Farbe von Rot (0%) über Gelb nach Grün (100%), statt nur
+  // dreier fester Klassen - für die Callout-Linien passender als die
+  // groben Ampel-Stufen.
+  function zustandsFarbe(wert) {
+    const hue = Math.max(0, Math.min(100, wert)) * 1.2; // 0=rot, 120=grün
+    return `hsl(${hue}, 70%, 38%)`;
+  }
+
+  // Positioniert die Verbindungslinien NACH dem Rendern anhand der
+  // tatsächlichen Textbox-Maße - die Linie beginnt exakt am Ende des
+  // Unterstrichs (linke oder rechte Kante, je nachdem auf welcher
+  // Seite das Ziel am Fahrzeug liegt), nicht an einem geschätzten Punkt.
+  function linienPositionieren() {
+    const fahrzeug = fahrzeuge[aktuellerIndex];
+    if (!fahrzeug) return;
+
+    const container = fensterElement.querySelector("#fuhrpark-visual");
+    const svg = fensterElement.querySelector(".fuhrpark-visual-linien");
+    if (!container || !svg) return;
+
+    const containerRect = container.getBoundingClientRect();
+    if (containerRect.width === 0 || containerRect.height === 0) return; // noch nicht gelayoutet
+
+    svg.innerHTML = "";
+
+    Verschleiss.TEILE.forEach((teil) => {
+      const box = container.querySelector(`.fuhrpark-callout[data-teil="${teil}"]`);
+      const layout = CALLOUT_LAYOUT[teil];
+      if (!box || !layout) return;
+
+      const boxRect = box.getBoundingClientRect();
+      const [ankerXProzent, ankerYProzent] = layout.anker;
+      const ankerXPx = (ankerXProzent / 100) * containerRect.width;
+
+      const boxMitteX = (boxRect.left + boxRect.right) / 2 - containerRect.left;
+      // Rechte Kante des Unterstrichs, wenn das Ziel rechts vom Text liegt,
+      // sonst linke Kante - damit die Linie nicht durch den Text verläuft.
+      const startXPx =
+        ankerXPx >= boxMitteX ? boxRect.right - containerRect.left : boxRect.left - containerRect.left;
+      const startYPx = boxRect.bottom - containerRect.top - 1; // knapp an der Unterstreichung
+
+      const startXProzent = (startXPx / containerRect.width) * 100;
+      const startYProzent = (startYPx / containerRect.height) * 100;
+
+      const wert = fahrzeug.verschleiss[teil];
+
+      const linie = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      linie.setAttribute("x1", startXProzent.toFixed(1));
+      linie.setAttribute("y1", startYProzent.toFixed(1));
+      linie.setAttribute("x2", ankerXProzent);
+      linie.setAttribute("y2", ankerYProzent);
+      linie.setAttribute("class", "callout-linie");
+      linie.setAttribute("stroke", zustandsFarbe(wert));
+      svg.appendChild(linie);
+    });
+  }
+
   function callouts(fahrzeug) {
-    const linien = [];
     const boxen = [];
 
     Verschleiss.TEILE.forEach((teil) => {
       const layout = CALLOUT_LAYOUT[teil];
-      const [ax, ay] = layout.anker;
       const [lx, ly] = layout.label;
       const wert = fahrzeug.verschleiss[teil];
 
-      linien.push(
-        `<line x1="${ax}" y1="${ay}" x2="${lx}" y2="${ly}" class="callout-linie" />`
-      );
-      linien.push(
-        `<circle cx="${ax}" cy="${ay}" r="1.3" class="callout-punkt" />`
-      );
-
       boxen.push(`
-        <div class="fuhrpark-callout ${zustandsKlasse(wert)}"
+        <div class="fuhrpark-callout" data-teil="${teil}"
              style="left:${lx}%; top:${ly}%;">
           <span class="fuhrpark-callout-label">${TEIL_LABEL[teil]}</span>
-          <span class="fuhrpark-callout-wert">${wert.toFixed(0)}%</span>
+          <span class="fuhrpark-callout-wert ${zustandsKlasse(wert)}">${wert.toFixed(0)}%</span>
         </div>
       `);
     });
 
-    return { linien: linien.join(""), boxen: boxen.join("") };
+    return boxen.join("");
   }
 
   function reparaturOptionen() {
@@ -147,7 +195,7 @@ const FuhrparkApp = (function () {
 
     const fahrzeug = fahrzeuge[aktuellerIndex];
     const gesamt = Verschleiss.gesamtzustand(fahrzeug);
-    const { linien, boxen } = callouts(fahrzeug);
+    const boxen = callouts(fahrzeug);
 
     return `
       <div class="fuhrpark-pager">
@@ -169,12 +217,12 @@ const FuhrparkApp = (function () {
           <button class="fuhrpark-nav bevel-out" id="fuhrpark-nav-links" aria-label="Vorheriges Fahrzeug">&#10094;</button>
 
           <div class="fuhrpark-visual-spalte">
-            <div class="fuhrpark-visual" id="fuhrpark-visual">
-              <img class="fuhrpark-visual-bild" src="assets/sprites/lkw-generisch.png" alt="Isometrische LKW-Ansicht">
-              <svg class="fuhrpark-visual-linien" viewBox="0 0 100 100" preserveAspectRatio="none">
-                ${linien}
-              </svg>
-              ${boxen}
+            <div class="fuhrpark-visual-rahmen">
+              <div class="fuhrpark-visual" id="fuhrpark-visual">
+                <img class="fuhrpark-visual-bild" src="assets/sprites/lkw-generisch.png" alt="Isometrische LKW-Ansicht">
+                <svg class="fuhrpark-visual-linien" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+                ${boxen}
+              </div>
             </div>
 
             <div class="fuhrpark-gesamtbalken">
@@ -278,7 +326,17 @@ const FuhrparkApp = (function () {
         neuZeichnen();
       });
     }
+
+    linienPositionieren();
   }
+
+  // Bei Größenänderung (z.B. Rotation des Handys) müssen die Linien neu
+  // berechnet werden, da sich die Textboxen dabei verschieben.
+  window.addEventListener("resize", () => {
+    if (fensterElement && document.body.contains(fensterElement)) {
+      linienPositionieren();
+    }
+  });
 
   function open() {
     if (fahrzeuge.length === 0) {

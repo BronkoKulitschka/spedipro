@@ -3,7 +3,25 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.7.0)
+## Aktueller Stand (v0.8.0)
+
+**Layout-Fix:** Bildbox wurde in verschachteltem Flexbox-Layout nicht
+korrekt begrenzt und konnte das Fenster zum Scrollen zwingen (was
+wiederum mit der Wisch-Navigation kollidierte). Neuer Rahmen-Container
+begrenzt die Bildbox jetzt strikt auf den verfügbaren Platz.
+
+**Callouts überarbeitet:**
+- Neue Bauteil-Zuordnung: Motor→Motorhaube, Bremse→Vorderachse
+  Zugmaschine, Reifen→Hinterachse Auflieger, Karosserie→Fahrerkabine,
+  Antrieb→Hinterachse Zugmaschine
+- Labels sind jetzt unterstrichen
+- Verbindungslinien: durchgezogen statt gestrichelt, kein Punkt-Marker
+  mehr, Farbe stufenlos von Rot (0%) über Gelb bis Grün (100%) je nach
+  Bauteilzustand
+- Linien starten jetzt exakt am Ende des Unterstrichs (nach dem
+  Rendern anhand der echten Textbox-Maße berechnet, nicht geschätzt)
+
+## Vorheriger Stand (v0.7.0)
 
 **Fuhrpark komplett neu als Blätter-Ansicht statt Liste:**
 - Ein Fahrzeug pro Bildschirm, isometrische Pixelart-Grafik (dieselbe
