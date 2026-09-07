@@ -3,7 +3,16 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.8.0)
+## Aktueller Stand (v0.9.0)
+
+**Bugfix:** Bildbox kollabierte auf Größe 0, wenn das Bild nicht lud
+(z.B. falscher Pfad/Cache) - riss dadurch Balken und Pager-Anzeige aus
+ihrer Position. Box-Größe wird jetzt explizit per JS aus dem
+verfügbaren Platz berechnet, unabhängig vom Ladezustand des Bildes.
+Zusätzlich: sichtbarer schraffierter Platzhalter mit Fehlertext, falls
+das Bild tatsächlich nicht gefunden wird (statt stillem Kollaps).
+
+## Vorheriger Stand (v0.8.0)
 
 **Layout-Fix:** Bildbox wurde in verschachteltem Flexbox-Layout nicht
 korrekt begrenzt und konnte das Fenster zum Scrollen zwingen (was

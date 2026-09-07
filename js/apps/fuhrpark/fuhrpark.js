@@ -117,6 +117,34 @@ const FuhrparkApp = (function () {
   // tatsächlichen Textbox-Maße - die Linie beginnt exakt am Ende des
   // Unterstrichs (linke oder rechte Kante, je nachdem auf welcher
   // Seite das Ziel am Fahrzeug liegt), nicht an einem geschätzten Punkt.
+  // Setzt die Größe der Bildbox explizit in Pixeln, statt sich allein
+  // auf CSS aspect-ratio + max-width/max-height zu verlassen. Grund:
+  // Ohne geladenes Bild (z.B. falscher Pfad) hat die Box sonst keine
+  // eigene Mindestgröße mehr und kollabiert auf 0 - das reißt dann auch
+  // alle nachfolgenden Elemente (Balken, Pager) aus ihrer Position.
+  function visualGroesseAnpassen() {
+    const rahmen = fensterElement.querySelector(".fuhrpark-visual-rahmen");
+    const visual = fensterElement.querySelector("#fuhrpark-visual");
+    if (!rahmen || !visual) return false;
+
+    const verfuegbareBreite = rahmen.clientWidth;
+    const verfuegbareHoehe = rahmen.clientHeight;
+    if (verfuegbareBreite === 0 || verfuegbareHoehe === 0) return false;
+
+    const seitenverhaeltnis = 560 / 436;
+    let breite = verfuegbareBreite;
+    let hoehe = breite / seitenverhaeltnis;
+
+    if (hoehe > verfuegbareHoehe) {
+      hoehe = verfuegbareHoehe;
+      breite = hoehe * seitenverhaeltnis;
+    }
+
+    visual.style.width = `${breite}px`;
+    visual.style.height = `${hoehe}px`;
+    return true;
+  }
+
   function linienPositionieren() {
     const fahrzeug = fahrzeuge[aktuellerIndex];
     if (!fahrzeug) return;
@@ -219,7 +247,8 @@ const FuhrparkApp = (function () {
           <div class="fuhrpark-visual-spalte">
             <div class="fuhrpark-visual-rahmen">
               <div class="fuhrpark-visual" id="fuhrpark-visual">
-                <img class="fuhrpark-visual-bild" src="assets/sprites/lkw-generisch.png" alt="Isometrische LKW-Ansicht">
+                <img class="fuhrpark-visual-bild" src="assets/sprites/lkw-generisch.png" alt="Isometrische LKW-Ansicht"
+                     onerror="this.classList.add('bild-fehler'); this.alt='Bild nicht gefunden: assets/sprites/lkw-generisch.png';">
                 <svg class="fuhrpark-visual-linien" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
                 ${boxen}
               </div>
@@ -327,13 +356,15 @@ const FuhrparkApp = (function () {
       });
     }
 
+    visualGroesseAnpassen();
     linienPositionieren();
   }
 
-  // Bei Größenänderung (z.B. Rotation des Handys) müssen die Linien neu
-  // berechnet werden, da sich die Textboxen dabei verschieben.
+  // Bei Größenänderung (z.B. Rotation des Handys) müssen Box und Linien
+  // neu berechnet werden.
   window.addEventListener("resize", () => {
     if (fensterElement && document.body.contains(fensterElement)) {
+      visualGroesseAnpassen();
       linienPositionieren();
     }
   });
