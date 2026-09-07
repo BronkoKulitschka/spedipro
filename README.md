@@ -3,33 +3,27 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.3.0)
+## Aktueller Stand (v0.4.0)
 
-- **Bugfix:** `#window-layer` blockierte unsichtbar Klicks auf Desktop-
-  Icons (lag im Dokument nach ihnen, ohne selbst Inhalt zu haben). Jetzt
-  `pointer-events: none` auf dem leeren Layer, `auto` auf echten Fenstern.
-- **Neu:** `AppRegistry` (`js/core/appregistry.js`) – Programme tragen
-  sich hier selbst ein (`id`, `name`, `icon`, `open()`), statt zentral
-  verdrahtet zu werden. Startmenü liest diese Liste zur Laufzeit.
-- Startmenü: "Programme »" ist jetzt ein aufklappbares Untermenü
-  (Klick, kein Hover-Zwang - funktioniert auch auf Touch/Handy), zeigt
-  alle registrierten Programme, aktuell also Fuhrpark.
-- Fuhrpark ist damit auf zwei Wegen startbar: Desktop-Icon oder
-  Start → Programme → Fuhrpark.
+Windows-98-Desktop mit Startmenü und erstem Programm (Fuhrpark).
 
-Windows-98-Desktop plus erstes Programm:
+**Fundament:**
 - Taskbar mit Start-Button, Uhr
-- Startmenü (Platzhalter-Einträge)
-- Fenstermanager (`WindowManager.open(...)`) zum Öffnen/Verschieben/
-  Schließen von Programmfenstern
-- **Fuhrpark-Modul**: Flottenübersicht mit 4 Testfahrzeugen, Verschleiß
-  pro Teil (Reifen/Bremsen/Motor), Spritverbrauch. Reine Verwaltung/
-  Berechnung - kein Kauf/Verkauf (Fahrzeughandel), keine Wartung
-  (Werkstatt), keine Tourzuweisung (Tourenplanung), das sind eigene,
-  noch nicht existierende Module.
-- Debug-Buttons im Fuhrpark: "Tour simulieren" (zufällige Tourdaten,
-  Platzhalter für Tourenplanung/Personal) und "Reparieren" (Platzhalter
-  für Werkstatt) - austauschbar, sobald die echten Module existieren.
+- Startmenü mit aufklappbarem "Programme »"-Untermenü (per Klick, kein
+  Hover-Zwang - funktioniert auch auf Touch/Handy), befüllt sich zur
+  Laufzeit aus `AppRegistry` - neue Programme melden sich dort selbst an
+- Fenstermanager (`WindowManager.open(...)`): Fenster sind **Vollbild**,
+  pro Programm nur **einmal gleichzeitig offen** (Singleton über `id`),
+  Schließen nur über den **X-Button**
+
+**Fuhrpark-Modul** (startbar über Desktop-Icon oder Start → Programme):
+- Flottenübersicht mit 4 Testfahrzeugen, Verschleiß pro Teil
+  (Reifen/Bremsen/Motor), Spritverbrauch
+- Reine Verwaltung/Berechnung - kein Kauf/Verkauf (Fahrzeughandel),
+  keine Wartung (Werkstatt), keine Tourzuweisung (Tourenplanung),
+  das sind eigene, noch nicht existierende Module
+- Debug-Buttons: "Tour simulieren" (zufällige Tourdaten, Platzhalter für
+  Tourenplanung/Personal) und "Reparieren" (Platzhalter für Werkstatt)
 
 ## Struktur
 
@@ -45,7 +39,7 @@ spedipro/
     core/
       clock.js          Taskbar-Uhr
       startmenu.js       Startmenü-Verhalten
-      windowmanager.js   Fenster öffnen/verschieben/schließen
+      windowmanager.js   Fenster öffnen/schließen (Vollbild, Singleton pro App)
       verschleiss.js     Verschleiß-/Verbrauchsberechnung (datenquellen-unabhängig)
     apps/
       fuhrpark/

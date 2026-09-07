@@ -177,14 +177,19 @@ const FuhrparkApp = (function () {
       seedFlotte();
     }
 
-    fensterElement = WindowManager.open({
+    const ergebnis = WindowManager.open({
+      id: "fuhrpark",
       title: "Fuhrpark",
-      width: 480,
-      height: 480,
       content: renderInhalt()
     });
 
-    ereignisseBinden();
+    fensterElement = ergebnis.element;
+
+    // Nur beim ersten Öffnen Events binden - ist das Fenster schon offen,
+    // holt WindowManager es nur nach vorne, der Inhalt bleibt unverändert.
+    if (ergebnis.wurdeNeuErstellt) {
+      ereignisseBinden();
+    }
   }
 
   return { open };
