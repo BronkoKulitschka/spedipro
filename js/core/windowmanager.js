@@ -4,33 +4,24 @@
 // Fenster auf dem Desktop öffnen können.
 //
 // Verhalten:
-//  - Fenster sind Vollbild (füllen den ganzen Desktop-Bereich über der
-//    Taskbar), daher kein Verschieben/Skalieren nötig.
-//  - Pro App-id kann immer nur EIN Fenster offen sein. Ein erneuter
-//    open()-Aufruf mit derselben id holt das bestehende Fenster nur
-//    nach vorne, statt ein Duplikat zu erzeugen.
-//  - Schließen nur über den X-Button in der Titelleiste.
+//  - Fenster sind Vollbild, daher kein Verschieben/Skalieren nötig.
+//  - Pro App-id kann immer nur EIN Fenster offen sein (Singleton).
+//  - Minimieren-Button legt das Fenster in die Taskleiste; ein Klick
+//    auf den Taskleisten-Eintrag holt es wieder in den Vordergrund.
+//  - Schließen (X) entfernt Fenster UND Taskleisten-Eintrag komplett.
 
 const WindowManager = (function () {
   const windowLayer = document.getElementById("window-layer");
+  const taskbarWindows = document.getElementById("taskbar-windows");
   let zCounter = 10;
 
-  // id -> Fenster-Element, für das Singleton-Verhalten
+  // id -> { element, taskbarButton, minimiert }
   const offeneFenster = {};
 
-  /**
-   * @param {object} optionen
-   * @param {string} optionen.id - eindeutige App-id (z.B. "fuhrpark").
-   *   Ohne id wird jedes Mal ein neues Fenster erzeugt (kein Singleton).
-   * @param {string} optionen.title - Titel in der Titelleiste
-   * @param {string} optionen.content - initiales HTML des Fensterinhalts
-   * @returns {{element: HTMLElement, wurdeNeuErstellt: boolean}}
-   */
   function open({ id, title, content = "" }) {
     if (id && offeneFenster[id]) {
-      const bestehendesFenster = offeneFenster[id];
-      bringToFront(bestehendesFenster);
-      return { element: bestehendesFenster, wurdeNeuErstellt: false };
+      restoreFenster(id);
+      return { element: offeneFenster[id].element, wurdeNeuErstellt: false };
     }
 
     const win = document.createElement("div");
@@ -41,6 +32,7 @@ const WindowManager = (function () {
       <div class="win98-titlebar">
         <span class="win98-titlebar-title">${title}</span>
         <div class="win98-titlebar-controls">
+          <button class="win98-btn-minimize bevel-out" title="Minimieren">_</button>
           <button class="win98-btn-close bevel-out" title="Schließen">&times;</button>
         </div>
       </div>
@@ -50,16 +42,58 @@ const WindowManager = (function () {
     windowLayer.appendChild(win);
     bringToFront(win);
 
-    win.querySelector(".win98-btn-close").addEventListener("click", () => {
-      win.remove();
-      if (id) delete offeneFenster[id];
-    });
-
     win.addEventListener("mousedown", () => bringToFront(win));
 
-    if (id) offeneFenster[id] = win;
+    win.querySelector(".win98-btn-close").addEventListener("click", () => {
+      schliesseFenster(id);
+    });
+
+    let taskbarButton = null;
+    if (id) {
+      taskbarButton = document.createElement("button");
+      taskbarButton.className = "taskbar-fenster-button win98-button bevel-out";
+      taskbarButton.textContent = title;
+      taskbarButton.addEventListener("click", () => restoreFenster(id));
+      taskbarWindows.appendChild(taskbarButton);
+
+      win.querySelector(".win98-btn-minimize").addEventListener("click", () => {
+        minimiereFenster(id);
+      });
+
+      offeneFenster[id] = { element: win, taskbarButton, minimiert: false };
+    } else {
+      // Fenster ohne id: kein Singleton, kein Taskleisten-Eintrag,
+      // Minimieren-Button entfernen wir dann besser gleich, da es ohne
+      // Taskleisten-Eintrag nicht wieder auffindbar wäre.
+      win.querySelector(".win98-btn-minimize").remove();
+    }
 
     return { element: win, wurdeNeuErstellt: true };
+  }
+
+  function minimiereFenster(id) {
+    const eintrag = offeneFenster[id];
+    if (!eintrag) return;
+    eintrag.element.classList.add("minimiert");
+    eintrag.minimiert = true;
+    eintrag.taskbarButton.classList.add("taskbar-fenster-minimiert");
+  }
+
+  function restoreFenster(id) {
+    const eintrag = offeneFenster[id];
+    if (!eintrag) return;
+    eintrag.element.classList.remove("minimiert");
+    eintrag.minimiert = false;
+    eintrag.taskbarButton.classList.remove("taskbar-fenster-minimiert");
+    bringToFront(eintrag.element);
+  }
+
+  function schliesseFenster(id) {
+    if (id && offeneFenster[id]) {
+      offeneFenster[id].element.remove();
+      offeneFenster[id].taskbarButton.remove();
+      delete offeneFenster[id];
+    }
   }
 
   function bringToFront(win) {

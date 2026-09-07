@@ -106,6 +106,20 @@ html, body {
   height: 24px;
 }
 
+.taskbar-fenster-button {
+  height: 22px;
+  max-width: 160px;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.taskbar-fenster-button.taskbar-fenster-minimiert {
+  font-style: italic;
+}
+
 #tray {
   height: 24px;
   display: flex;

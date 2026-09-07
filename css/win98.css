@@ -82,6 +82,10 @@ body {
   height: 100%;
 }
 
+.win98-window.minimiert {
+  display: none;
+}
+
 .win98-titlebar {
   display: flex;
   align-items: center;

@@ -3,7 +3,17 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.4.0)
+## Aktueller Stand (v0.5.0)
+
+- **Minimieren:** Fenster lassen sich über den `_`-Button in die
+  Taskleiste legen (`display:none`, Fenster bleibt im Hintergrund
+  "offen").
+- **Wiederherstellen:** Klick auf den Taskleisten-Eintrag oder erneutes
+  Öffnen über Icon/Startmenü holt das Fenster zurück in den Vordergrund.
+- **Schließen (X):** entfernt Fenster UND Taskleisten-Eintrag komplett -
+  danach ist das Programm wieder ganz neu startbar.
+
+## Vorheriger Stand (v0.4.0)
 
 Windows-98-Desktop mit Startmenü und erstem Programm (Fuhrpark).
 
@@ -39,7 +49,7 @@ spedipro/
     core/
       clock.js          Taskbar-Uhr
       startmenu.js       Startmenü-Verhalten
-      windowmanager.js   Fenster öffnen/schließen (Vollbild, Singleton pro App)
+      windowmanager.js   Fenster öffnen/minimieren/schließen (Vollbild, Singleton, Taskleiste)
       verschleiss.js     Verschleiß-/Verbrauchsberechnung (datenquellen-unabhängig)
     apps/
       fuhrpark/
