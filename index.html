@@ -6,12 +6,20 @@
   <title>SpediPro 95</title>
   <link rel="stylesheet" href="css/win98.css">
   <link rel="stylesheet" href="css/desktop.css">
+  <link rel="stylesheet" href="css/apps/fuhrpark.css">
 </head>
 <body>
 
   <div id="desktop">
     <!-- Desktop-Icons kommen hier später hin (Fuhrpark, Tourenplanung, ...) -->
-    <div id="desktop-icons"></div>
+    <div id="desktop-icons">
+      <div class="desktop-icon" id="icon-fuhrpark">
+        <!-- Platzhalter-Icon: Emoji, bis eigenes Pixelart-Icon existiert.
+             Später einfach durch <img src="assets/icons/fuhrpark.png"> ersetzen. -->
+        <div class="desktop-icon-bild">🚛</div>
+        <span class="desktop-icon-label">Fuhrpark</span>
+      </div>
+    </div>
 
     <!-- Fenster werden hier zur Laufzeit eingehängt -->
     <div id="window-layer"></div>
@@ -43,5 +51,8 @@
   <script src="js/core/clock.js"></script>
   <script src="js/core/startmenu.js"></script>
   <script src="js/core/windowmanager.js"></script>
+  <script src="js/core/verschleiss.js"></script>
+  <script src="js/data/fahrzeugtypen.js"></script>
+  <script src="js/apps/fuhrpark/fuhrpark.js"></script>
 </body>
 </html>

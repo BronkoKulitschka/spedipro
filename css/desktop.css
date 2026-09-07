@@ -28,6 +28,35 @@ html, body {
   align-content: flex-start;
 }
 
+.desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 64px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.desktop-icon-bild {
+  font-size: 32px;
+  line-height: 1;
+  text-align: center;
+}
+
+.desktop-icon-label {
+  margin-top: 4px;
+  color: var(--win-white);
+  font-size: 11px;
+  text-align: center;
+  text-shadow: 1px 1px 1px black;
+}
+
+.desktop-icon:focus,
+.desktop-icon.selected .desktop-icon-label {
+  background: var(--win-blue-title);
+  outline: 1px dotted var(--win-white);
+}
+
 #window-layer {
   position: absolute;
   inset: 0;

@@ -1,0 +1,88 @@
+/* fuhrpark.css - spezifisch für das Fuhrpark-Programmfenster */
+
+.fuhrpark-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fuhrpark-karte {
+  padding: 6px 8px;
+  background: var(--win-grey-light);
+}
+
+.fuhrpark-karte-kopf {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.fuhrpark-kennzeichen {
+  font-family: monospace;
+}
+
+.fuhrpark-karte-info {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+  margin-bottom: 6px;
+}
+
+.verschleiss-zeile {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.verschleiss-label {
+  width: 90px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.verschleiss-balken-hintergrund {
+  flex: 1;
+  height: 10px;
+  background: var(--win-white);
+  border: 1px solid var(--win-grey-darker);
+}
+
+.verschleiss-balken-fuellung {
+  height: 100%;
+}
+
+.zustand-gut {
+  background: #2e8b2e;
+}
+
+.zustand-warnung {
+  background: #d4a017;
+}
+
+.zustand-kritisch {
+  background: #b22222;
+}
+
+.verschleiss-wert {
+  width: 34px;
+  font-size: 11px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.fuhrpark-debug-leiste {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--win-grey-dark);
+}
+
+.fuhrpark-debug-leiste::before {
+  content: "DEBUG";
+  font-size: 9px;
+  color: var(--win-grey-dark);
+  align-self: center;
+  margin-right: 2px;
+}
