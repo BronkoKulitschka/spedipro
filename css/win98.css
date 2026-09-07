@@ -1,0 +1,125 @@
+/* ==========================================================
+   win98.css
+   Grundbausteine des Windows-98-Looks: Farben, Bevel-Rahmen,
+   Buttons, Titelleisten. Wird von allen Programm-Fenstern
+   wiederverwendet, nicht nur vom Desktop selbst.
+   ========================================================== */
+
+:root {
+  --win-grey: #c0c0c0;
+  --win-grey-dark: #808080;
+  --win-grey-darker: #404040;
+  --win-grey-light: #dfdfdf;
+  --win-white: #ffffff;
+  --win-blue-title: #000080;
+  --win-blue-title-light: #1084d0;
+  --win-text: #000000;
+  --win-desktop-bg: #008080; /* klassisches Teal */
+
+  --font-win: "MS Sans Serif", "Tahoma", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-win);
+  font-size: 12px;
+  color: var(--win-text);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Erhabener Rand (z.B. Buttons, Fenster, Taskbar) */
+.bevel-out {
+  border-top: 1px solid var(--win-grey-light);
+  border-left: 1px solid var(--win-grey-light);
+  border-right: 1px solid var(--win-grey-darker);
+  border-bottom: 1px solid var(--win-grey-darker);
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-grey-dark);
+  background: var(--win-grey);
+}
+
+/* Vertiefter Rand (z.B. gedrückte Buttons, Eingabefelder) */
+.bevel-in {
+  border-top: 1px solid var(--win-grey-darker);
+  border-left: 1px solid var(--win-grey-darker);
+  border-right: 1px solid var(--win-grey-light);
+  border-bottom: 1px solid var(--win-grey-light);
+  box-shadow:
+    inset 1px 1px 0 var(--win-grey-dark),
+    inset -1px -1px 0 var(--win-white);
+  background: var(--win-grey);
+}
+
+.win98-button {
+  font-family: var(--font-win);
+  font-size: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.win98-button:active {
+  /* aus bevel-out wird beim Klick bevel-in */
+  border-top: 1px solid var(--win-grey-darker);
+  border-left: 1px solid var(--win-grey-darker);
+  border-right: 1px solid var(--win-grey-light);
+  border-bottom: 1px solid var(--win-grey-light);
+  box-shadow:
+    inset 1px 1px 0 var(--win-grey-dark),
+    inset -1px -1px 0 var(--win-white);
+  padding: 5px 9px 3px 11px; /* leichter Versatz für "gedrückt"-Gefühl */
+}
+
+.win98-window {
+  position: absolute;
+  min-width: 200px;
+  min-height: 120px;
+  background: var(--win-grey);
+}
+
+.win98-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 4px;
+  background: linear-gradient(90deg, var(--win-blue-title), var(--win-blue-title-light));
+  color: var(--win-white);
+  font-weight: bold;
+  font-size: 12px;
+  cursor: move;
+}
+
+.win98-titlebar-controls {
+  display: flex;
+  gap: 2px;
+}
+
+.win98-titlebar-controls button {
+  width: 16px;
+  height: 14px;
+  font-size: 10px;
+  line-height: 1;
+  padding: 0;
+}
+
+.win98-titlebar-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.win98-window-content {
+  padding: 8px;
+  height: calc(100% - 24px);
+  overflow: auto;
+  background: var(--win-grey);
+}
+
+.hidden {
+  display: none !important;
+}

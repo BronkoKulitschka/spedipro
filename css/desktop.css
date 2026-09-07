@@ -1,0 +1,143 @@
+/* ==========================================================
+   desktop.css
+   Layout des eigentlichen Desktops: Hintergrund, Taskbar,
+   Startmenü. Programm-spezifisches Styling gehört NICHT
+   hierher, sondern in js/apps/<programm>/*.css (später).
+   ========================================================== */
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+#desktop {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 30px); /* Taskbar-Höhe abziehen */
+  background-color: var(--win-desktop-bg);
+  overflow: hidden;
+}
+
+#desktop-icons {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  height: 100%;
+  align-content: flex-start;
+}
+
+#window-layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---------- Taskbar ---------- */
+
+#taskbar {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 3px;
+  background: var(--win-grey);
+  border-top: 1px solid var(--win-grey-light);
+  z-index: 1000;
+}
+
+#start-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: bold;
+  height: 24px;
+}
+
+.start-flag {
+  font-size: 14px;
+}
+
+#taskbar-windows {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+  height: 24px;
+}
+
+#tray {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+}
+
+#tray, #taskbar-windows {
+  border-top: 1px solid var(--win-grey-darker);
+  border-left: 1px solid var(--win-grey-darker);
+  border-right: 1px solid var(--win-grey-light);
+  border-bottom: 1px solid var(--win-grey-light);
+}
+
+#clock {
+  font-size: 12px;
+}
+
+/* ---------- Startmenü ---------- */
+
+#start-menu {
+  position: fixed;
+  left: 2px;
+  bottom: 32px;
+  width: 200px;
+  display: flex;
+  z-index: 1001;
+}
+
+.start-menu-side {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  background: var(--win-blue-title);
+  color: var(--win-white);
+  font-weight: bold;
+  font-size: 14px;
+  padding: 8px 4px;
+  letter-spacing: 1px;
+}
+
+.start-menu-items {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: var(--win-grey);
+}
+
+.start-menu-items li {
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.start-menu-items li:hover:not(.disabled):not(.separator) {
+  background: var(--win-blue-title);
+  color: var(--win-white);
+}
+
+.start-menu-items li.disabled {
+  color: var(--win-grey-dark);
+  cursor: default;
+}
+
+.start-menu-items li.separator {
+  height: 1px;
+  padding: 0;
+  margin: 4px 2px;
+  border-top: 1px solid var(--win-grey-darker);
+  border-bottom: 1px solid var(--win-grey-light);
+  cursor: default;
+}

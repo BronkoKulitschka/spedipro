@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpediPro 95</title>
+  <link rel="stylesheet" href="css/win98.css">
+  <link rel="stylesheet" href="css/desktop.css">
+</head>
+<body>
+
+  <div id="desktop">
+    <!-- Desktop-Icons kommen hier später hin (Fuhrpark, Tourenplanung, ...) -->
+    <div id="desktop-icons"></div>
+
+    <!-- Fenster werden hier zur Laufzeit eingehängt -->
+    <div id="window-layer"></div>
+  </div>
+
+  <div id="taskbar" class="bevel-out">
+    <button id="start-button" class="win98-button bevel-out">
+      <span class="start-flag">🚚</span> Start
+    </button>
+
+    <div id="taskbar-windows"></div>
+
+    <div id="tray">
+      <span id="clock">--:--</span>
+    </div>
+  </div>
+
+  <div id="start-menu" class="hidden bevel-out">
+    <div class="start-menu-side">SpediPro 95</div>
+    <ul class="start-menu-items">
+      <li class="disabled">Programme &raquo;</li>
+      <li class="disabled">Dokumente &raquo;</li>
+      <li class="disabled">Einstellungen &raquo;</li>
+      <li class="separator"></li>
+      <li id="shutdown-item">Beenden...</li>
+    </ul>
+  </div>
+
+  <script src="js/core/clock.js"></script>
+  <script src="js/core/startmenu.js"></script>
+  <script src="js/core/windowmanager.js"></script>
+</body>
+</html>
