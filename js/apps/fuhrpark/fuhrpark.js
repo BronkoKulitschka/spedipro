@@ -198,7 +198,6 @@ const FuhrparkApp = (function () {
 AppRegistry.register({
   id: "fuhrpark",
   name: "Fuhrpark",
-  icon: "🚛",
   open: FuhrparkApp.open
 });
 

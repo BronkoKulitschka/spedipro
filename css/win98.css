@@ -15,12 +15,18 @@
   --win-blue-title-light: #1084d0;
   --win-text: #000000;
   --win-desktop-bg: #008080; /* klassisches Teal */
+  --win-desktop-bg-dither: #006666; /* zweiter Farbton für das Dither-Muster */
 
-  --font-win: "MS Sans Serif", "Tahoma", "Segoe UI", sans-serif;
+  --font-win: "Pixelify Sans", "MS Sans Serif", "Tahoma", monospace;
 }
 
 * {
   box-sizing: border-box;
+}
+
+img {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 body {

@@ -24,7 +24,7 @@
     programmeSubmenu.innerHTML = "";
     AppRegistry.getAll().forEach((app) => {
       const li = document.createElement("li");
-      li.textContent = `${app.icon ? app.icon + " " : ""}${app.name}`;
+      li.textContent = app.name;
       li.addEventListener("click", (event) => {
         event.stopPropagation();
         app.open();

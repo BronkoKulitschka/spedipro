@@ -3,7 +3,21 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.5.0)
+## Aktueller Stand (v0.6.0)
+
+**Pixelart-Design** für Fenster und Taskleiste:
+- Feine Pixel-Schrift ("Pixelify Sans" von Google Fonts) als Standard-
+  schrift überall statt der bisherigen Systemschrift
+- Echtes Pixelart-Icon für Fuhrpark (`assets/icons/fuhrpark.svg`) statt
+  Emoji-Platzhalter - handgezeichnetes Raster, `shape-rendering:
+  crispEdges` + `image-rendering: pixelated` für scharfe Kanten in
+  jeder Größe
+- Eigenes Pixelart-Icon für den Start-Button (`assets/icons/start-flag.svg`)
+- Feines Dither-Muster (4×4px Schachbrett) statt Flatfarbe für den
+  Desktop-Hintergrund - authentisch für die 90er, als Displays mit
+  wenigen Farben zusätzliche Farbtiefe simulierten
+
+## Vorheriger Stand (v0.5.0)
 
 - **Minimieren:** Fenster lassen sich über den `_`-Button in die
   Taskleiste legen (`display:none`, Fenster bleibt im Hintergrund

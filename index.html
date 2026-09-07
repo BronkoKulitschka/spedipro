@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SpediPro 95</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/win98.css">
   <link rel="stylesheet" href="css/desktop.css">
   <link rel="stylesheet" href="css/apps/fuhrpark.css">
@@ -14,9 +17,7 @@
     <!-- Desktop-Icons kommen hier später hin (Fuhrpark, Tourenplanung, ...) -->
     <div id="desktop-icons">
       <div class="desktop-icon" id="icon-fuhrpark">
-        <!-- Platzhalter-Icon: Emoji, bis eigenes Pixelart-Icon existiert.
-             Später einfach durch <img src="assets/icons/fuhrpark.png"> ersetzen. -->
-        <div class="desktop-icon-bild">🚛</div>
+        <img class="desktop-icon-bild" src="assets/icons/fuhrpark.svg" alt="Fuhrpark" width="48" height="28">
         <span class="desktop-icon-label">Fuhrpark</span>
       </div>
     </div>
@@ -27,7 +28,7 @@
 
   <div id="taskbar" class="bevel-out">
     <button id="start-button" class="win98-button bevel-out">
-      <span class="start-flag">🚚</span> Start
+      <img class="start-flag" src="assets/icons/start-flag.svg" alt="" width="13" height="20"> Start
     </button>
 
     <div id="taskbar-windows"></div>
