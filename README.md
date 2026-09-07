@@ -3,7 +3,20 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.9.0)
+## Aktueller Stand (v0.10.0)
+
+**Bugfix (Bild wurde gar nicht angezeigt):** In einer Flexbox-Zeile
+steuert `flex: 1` nur die Breite, nicht die Höhe. Zusammen mit
+`align-items: center` schrumpfte die Bild-Spalte auf ihre Inhaltshöhe,
+der Rahmen bekam Höhe 0 und das Bild lag unsichtbar in einer
+nulldimensionalen Box.
+- `align-items: stretch` auf der Zeile + `align-self: stretch` auf der
+  Bild-Spalte (Pfeil-Buttons bleiben per `align-self: center` mittig)
+- Größenberechnung ist jetzt selbstheilend: `ResizeObserver` rechnet
+  neu, sobald der Rahmen eine echte Größe bekommt, statt beim ersten
+  Fehlversuch stillschweigend aufzugeben
+
+## Vorheriger Stand (v0.9.0)
 
 **Bugfix:** Bildbox kollabierte auf Größe 0, wenn das Bild nicht lud
 (z.B. falscher Pfad/Cache) - riss dadurch Balken und Pager-Anzeige aus

@@ -129,13 +129,18 @@ const FuhrparkApp = (function () {
 
     const verfuegbareBreite = rahmen.clientWidth;
     const verfuegbareHoehe = rahmen.clientHeight;
-    if (verfuegbareBreite === 0 || verfuegbareHoehe === 0) return false;
+
+    // Ohne Breite ist noch gar nichts gelayoutet - dann später erneut
+    // versuchen (siehe ResizeObserver unten), statt stillschweigend
+    // aufzugeben und das Bild unsichtbar zu lassen.
+    if (verfuegbareBreite === 0) return false;
 
     const seitenverhaeltnis = 560 / 436;
     let breite = verfuegbareBreite;
     let hoehe = breite / seitenverhaeltnis;
 
-    if (hoehe > verfuegbareHoehe) {
+    // Höhe nur begrenzen, wenn der Rahmen überhaupt eine kennt.
+    if (verfuegbareHoehe > 0 && hoehe > verfuegbareHoehe) {
       hoehe = verfuegbareHoehe;
       breite = hoehe * seitenverhaeltnis;
     }
@@ -143,6 +148,27 @@ const FuhrparkApp = (function () {
     visual.style.width = `${breite}px`;
     visual.style.height = `${hoehe}px`;
     return true;
+  }
+
+  // Beobachtet den Rahmen und rechnet neu, sobald er eine echte Größe
+  // bekommt. Fängt den Fall ab, dass beim ersten Render noch kein
+  // Layout stand (Bild noch nicht geladen, Fenster gerade erst geöffnet).
+  let groessenBeobachter = null;
+
+  function groessenBeobachtungStarten() {
+    if (typeof ResizeObserver === "undefined") return;
+
+    const rahmen = fensterElement.querySelector(".fuhrpark-visual-rahmen");
+    if (!rahmen) return;
+
+    if (groessenBeobachter) groessenBeobachter.disconnect();
+
+    groessenBeobachter = new ResizeObserver(() => {
+      if (visualGroesseAnpassen()) {
+        linienPositionieren();
+      }
+    });
+    groessenBeobachter.observe(rahmen);
   }
 
   function linienPositionieren() {
@@ -358,6 +384,7 @@ const FuhrparkApp = (function () {
 
     visualGroesseAnpassen();
     linienPositionieren();
+    groessenBeobachtungStarten();
   }
 
   // Bei Größenänderung (z.B. Rotation des Handys) müssen Box und Linien
