@@ -3,7 +3,21 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.10.0)
+## Aktueller Stand (v0.11.0)
+
+**Layout umgestellt.** Reihenfolge von oben nach unten:
+1. Kopfzeile (Fahrzeugname, Kennzeichen, Daten)
+2. Bild - direkt darunter, nutzt die volle Breite
+3. Gesamtzustand-Balken
+4. Blätter-Pfeile - jetzt unten, links/rechts vom Zähler (1 / 4)
+5. Debug-Leiste
+
+Pfeile sind für die waagerechte Leiste umproportioniert (56×32 statt
+36×48). Der Zähler hat eine feste Mindestbreite, damit die Pfeile beim
+Blättern nicht seitlich verspringen. Wischen auf dem Bild blättert
+weiterhin.
+
+## Vorheriger Stand (v0.10.0)
 
 **Bugfix (Bild wurde gar nicht angezeigt):** In einer Flexbox-Zeile
 steuert `flex: 1` nur die Breite, nicht die Höhe. Zusammen mit

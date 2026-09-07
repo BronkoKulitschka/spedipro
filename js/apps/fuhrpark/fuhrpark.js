@@ -139,7 +139,9 @@ const FuhrparkApp = (function () {
     let breite = verfuegbareBreite;
     let hoehe = breite / seitenverhaeltnis;
 
-    // Höhe nur begrenzen, wenn der Rahmen überhaupt eine kennt.
+    // Höhe nur begrenzen, wenn der Rahmen überhaupt eine kennt. Sonst
+    // die volle Breite ausnutzen - das Bild soll waagerecht komplett
+    // ausfüllen.
     if (verfuegbareHoehe > 0 && hoehe > verfuegbareHoehe) {
       hoehe = verfuegbareHoehe;
       breite = hoehe * seitenverhaeltnis;
@@ -267,33 +269,29 @@ const FuhrparkApp = (function () {
           </div>
         </div>
 
-        <div class="fuhrpark-blaetter-zeile">
-          <button class="fuhrpark-nav bevel-out" id="fuhrpark-nav-links" aria-label="Vorheriges Fahrzeug">&#10094;</button>
-
-          <div class="fuhrpark-visual-spalte">
-            <div class="fuhrpark-visual-rahmen">
-              <div class="fuhrpark-visual" id="fuhrpark-visual">
-                <img class="fuhrpark-visual-bild" src="assets/sprites/lkw-generisch.png" alt="Isometrische LKW-Ansicht"
-                     onerror="this.classList.add('bild-fehler'); this.alt='Bild nicht gefunden: assets/sprites/lkw-generisch.png';">
-                <svg class="fuhrpark-visual-linien" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
-                ${boxen}
-              </div>
-            </div>
-
-            <div class="fuhrpark-gesamtbalken">
-              <span class="fuhrpark-gesamtbalken-label">Gesamtzustand</span>
-              <div class="fuhrpark-gesamtbalken-hintergrund">
-                <div class="fuhrpark-gesamtbalken-fuellung ${zustandsKlasse(gesamt)}"
-                     style="width:${gesamt.toFixed(0)}%"></div>
-              </div>
-              <span class="fuhrpark-gesamtbalken-wert">${gesamt.toFixed(0)}%</span>
-            </div>
+        <div class="fuhrpark-visual-rahmen">
+          <div class="fuhrpark-visual" id="fuhrpark-visual">
+            <img class="fuhrpark-visual-bild" src="assets/sprites/lkw-generisch.png" alt="Isometrische LKW-Ansicht"
+                 onerror="this.classList.add('bild-fehler'); this.alt='Bild nicht gefunden: assets/sprites/lkw-generisch.png';">
+            <svg class="fuhrpark-visual-linien" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+            ${boxen}
           </div>
-
-          <button class="fuhrpark-nav bevel-out" id="fuhrpark-nav-rechts" aria-label="Nächstes Fahrzeug">&#10095;</button>
         </div>
 
-        <div class="fuhrpark-pager-indikator">${aktuellerIndex + 1} / ${fahrzeuge.length}</div>
+        <div class="fuhrpark-gesamtbalken">
+          <span class="fuhrpark-gesamtbalken-label">Gesamtzustand</span>
+          <div class="fuhrpark-gesamtbalken-hintergrund">
+            <div class="fuhrpark-gesamtbalken-fuellung ${zustandsKlasse(gesamt)}"
+                 style="width:${gesamt.toFixed(0)}%"></div>
+          </div>
+          <span class="fuhrpark-gesamtbalken-wert">${gesamt.toFixed(0)}%</span>
+        </div>
+
+        <div class="fuhrpark-blaetter-zeile">
+          <button class="fuhrpark-nav bevel-out" id="fuhrpark-nav-links" aria-label="Vorheriges Fahrzeug">&#10094;</button>
+          <div class="fuhrpark-pager-indikator">${aktuellerIndex + 1} / ${fahrzeuge.length}</div>
+          <button class="fuhrpark-nav bevel-out" id="fuhrpark-nav-rechts" aria-label="Nächstes Fahrzeug">&#10095;</button>
+        </div>
 
         <div class="fuhrpark-debug-leiste">
           <button class="win98-button bevel-out" id="fuhrpark-btn-tour">🎲 Tour simulieren</button>
