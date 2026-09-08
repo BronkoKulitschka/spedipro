@@ -3,7 +3,28 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.13.2)
+## Aktueller Stand (v0.13.3)
+
+**Neues Kernmodul `js/core/ausfall.js` - Pannen und Stillstand:**
+- Kritische Grenze je Bauteil: Bremsen 15 %, Reifen 12 %, Antrieb 10 %,
+  Motor 8 %, Karosserie 5 %. Unterschreitung -> Fahrzeug bleibt am
+  aktuellen Standort liegen und kann keine Touren mehr fahren.
+- Zwei Wege zurück: **vor Ort** (nur Reifen, mobiler Dienst - 450 DM,
+  1 Tag) oder **Bergung** (alle übrigen Schäden - 1.800 DM, 3 Tage,
+  +900 DM bei Ausfall im Ausland).
+- Vorwarnung, bevor ein Teil die kritische Grenze erreicht.
+- Kosten und Standzeit landen in der Fahrzeughistorie (Grundlage für
+  die spätere Buchhaltung).
+- Kostenbeträge sind plausible Größenordnungen, aber nicht recherchiert
+  (Vermerk im Code).
+
+**Fahrzeughistorie umgebaut:** In der Detailansicht steht nur noch der
+neueste Eintrag als klickbare Zeile - vorher wuchs die Liste mit jedem
+Ereignis und nahm dem Bild den Platz weg. Klick öffnet die vollständige
+Chronik in einem eigenen Fenster (mit km-Stand je Eintrag, scrollbar,
+eigener Taskleisten-Eintrag).
+
+## Vorheriger Stand (v0.13.2)
 
 **Neue Kernmodule:**
 - `js/core/spielzeit.js` - Spielkalender, startet 01.03.1994. Wird
@@ -233,6 +254,30 @@ spedipro/
 - Beschriftung auf dem Auflieger (Firmenname). Zu beachten: isometrische
   Schrägstellung des Textes, Pixelschrift ohne Weichzeichnung, Cache-
   Schlüssel dann aus Farbe UND Text
+
+**Tourausfall und Vertragsstrafe** - Notiz in `js/core/ausfall.js`.
+Bleibt ein Fahrzeug mitten in einer Tour liegen und wird nicht zeitnah
+instand gesetzt, soll die Tour platzen und eine Strafe fällig werden.
+Braucht die Tourenplanung: heute wird die Tour in einem Rutsch
+abgerechnet, es gibt keinen Zwischenstand "steht bei km X mit Ladung",
+und ohne Auftrag (Kunde, Liefertermin, Entgelt) gibt es keine Grundlage
+für eine Strafe. Rechtlicher Rahmen für die Ausgestaltung: KVO
+(national) und CMR (grenzüberschreitend) - vor Umsetzung prüfen.
+
+**Weitere Fahrzeugkonfigurationen** - ausführliche Notiz in
+`js/data/fahrzeugtypen.js`. Geplant sind Gliederzüge (Motorwagen mit und
+ohne Anhänger), Wechselbrücken-Fahrzeuge (mit und ohne Anhänger),
+Verteilerfahrzeuge 7,5-12 t (mit und ohne Anhänger) und Transporter bis
+3,5 t. Das ist mehr als ein neuer Katalogeintrag: Anhänger/Auflieger
+brauchen eine eigene Einheit mit eigener Laufleistung, eigenem
+Verschleiß und eigenen Prüffristen; die Fristen werden gewichtsabhängig
+(SP-Pflicht erst über 7,5 t bzw. 10 t bei Anhängern, Transporter gar
+nicht); jede Konfiguration braucht ein eigenes Sprite mit eigenen
+Callout-Ankern; Verschleiß und Auslastung müssen das Einsatzprofil
+(Nah- vs. Fernverkehr) berücksichtigen. Transporter fallen besonders aus
+dem Raster: keine Lenkzeitpflicht mit Fahrtenschreiber, Klasse 3 statt
+Klasse 2, ganz andere Preis- und Verbrauchsgrößen - spielerisch als
+Einstiegsfahrzeug für eine junge Spedition gedacht.
 
 **Fahrzeughandel-Modul** - ersetzt die Debug-Kauf-Buttons in der
 Fuhrpark-Übersicht ("Neufahrzeug", "Gebrauchtfahrzeug", "Leeren"). Die

@@ -252,14 +252,98 @@
   color: #6b4e00;
 }
 
+/* ---------- Ausfall / Stillstand ---------- */
+
+.fuhrpark-ausfall {
+  flex-shrink: 0;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  border: 2px solid var(--win-grey-darker);
+}
+
+.fuhrpark-ausfall-stillstand {
+  background: #f3c9c9;
+  border-color: #8a1414;
+}
+
+.fuhrpark-ausfall-warnung {
+  background: #f5e6b8;
+  border-color: #8a6b00;
+}
+
+.fuhrpark-ausfall-titel {
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.fuhrpark-ausfall-stillstand .fuhrpark-ausfall-titel { color: #8a1414; }
+.fuhrpark-ausfall-warnung .fuhrpark-ausfall-titel { color: #6b4e00; }
+
+.fuhrpark-ausfall-text {
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.fuhrpark-ausfall-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.fuhrpark-ausfall-buttons .win98-button {
+  font-size: 11px;
+}
+
+.fuhrpark-frist-marke.marke-stillstand {
+  background: #8a1414;
+  color: var(--win-white);
+  font-weight: bold;
+  border-color: #5a0c0c;
+}
+
 /* ---------- Historie ---------- */
 
-.fuhrpark-historie-liste {
+/* Einzeiliger Anreißer in der Detailansicht - klickbar */
+.fuhrpark-historie-neuester {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  padding: 3px 4px;
+  cursor: pointer;
+  background: var(--win-white);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.fuhrpark-historie-neuester:active {
+  background: var(--win-grey);
+}
+
+.fuhrpark-historie-mehr {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--win-blue-title);
+  text-decoration: underline;
+}
+
+/* Vollständige Chronik im eigenen Fenster */
+.fuhrpark-historie-fenster {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 6px;
+}
+
+.fuhrpark-historie-vollliste {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 140px;
-  overflow-y: auto;
+  background: var(--win-white);
+  border: 1px solid var(--win-grey-darker);
 }
 
 .fuhrpark-historie-eintrag {
@@ -267,7 +351,7 @@
   align-items: baseline;
   gap: 6px;
   font-size: 11px;
-  padding: 1px 0;
+  padding: 3px 5px;
   border-bottom: 1px dotted var(--win-grey-dark);
 }
 
@@ -279,6 +363,14 @@
 .fuhrpark-historie-datum {
   flex-shrink: 0;
   width: 68px;
+  font-family: monospace;
+  color: var(--win-grey-darker);
+}
+
+.fuhrpark-historie-kmstand {
+  flex-shrink: 0;
+  width: 76px;
+  text-align: right;
   font-family: monospace;
   color: var(--win-grey-darker);
 }

@@ -438,6 +438,14 @@ const FuhrparkApp = (function () {
             fristStatus === "ueberfaellig" ? "Frist überfällig" : "Frist bald fällig"
           }</span>`;
 
+    // Ein stehendes Fahrzeug ist die dringlichste Meldung - dann sind
+    // Fristen und Auslastung zweitrangig.
+    const stillstandHinweis = Ausfall.istStillstehend(fahrzeug)
+      ? `<span class="fuhrpark-frist-marke marke-stillstand">⛔ Steht: ${
+          TEIL_LABEL[fahrzeug.ausfall.teil]
+        } defekt</span>`
+      : "";
+
     // Auslastung nur melden, wenn sie auffällig ist - "normal" muss
     // nicht in jeder Zeile stehen.
     const a = Auslastung.berechne(fahrzeug);
@@ -461,6 +469,7 @@ const FuhrparkApp = (function () {
             ${fahrzeug.kmStand.toLocaleString("de-DE")} km · ${fahrzeug.standort} ·
             ${fahrzeug.status}
           </div>
+          ${stillstandHinweis}
           ${fristHinweis}
           ${auslastungHinweis}
           <div class="fuhrpark-uebersicht-zustand">
@@ -484,6 +493,8 @@ const FuhrparkApp = (function () {
     ).length;
 
     const hinweise = [];
+    const anzahlStillstand = fahrzeuge.filter((f) => Ausfall.istStillstehend(f)).length;
+    if (anzahlStillstand > 0) hinweise.push(`${anzahlStillstand} steht`);
     if (anzahlKritisch > 0) hinweise.push(`${anzahlKritisch} kritisch`);
     if (anzahlFristen > 0) hinweise.push(`${anzahlFristen} mit Frist`);
 
@@ -585,9 +596,10 @@ const FuhrparkApp = (function () {
   }
 
   function historieBlock(fahrzeug) {
-    const eintraege = Historie.letzte(fahrzeug, 12);
+    const anzahl = (fahrzeug.historie || []).length;
+    const neuester = Historie.letzte(fahrzeug, 1)[0];
 
-    if (eintraege.length === 0) {
+    if (!neuester) {
       return `
         <div class="fuhrpark-historie">
           <div class="fuhrpark-fristen-titel">Fahrzeughistorie</div>
@@ -596,25 +608,122 @@ const FuhrparkApp = (function () {
       `;
     }
 
-    const zeilen = eintraege
-      .map(
-        (e) => `
-          <li class="fuhrpark-historie-eintrag">
-            <span class="fuhrpark-historie-symbol">${Historie.symbolFuer(e.art)}</span>
-            <span class="fuhrpark-historie-datum">${Spielzeit.formatiere(new Date(e.datum))}</span>
-            <span class="fuhrpark-historie-text">${e.text}</span>
-          </li>
-        `
-      )
-      .join("");
-
+    // Bewusst nur EIN Eintrag: die Liste würde sonst mit jedem Ereignis
+    // wachsen und dem Bild darüber den Platz wegnehmen. Alles Weitere
+    // steht im eigenen Fenster.
     return `
       <div class="fuhrpark-historie">
         <div class="fuhrpark-fristen-titel">
           Fahrzeughistorie
-          <span class="fuhrpark-auslastung-zeitraum">(${(fahrzeug.historie || []).length} Einträge)</span>
+          <span class="fuhrpark-auslastung-zeitraum">(${anzahl} Einträge)</span>
         </div>
-        <ul class="fuhrpark-historie-liste">${zeilen}</ul>
+        <div class="fuhrpark-historie-neuester" id="fuhrpark-historie-oeffnen"
+             title="Alle Einträge anzeigen">
+          <span class="fuhrpark-historie-symbol">${Historie.symbolFuer(neuester.art)}</span>
+          <span class="fuhrpark-historie-datum">${Spielzeit.formatiere(new Date(neuester.datum))}</span>
+          <span class="fuhrpark-historie-text">${neuester.text}</span>
+          <span class="fuhrpark-historie-mehr">alle &raquo;</span>
+        </div>
+      </div>
+    `;
+  }
+
+  /** Vollständige Chronik in einem eigenen Fenster. */
+  function historieFensterOeffnen(fahrzeug) {
+    const eintraege = Historie.alle(fahrzeug);
+
+    const zeilen =
+      eintraege.length === 0
+        ? `<li class="fuhrpark-historie-leer">Noch keine Einträge.</li>`
+        : eintraege
+            .map(
+              (e) => `
+                <li class="fuhrpark-historie-eintrag">
+                  <span class="fuhrpark-historie-symbol">${Historie.symbolFuer(e.art)}</span>
+                  <span class="fuhrpark-historie-datum">${Spielzeit.formatiere(new Date(e.datum))}</span>
+                  <span class="fuhrpark-historie-kmstand">${(e.kmStand || 0).toLocaleString("de-DE")} km</span>
+                  <span class="fuhrpark-historie-text">${e.text}</span>
+                </li>
+              `
+            )
+            .join("");
+
+    const inhalt = `
+      <div class="fuhrpark-historie-fenster">
+        <div class="fuhrpark-kopfzeile">
+          <span class="fuhrpark-fahrzeugname">${fahrzeug.marke} ${fahrzeug.modell}</span>
+          <span class="fuhrpark-kennzeichen">${fahrzeug.kennzeichen}</span>
+        </div>
+        <div class="fuhrpark-datumszeile">${eintraege.length} Einträge, neueste zuerst</div>
+        <ul class="fuhrpark-historie-vollliste">${zeilen}</ul>
+      </div>
+    `;
+
+    const ergebnis = WindowManager.open({
+      id: "fuhrpark-historie",
+      title: `Historie – ${fahrzeug.kennzeichen}`,
+      content: inhalt
+    });
+
+    // War das Fenster schon offen (evtl. mit einem anderen Fahrzeug),
+    // holt WindowManager es nur nach vorne - Inhalt und Titel müssen
+    // dann von Hand aktualisiert werden.
+    if (!ergebnis.wurdeNeuErstellt) {
+      ergebnis.element.querySelector(".win98-window-content").innerHTML = inhalt;
+      ergebnis.element.querySelector(".win98-titlebar-title").textContent =
+        `Historie – ${fahrzeug.kennzeichen}`;
+    }
+  }
+
+  function ausfallBlock(fahrzeug) {
+    if (!Ausfall.istStillstehend(fahrzeug)) {
+      // Kein Ausfall - aber vielleicht eine Vorwarnung.
+      const warnungen = Ausfall.warnungen(fahrzeug);
+      if (warnungen.length === 0) return "";
+
+      const namen = warnungen.map((t) => TEIL_LABEL[t]).join(", ");
+      return `
+        <div class="fuhrpark-ausfall fuhrpark-ausfall-warnung">
+          <div class="fuhrpark-ausfall-titel">⚠ Bald kritisch: ${namen}</div>
+          <div class="fuhrpark-ausfall-text">
+            Unterhalb der kritischen Grenze bleibt das Fahrzeug liegen.
+            Eine geplante Instandsetzung ist deutlich günstiger als eine Bergung.
+          </div>
+        </div>
+      `;
+    }
+
+    const ausfall = fahrzeug.ausfall;
+    const seit = Spielzeit.tageZwischen(new Date(ausfall.seit), Spielzeit.heute());
+    const kostenBergung = Ausfall.kostenBergung(fahrzeug);
+
+    const vorOrtButton = Ausfall.kannVorOrt(fahrzeug)
+      ? `<button class="win98-button bevel-out" id="fuhrpark-btn-vor-ort">
+           🔧 Vor Ort reparieren (${Ausfall.kostenVorOrt(fahrzeug).toLocaleString("de-DE")} DM,
+           ${Ausfall.DAUER_TAGE.vorOrt} Tag)
+         </button>`
+      : "";
+
+    return `
+      <div class="fuhrpark-ausfall fuhrpark-ausfall-stillstand">
+        <div class="fuhrpark-ausfall-titel">
+          ⛔ Fahrzeug steht: ${TEIL_LABEL[ausfall.teil]} bei ${ausfall.wert.toFixed(0)}%
+        </div>
+        <div class="fuhrpark-ausfall-text">
+          Liegengeblieben in ${ausfall.ort}${seit > 0 ? `, seit ${seit} Tagen` : ""}.
+          ${
+            Ausfall.kannVorOrt(fahrzeug)
+              ? "Ein mobiler Dienst kann den Schaden an Ort und Stelle beheben."
+              : "Dieser Schaden lässt sich nicht an der Straße beheben - das Fahrzeug muss geborgen werden."
+          }
+        </div>
+        <div class="fuhrpark-ausfall-buttons">
+          ${vorOrtButton}
+          <button class="win98-button bevel-out" id="fuhrpark-btn-bergung">
+            🚨 Bergung in die Werkstatt (${kostenBergung.toLocaleString("de-DE")} DM,
+            ${Ausfall.DAUER_TAGE.bergung} Tage)
+          </button>
+        </div>
       </div>
     `;
   }
@@ -630,6 +739,8 @@ const FuhrparkApp = (function () {
           <span class="fuhrpark-fahrzeugname">${fahrzeug.marke} ${fahrzeug.modell}</span>
           <span class="fuhrpark-kennzeichen">${fahrzeug.kennzeichen}</span>
         </div>
+
+        ${ausfallBlock(fahrzeug)}
 
         <div class="fuhrpark-visual-rahmen">
           <div class="fuhrpark-visual" id="fuhrpark-visual">
@@ -816,6 +927,15 @@ const FuhrparkApp = (function () {
     if (btnTour) {
       btnTour.addEventListener("click", () => {
         const fahrzeug = fahrzeuge[aktuellerIndex];
+
+        if (Ausfall.istStillstehend(fahrzeug)) {
+          window.alert(
+            "Das Fahrzeug steht und kann keine Tour fahren. " +
+            "Zuerst muss der Schaden behoben werden."
+          );
+          return;
+        }
+
         const tour = Verschleiss.zufaelligeTour();
         const ergebnis = Verschleiss.wendeTourAn(fahrzeug, tour);
 
@@ -832,6 +952,20 @@ const FuhrparkApp = (function () {
         // der Fuhrpark hier selbst vor, damit die Auslastungsrechnung
         // überhaupt einen Zeitverlauf sieht.
         Spielzeit.vorspulen(tour.tage);
+
+        // Ist unterwegs ein Bauteil unter die kritische Grenze gefallen,
+        // bleibt das Fahrzeug liegen.
+        const schaden = Ausfall.pruefe(fahrzeug);
+        if (schaden) {
+          Ausfall.ausloesen(fahrzeug, schaden.teil, schaden.wert);
+          Historie.hinzufuegen(fahrzeug, {
+            art: "schaden",
+            text: `Liegengeblieben in ${fahrzeug.standort}: ` +
+                  `${TEIL_LABEL[schaden.teil]} bei ${schaden.wert.toFixed(0)}%`,
+            daten: { teil: schaden.teil, wert: schaden.wert }
+          });
+        }
+
         neuZeichnen();
       });
     }
@@ -890,6 +1024,39 @@ const FuhrparkApp = (function () {
         neuZeichnen();
       });
     }
+
+    const historieOeffnen = fensterElement.querySelector("#fuhrpark-historie-oeffnen");
+    if (historieOeffnen) {
+      historieOeffnen.addEventListener("click", () => {
+        historieFensterOeffnen(fahrzeuge[aktuellerIndex]);
+      });
+    }
+
+    function ausfallBeheben(weg) {
+      const fahrzeug = fahrzeuge[aktuellerIndex];
+      const ergebnis = Ausfall.beheben(fahrzeug, weg);
+
+      Historie.hinzufuegen(fahrzeug, {
+        art: "reparatur",
+        text:
+          weg === "vorOrt"
+            ? `${TEIL_LABEL[ergebnis.teil]} vor Ort instand gesetzt`
+            : `Bergung in die Werkstatt, ${TEIL_LABEL[ergebnis.teil]} erneuert`,
+        kosten: ergebnis.kosten,
+        tage: ergebnis.tage,
+        daten: { teil: ergebnis.teil, weg }
+      });
+
+      // Die Instandsetzung kostet Standzeit.
+      Spielzeit.vorspulen(ergebnis.tage);
+      neuZeichnen();
+    }
+
+    const btnVorOrt = fensterElement.querySelector("#fuhrpark-btn-vor-ort");
+    if (btnVorOrt) btnVorOrt.addEventListener("click", () => ausfallBeheben("vorOrt"));
+
+    const btnBergung = fensterElement.querySelector("#fuhrpark-btn-bergung");
+    if (btnBergung) btnBergung.addEventListener("click", () => ausfallBeheben("bergung"));
 
     // Bild-Layout nur relevant, wenn die Detailansicht sichtbar ist.
     if (ansicht === "detail") {
