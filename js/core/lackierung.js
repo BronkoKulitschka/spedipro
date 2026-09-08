@@ -111,14 +111,35 @@ const Lackierung = (function () {
     ];
   }
 
+  // Ausschnitt der Zugmaschine für Listen-Miniaturen. Quadratisch, damit
+  // die Kabine bei kleiner Anzeigegröße groß genug bleibt - der ganze
+  // Sattelzug wäre in Listenhöhe zu klein und detailarm.
+  // Werte am Sprite ausgemessen: Kabine inkl. Vorderrad, ohne den
+  // größten Teil des Aufliegers.
+  const MINIATUR_AUSSCHNITT = { x: 25, y: 175, breite: 240, hoehe: 240 };
+
   /**
    * Erzeugt eine umgefärbte Fassung des Sprites.
    * @param {number} zielHue Farbton in Grad (0-360)
    * @returns {string} DataURL des umgefärbten Bildes
    */
   function umfaerben(zielHue) {
+    return erzeugen(zielHue, false);
+  }
+
+  /**
+   * Wie umfaerben(), liefert aber nur den Zugmaschinen-Ausschnitt für
+   * Listen-Miniaturen.
+   */
+  function miniatur(zielHue) {
+    return erzeugen(zielHue, true);
+  }
+
+  function erzeugen(zielHue, alsMiniatur) {
     if (!quellBildGeladen) return QUELLE; // solange nicht geladen: Original
-    if (cache[zielHue]) return cache[zielHue];
+
+    const cacheSchluessel = `${zielHue}${alsMiniatur ? "-mini" : ""}`;
+    if (cache[cacheSchluessel]) return cache[cacheSchluessel];
 
     const leinwand = document.createElement("canvas");
     leinwand.width = quellBild.naturalWidth;
@@ -146,8 +167,23 @@ const Lackierung = (function () {
     }
 
     ctx.putImageData(daten, 0, 0);
-    const dataUrl = leinwand.toDataURL("image/png");
-    cache[zielHue] = dataUrl;
+
+    let ergebnisLeinwand = leinwand;
+
+    if (alsMiniatur) {
+      const a = MINIATUR_AUSSCHNITT;
+      const ausschnitt = document.createElement("canvas");
+      ausschnitt.width = a.breite;
+      ausschnitt.height = a.hoehe;
+      const actx = ausschnitt.getContext("2d");
+      // Kantenglättung aus, damit die Pixelkanten scharf bleiben.
+      actx.imageSmoothingEnabled = false;
+      actx.drawImage(leinwand, a.x, a.y, a.breite, a.hoehe, 0, 0, a.breite, a.hoehe);
+      ergebnisLeinwand = ausschnitt;
+    }
+
+    const dataUrl = ergebnisLeinwand.toDataURL("image/png");
+    cache[cacheSchluessel] = dataUrl;
     return dataUrl;
   }
 
@@ -169,6 +205,7 @@ const Lackierung = (function () {
     FARBEN,
     bildLaden,
     umfaerben,
+    miniatur,
     farbNamen,
     hueVonName,
     zufaelligeFarbe

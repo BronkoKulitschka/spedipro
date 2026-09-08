@@ -122,6 +122,21 @@ const Verschleiss = (function () {
     fahrzeug.verschleiss[teil] = 100;
   }
 
+  /**
+   * Welchen Zustand hätte ein Teil nach der angegebenen Laufleistung
+   * unter durchschnittlichen Bedingungen? Wird gebraucht, um für
+   * Gebrauchtfahrzeuge einen zur Laufleistung passenden Verschleiß
+   * herzuleiten, statt ihn frei zu würfeln.
+   * @returns {number} Zustand in Prozent (0-100)
+   */
+  function erwarteterZustand(teil, kmStand) {
+    if (!TEILE.includes(teil)) {
+      throw new Error(`Unbekanntes Verschleißteil: ${teil}`);
+    }
+    const abnutzung = kmStand * BASISRATE[teil];
+    return Math.max(0, Math.min(100, 100 - abnutzung));
+  }
+
   // ---------- Debug: simulierte Tourdaten ----------
   // Platzhalter, bis Tourenplanung/Personal echte Werte liefern.
   // Erzeugt exakt dieselbe Datenform wie ein echter Tour-Datensatz.
@@ -131,8 +146,18 @@ const Verschleiss = (function () {
   }
 
   function zufaelligeTour() {
+    const km = Math.round(50 + Math.random() * 750);
+
+    // Tourdauer aus der Distanz ableiten. In den 90ern galten bereits
+    // EU-Lenkzeitregeln (grob 9 h Lenkzeit/Tag), was bei Fernverkehr
+    // rund 600-700 km Tagesleistung entspricht. Plus je nach Tour etwas
+    // Zeit für Be- und Entladung.
+    const kmProTag = 600 + Math.random() * 100;
+    const tage = Math.max(1, Math.ceil(km / kmProTag));
+
     return {
-      km: Math.round(50 + Math.random() * 750),
+      km,
+      tage,
       gelaende: zufaelligAus(Object.keys(GELAENDE_FAKTOR)),
       strassenqualitaet: zufaelligAus(Object.keys(STRASSE_FAKTOR)),
       jahreszeit: zufaelligAus(Object.keys(JAHRESZEIT_FAKTOR)),
@@ -142,11 +167,26 @@ const Verschleiss = (function () {
     };
   }
 
+  // Erwartete Lebensdauer pro Teil in km (Kehrwert der Basisrate).
+  // Wird gebraucht, um bei Gebrauchtfahrzeugen zu erkennen, welche
+  // Teile im Laufe des Fahrzeuglebens bereits ersetzt worden sein
+  // müssen (Reifen/Bremsen) und welche über die gesamte Laufleistung
+  // mitaltern (Motor, Antrieb, Karosserie).
+  const LEBENSDAUER_KM = {
+    reifen: 90000,
+    bremsen: 65000,
+    motor: 550000,
+    antrieb: 450000,
+    karosserie: 700000
+  };
+
   return {
     TEILE,
+    LEBENSDAUER_KM,
     wendeTourAn,
     gesamtzustand,
     teilReparieren,
+    erwarteterZustand,
     zufaelligeTour
   };
 })();

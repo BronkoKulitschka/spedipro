@@ -103,10 +103,195 @@
   padding: 6px 8px;
   background: var(--win-grey-light);
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fuhrpark-uebersicht-mini {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  background: var(--win-white);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.fuhrpark-uebersicht-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .fuhrpark-uebersicht-eintrag:active {
   background: var(--win-grey);
+}
+
+.fuhrpark-uebersicht-leer {
+  padding: 16px 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--win-grey-darker);
+}
+
+/* ---------- Termine & Fristen ---------- */
+
+.fuhrpark-datumszeile {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--win-grey-darker);
+  padding: 2px 0 4px 0;
+  border-bottom: 1px solid var(--win-grey-dark);
+}
+
+.fuhrpark-frist-marke {
+  display: inline-block;
+  font-size: 10px;
+  padding: 1px 5px;
+  margin-bottom: 4px;
+  border: 1px solid var(--win-grey-darker);
+}
+
+.fuhrpark-frist-marke.frist-bald {
+  background: #f5e6b8;
+  color: #6b4e00;
+}
+
+.fuhrpark-frist-marke.frist-ueberfaellig {
+  background: #f3c9c9;
+  color: #8a1414;
+  font-weight: bold;
+}
+
+.fuhrpark-fristen {
+  flex-shrink: 0;
+  margin-top: 4px;
+  padding: 6px 8px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.fuhrpark-fristen-titel {
+  font-size: 11px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.fuhrpark-fristen-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fuhrpark-frist {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  padding: 1px 0;
+}
+
+.fuhrpark-frist-ampel {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--win-grey-darker);
+}
+
+.frist-ok .fuhrpark-frist-ampel { background: #2e8b2e; }
+.frist-bald .fuhrpark-frist-ampel { background: #d4a017; }
+.frist-ueberfaellig .fuhrpark-frist-ampel { background: #b22222; }
+
+.fuhrpark-frist-label {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.fuhrpark-frist-text {
+  color: var(--win-grey-darker);
+}
+
+.fuhrpark-frist.frist-ueberfaellig .fuhrpark-frist-text {
+  color: #8a1414;
+  font-weight: bold;
+}
+
+/* ---------- Auslastung ---------- */
+
+.fuhrpark-auslastung,
+.fuhrpark-historie {
+  flex-shrink: 0;
+  margin-top: 4px;
+  padding: 6px 8px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.fuhrpark-auslastung-zeitraum {
+  font-weight: normal;
+  color: var(--win-grey-darker);
+  font-size: 10px;
+}
+
+.fuhrpark-auslastung-details {
+  font-size: 10px;
+  color: var(--win-grey-darker);
+  margin-top: 3px;
+}
+
+.fuhrpark-gesamtbalken-fuellung.auslastung-unterauslastung { background: #4a7ec0; }
+.fuhrpark-gesamtbalken-fuellung.auslastung-normal { background: #2e8b2e; }
+.fuhrpark-gesamtbalken-fuellung.auslastung-hoch { background: #2e8b2e; }
+.fuhrpark-gesamtbalken-fuellung.auslastung-ueberlastung { background: #d4a017; }
+
+.fuhrpark-frist-marke.auslastung-marke-unterauslastung {
+  background: #d3e2f5;
+  color: #1c4a80;
+}
+
+.fuhrpark-frist-marke.auslastung-marke-ueberlastung {
+  background: #f5e6b8;
+  color: #6b4e00;
+}
+
+/* ---------- Historie ---------- */
+
+.fuhrpark-historie-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.fuhrpark-historie-eintrag {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  padding: 1px 0;
+  border-bottom: 1px dotted var(--win-grey-dark);
+}
+
+.fuhrpark-historie-symbol {
+  flex-shrink: 0;
+  width: 14px;
+}
+
+.fuhrpark-historie-datum {
+  flex-shrink: 0;
+  width: 68px;
+  font-family: monospace;
+  color: var(--win-grey-darker);
+}
+
+.fuhrpark-historie-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.fuhrpark-historie-leer {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+  padding: 4px 0;
 }
 
 .fuhrpark-uebersicht-kopf {

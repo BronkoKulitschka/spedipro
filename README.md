@@ -3,7 +3,32 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.13.1)
+## Aktueller Stand (v0.13.2)
+
+**Neue Kernmodule:**
+- `js/core/spielzeit.js` - Spielkalender, startet 01.03.1994. Wird
+  später auch von Tourenplanung, Personal und Buchhaltung genutzt.
+- `js/core/fristen.js` - Termin- und Fristenüberwachung: HU (jährlich),
+  SP (halbjährlich, §29 StVZO für Nutzfahrzeuge > 7,5 t), Wartung
+  (alle 60.000 km, laufleistungsabhängig).
+  ACHTUNG: Intervalle entsprechen heutiger Regelung, für die 90er noch
+  gegenzuprüfen (Vermerk im Code).
+- `js/core/historie.js` - Ereignis-Chronik pro Fahrzeug (Zugang, Tour,
+  Reparatur, Wartung, Prüfung, Schaden), max. 200 Einträge.
+- `js/core/auslastung.js` - Auslastung aus Tour-Einträgen, Zeitraum
+  90 Tage. 100 % = 5 von 7 Tagen (Wochenende, Sonntagsfahrverbot,
+  Werkstattzeiten). Überlastung erst ab 105 %. Fahrzeuge unter 14 Tagen
+  im Bestand werden nicht bewertet.
+
+**Fuhrpark-Oberfläche:**
+- Übersicht: Spieldatum, Flottenauslastung, Zähler für kritische
+  Fahrzeuge / Fristen / Unterauslastung; Marken an auffälligen Einträgen
+- Detail: Fristen-Block mit Ampel, Auslastungs-Block, Fahrzeughistorie
+- Debug: Zeit vorspulen (Woche/Monat), Fristen abhaken. Touren lassen
+  jetzt Spielzeit vergehen (Dauer aus Distanz, ~600-700 km/Tag nach
+  damaligen Lenkzeiten)
+
+## Vorheriger Stand (v0.13.1)
 
 **Neue Übersichtsseite im Fuhrpark:**
 - Startbildschirm listet alle Fahrzeuge mit Marke/Modell, Kennzeichen,
@@ -132,7 +157,7 @@ begrenzt die Bildbox jetzt strikt auf den verfügbaren Platz.
 **Pixelart-Design** für Fenster und Taskleiste:
 - Feine Pixel-Schrift ("Pixelify Sans" von Google Fonts) als Standard-
   schrift überall statt der bisherigen Systemschrift
-- Echtes Pixelart-Icon für Fuhrpark (`assets/icons/fuhrpark.svg`) statt
+- Echtes Pixelart-Icon für Fuhrpark (später ersetzt, siehe oben) statt
   Emoji-Platzhalter - handgezeichnetes Raster, `shape-rendering:
   crispEdges` + `image-rendering: pixelated` für scharfe Kanten in
   jeder Größe
@@ -208,6 +233,24 @@ spedipro/
 - Beschriftung auf dem Auflieger (Firmenname). Zu beachten: isometrische
   Schrägstellung des Textes, Pixelschrift ohne Weichzeichnung, Cache-
   Schlüssel dann aus Farbe UND Text
+
+**Fahrzeughandel-Modul** - ersetzt die Debug-Kauf-Buttons in der
+Fuhrpark-Übersicht ("Neufahrzeug", "Gebrauchtfahrzeug", "Leeren"). Die
+Buttons erst entfernen, wenn das Modul steht. Die Herleitungslogik für
+Gebrauchtfahrzeuge (Laufleistung passend zum Baujahr, Verschleiß
+passend zur Laufleistung, ersetzte Verschleißteile) kann dabei
+übernommen werden - sie steckt in `gebrauchtesFahrzeugKaufen()`.
+
+**Werkstatt-Anbindung im Fuhrpark** - Notiz im Code an der Debug-Leiste
+in `js/apps/fuhrpark/fuhrpark.js`:
+- Der Debug-Button "Reparieren" wird später durch einen "Werkstatt"-
+  Button ersetzt, der das Werkstatt-Modul mit dem Fahrzeug im Kontext
+  öffnet
+- Ohne eigene Werkstatt: Termin bei Fremdwerkstatt (Wartezeit,
+  Fremdpreise). Mit eigener Werkstatt: interne Ausführung (günstiger,
+  aber kapazitätsbegrenzt)
+- Werkstatt-Besitz gehört in den globalen gameState, nicht in den Fuhrpark
+- Debug-Button erst entfernen, wenn das Werkstatt-Modul steht
 
 ## Nächste Schritte
 

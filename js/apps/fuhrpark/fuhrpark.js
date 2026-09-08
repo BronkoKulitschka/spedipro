@@ -54,6 +54,7 @@ const FuhrparkApp = (function () {
       aufbautyp: typ.aufbautyp,
       zuladungKg: typ.zuladungKg,
       verbrauchBasisL100km: typ.verbrauchBasisL100km,
+      neupreisDM: typ.neupreisDM,
       baujahr: typ.baujahrVon,
       kennzeichen: "??-XX 000",
       kmStand: 0,
@@ -103,6 +104,15 @@ const FuhrparkApp = (function () {
         verschleiss: { reifen: 95, bremsen: 96, motor: 97, antrieb: 96, karosserie: 98 }
       })
     ];
+
+    // Jedes Startfahrzeug bekommt eine plausible Prüf-Vorgeschichte.
+    fahrzeuge.forEach((f) => {
+      Fristen.initialisiere(f);
+      Historie.hinzufuegen(f, {
+        art: "kauf",
+        text: `Übernommen in den Fuhrpark (Bj. ${f.baujahr})`
+      });
+    });
   }
 
   // ---------- Darstellung ----------
@@ -265,25 +275,201 @@ const FuhrparkApp = (function () {
     ).join("");
   }
 
+  // ---------- Debug: Fahrzeuge beschaffen ----------
+  // Platzhalter, bis das Fahrzeughandel-Modul existiert. Dient nur dazu,
+  // die Übersichtsliste zum Testen zu füllen.
+
+  const STANDORTE = [
+    "Frankfurt am Main", "Köln", "Hamburg", "München", "Rotterdam",
+    "Mailand", "Lyon", "Wien", "Prag", "Antwerpen"
+  ];
+
+  // Fortlaufende Kennzeichen im Stil der Testflotte (F-SP 1xx).
+
+  function naechstesKennzeichen() {
+    // Höchste vergebene Nummer aus der bestehenden Flotte ermitteln,
+    // damit neue Kennzeichen nicht mit denen der Startflotte kollidieren.
+    const hoechste = fahrzeuge.reduce((max, f) => {
+      const treffer = /F-SP (\d+)/.exec(f.kennzeichen);
+      return treffer ? Math.max(max, Number(treffer[1])) : max;
+    }, 100);
+    return `F-SP ${hoechste + 1}`;
+  }
+
+  function zufaelligAus(liste) {
+    return liste[Math.floor(Math.random() * liste.length)];
+  }
+
+  function zufaelligerTyp() {
+    return zufaelligAus(FAHRZEUGTYPEN);
+  }
+
+  function neuesFahrzeugKaufen() {
+    const typ = zufaelligerTyp();
+    // Neufahrzeug: jüngstes Baujahr der Baureihe, 0 km, alles auf 100%.
+    const fahrzeug = neuesFahrzeugAusTyp(typ.typId, {
+      baujahr: typ.baujahrBis,
+      kennzeichen: naechstesKennzeichen(),
+      kmStand: 0,
+      standort: zufaelligAus(STANDORTE),
+      lackierung: Lackierung.zufaelligeFarbe(),
+      verschleiss: { reifen: 100, bremsen: 100, motor: 100, antrieb: 100, karosserie: 100 }
+    });
+    Fristen.initialisiere(fahrzeug, { neuwagen: true });
+    Historie.hinzufuegen(fahrzeug, {
+      art: "kauf",
+      text: `Neufahrzeug übernommen (${typ.marke} ${typ.modell})`,
+      kosten: typ.neupreisDM
+    });
+    fahrzeuge.push(fahrzeug);
+    return fahrzeug;
+  }
+
+  function gebrauchtesFahrzeugKaufen() {
+    const typ = zufaelligerTyp();
+
+    // Baujahr irgendwo in der Bauzeit, Laufleistung grob passend dazu:
+    // historisch realistisch sind ~80.000-130.000 km im Jahr für einen
+    // Fernverkehrs-Sattelzug.
+    const baujahr =
+      typ.baujahrVon + Math.floor(Math.random() * (typ.baujahrBis - typ.baujahrVon + 1));
+    const alterJahre = Math.max(1, typ.baujahrBis - baujahr + 1);
+    const kmProJahr = 80000 + Math.random() * 50000;
+    const kmStand = Math.round(alterJahre * kmProJahr);
+
+    // Verschleiß passend zur Laufleistung herleiten, statt frei zu
+    // würfeln - sonst gäbe es 400.000-km-Fahrzeuge mit Neuzustand.
+    //
+    // Wichtig: Kurzlebige Teile (Reifen, Bremsen) wurden im Laufe des
+    // Fahrzeuglebens längst mehrfach ersetzt - ein Gebrauchter mit
+    // 300.000 km fährt nicht auf der Erstbereifung. Für diese Teile
+    // zählt daher nur die Laufleistung SEIT dem letzten Wechsel.
+    // Langlebige Teile (Motor, Antrieb, Karosserie) altern dagegen über
+    // die gesamte Laufleistung mit.
+    const verschleiss = {};
+    Verschleiss.TEILE.forEach((teil) => {
+      const lebensdauer = Verschleiss.LEBENSDAUER_KM[teil];
+      let massgeblicheKm = kmStand;
+
+      if (kmStand > lebensdauer * 0.9) {
+        // Teil muss zwischenzeitlich ersetzt worden sein - seitdem ist
+        // irgendein Teil seiner Lebensdauer vergangen.
+        massgeblicheKm = Math.random() * lebensdauer * 0.9;
+      }
+
+      const erwartet = Verschleiss.erwarteterZustand(teil, massgeblicheKm);
+      const streuung = 0.85 + Math.random() * 0.3; // 85-115% (Pflege des Vorbesitzers)
+      verschleiss[teil] = Math.max(5, Math.min(100, erwartet * streuung));
+    });
+
+    const fahrzeug = neuesFahrzeugAusTyp(typ.typId, {
+      baujahr,
+      kennzeichen: naechstesKennzeichen(),
+      kmStand,
+      standort: zufaelligAus(STANDORTE),
+      lackierung: Lackierung.zufaelligeFarbe(),
+      verschleiss
+    });
+    Fristen.initialisiere(fahrzeug);
+    Historie.hinzufuegen(fahrzeug, {
+      art: "kauf",
+      text: `Gebrauchtfahrzeug übernommen (Bj. ${baujahr}, ${kmStand.toLocaleString("de-DE")} km)`,
+      kosten: restwert(fahrzeug)
+    });
+    fahrzeuge.push(fahrzeug);
+    return fahrzeug;
+  }
+
+  /**
+   * Grobe Restwertschätzung in DM.
+   *
+   * GEPLANT: Wandert später ins Fahrzeughandel-Modul - dort dann mit
+   * Marktschwankungen, Verhandlung und Händlerspanne. Hier bewusst
+   * simpel gehalten, damit der Debug-Verkauf einen plausiblen Betrag
+   * nennen kann.
+   *
+   * Faktoren: Alter (Nutzfahrzeuge verlieren in den ersten Jahren
+   * kräftig), Laufleistung und der technische Zustand.
+   */
+  function restwert(fahrzeug) {
+    const bezugsjahr = 1996; // solange es keine Spielzeit im gameState gibt
+    const alter = Math.max(0, bezugsjahr - fahrzeug.baujahr);
+
+    // Wertverlust ca. 15% pro Jahr, aber nie unter 15% Restwert.
+    const altersfaktor = Math.max(0.15, Math.pow(0.85, alter));
+
+    // Laufleistung: bis ~1 Mio km linear bis auf 30% herunter.
+    const kmFaktor = Math.max(0.3, 1 - fahrzeug.kmStand / 1000000);
+
+    // Zustand wirkt direkt mit (halbes Gewicht, damit ein schlechter
+    // Zustand den Wert drückt, aber nicht auf null zieht).
+    const zustand = Verschleiss.gesamtzustand(fahrzeug) / 100;
+    const zustandsfaktor = 0.5 + zustand * 0.5;
+
+    return Math.round(
+      (fahrzeug.neupreisDM || 150000) * altersfaktor * kmFaktor * zustandsfaktor
+    );
+  }
+
+  function fahrzeugVerkaufen(index) {
+    fahrzeuge.splice(index, 1);
+    if (aktuellerIndex >= fahrzeuge.length) {
+      aktuellerIndex = Math.max(0, fahrzeuge.length - 1);
+    }
+    ansicht = "uebersicht"; // verkauftes Fahrzeug kann nicht mehr angezeigt werden
+    neuZeichnen();
+  }
+
+  function miniaturQuelle(fahrzeug) {
+    const hue = Lackierung.hueVonName(fahrzeug.lackierung);
+    return hue === undefined ? Lackierung.QUELLE : Lackierung.miniatur(hue);
+  }
+
   function uebersichtZeile(fahrzeug, index) {
     const gesamt = Verschleiss.gesamtzustand(fahrzeug);
+    const fristStatus = Fristen.schlimmsterStatus(fahrzeug);
+
+    // Nur auffällige Fristen anzeigen - "alles in Ordnung" muss nicht
+    // in jeder Zeile stehen und würde die Liste unruhig machen.
+    const fristHinweis =
+      fristStatus === "ok"
+        ? ""
+        : `<span class="fuhrpark-frist-marke frist-${fristStatus}">${
+            fristStatus === "ueberfaellig" ? "Frist überfällig" : "Frist bald fällig"
+          }</span>`;
+
+    // Auslastung nur melden, wenn sie auffällig ist - "normal" muss
+    // nicht in jeder Zeile stehen.
+    const a = Auslastung.berechne(fahrzeug);
+    const auslastungHinweis =
+      a.bewertung === "unterauslastung" || a.bewertung === "ueberlastung"
+        ? `<span class="fuhrpark-frist-marke auslastung-marke-${a.bewertung}">${
+            a.text
+          } (${a.prozent.toFixed(0)}%)</span>`
+        : "";
+
     return `
       <li class="fuhrpark-uebersicht-eintrag bevel-out" data-index="${index}">
-        <div class="fuhrpark-uebersicht-kopf">
-          <span class="fuhrpark-uebersicht-name">${fahrzeug.marke} ${fahrzeug.modell}</span>
-          <span class="fuhrpark-uebersicht-kennzeichen">${fahrzeug.kennzeichen}</span>
-        </div>
-        <div class="fuhrpark-uebersicht-meta">
-          ${fahrzeug.baujahr} · ${fahrzeug.aufbautyp} ·
-          ${fahrzeug.kmStand.toLocaleString("de-DE")} km · ${fahrzeug.standort} ·
-          ${fahrzeug.status}
-        </div>
-        <div class="fuhrpark-uebersicht-zustand">
-          <div class="fuhrpark-gesamtbalken-hintergrund">
-            <div class="fuhrpark-gesamtbalken-fuellung ${zustandsKlasse(gesamt)}"
-                 style="width:${gesamt.toFixed(0)}%"></div>
+        <img class="fuhrpark-uebersicht-mini" src="${miniaturQuelle(fahrzeug)}" alt="">
+        <div class="fuhrpark-uebersicht-text">
+          <div class="fuhrpark-uebersicht-kopf">
+            <span class="fuhrpark-uebersicht-name">${fahrzeug.marke} ${fahrzeug.modell}</span>
+            <span class="fuhrpark-uebersicht-kennzeichen">${fahrzeug.kennzeichen}</span>
           </div>
-          <span class="fuhrpark-gesamtbalken-wert">${gesamt.toFixed(0)}%</span>
+          <div class="fuhrpark-uebersicht-meta">
+            ${fahrzeug.baujahr} · ${fahrzeug.aufbautyp} ·
+            ${fahrzeug.kmStand.toLocaleString("de-DE")} km · ${fahrzeug.standort} ·
+            ${fahrzeug.status}
+          </div>
+          ${fristHinweis}
+          ${auslastungHinweis}
+          <div class="fuhrpark-uebersicht-zustand">
+            <div class="fuhrpark-gesamtbalken-hintergrund">
+              <div class="fuhrpark-gesamtbalken-fuellung ${zustandsKlasse(gesamt)}"
+                   style="width:${gesamt.toFixed(0)}%"></div>
+            </div>
+            <span class="fuhrpark-gesamtbalken-wert">${gesamt.toFixed(0)}%</span>
+          </div>
         </div>
       </li>
     `;
@@ -293,19 +479,53 @@ const FuhrparkApp = (function () {
     const anzahlKritisch = fahrzeuge.filter(
       (f) => Verschleiss.gesamtzustand(f) < 40
     ).length;
+    const anzahlFristen = fahrzeuge.filter(
+      (f) => Fristen.schlimmsterStatus(f) !== "ok"
+    ).length;
+
+    const hinweise = [];
+    if (anzahlKritisch > 0) hinweise.push(`${anzahlKritisch} kritisch`);
+    if (anzahlFristen > 0) hinweise.push(`${anzahlFristen} mit Frist`);
+
+    const flotte = Auslastung.flotte(fahrzeuge);
+    if (flotte.unterausgelastet > 0) hinweise.push(`${flotte.unterausgelastet} unterausgelastet`);
 
     return `
       <div class="fuhrpark-uebersicht">
         <div class="fuhrpark-kopfzeile">
           <span class="fuhrpark-fahrzeugname">Fuhrpark</span>
           <span class="fuhrpark-uebersicht-zaehler">${fahrzeuge.length} Fahrzeuge${
-            anzahlKritisch > 0 ? ` · ${anzahlKritisch} kritisch` : ""
+            hinweise.length > 0 ? ` · ${hinweise.join(" · ")}` : ""
           }</span>
         </div>
 
+        <div class="fuhrpark-datumszeile">
+          ${Spielzeit.formatiereLang(Spielzeit.heute())}
+          ${
+            flotte.bewertbareAnzahl > 0
+              ? ` · Flottenauslastung ${flotte.prozent.toFixed(0)}%`
+              : ""
+          }
+        </div>
+
         <ul class="fuhrpark-uebersicht-liste">
-          ${fahrzeuge.map(uebersichtZeile).join("")}
+          ${
+            fahrzeuge.length === 0
+              ? `<li class="fuhrpark-uebersicht-leer">Keine Fahrzeuge im Fuhrpark.</li>`
+              : fahrzeuge.map(uebersichtZeile).join("")
+          }
         </ul>
+
+        <div class="fuhrpark-debug-leiste">
+          <!-- GEPLANT: Ersetzt durch das Fahrzeughandel-Modul, sobald es
+               existiert. Bis dahin nur zum Füllen der Liste.
+               Das Vorspulen der Zeit übernimmt später die Tourenplanung. -->
+          <button class="win98-button bevel-out" id="fuhrpark-btn-kauf-neu">🚚 Neufahrzeug</button>
+          <button class="win98-button bevel-out" id="fuhrpark-btn-kauf-gebraucht">🔑 Gebrauchtfahrzeug</button>
+          <button class="win98-button bevel-out" id="fuhrpark-btn-flotte-leeren">🗑 Leeren</button>
+          <button class="win98-button bevel-out" id="fuhrpark-btn-zeit-woche">📅 +1 Woche</button>
+          <button class="win98-button bevel-out" id="fuhrpark-btn-zeit-monat">📅 +1 Monat</button>
+        </div>
       </div>
     `;
   }
@@ -315,6 +535,88 @@ const FuhrparkApp = (function () {
     // Ohne bekannte Farbe oder solange das Sprite noch nicht geladen ist,
     // liefert umfaerben() automatisch das Originalbild zurück.
     return hue === undefined ? Lackierung.QUELLE : Lackierung.umfaerben(hue);
+  }
+
+  function fristenBlock(fahrzeug) {
+    const zeilen = Fristen.alle(fahrzeug)
+      .map(
+        (f) => `
+          <li class="fuhrpark-frist frist-${f.status}">
+            <span class="fuhrpark-frist-ampel"></span>
+            <span class="fuhrpark-frist-label">${f.label}</span>
+            <span class="fuhrpark-frist-text">${f.text}</span>
+          </li>
+        `
+      )
+      .join("");
+
+    return `
+      <div class="fuhrpark-fristen">
+        <div class="fuhrpark-fristen-titel">Termine &amp; Fristen</div>
+        <ul class="fuhrpark-fristen-liste">${zeilen}</ul>
+      </div>
+    `;
+  }
+
+  function auslastungBlock(fahrzeug) {
+    const a = Auslastung.berechne(fahrzeug);
+    const breite = Math.min(100, a.prozent);
+
+    return `
+      <div class="fuhrpark-auslastung">
+        <div class="fuhrpark-fristen-titel">
+          Auslastung <span class="fuhrpark-auslastung-zeitraum">(letzte ${Auslastung.ZEITRAUM_TAGE} Tage)</span>
+        </div>
+        <div class="fuhrpark-gesamtbalken">
+          <span class="fuhrpark-gesamtbalken-label">${a.text}</span>
+          <div class="fuhrpark-gesamtbalken-hintergrund">
+            <div class="fuhrpark-gesamtbalken-fuellung auslastung-${a.bewertung}"
+                 style="width:${breite.toFixed(0)}%"></div>
+          </div>
+          <span class="fuhrpark-gesamtbalken-wert">${a.prozent.toFixed(0)}%</span>
+        </div>
+        <div class="fuhrpark-auslastung-details">
+          ${a.touren} Touren · ${a.einsatztage} von ${a.verfuegbareTage} möglichen Einsatztagen ·
+          ${a.km.toLocaleString("de-DE")} km
+          ${a.kmProEinsatztag > 0 ? `· Ø ${Math.round(a.kmProEinsatztag).toLocaleString("de-DE")} km/Tag` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  function historieBlock(fahrzeug) {
+    const eintraege = Historie.letzte(fahrzeug, 12);
+
+    if (eintraege.length === 0) {
+      return `
+        <div class="fuhrpark-historie">
+          <div class="fuhrpark-fristen-titel">Fahrzeughistorie</div>
+          <div class="fuhrpark-historie-leer">Noch keine Einträge.</div>
+        </div>
+      `;
+    }
+
+    const zeilen = eintraege
+      .map(
+        (e) => `
+          <li class="fuhrpark-historie-eintrag">
+            <span class="fuhrpark-historie-symbol">${Historie.symbolFuer(e.art)}</span>
+            <span class="fuhrpark-historie-datum">${Spielzeit.formatiere(new Date(e.datum))}</span>
+            <span class="fuhrpark-historie-text">${e.text}</span>
+          </li>
+        `
+      )
+      .join("");
+
+    return `
+      <div class="fuhrpark-historie">
+        <div class="fuhrpark-fristen-titel">
+          Fahrzeughistorie
+          <span class="fuhrpark-auslastung-zeitraum">(${(fahrzeug.historie || []).length} Einträge)</span>
+        </div>
+        <ul class="fuhrpark-historie-liste">${zeilen}</ul>
+      </div>
+    `;
   }
 
   function renderDetail() {
@@ -359,23 +661,49 @@ const FuhrparkApp = (function () {
           <dt>Standort</dt><dd>${fahrzeug.standort}</dd>
           <dt>Status</dt><dd>${fahrzeug.status}</dd>
           <dt>Verbrauch gesamt</dt><dd>${fahrzeug.verbrauchGesamtL.toFixed(0)} l</dd>
+          <dt>Restwert (geschätzt)</dt><dd>${restwert(fahrzeug).toLocaleString("de-DE")} DM</dd>
         </dl>
 
+        ${fristenBlock(fahrzeug)}
+        ${auslastungBlock(fahrzeug)}
+        ${historieBlock(fahrzeug)}
+
         <div class="fuhrpark-debug-leiste">
+          <!-- GEPLANT: Der Reparieren-Button wird später durch einen
+               "Werkstatt"-Button ersetzt, der das Werkstatt-Modul mit
+               diesem Fahrzeug im Kontext öffnet. Dort dann zwei Fälle:
+                 1) Keine eigene Werkstatt -> Termin bei einer
+                    Fremdwerkstatt vereinbaren (Wartezeit, Fremdpreise,
+                    Fahrzeug ist bis dahin gebunden)
+                 2) Eigene Werkstatt vorhanden -> Arbeiten intern
+                    ausführen (günstiger, aber durch eigene Kapazität
+                    begrenzt)
+               Ob eine eigene Werkstatt existiert, gehört NICHT in den
+               Fuhrpark, sondern in den späteren globalen gameState.
+               Den Debug-Button erst entfernen, wenn das Werkstatt-Modul
+               steht - sonst lässt sich Verschleiß nicht zurücksetzen.
+               Details werden beim Bau des Werkstatt-Moduls festgelegt. -->
           <button class="win98-button bevel-out" id="fuhrpark-btn-tour">🎲 Tour simulieren</button>
           <select class="win98-button bevel-out" id="fuhrpark-select-teil">
             ${reparaturOptionen()}
           </select>
           <button class="win98-button bevel-out" id="fuhrpark-btn-reparieren">🔧 Reparieren (Debug)</button>
+          <button class="win98-button bevel-out" id="fuhrpark-btn-verkaufen">💰 Verkaufen (${restwert(fahrzeug).toLocaleString("de-DE")} DM)</button>
+          <select class="win98-button bevel-out" id="fuhrpark-select-frist">
+            ${Object.entries(Fristen.ARTEN)
+              .map(([art, d]) => `<option value="${art}">${d.kurz}</option>`)
+              .join("")}
+          </select>
+          <button class="win98-button bevel-out" id="fuhrpark-btn-frist-erledigen">📋 Frist erledigt (Debug)</button>
         </div>
       </div>
     `;
   }
 
   function renderInhalt() {
-    if (fahrzeuge.length === 0) {
-      return `<p>Keine Fahrzeuge im Fuhrpark.</p>`;
-    }
+    // Auch bei leerer Flotte die Übersicht zeigen - dort sitzen die
+    // Kauf-Buttons, sonst wäre der leere Zustand eine Sackgasse.
+    if (fahrzeuge.length === 0) return renderUebersicht();
     return ansicht === "uebersicht" ? renderUebersicht() : renderDetail();
   }
 
@@ -436,6 +764,47 @@ const FuhrparkApp = (function () {
       });
     });
 
+    const btnKaufNeu = fensterElement.querySelector("#fuhrpark-btn-kauf-neu");
+    if (btnKaufNeu) {
+      btnKaufNeu.addEventListener("click", () => {
+        neuesFahrzeugKaufen();
+        neuZeichnen();
+      });
+    }
+
+    const btnKaufGebraucht = fensterElement.querySelector("#fuhrpark-btn-kauf-gebraucht");
+    if (btnKaufGebraucht) {
+      btnKaufGebraucht.addEventListener("click", () => {
+        gebrauchtesFahrzeugKaufen();
+        neuZeichnen();
+      });
+    }
+
+    const btnLeeren = fensterElement.querySelector("#fuhrpark-btn-flotte-leeren");
+    if (btnLeeren) {
+      btnLeeren.addEventListener("click", () => {
+        fahrzeuge = [];
+        aktuellerIndex = 0;
+        neuZeichnen();
+      });
+    }
+
+    const btnZeitWoche = fensterElement.querySelector("#fuhrpark-btn-zeit-woche");
+    if (btnZeitWoche) {
+      btnZeitWoche.addEventListener("click", () => {
+        Spielzeit.vorspulen(7);
+        neuZeichnen();
+      });
+    }
+
+    const btnZeitMonat = fensterElement.querySelector("#fuhrpark-btn-zeit-monat");
+    if (btnZeitMonat) {
+      btnZeitMonat.addEventListener("click", () => {
+        Spielzeit.vorspulen(30);
+        neuZeichnen();
+      });
+    }
+
     // ---- Detailansicht ----
     const btnZurueck = fensterElement.querySelector("#fuhrpark-btn-zurueck");
     if (btnZurueck) btnZurueck.addEventListener("click", zurueckZurUebersicht);
@@ -448,7 +817,21 @@ const FuhrparkApp = (function () {
       btnTour.addEventListener("click", () => {
         const fahrzeug = fahrzeuge[aktuellerIndex];
         const tour = Verschleiss.zufaelligeTour();
-        Verschleiss.wendeTourAn(fahrzeug, tour);
+        const ergebnis = Verschleiss.wendeTourAn(fahrzeug, tour);
+
+        Historie.hinzufuegen(fahrzeug, {
+          art: "tour",
+          text: `${tour.km.toLocaleString("de-DE")} km · ${tour.gelaende} · ` +
+                `${tour.strassenqualitaet} · ${tour.beladungProzent}% beladen`,
+          km: tour.km,
+          tage: tour.tage,
+          daten: { verbrauchL: Math.round(ergebnis.verbrauchL) }
+        });
+
+        // Eine Tour kostet Zeit. Solange die Tourenplanung fehlt, spult
+        // der Fuhrpark hier selbst vor, damit die Auslastungsrechnung
+        // überhaupt einen Zeitverlauf sieht.
+        Spielzeit.vorspulen(tour.tage);
         neuZeichnen();
       });
     }
@@ -458,7 +841,52 @@ const FuhrparkApp = (function () {
       btnReparieren.addEventListener("click", () => {
         const fahrzeug = fahrzeuge[aktuellerIndex];
         const select = fensterElement.querySelector("#fuhrpark-select-teil");
-        Verschleiss.teilReparieren(fahrzeug, select.value);
+        const teil = select.value;
+        const zustandVorher = fahrzeug.verschleiss[teil];
+
+        Verschleiss.teilReparieren(fahrzeug, teil);
+
+        Historie.hinzufuegen(fahrzeug, {
+          art: "reparatur",
+          text: `${TEIL_LABEL[teil]} erneuert (vorher ${zustandVorher.toFixed(0)}%)`,
+          daten: { teil, zustandVorher }
+        });
+
+        neuZeichnen();
+      });
+    }
+
+    const btnVerkaufen = fensterElement.querySelector("#fuhrpark-btn-verkaufen");
+    if (btnVerkaufen) {
+      btnVerkaufen.addEventListener("click", () => {
+        const fahrzeug = fahrzeuge[aktuellerIndex];
+        const erloes = restwert(fahrzeug).toLocaleString("de-DE");
+        // Rückfrage, da ein Verkauf das Fahrzeug endgültig entfernt.
+        const bestaetigt = window.confirm(
+          `${fahrzeug.marke} ${fahrzeug.modell} (${fahrzeug.kennzeichen}) ` +
+          `für ${erloes} DM verkaufen?`
+        );
+        if (bestaetigt) {
+          fahrzeugVerkaufen(aktuellerIndex);
+        }
+      });
+    }
+
+    const btnFristErledigen = fensterElement.querySelector("#fuhrpark-btn-frist-erledigen");
+    if (btnFristErledigen) {
+      btnFristErledigen.addEventListener("click", () => {
+        const select = fensterElement.querySelector("#fuhrpark-select-frist");
+        const fahrzeug = fahrzeuge[aktuellerIndex];
+        const art = select.value;
+
+        Fristen.erledigen(fahrzeug, art);
+
+        Historie.hinzufuegen(fahrzeug, {
+          art: art === "wartung" ? "wartung" : "pruefung",
+          text: `${Fristen.ARTEN[art].label} durchgeführt`,
+          daten: { fristart: art }
+        });
+
         neuZeichnen();
       });
     }
