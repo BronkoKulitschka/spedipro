@@ -13,6 +13,9 @@ const FuhrparkApp = (function () {
   let fahrzeuge = [];
   let naechsteId = 1;
   let aktuellerIndex = 0;
+  // "uebersicht" = Liste aller Fahrzeuge, "detail" = Einzelansicht mit
+  // LKW-Grafik und Callouts.
+  let ansicht = "uebersicht";
 
   const TEIL_LABEL = {
     reifen: "Reifen",
@@ -56,6 +59,7 @@ const FuhrparkApp = (function () {
       kmStand: 0,
       standort: "Frankfurt am Main",
       status: "verfügbar",
+      lackierung: "rot",
       verbrauchGesamtL: 0,
       verschleiss: { reifen: 100, bremsen: 100, motor: 100, antrieb: 100, karosserie: 100 }
     };
@@ -70,6 +74,7 @@ const FuhrparkApp = (function () {
         kennzeichen: "F-SP 101",
         kmStand: 312000,
         standort: "Frankfurt am Main",
+        lackierung: "rot",
         verschleiss: { reifen: 72, bremsen: 58, motor: 80, antrieb: 75, karosserie: 88 }
       }),
       neuesFahrzeugAusTyp("skanda-143m", {
@@ -77,6 +82,7 @@ const FuhrparkApp = (function () {
         kennzeichen: "F-SP 102",
         kmStand: 187000,
         standort: "Köln",
+        lackierung: "blau",
         verschleiss: { reifen: 90, bremsen: 85, motor: 91, antrieb: 89, karosserie: 94 }
       }),
       neuesFahrzeugAusTyp("iveko-turbostar", {
@@ -84,6 +90,7 @@ const FuhrparkApp = (function () {
         kennzeichen: "F-SP 103",
         kmStand: 455000,
         standort: "Mailand",
+        lackierung: "gelb",
         status: "außer Betrieb",
         verschleiss: { reifen: 40, bremsen: 22, motor: 35, antrieb: 30, karosserie: 55 }
       }),
@@ -92,6 +99,7 @@ const FuhrparkApp = (function () {
         kennzeichen: "F-SP 104",
         kmStand: 64000,
         standort: "Rotterdam",
+        lackierung: "gruen",
         verschleiss: { reifen: 95, bremsen: 96, motor: 97, antrieb: 96, karosserie: 98 }
       })
     ];
@@ -257,11 +265,59 @@ const FuhrparkApp = (function () {
     ).join("");
   }
 
-  function renderInhalt() {
-    if (fahrzeuge.length === 0) {
-      return `<p>Keine Fahrzeuge im Fuhrpark.</p>`;
-    }
+  function uebersichtZeile(fahrzeug, index) {
+    const gesamt = Verschleiss.gesamtzustand(fahrzeug);
+    return `
+      <li class="fuhrpark-uebersicht-eintrag bevel-out" data-index="${index}">
+        <div class="fuhrpark-uebersicht-kopf">
+          <span class="fuhrpark-uebersicht-name">${fahrzeug.marke} ${fahrzeug.modell}</span>
+          <span class="fuhrpark-uebersicht-kennzeichen">${fahrzeug.kennzeichen}</span>
+        </div>
+        <div class="fuhrpark-uebersicht-meta">
+          ${fahrzeug.baujahr} · ${fahrzeug.aufbautyp} ·
+          ${fahrzeug.kmStand.toLocaleString("de-DE")} km · ${fahrzeug.standort} ·
+          ${fahrzeug.status}
+        </div>
+        <div class="fuhrpark-uebersicht-zustand">
+          <div class="fuhrpark-gesamtbalken-hintergrund">
+            <div class="fuhrpark-gesamtbalken-fuellung ${zustandsKlasse(gesamt)}"
+                 style="width:${gesamt.toFixed(0)}%"></div>
+          </div>
+          <span class="fuhrpark-gesamtbalken-wert">${gesamt.toFixed(0)}%</span>
+        </div>
+      </li>
+    `;
+  }
 
+  function renderUebersicht() {
+    const anzahlKritisch = fahrzeuge.filter(
+      (f) => Verschleiss.gesamtzustand(f) < 40
+    ).length;
+
+    return `
+      <div class="fuhrpark-uebersicht">
+        <div class="fuhrpark-kopfzeile">
+          <span class="fuhrpark-fahrzeugname">Fuhrpark</span>
+          <span class="fuhrpark-uebersicht-zaehler">${fahrzeuge.length} Fahrzeuge${
+            anzahlKritisch > 0 ? ` · ${anzahlKritisch} kritisch` : ""
+          }</span>
+        </div>
+
+        <ul class="fuhrpark-uebersicht-liste">
+          ${fahrzeuge.map(uebersichtZeile).join("")}
+        </ul>
+      </div>
+    `;
+  }
+
+  function bildQuelle(fahrzeug) {
+    const hue = Lackierung.hueVonName(fahrzeug.lackierung);
+    // Ohne bekannte Farbe oder solange das Sprite noch nicht geladen ist,
+    // liefert umfaerben() automatisch das Originalbild zurück.
+    return hue === undefined ? Lackierung.QUELLE : Lackierung.umfaerben(hue);
+  }
+
+  function renderDetail() {
     const fahrzeug = fahrzeuge[aktuellerIndex];
     const gesamt = Verschleiss.gesamtzustand(fahrzeug);
     const boxen = callouts(fahrzeug);
@@ -275,7 +331,7 @@ const FuhrparkApp = (function () {
 
         <div class="fuhrpark-visual-rahmen">
           <div class="fuhrpark-visual" id="fuhrpark-visual">
-            <img class="fuhrpark-visual-bild" src="assets/sprites/lkw-generisch.png" alt="Isometrische LKW-Ansicht"
+            <img class="fuhrpark-visual-bild" src="${bildQuelle(fahrzeug)}" alt="Isometrische LKW-Ansicht"
                  onerror="this.classList.add('bild-fehler'); this.alt='Bild nicht gefunden: assets/sprites/lkw-generisch.png';">
             <svg class="fuhrpark-visual-linien" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
             ${boxen}
@@ -292,14 +348,13 @@ const FuhrparkApp = (function () {
         </div>
 
         <div class="fuhrpark-blaetter-zeile">
-          <button class="fuhrpark-nav bevel-out" id="fuhrpark-nav-links" aria-label="Vorheriges Fahrzeug">&#10094;</button>
-          <div class="fuhrpark-pager-indikator">${aktuellerIndex + 1} / ${fahrzeuge.length}</div>
-          <button class="fuhrpark-nav bevel-out" id="fuhrpark-nav-rechts" aria-label="Nächstes Fahrzeug">&#10095;</button>
+          <button class="win98-button bevel-out fuhrpark-zurueck" id="fuhrpark-btn-zurueck">&#10094; Übersicht</button>
         </div>
 
         <dl class="fuhrpark-infoliste">
           <dt>Baujahr</dt><dd>${fahrzeug.baujahr}</dd>
           <dt>Aufbau</dt><dd>${fahrzeug.aufbautyp}</dd>
+          <dt>Lackierung</dt><dd>${fahrzeug.lackierung}</dd>
           <dt>Laufleistung</dt><dd>${fahrzeug.kmStand.toLocaleString("de-DE")} km</dd>
           <dt>Standort</dt><dd>${fahrzeug.standort}</dd>
           <dt>Status</dt><dd>${fahrzeug.status}</dd>
@@ -317,6 +372,13 @@ const FuhrparkApp = (function () {
     `;
   }
 
+  function renderInhalt() {
+    if (fahrzeuge.length === 0) {
+      return `<p>Keine Fahrzeuge im Fuhrpark.</p>`;
+    }
+    return ansicht === "uebersicht" ? renderUebersicht() : renderDetail();
+  }
+
   // ---------- Verhalten ----------
 
   let fensterElement = null;
@@ -327,13 +389,14 @@ const FuhrparkApp = (function () {
     ereignisseBinden();
   }
 
-  function vorheriges() {
-    aktuellerIndex = (aktuellerIndex - 1 + fahrzeuge.length) % fahrzeuge.length;
+  function fahrzeugOeffnen(index) {
+    aktuellerIndex = index;
+    ansicht = "detail";
     neuZeichnen();
   }
 
-  function naechstes() {
-    aktuellerIndex = (aktuellerIndex + 1) % fahrzeuge.length;
+  function zurueckZurUebersicht() {
+    ansicht = "uebersicht";
     neuZeichnen();
   }
 
@@ -356,19 +419,26 @@ const FuhrparkApp = (function () {
       // wurde, damit vertikales Scrollen nicht versehentlich blättert.
       if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
         if (deltaX < 0) {
-          naechstes();
+          aktuellerIndex = (aktuellerIndex + 1) % fahrzeuge.length;
         } else {
-          vorheriges();
+          aktuellerIndex = (aktuellerIndex - 1 + fahrzeuge.length) % fahrzeuge.length;
         }
+        neuZeichnen();
       }
     });
   }
 
   function ereignisseBinden() {
-    const btnLinks = fensterElement.querySelector("#fuhrpark-nav-links");
-    const btnRechts = fensterElement.querySelector("#fuhrpark-nav-rechts");
-    if (btnLinks) btnLinks.addEventListener("click", vorheriges);
-    if (btnRechts) btnRechts.addEventListener("click", naechstes);
+    // ---- Übersicht ----
+    fensterElement.querySelectorAll(".fuhrpark-uebersicht-eintrag").forEach((eintrag) => {
+      eintrag.addEventListener("click", () => {
+        fahrzeugOeffnen(Number(eintrag.dataset.index));
+      });
+    });
+
+    // ---- Detailansicht ----
+    const btnZurueck = fensterElement.querySelector("#fuhrpark-btn-zurueck");
+    if (btnZurueck) btnZurueck.addEventListener("click", zurueckZurUebersicht);
 
     const visual = fensterElement.querySelector("#fuhrpark-visual");
     if (visual) swipeErkennen(visual);
@@ -393,15 +463,20 @@ const FuhrparkApp = (function () {
       });
     }
 
-    visualGroesseAnpassen();
-    linienPositionieren();
-    groessenBeobachtungStarten();
+    // Bild-Layout nur relevant, wenn die Detailansicht sichtbar ist.
+    if (ansicht === "detail") {
+      visualGroesseAnpassen();
+      linienPositionieren();
+      groessenBeobachtungStarten();
+    } else if (groessenBeobachter) {
+      groessenBeobachter.disconnect();
+    }
   }
 
   // Bei Größenänderung (z.B. Rotation des Handys) müssen Box und Linien
   // neu berechnet werden.
   window.addEventListener("resize", () => {
-    if (fensterElement && document.body.contains(fensterElement)) {
+    if (ansicht === "detail" && fensterElement && document.body.contains(fensterElement)) {
       visualGroesseAnpassen();
       linienPositionieren();
     }
@@ -424,6 +499,16 @@ const FuhrparkApp = (function () {
     // holt WindowManager es nur nach vorne, der Inhalt bleibt unverändert.
     if (ergebnis.wurdeNeuErstellt) {
       ereignisseBinden();
+
+      // Das Umfärben braucht das geladene Sprite. Bis dahin zeigt
+      // bildQuelle() das Original; sobald es da ist, einmal neu zeichnen.
+      Lackierung.bildLaden()
+        .then(() => {
+          if (fensterElement && document.body.contains(fensterElement)) {
+            neuZeichnen();
+          }
+        })
+        .catch((fehler) => console.warn("Lackierung nicht verfügbar:", fehler.message));
     }
   }
 

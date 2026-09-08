@@ -3,7 +3,27 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.13.0)
+## Aktueller Stand (v0.13.1)
+
+**Neue Übersichtsseite im Fuhrpark:**
+- Startbildschirm listet alle Fahrzeuge mit Marke/Modell, Kennzeichen,
+  Kurzinfos und Gesamtzustand-Balken
+- Kopfzeile zeigt Fahrzeuganzahl und ggf. Anzahl kritischer Fahrzeuge
+- Auswahl eines Eintrags öffnet die Detailansicht
+
+**Detailansicht:** Navigationspfeile entfernt, stattdessen
+"❮ Übersicht"-Button. Wischen zum Blättern funktioniert weiterhin.
+
+**Lackierungssystem** (`js/core/lackierung.js`):
+- Färbt die Zugmaschine zur Laufzeit per Canvas um - keine zusätzlichen
+  Bilddateien nötig, Schattierungen bleiben exakt erhalten
+- Sechs Farben (rot, orange, gelb, grün, blau, violett), beliebig
+  erweiterbar; Ergebnis wird zwischengespeichert
+- `lackierung` als Fahrzeugeigenschaft, sichtbar in der Infoliste
+- Rückfall aufs Originalbild, solange das Sprite lädt oder bei
+  unbekannter Farbe
+
+## Vorheriger Stand (v0.13.0)
 
 **Kopfzeile:** nur noch Marke/Modell und Kennzeichen, beides größer
 (16px) und fett. "Gesamt: X%"-Badge entfernt (Zustand steht weiterhin
@@ -178,6 +198,16 @@ spedipro/
     icons/
     sprites/
 ```
+
+## Geplant (noch nicht umgesetzt)
+
+**Designmodus** - Details als Kommentar in `js/core/lackierung.js`:
+- Auflieger einfärben (dieselbe Technik wie bei der Kabine). Empfehlung:
+  Auflieger im Sprite in einen eigenen Farbton legen statt "grau"
+  zu erkennen, damit Kabine und Auflieger unabhängig ansprechbar sind
+- Beschriftung auf dem Auflieger (Firmenname). Zu beachten: isometrische
+  Schrägstellung des Textes, Pixelschrift ohne Weichzeichnung, Cache-
+  Schlüssel dann aus Farbe UND Text
 
 ## Nächste Schritte
 
