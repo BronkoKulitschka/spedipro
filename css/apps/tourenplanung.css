@@ -1,0 +1,184 @@
+/* tourenplanung.css */
+
+.tour-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 6px;
+}
+
+/* ---------- Kartenbereich ----------
+   Feste Höhe über einen Anteil der Fensterhöhe. Bewusst `flex: none`
+   plus `flex-shrink: 0`: der Bereich darf sich unter KEINEN Umständen
+   verkleinern, egal wie viel Inhalt unten in der Disposition steht.
+   Genau das war beim Fuhrpark das Problem, wo die wachsende Historie
+   das Bild zusammengedrückt hat. */
+.tour-kartenbereich {
+  flex: none;
+  flex-shrink: 0;
+  height: 38%;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tour-karte-rahmen {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #2a5ca8; /* Meerfarbe, damit Ränder nicht auffallen */
+  border: 1px solid var(--win-grey-darker);
+  cursor: grab;
+  touch-action: none; /* eigene Touch-Steuerung, kein Browser-Scrollen */
+}
+
+.tour-karte-rahmen.zieht {
+  cursor: grabbing;
+}
+
+.tour-karte-buehne {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.tour-karte-bild {
+  display: block;
+  width: 700px;   /* Originalgröße der Karte - Zoom läuft über transform */
+  height: 990px;
+  image-rendering: pixelated;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.tour-karte-marken {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 700px;
+  height: 990px;
+}
+
+.tour-marke {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  margin: -3px 0 0 -3px; /* auf den Koordinatenpunkt zentrieren */
+  background: #d02828;
+  border: 1px solid #201010;
+  cursor: pointer;
+}
+
+.tour-marke-knoten {
+  width: 7px;
+  height: 7px;
+  margin: -4px 0 0 -4px;
+  background: #e6b428;
+}
+
+.tour-marke-gewaehlt {
+  background: var(--win-white);
+  border-color: #000;
+  box-shadow: 0 0 0 2px #d02828;
+}
+
+.tour-karte-tooltip {
+  position: absolute;
+  z-index: 5;
+  padding: 2px 6px;
+  background: #ffffe1; /* klassisches Win98-Gelb für Kurzinfos */
+  border: 1px solid #000;
+  font-size: 11px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.tour-karte-leiste {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tour-karte-leiste .win98-button {
+  min-width: 32px;
+  height: 26px;
+  font-size: 13px;
+}
+
+.tour-karte-hinweis {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}
+
+/* ---------- Dispositionsbereich ---------- */
+
+.tour-disposition {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 8px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.tour-dispo-leer {
+  font-size: 12px;
+  color: var(--win-grey-darker);
+  text-align: center;
+  padding: 20px 8px;
+}
+
+.tour-dispo-kopf {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tour-dispo-stadt {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.tour-dispo-land {
+  font-family: monospace;
+  font-size: 13px;
+  color: var(--win-grey-darker);
+}
+
+.tour-dispo-knoten {
+  font-size: 10px;
+  padding: 1px 5px;
+  background: #e6b428;
+  border: 1px solid var(--win-grey-darker);
+}
+
+.tour-dispo-info {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+  margin-top: 2px;
+}
+
+.tour-dispo-platzhalter {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--win-grey-dark);
+  font-size: 11px;
+}
+
+.tour-dispo-titel {
+  font-weight: bold;
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.tour-dispo-platzhalter p {
+  margin: 0;
+  color: var(--win-grey-darker);
+}

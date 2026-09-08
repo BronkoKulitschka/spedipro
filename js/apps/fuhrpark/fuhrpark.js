@@ -16,6 +16,8 @@ const FuhrparkApp = (function () {
   // "uebersicht" = Liste aller Fahrzeuge, "detail" = Einzelansicht mit
   // LKW-Grafik und Callouts.
   let ansicht = "uebersicht";
+  // Im Bild angeklicktes Bauteil - Ziel der Reparatur.
+  let gewaehltesTeil = null;
 
   const TEIL_LABEL = {
     reifen: "Reifen",
@@ -243,7 +245,10 @@ const FuhrparkApp = (function () {
       linie.setAttribute("y1", startYProzent.toFixed(1));
       linie.setAttribute("x2", ankerXProzent);
       linie.setAttribute("y2", ankerYProzent);
-      linie.setAttribute("class", "callout-linie");
+      linie.setAttribute(
+        "class",
+        gewaehltesTeil === teil ? "callout-linie callout-linie-gewaehlt" : "callout-linie"
+      );
       linie.setAttribute("stroke", zustandsFarbe(wert));
       svg.appendChild(linie);
     });
@@ -258,21 +263,28 @@ const FuhrparkApp = (function () {
       const wert = fahrzeug.verschleiss[teil];
 
       boxen.push(`
-        <div class="fuhrpark-callout" data-teil="${teil}"
+        <div class="fuhrpark-callout${gewaehltesTeil === teil ? " callout-gewaehlt" : ""}"
+             data-teil="${teil}" role="button" tabindex="0"
+             title="${TEIL_LABEL[teil]} auswählen"
              style="left:${lx}%; top:${ly}%;">
           <span class="fuhrpark-callout-label">${TEIL_LABEL[teil]}</span>
           <span class="fuhrpark-callout-wert ${zustandsKlasse(wert)}">${wert.toFixed(0)}%</span>
         </div>
       `);
+
+      // Blinkende Markierung am Linienende - zeigt, welches Bauteil am
+      // Fahrzeug gemeint ist. Bewusst als HTML-Element statt im SVG:
+      // Das SVG nutzt preserveAspectRatio="none", darin würde ein Kreis
+      // je nach Fenstergröße zur Ellipse verzerrt.
+      if (gewaehltesTeil === teil) {
+        const [ax, ay] = layout.anker;
+        boxen.push(
+          `<span class="fuhrpark-anker-blink" style="left:${ax}%; top:${ay}%;"></span>`
+        );
+      }
     });
 
     return boxen.join("");
-  }
-
-  function reparaturOptionen() {
-    return Verschleiss.TEILE.map(
-      (teil) => `<option value="${teil}">${TEIL_LABEL[teil]}</option>`
-    ).join("");
   }
 
   // ---------- Debug: Fahrzeuge beschaffen ----------
@@ -740,14 +752,13 @@ const FuhrparkApp = (function () {
           <span class="fuhrpark-kennzeichen">${fahrzeug.kennzeichen}</span>
         </div>
 
-        ${ausfallBlock(fahrzeug)}
-
         <div class="fuhrpark-visual-rahmen">
           <div class="fuhrpark-visual" id="fuhrpark-visual">
             <img class="fuhrpark-visual-bild" src="${bildQuelle(fahrzeug)}" alt="Isometrische LKW-Ansicht"
                  onerror="this.classList.add('bild-fehler'); this.alt='Bild nicht gefunden: assets/sprites/lkw-generisch.png';">
             <svg class="fuhrpark-visual-linien" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
             ${boxen}
+            ${ausfallBlock(fahrzeug)}
           </div>
         </div>
 
@@ -795,10 +806,10 @@ const FuhrparkApp = (function () {
                steht - sonst lässt sich Verschleiß nicht zurücksetzen.
                Details werden beim Bau des Werkstatt-Moduls festgelegt. -->
           <button class="win98-button bevel-out" id="fuhrpark-btn-tour">🎲 Tour simulieren</button>
-          <select class="win98-button bevel-out" id="fuhrpark-select-teil">
-            ${reparaturOptionen()}
-          </select>
-          <button class="win98-button bevel-out" id="fuhrpark-btn-reparieren">🔧 Reparieren (Debug)</button>
+          <button class="win98-button bevel-out" id="fuhrpark-btn-reparieren"
+                  ${gewaehltesTeil ? "" : "disabled"}>
+            🔧 ${gewaehltesTeil ? `${TEIL_LABEL[gewaehltesTeil]} reparieren` : "Teil im Bild wählen"} (Debug)
+          </button>
           <button class="win98-button bevel-out" id="fuhrpark-btn-verkaufen">💰 Verkaufen (${restwert(fahrzeug).toLocaleString("de-DE")} DM)</button>
           <select class="win98-button bevel-out" id="fuhrpark-select-frist">
             ${Object.entries(Fristen.ARTEN)
@@ -831,11 +842,13 @@ const FuhrparkApp = (function () {
   function fahrzeugOeffnen(index) {
     aktuellerIndex = index;
     ansicht = "detail";
+    gewaehltesTeil = null; // Auswahl gilt nur für das aktuelle Fahrzeug
     neuZeichnen();
   }
 
   function zurueckZurUebersicht() {
     ansicht = "uebersicht";
+    gewaehltesTeil = null;
     neuZeichnen();
   }
 
@@ -862,6 +875,7 @@ const FuhrparkApp = (function () {
         } else {
           aktuellerIndex = (aktuellerIndex - 1 + fahrzeuge.length) % fahrzeuge.length;
         }
+        gewaehltesTeil = null;
         neuZeichnen();
       }
     });
@@ -970,12 +984,21 @@ const FuhrparkApp = (function () {
       });
     }
 
+    // Bauteil im Bild auswählen
+    fensterElement.querySelectorAll(".fuhrpark-callout").forEach((box) => {
+      box.addEventListener("click", () => {
+        // Erneutes Antippen hebt die Auswahl wieder auf.
+        gewaehltesTeil = gewaehltesTeil === box.dataset.teil ? null : box.dataset.teil;
+        neuZeichnen();
+      });
+    });
+
     const btnReparieren = fensterElement.querySelector("#fuhrpark-btn-reparieren");
     if (btnReparieren) {
       btnReparieren.addEventListener("click", () => {
+        if (!gewaehltesTeil) return;
         const fahrzeug = fahrzeuge[aktuellerIndex];
-        const select = fensterElement.querySelector("#fuhrpark-select-teil");
-        const teil = select.value;
+        const teil = gewaehltesTeil;
         const zustandVorher = fahrzeug.verschleiss[teil];
 
         Verschleiss.teilReparieren(fahrzeug, teil);
@@ -986,6 +1009,7 @@ const FuhrparkApp = (function () {
           daten: { teil, zustandVorher }
         });
 
+        gewaehltesTeil = null;
         neuZeichnen();
       });
     }

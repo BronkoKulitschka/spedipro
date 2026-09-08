@@ -81,6 +81,25 @@ body {
   padding: 5px 9px 3px 11px; /* leichter Versatz für "gedrückt"-Gefühl */
 }
 
+/* Deaktivierte Schaltflächen: grauer Text mit hellem Versatz, wie in
+   Windows 98 üblich. */
+.win98-button:disabled {
+  color: var(--win-grey-dark);
+  text-shadow: 1px 1px 0 var(--win-white);
+  cursor: default;
+}
+
+.win98-button:disabled:active {
+  border-top: 1px solid var(--win-grey-light);
+  border-left: 1px solid var(--win-grey-light);
+  border-right: 1px solid var(--win-grey-darker);
+  border-bottom: 1px solid var(--win-grey-darker);
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-grey-dark);
+  padding: 4px 10px;
+}
+
 .win98-window {
   position: absolute;
   inset: 0;

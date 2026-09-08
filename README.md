@@ -3,7 +3,39 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.13.3)
+## Aktueller Stand (v0.14.0)
+
+**Neues Modul: Tourenplanung** (`js/apps/tourenplanung/`)
+- Kartenfenster im oberen Bereich (38 % Fensterhöhe, min. 180 px),
+  `flex: none` + `flex-shrink: 0` - darf sich durch nichts verkleinern
+- Zoom über Buttons, Mausrad und Zwei-Finger-Geste; Verschieben per
+  Ziehen (Maus und Touch), mit Randbegrenzung
+- 165 Städte als Quadrate ohne Beschriftung, Namen per Tooltip;
+  63 Frachtknoten gelb hervorgehoben
+- Dispositionsbereich darunter: zeigt gewählte Stadt mit Land,
+  Einwohnerzahl 1995 und Koordinaten (Warenangebote folgen)
+
+**Kartendaten:**
+- `assets/sprites/europa.png` - Pixelart-Europakarte, gerendert aus
+  echten Geodaten (Natural Earth), definierte Projektion
+- `js/core/karte.js` - Umrechnung Koordinaten <-> Bildpunkt in beide
+  Richtungen (verlustfrei), Luftlinie und geschätzte Straßenentfernung
+- `js/data/staedte.js` - 165 Städte mit echten Koordinaten, Länder-
+  kürzel, Einwohnerzahlen 1995. Auswahl über Mindestabstand 140 km für
+  gleichmäßige Verteilung, plus Pflichtknoten (Häfen, Wirtschafts-
+  zentren), die diesen Abstand unterschreiten dürfen
+
+**Fuhrpark verbessert:**
+- Ausfall-/Warnhinweis überlagert jetzt das Bild, statt ihm die Höhe zu
+  nehmen und es zu beschneiden
+- Bauteil-Auswahl erfolgt durch Antippen im Bild statt über ein
+  Dropdown (entfernt). Gewähltes Teil wird hervorgehoben, ein
+  blinkender Ring markiert die Stelle am Fahrzeug, die Verbindungslinie
+  wird kräftiger gezeichnet
+- Reparatur-Button zeigt das gewählte Teil und ist ohne Auswahl gesperrt
+- Win98-Stil für deaktivierte Schaltflächen ergänzt
+
+## Vorheriger Stand (v0.13.3)
 
 **Neues Kernmodul `js/core/ausfall.js` - Pannen und Stillstand:**
 - Kritische Grenze je Bauteil: Bremsen 15 %, Reifen 12 %, Antrieb 10 %,
@@ -229,17 +261,29 @@ spedipro/
     desktop.css       Desktop, Taskbar, Startmenü, Desktop-Icons
     apps/
       fuhrpark.css     Styling des Fuhrpark-Fensters
+  docs/
+    historischer-rahmen-1994.md   Zeitliche Gegebenheiten (zu verifizieren)
   js/
     core/
       clock.js          Taskbar-Uhr
       startmenu.js       Startmenü-Verhalten
       windowmanager.js   Fenster öffnen/minimieren/schließen (Vollbild, Singleton, Taskleiste)
       verschleiss.js     Verschleiß-/Verbrauchsberechnung (datenquellen-unabhängig)
+      spielzeit.js       Spielkalender (Start 01.03.1994)
+      fristen.js         HU, SP, Wartung
+      historie.js        Ereignis-Chronik je Fahrzeug
+      auslastung.js      Auslastung aus Tour-Einträgen
+      ausfall.js         Pannen, Stillstand, Bergung
+      lackierung.js      Umfärben der Kabine zur Laufzeit
+      karte.js           Kartenprojektion und Entfernungen
     apps/
       fuhrpark/
         fuhrpark.js      Fuhrpark-Programm (Zustand, UI, Debug-Buttons)
+      tourenplanung/
+        tourenplanung.js Karte, Zoom/Verschieben, Disposition
     data/
       fahrzeugtypen.js   Katalog fiktiver, an reale 90er-LKW angelehnter Fahrzeugtypen
+      staedte.js         165 europäische Städte mit echten Koordinaten
   assets/
     icons/
     sprites/
