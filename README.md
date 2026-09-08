@@ -3,7 +3,23 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.12.0)
+## Aktueller Stand (v0.13.0)
+
+**Kopfzeile:** nur noch Marke/Modell und Kennzeichen, beides größer
+(16px) und fett. "Gesamt: X%"-Badge entfernt (Zustand steht weiterhin
+im Balken unter dem Bild).
+
+**Neue Infoliste unter der Navigation:** Baujahr, Aufbau, Laufleistung,
+Standort, Status, Verbrauch gesamt - zweispaltig (Bezeichnung links,
+Wert rechts fett) in einem abgesetzten Kasten.
+
+**Callouts näher ans Fahrzeug gerückt**, Verbindungslinien dadurch
+kürzer.
+
+Reihenfolge: Kopfzeile → Bild → Zustandsbalken → Navigation →
+Infoliste → Debug-Leiste.
+
+## Vorheriger Stand (v0.12.0)
 
 **Titelleiste:** höher (Padding 3→7px), größere Schrift, und deutlich
 größere Minimieren-/Schließen-Buttons (16×14 → 28×24px) für bessere

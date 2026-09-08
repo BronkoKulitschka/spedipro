@@ -28,11 +28,11 @@ const FuhrparkApp = (function () {
   // Verbindungslinie (SVG) und Beschriftungs-Box exakt zusammenpassen.
   // Ermittelt am tatsächlichen Sprite assets/sprites/lkw-generisch.png.
   const CALLOUT_LAYOUT = {
-    motor: { anker: [19.6, 52.8], label: [4, 30] },
-    bremsen: { anker: [27.7, 81.4], label: [4, 95] },
-    reifen: { anker: [78.6, 60.8], label: [95, 60] },
-    karosserie: { anker: [30.4, 61.9], label: [30, 4] },
-    antrieb: { anker: [48.2, 75.7], label: [48, 97] }
+    motor: { anker: [19.6, 52.8], label: [9, 36] },
+    bremsen: { anker: [27.7, 81.4], label: [12, 93] },
+    reifen: { anker: [78.6, 60.8], label: [88, 45] },
+    karosserie: { anker: [30.4, 61.9], label: [30, 18] },
+    antrieb: { anker: [48.2, 75.7], label: [50, 92] }
   };
 
   function typZuFinden(typId) {
@@ -269,17 +269,8 @@ const FuhrparkApp = (function () {
     return `
       <div class="fuhrpark-pager">
         <div class="fuhrpark-kopfzeile">
-          <div>
-            <strong>${fahrzeug.marke} ${fahrzeug.modell}</strong>
-            <span class="fuhrpark-kennzeichen">${fahrzeug.kennzeichen}</span>
-            <span class="fuhrpark-gesamt ${zustandsKlasse(gesamt)}">Gesamt: ${gesamt.toFixed(0)}%</span>
-          </div>
-          <div class="fuhrpark-karte-info">
-            Baujahr ${fahrzeug.baujahr} · ${fahrzeug.aufbautyp} ·
-            ${fahrzeug.kmStand.toLocaleString("de-DE")} km · ${fahrzeug.standort} ·
-            Status: <em>${fahrzeug.status}</em> ·
-            Verbrauch gesamt: ${fahrzeug.verbrauchGesamtL.toFixed(0)} l
-          </div>
+          <span class="fuhrpark-fahrzeugname">${fahrzeug.marke} ${fahrzeug.modell}</span>
+          <span class="fuhrpark-kennzeichen">${fahrzeug.kennzeichen}</span>
         </div>
 
         <div class="fuhrpark-visual-rahmen">
@@ -305,6 +296,15 @@ const FuhrparkApp = (function () {
           <div class="fuhrpark-pager-indikator">${aktuellerIndex + 1} / ${fahrzeuge.length}</div>
           <button class="fuhrpark-nav bevel-out" id="fuhrpark-nav-rechts" aria-label="Nächstes Fahrzeug">&#10095;</button>
         </div>
+
+        <dl class="fuhrpark-infoliste">
+          <dt>Baujahr</dt><dd>${fahrzeug.baujahr}</dd>
+          <dt>Aufbau</dt><dd>${fahrzeug.aufbautyp}</dd>
+          <dt>Laufleistung</dt><dd>${fahrzeug.kmStand.toLocaleString("de-DE")} km</dd>
+          <dt>Standort</dt><dd>${fahrzeug.standort}</dd>
+          <dt>Status</dt><dd>${fahrzeug.status}</dd>
+          <dt>Verbrauch gesamt</dt><dd>${fahrzeug.verbrauchGesamtL.toFixed(0)} l</dd>
+        </dl>
 
         <div class="fuhrpark-debug-leiste">
           <button class="win98-button bevel-out" id="fuhrpark-btn-tour">🎲 Tour simulieren</button>
