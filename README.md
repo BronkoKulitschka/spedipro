@@ -3,7 +3,35 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.15.2)
+**Versionierung:** Die zweite Stelle bleibt bei 0.15, bis die
+Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
+hochgezählt (0.15.3, 0.15.4, ...).
+
+## Aktueller Stand (v0.15.3)
+
+**Stadtmarken skalieren nicht mehr mit dem Zoom.** Sie liegen jetzt wie
+die Namen in einer eigenen Ebene außerhalb der gezoomten Bühne; die
+Bildschirmpositionen werden bei jeder Ansichtsänderung neu berechnet und
+auf ganze Pixel gerundet. Randfall behoben: Solange die Fenstergröße
+noch nicht feststeht, wird nicht ausgeblendet - sonst galt jede Marke
+als außerhalb und die Karte blieb leer.
+
+**Karte auf feine Auflösung umgestellt** (Natural Earth 10m statt 50m):
+
+| | vorher | jetzt |
+|---|---|---|
+| Deutschland-Umriss | 562 Punkte | 3.027 Punkte |
+| Norwegen-Umriss | 1.985 Punkte | 15.817 Punkte |
+| Flüsse | 462 | 1.455 |
+| Seen | 412 | 1.355 |
+
+Sichtbar an norwegischen Fjorden, dalmatinischen Inseln und der Ägäis.
+Flüsse und Seen werden nach Bedeutung gefiltert - alle zu zeichnen
+ergäbe ein unlesbares Adernetz. Projektion unverändert, alle Städte
+sitzen weiterhin exakt (geprüft: keine liegt im Wasser). Dateigröße
+233 KB.
+
+## Vorheriger Stand (v0.15.2)
 
 **Schrift vereinheitlicht:** Nur noch Tahoma/MS Sans Serif für die
 gesamte Oberfläche (Originalschriften von Windows 98). Die Pixelschrift

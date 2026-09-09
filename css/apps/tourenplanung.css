@@ -55,12 +55,13 @@
   -webkit-user-drag: none;
 }
 
+/* Markenebene liegt über der Karte und wird NICHT mitskaliert -
+   dadurch behalten die Quadrate in jeder Zoomstufe dieselbe Größe. */
 .tour-karte-marken {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 700px;
-  height: 990px;
+  inset: 0;
+  overflow: hidden;
+  z-index: 2;
 }
 
 /* Stadtmarken - Größe und Farbe nach Einwohnerzahl (1995).

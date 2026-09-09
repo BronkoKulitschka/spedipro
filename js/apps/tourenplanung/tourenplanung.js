@@ -39,8 +39,12 @@ const TourenplanungApp = (function () {
             <div class="tour-karte-buehne" id="tour-karte-buehne">
               <img class="tour-karte-bild" id="tour-karte-bild"
                    src="${Karte.BILD}" alt="Europakarte" draggable="false">
-              <div class="tour-karte-marken" id="tour-karte-marken"></div>
             </div>
+            <!-- Marken und Namen liegen AUSSERHALB der gezoomten Bühne.
+                 Sonst würden die Quadrate mitwachsen und der Text
+                 unscharf werden. Ihre Bildschirmpositionen werden bei
+                 jeder Ansichtsänderung neu berechnet. -->
+            <div class="tour-karte-marken" id="tour-karte-marken"></div>
             <!-- Namen liegen bewusst AUSSERHALB der gezoomten Bühne:
                  Text in einer skalierten Ebene wird unscharf, weil er
                  auf Zwischenpixel fällt. Hier werden die Positionen
@@ -111,13 +115,17 @@ const TourenplanungApp = (function () {
     return 1;
   }
 
+  // Marken werden einmal erzeugt und danach nur noch verschoben. Ihre
+  // Bildkoordinaten stehen fest, die Bildschirmposition folgt aus Zoom
+  // und Versatz.
+  let markenListe = [];
+
   function markenZeichnen() {
     const behaelter = fensterElement.querySelector("#tour-karte-marken");
     if (!behaelter) return;
 
     behaelter.innerHTML = Karte.alleStaedte()
       .map((stadt) => {
-        const p = Karte.nachBild(stadt.lon, stadt.lat);
         const stufe = groessenstufe(stadt);
         const klassen = [
           "tour-marke",
@@ -126,11 +134,47 @@ const TourenplanungApp = (function () {
           gewaehlteStadt && gewaehlteStadt.name === stadt.name ? "tour-marke-gewaehlt" : ""
         ].filter(Boolean).join(" ");
 
-        return `<span class="${klassen}"
-                      style="left:${p.x}px; top:${p.y}px"
-                      data-stadt="${stadt.name}"></span>`;
+        return `<span class="${klassen}" data-stadt="${stadt.name}"></span>`;
       })
       .join("");
+
+    // Bildkoordinaten einmal vorberechnen, statt sie bei jedem
+    // Verschieben neu aus den Geokoordinaten abzuleiten.
+    markenListe = Array.from(behaelter.children).map((el) => {
+      const stadt = STAEDTE[el.dataset.stadt];
+      const p = Karte.nachBild(stadt.lon, stadt.lat);
+      return { el, x: p.x, y: p.y };
+    });
+
+    markenPositionieren();
+  }
+
+  function markenPositionieren() {
+    const rahmen = fensterElement.querySelector("#tour-karte-rahmen");
+    if (!rahmen || markenListe.length === 0) return;
+
+    const breite = rahmen.clientWidth;
+    const hoehe = rahmen.clientHeight;
+    const rand = 30;
+
+    // Steht die Fenstergröße noch nicht fest (erster Aufbau), darf nicht
+    // ausgeblendet werden - sonst gilt jede Marke als außerhalb und die
+    // Karte bliebe leer.
+    const kannAusblenden = breite > 0 && hoehe > 0;
+
+    markenListe.forEach(({ el, x, y }) => {
+      const sx = Math.round(x * zoom + versatzX);
+      const sy = Math.round(y * zoom + versatzY);
+
+      el.style.left = `${sx}px`;
+      el.style.top = `${sy}px`;
+
+      // Marken außerhalb des Fensters ausblenden - spart Darstellungs-
+      // aufwand beim Verschieben.
+      const draussen =
+        sx < -rand || sx > breite + rand || sy < -rand || sy > hoehe + rand;
+      el.style.display = kannAusblenden && draussen ? "none" : "";
+    });
   }
 
   function ansichtAnwenden() {
@@ -138,6 +182,7 @@ const TourenplanungApp = (function () {
     if (!buehne) return;
     buehne.style.transform =
       `translate(${versatzX}px, ${versatzY}px) scale(${zoom})`;
+    markenPositionieren();
     namenAktualisieren();
   }
 
