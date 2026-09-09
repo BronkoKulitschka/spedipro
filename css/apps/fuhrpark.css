@@ -48,10 +48,11 @@
 }
 
 .fuhrpark-visual-rahmen {
-  /* Nicht flex:1 - der Rahmen soll sich eng ans Bild anschmiegen,
-     damit Balken und Navigation direkt darunter sitzen statt ans
-     Fensterende gedrückt zu werden. */
-  flex: 0 0 auto;
+  /* Nimmt den verfügbaren Platz ein, statt sich nur ans Bild zu
+     schmiegen: Auslastung und Historie sind in eigene Fenster
+     ausgelagert, der frei gewordene Raum gehört dem Fahrzeugbild. */
+  flex: 1 1 auto;
+  min-height: 200px;
   min-width: 0;
   display: flex;
   align-items: flex-start;
@@ -64,7 +65,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .fuhrpark-zurueck {

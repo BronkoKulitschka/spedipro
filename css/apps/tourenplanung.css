@@ -16,8 +16,8 @@
 .tour-kartenbereich {
   flex: none;
   flex-shrink: 0;
-  height: 38%;
-  min-height: 180px;
+  height: 50%;
+  min-height: 220px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -63,20 +63,32 @@
   height: 990px;
 }
 
+/* Stadtmarken - Größe und Farbe nach Einwohnerzahl (1995).
+   Kleine Orte bleiben unauffällig, Millionenstädte stechen hervor.
+   Frachtknoten (Häfen, Umschlagplätze) sind zusätzlich gelb. */
 .tour-marke {
   position: absolute;
-  width: 5px;
-  height: 5px;
-  margin: -3px 0 0 -3px; /* auf den Koordinatenpunkt zentrieren */
-  background: #d02828;
+  background: #c44030;
   border: 1px solid #201010;
   cursor: pointer;
 }
 
+.tour-marke-s1 { width: 5px;  height: 5px;  margin: -3px 0 0 -3px; }
+.tour-marke-s2 { width: 7px;  height: 7px;  margin: -4px 0 0 -4px; background: #d64830; }
+.tour-marke-s3 { width: 9px;  height: 9px;  margin: -5px 0 0 -5px; background: #e85828; }
+.tour-marke-s4 { width: 11px; height: 11px; margin: -6px 0 0 -6px; background: #f67828; }
+
+/* Große Städte bekommen einen hellen Kern, damit sie auch bei starkem
+   Herauszoomen erkennbar bleiben. */
+.tour-marke-s3::after,
+.tour-marke-s4::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: #fff4d6;
+}
+
 .tour-marke-knoten {
-  width: 7px;
-  height: 7px;
-  margin: -4px 0 0 -4px;
   background: #e6b428;
 }
 
@@ -84,6 +96,11 @@
   background: var(--win-white);
   border-color: #000;
   box-shadow: 0 0 0 2px #d02828;
+  z-index: 2;
+}
+
+.tour-marke-gewaehlt::after {
+  background: #d02828;
 }
 
 .tour-karte-tooltip {

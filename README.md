@@ -3,7 +3,41 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.14.0)
+## Aktueller Stand (v0.15.0)
+
+**Karte deutlich ausgebaut** (`assets/sprites/europa.png`):
+- Höhenrelief aus 78 echten Gipfelpunkten (Natural Earth), benachbarte
+  Gipfel unter 250 km zu Ketten verbunden - ergibt Alpenbogen, Apennin,
+  Skanden statt einzelner Kegel. Die Gebirgspolygone von Natural Earth
+  wurden bewusst NICHT gefüllt: sie umschließen teils ganze Becken
+  (Karpaten das siebenbürgische Hochland) und ergäben falsche Hochflächen
+- Flüsse und Seen, Bodentextur, breitenabhängige Schneegrenze
+  (Alpen ~2700 m, Nordskandinavien fast auf Meereshöhe)
+- Straßennetz eingezeichnet: 452 Verbindungen, davon 70 Fähren
+  (gestrichelt). Auswahl je Stadt bis zu 5 Nachbarn innerhalb 420 km,
+  Wasseranteil der Strecke aus der Karte geprüft: bis 20 % Straße,
+  20-55 % Fähre, darüber verworfen. Alle 165 Städte sind erreichbar
+- Verbindungen auch als Daten: `js/data/strassennetz.js` für die
+  spätere Routenberechnung
+
+**Stadtmarken** in vier Größen nach Einwohnerzahl (Verteilung 42/46/41/36),
+große Städte mit hellem Kern, Frachtknoten weiterhin gelb. Tooltip zeigt
+jetzt Land und Einwohnerzahl.
+
+**Einwohnerzahlen korrigiert:** Natural Earth führt 1995er Werte nur für
+große Ballungsräume - 118 von 165 Städten hatten keine. Jetzt Rückfall
+auf die aktuelle Zahl, das Feld `einwQuelle` hält fest, worauf sich der
+Wert bezieht (wichtig, sobald das Frachtaufkommen daran hängt).
+
+**Fuhrpark:**
+- Auslastung und Historie in eigene Fenster ausgelagert, erreichbar über
+  Buttons neben "Übersicht". Das Fahrzeugbild bekommt den frei
+  gewordenen Platz (min. 200 px, wächst mit)
+- Auslastungsfenster mit Kennzahlen und Auflistung der Touren im Zeitraum
+
+**Tourenplanung:** Kartenbereich auf 50 % der Fensterhöhe erweitert.
+
+## Vorheriger Stand (v0.14.0)
 
 **Neues Modul: Tourenplanung** (`js/apps/tourenplanung/`)
 - Kartenfenster im oberen Bereich (38 % Fensterhöhe, min. 180 px),
@@ -284,6 +318,7 @@ spedipro/
     data/
       fahrzeugtypen.js   Katalog fiktiver, an reale 90er-LKW angelehnter Fahrzeugtypen
       staedte.js         165 europäische Städte mit echten Koordinaten
+      strassennetz.js    452 Verbindungen zwischen den Städten
   assets/
     icons/
     sprites/

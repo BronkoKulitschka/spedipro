@@ -581,63 +581,86 @@ const FuhrparkApp = (function () {
     `;
   }
 
-  function auslastungBlock(fahrzeug) {
+  /** Auslastung in einem eigenen Fenster. */
+  function auslastungFensterOeffnen(fahrzeug) {
     const a = Auslastung.berechne(fahrzeug);
     const breite = Math.min(100, a.prozent);
 
-    return `
-      <div class="fuhrpark-auslastung">
-        <div class="fuhrpark-fristen-titel">
-          Auslastung <span class="fuhrpark-auslastung-zeitraum">(letzte ${Auslastung.ZEITRAUM_TAGE} Tage)</span>
+    // Tour-Einträge des Zeitraums für die Aufschlüsselung
+    const touren = Historie.seitTagen(fahrzeug, Auslastung.ZEITRAUM_TAGE)
+      .filter((e) => e.art === "tour")
+      .reverse();
+
+    const tourZeilen =
+      touren.length === 0
+        ? `<li class="fuhrpark-historie-leer">Keine Touren im Zeitraum.</li>`
+        : touren
+            .map(
+              (t) => `
+                <li class="fuhrpark-historie-eintrag">
+                  <span class="fuhrpark-historie-datum">${Spielzeit.formatiere(new Date(t.datum))}</span>
+                  <span class="fuhrpark-historie-kmstand">${(t.km || 0).toLocaleString("de-DE")} km</span>
+                  <span class="fuhrpark-historie-kmstand">${t.tage || 0} Tage</span>
+                  <span class="fuhrpark-historie-text">${t.text}</span>
+                </li>
+              `
+            )
+            .join("");
+
+    const inhalt = `
+      <div class="fuhrpark-historie-fenster">
+        <div class="fuhrpark-kopfzeile">
+          <span class="fuhrpark-fahrzeugname">${fahrzeug.marke} ${fahrzeug.modell}</span>
+          <span class="fuhrpark-kennzeichen">${fahrzeug.kennzeichen}</span>
         </div>
-        <div class="fuhrpark-gesamtbalken">
-          <span class="fuhrpark-gesamtbalken-label">${a.text}</span>
-          <div class="fuhrpark-gesamtbalken-hintergrund">
-            <div class="fuhrpark-gesamtbalken-fuellung auslastung-${a.bewertung}"
-                 style="width:${breite.toFixed(0)}%"></div>
+        <div class="fuhrpark-datumszeile">
+          Auslastung der letzten ${Auslastung.ZEITRAUM_TAGE} Tage
+        </div>
+
+        <div class="fuhrpark-auslastung">
+          <div class="fuhrpark-gesamtbalken">
+            <span class="fuhrpark-gesamtbalken-label">${a.text}</span>
+            <div class="fuhrpark-gesamtbalken-hintergrund">
+              <div class="fuhrpark-gesamtbalken-fuellung auslastung-${a.bewertung}"
+                   style="width:${breite.toFixed(0)}%"></div>
+            </div>
+            <span class="fuhrpark-gesamtbalken-wert">${a.prozent.toFixed(0)}%</span>
           </div>
-          <span class="fuhrpark-gesamtbalken-wert">${a.prozent.toFixed(0)}%</span>
+          <dl class="fuhrpark-infoliste">
+            <dt>Touren</dt><dd>${a.touren}</dd>
+            <dt>Einsatztage</dt><dd>${a.einsatztage} von ${a.verfuegbareTage} möglichen</dd>
+            <dt>Gefahrene km</dt><dd>${a.km.toLocaleString("de-DE")} km</dd>
+            <dt>Durchschnitt</dt><dd>${
+              a.kmProEinsatztag > 0
+                ? Math.round(a.kmProEinsatztag).toLocaleString("de-DE") + " km je Einsatztag"
+                : "–"
+            }</dd>
+          </dl>
+          <div class="fuhrpark-auslastung-details">
+            100 % entspricht dem Einsatz an allen realistisch erreichbaren
+            Tagen (5 von 7 - Wochenenden, Sonntagsfahrverbot, Werkstattzeiten).
+          </div>
         </div>
-        <div class="fuhrpark-auslastung-details">
-          ${a.touren} Touren · ${a.einsatztage} von ${a.verfuegbareTage} möglichen Einsatztagen ·
-          ${a.km.toLocaleString("de-DE")} km
-          ${a.kmProEinsatztag > 0 ? `· Ø ${Math.round(a.kmProEinsatztag).toLocaleString("de-DE")} km/Tag` : ""}
-        </div>
+
+        <div class="fuhrpark-fristen-titel" style="margin-top:6px">Touren im Zeitraum</div>
+        <ul class="fuhrpark-historie-vollliste">${tourZeilen}</ul>
       </div>
     `;
+
+    fensterAktualisieren("fuhrpark-auslastung", `Auslastung – ${fahrzeug.kennzeichen}`, inhalt);
   }
 
-  function historieBlock(fahrzeug) {
-    const anzahl = (fahrzeug.historie || []).length;
-    const neuester = Historie.letzte(fahrzeug, 1)[0];
-
-    if (!neuester) {
-      return `
-        <div class="fuhrpark-historie">
-          <div class="fuhrpark-fristen-titel">Fahrzeughistorie</div>
-          <div class="fuhrpark-historie-leer">Noch keine Einträge.</div>
-        </div>
-      `;
+  /**
+   * Öffnet ein Nebenfenster oder aktualisiert es, falls es bereits mit
+   * einem anderen Fahrzeug offen ist (WindowManager holt es dann nur
+   * nach vorne, ohne den Inhalt zu tauschen).
+   */
+  function fensterAktualisieren(id, titel, inhalt) {
+    const ergebnis = WindowManager.open({ id, title: titel, content: inhalt });
+    if (!ergebnis.wurdeNeuErstellt) {
+      ergebnis.element.querySelector(".win98-window-content").innerHTML = inhalt;
+      ergebnis.element.querySelector(".win98-titlebar-title").textContent = titel;
     }
-
-    // Bewusst nur EIN Eintrag: die Liste würde sonst mit jedem Ereignis
-    // wachsen und dem Bild darüber den Platz wegnehmen. Alles Weitere
-    // steht im eigenen Fenster.
-    return `
-      <div class="fuhrpark-historie">
-        <div class="fuhrpark-fristen-titel">
-          Fahrzeughistorie
-          <span class="fuhrpark-auslastung-zeitraum">(${anzahl} Einträge)</span>
-        </div>
-        <div class="fuhrpark-historie-neuester" id="fuhrpark-historie-oeffnen"
-             title="Alle Einträge anzeigen">
-          <span class="fuhrpark-historie-symbol">${Historie.symbolFuer(neuester.art)}</span>
-          <span class="fuhrpark-historie-datum">${Spielzeit.formatiere(new Date(neuester.datum))}</span>
-          <span class="fuhrpark-historie-text">${neuester.text}</span>
-          <span class="fuhrpark-historie-mehr">alle &raquo;</span>
-        </div>
-      </div>
-    `;
   }
 
   /** Vollständige Chronik in einem eigenen Fenster. */
@@ -671,20 +694,7 @@ const FuhrparkApp = (function () {
       </div>
     `;
 
-    const ergebnis = WindowManager.open({
-      id: "fuhrpark-historie",
-      title: `Historie – ${fahrzeug.kennzeichen}`,
-      content: inhalt
-    });
-
-    // War das Fenster schon offen (evtl. mit einem anderen Fahrzeug),
-    // holt WindowManager es nur nach vorne - Inhalt und Titel müssen
-    // dann von Hand aktualisiert werden.
-    if (!ergebnis.wurdeNeuErstellt) {
-      ergebnis.element.querySelector(".win98-window-content").innerHTML = inhalt;
-      ergebnis.element.querySelector(".win98-titlebar-title").textContent =
-        `Historie – ${fahrzeug.kennzeichen}`;
-    }
+    fensterAktualisieren("fuhrpark-historie", `Historie – ${fahrzeug.kennzeichen}`, inhalt);
   }
 
   function ausfallBlock(fahrzeug) {
@@ -773,6 +783,8 @@ const FuhrparkApp = (function () {
 
         <div class="fuhrpark-blaetter-zeile">
           <button class="win98-button bevel-out fuhrpark-zurueck" id="fuhrpark-btn-zurueck">&#10094; Übersicht</button>
+          <button class="win98-button bevel-out fuhrpark-zurueck" id="fuhrpark-btn-auslastung">📊 Auslastung</button>
+          <button class="win98-button bevel-out fuhrpark-zurueck" id="fuhrpark-btn-historie">📜 Historie</button>
         </div>
 
         <dl class="fuhrpark-infoliste">
@@ -787,8 +799,6 @@ const FuhrparkApp = (function () {
         </dl>
 
         ${fristenBlock(fahrzeug)}
-        ${auslastungBlock(fahrzeug)}
-        ${historieBlock(fahrzeug)}
 
         <div class="fuhrpark-debug-leiste">
           <!-- GEPLANT: Der Reparieren-Button wird später durch einen
@@ -1049,9 +1059,16 @@ const FuhrparkApp = (function () {
       });
     }
 
-    const historieOeffnen = fensterElement.querySelector("#fuhrpark-historie-oeffnen");
-    if (historieOeffnen) {
-      historieOeffnen.addEventListener("click", () => {
+    const btnAuslastung = fensterElement.querySelector("#fuhrpark-btn-auslastung");
+    if (btnAuslastung) {
+      btnAuslastung.addEventListener("click", () => {
+        auslastungFensterOeffnen(fahrzeuge[aktuellerIndex]);
+      });
+    }
+
+    const btnHistorie = fensterElement.querySelector("#fuhrpark-btn-historie");
+    if (btnHistorie) {
+      btnHistorie.addEventListener("click", () => {
         historieFensterOeffnen(fahrzeuge[aktuellerIndex]);
       });
     }

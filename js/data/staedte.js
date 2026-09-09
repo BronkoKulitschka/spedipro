@@ -1,16 +1,22 @@
 // staedte.js
 // 165 europäische Städte mit echten Koordinaten, Länderkürzel und
-// Einwohnerzahlen von 1995.
+// Einwohnerzahl.
 //
 // Herkunft: Städteliste aus dem Projekt, abgeglichen mit Natural Earth
 // (Koordinaten, Bevölkerung) - also keine geschätzten Positionen.
 //
+// einwQuelle sagt, worauf sich einw bezieht:
+//   "1995"    Einwohnerzahl des Ballungsraums 1995 - passt zur Spielzeit
+//   "aktuell" heutige Zahl; Natural Earth führt historische Werte nur
+//             für große Ballungsräume, für die übrigen Städte gibt es
+//             keine 1995er Angabe
+// Für die Anzeige spielt das keine Rolle, für Frachtaufkommen später
+// schon - dort sollte der Unterschied bedacht werden.
+//
 // Auswahlverfahren: gleichmäßige Verteilung über einen Mindestabstand
 // von 140 km, ergänzt um Pflichtknoten (knoten: true), die diesen
 // Abstand unterschreiten dürfen. Das sind die Frachtdrehscheiben
-// Europas - Seehäfen, Binnenhäfen und große Wirtschaftszentren -,
-// ohne die eine Speditionssimulation unvollständig wäre
-// (Rotterdam/Antwerpen/Amsterdam, Ruhrgebiet, Poebene usw.).
+// Europas - Seehäfen, Binnenhäfen und große Wirtschaftszentren.
 
 const STAEDTE = {
 "Rotterdam": {
@@ -18,7 +24,8 @@ const STAEDTE = {
 "lat": 51.9219,
 "lon": 4.478,
 "land": "NL",
-"einw1995": 981,
+"einw": 981000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Antwerpen": {
@@ -26,7 +33,8 @@ const STAEDTE = {
 "lat": 51.2223,
 "lon": 4.4131,
 "land": "BE",
-"einw1995": 906,
+"einw": 906000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Amsterdam": {
@@ -34,7 +42,8 @@ const STAEDTE = {
 "lat": 52.3519,
 "lon": 4.9147,
 "land": "NL",
-"einw1995": 988,
+"einw": 988000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Brussel": {
@@ -42,7 +51,8 @@ const STAEDTE = {
 "lat": 50.8353,
 "lon": 4.3314,
 "land": "BE",
-"einw1995": 1715,
+"einw": 1715000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Hamburg": {
@@ -50,7 +60,8 @@ const STAEDTE = {
 "lat": 53.552,
 "lon": 9.9981,
 "land": "DE",
-"einw1995": 1707,
+"einw": 1707000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Bremerhaven": {
@@ -58,7 +69,8 @@ const STAEDTE = {
 "lat": 53.5504,
 "lon": 8.58,
 "land": "DE",
-"einw1995": 0,
+"einw": 137751,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Bremen": {
@@ -66,7 +78,8 @@ const STAEDTE = {
 "lat": 53.08,
 "lon": 8.8,
 "land": "DE",
-"einw1995": 0,
+"einw": 724909,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Duisburg": {
@@ -74,7 +87,8 @@ const STAEDTE = {
 "lat": 51.43,
 "lon": 6.75,
 "land": "DE",
-"einw1995": 0,
+"einw": 1276757,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Köln": {
@@ -82,7 +96,8 @@ const STAEDTE = {
 "lat": 50.932,
 "lon": 6.9481,
 "land": "DE",
-"einw1995": 965,
+"einw": 965000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Le Havre": {
@@ -90,7 +105,8 @@ const STAEDTE = {
 "lat": 49.505,
 "lon": 0.105,
 "land": "FR",
-"einw1995": 0,
+"einw": 242124,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Zeebrugge": {
@@ -98,7 +114,8 @@ const STAEDTE = {
 "lat": 51.33,
 "lon": 3.2,
 "land": "BE",
-"einw1995": 0,
+"einw": 4000,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Felixstowe": {
@@ -106,7 +123,8 @@ const STAEDTE = {
 "lat": 51.9637,
 "lon": 1.3511,
 "land": "GB",
-"einw1995": 0,
+"einw": 0,
+"einwQuelle": "unbekannt",
 "knoten": true
 },
 "Gdańsk": {
@@ -114,7 +132,8 @@ const STAEDTE = {
 "lat": 54.36,
 "lon": 18.64,
 "land": "PL",
-"einw1995": 0,
+"einw": 740000,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Göteborg": {
@@ -122,7 +141,8 @@ const STAEDTE = {
 "lat": 57.75,
 "lon": 12.0,
 "land": "SE",
-"einw1995": 0,
+"einw": 537797,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "København": {
@@ -130,7 +150,8 @@ const STAEDTE = {
 "lat": 55.6805,
 "lon": 12.5615,
 "land": "DK",
-"einw1995": 1048,
+"einw": 1048000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Klaipėda": {
@@ -138,7 +159,8 @@ const STAEDTE = {
 "lat": 55.7204,
 "lon": 21.1199,
 "land": "LT",
-"einw1995": 0,
+"einw": 192307,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Rīga": {
@@ -146,7 +168,8 @@ const STAEDTE = {
 "lat": 56.95,
 "lon": 24.1,
 "land": "LV",
-"einw1995": 0,
+"einw": 742572,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Tallinn": {
@@ -154,7 +177,8 @@ const STAEDTE = {
 "lat": 59.4339,
 "lon": 24.728,
 "land": "EE",
-"einw1995": 0,
+"einw": 394024,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Helsinki": {
@@ -162,7 +186,8 @@ const STAEDTE = {
 "lat": 60.1775,
 "lon": 24.9322,
 "land": "FI",
-"einw1995": 943,
+"einw": 943000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Stockholm": {
@@ -170,7 +195,8 @@ const STAEDTE = {
 "lat": 59.3527,
 "lon": 18.0954,
 "land": "SE",
-"einw1995": 1138,
+"einw": 1138000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Oslo": {
@@ -178,7 +204,8 @@ const STAEDTE = {
 "lat": 59.9186,
 "lon": 10.748,
 "land": "NO",
-"einw1995": 729,
+"einw": 729000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Marseille": {
@@ -186,7 +213,8 @@ const STAEDTE = {
 "lat": 43.2919,
 "lon": 5.3731,
 "land": "FR",
-"einw1995": 1331,
+"einw": 1331000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Barcelona": {
@@ -194,7 +222,8 @@ const STAEDTE = {
 "lat": 41.3852,
 "lon": 2.1814,
 "land": "ES",
-"einw1995": 4318,
+"einw": 4318000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "València": {
@@ -202,7 +231,8 @@ const STAEDTE = {
 "lat": 39.487,
 "lon": -0.402,
 "land": "ES",
-"einw1995": 785,
+"einw": 785000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Genova": {
@@ -210,7 +240,8 @@ const STAEDTE = {
 "lat": 44.41,
 "lon": 8.93,
 "land": "IT",
-"einw1995": 0,
+"einw": 647497,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Trieste": {
@@ -218,7 +249,8 @@ const STAEDTE = {
 "lat": 45.6504,
 "lon": 13.8,
 "land": "IT",
-"einw1995": 0,
+"einw": 216035,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Koper": {
@@ -226,7 +258,8 @@ const STAEDTE = {
 "lat": 45.5482,
 "lon": 13.7296,
 "land": "SI",
-"einw1995": 0,
+"einw": 0,
+"einwQuelle": "unbekannt",
 "knoten": true
 },
 "Piraeus": {
@@ -234,7 +267,8 @@ const STAEDTE = {
 "lat": 37.95,
 "lon": 23.7,
 "land": "GR",
-"einw1995": 0,
+"einw": 466065,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Algeciras": {
@@ -242,7 +276,8 @@ const STAEDTE = {
 "lat": 36.1267,
 "lon": -5.4665,
 "land": "ES",
-"einw1995": 0,
+"einw": 111027,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Napoli": {
@@ -250,7 +285,8 @@ const STAEDTE = {
 "lat": 40.842,
 "lon": 14.2431,
 "land": "IT",
-"einw1995": 2218,
+"einw": 2218000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Milano": {
@@ -258,7 +294,8 @@ const STAEDTE = {
 "lat": 45.4719,
 "lon": 9.2031,
 "land": "IT",
-"einw1995": 3020,
+"einw": 3020000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Torino": {
@@ -266,7 +303,8 @@ const STAEDTE = {
 "lat": 45.0723,
 "lon": 7.668,
 "land": "IT",
-"einw1995": 1733,
+"einw": 1733000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Bologna": {
@@ -274,7 +312,8 @@ const STAEDTE = {
 "lat": 44.5004,
 "lon": 11.34,
 "land": "IT",
-"einw1995": 0,
+"einw": 488172,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Venezia": {
@@ -282,7 +321,8 @@ const STAEDTE = {
 "lat": 45.4387,
 "lon": 12.335,
 "land": "IT",
-"einw1995": 0,
+"einw": 270816,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "München": {
@@ -290,7 +330,8 @@ const STAEDTE = {
 "lat": 48.1319,
 "lon": 11.573,
 "land": "DE",
-"einw1995": 1241,
+"einw": 1241000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Frankfurt am Main": {
@@ -298,7 +339,8 @@ const STAEDTE = {
 "lat": 50.1,
 "lon": 8.675,
 "land": "DE",
-"einw1995": 0,
+"einw": 2895000,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Stuttgart": {
@@ -306,7 +348,8 @@ const STAEDTE = {
 "lat": 48.78,
 "lon": 9.2,
 "land": "DE",
-"einw1995": 0,
+"einw": 2944700,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Berlin": {
@@ -314,7 +357,8 @@ const STAEDTE = {
 "lat": 52.5238,
 "lon": 13.3996,
 "land": "DE",
-"einw1995": 3471,
+"einw": 3471000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Leipzig": {
@@ -322,7 +366,8 @@ const STAEDTE = {
 "lat": 51.3354,
 "lon": 12.41,
 "land": "DE",
-"einw1995": 0,
+"einw": 542529,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Nürnberg": {
@@ -330,7 +375,8 @@ const STAEDTE = {
 "lat": 49.45,
 "lon": 11.08,
 "land": "DE",
-"einw1995": 0,
+"einw": 737304,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Hannover": {
@@ -338,7 +384,8 @@ const STAEDTE = {
 "lat": 52.367,
 "lon": 9.7167,
 "land": "DE",
-"einw1995": 0,
+"einw": 722490,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Paris": {
@@ -346,7 +393,8 @@ const STAEDTE = {
 "lat": 48.8686,
 "lon": 2.3314,
 "land": "FR",
-"einw1995": 9510,
+"einw": 9510000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Lyon": {
@@ -354,7 +402,8 @@ const STAEDTE = {
 "lat": 45.772,
 "lon": 4.8281,
 "land": "FR",
-"einw1995": 1313,
+"einw": 1313000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Lille": {
@@ -362,7 +411,8 @@ const STAEDTE = {
 "lat": 50.6519,
 "lon": 3.0781,
 "land": "FR",
-"einw1995": 984,
+"einw": 984000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Madrid": {
@@ -370,7 +420,8 @@ const STAEDTE = {
 "lat": 40.402,
 "lon": -3.6853,
 "land": "ES",
-"einw1995": 4701,
+"einw": 4701000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Wien": {
@@ -378,7 +429,8 @@ const STAEDTE = {
 "lat": 48.202,
 "lon": 16.3647,
 "land": "AT",
-"einw1995": 2127,
+"einw": 2127000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Praha": {
@@ -386,7 +438,8 @@ const STAEDTE = {
 "lat": 50.0853,
 "lon": 14.464,
 "land": "CZ",
-"einw1995": 1194,
+"einw": 1194000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Bratislava": {
@@ -394,7 +447,8 @@ const STAEDTE = {
 "lat": 48.15,
 "lon": 17.117,
 "land": "SK",
-"einw1995": 0,
+"einw": 423737,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Budapest": {
@@ -402,7 +456,8 @@ const STAEDTE = {
 "lat": 47.502,
 "lon": 19.0814,
 "land": "HU",
-"einw1995": 1893,
+"einw": 1893000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Warszawa": {
@@ -410,7 +465,8 @@ const STAEDTE = {
 "lat": 52.2519,
 "lon": 20.9981,
 "land": "PL",
-"einw1995": 1652,
+"einw": 1652000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Poznań": {
@@ -418,7 +474,8 @@ const STAEDTE = {
 "lat": 52.4058,
 "lon": 16.8999,
 "land": "PL",
-"einw1995": 0,
+"einw": 623997,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Wrocław": {
@@ -426,7 +483,8 @@ const STAEDTE = {
 "lat": 51.1104,
 "lon": 17.03,
 "land": "PL",
-"einw1995": 0,
+"einw": 634893,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Katowice": {
@@ -434,7 +492,8 @@ const STAEDTE = {
 "lat": 50.2604,
 "lon": 19.02,
 "land": "PL",
-"einw1995": 0,
+"einw": 2746000,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Ljubljana": {
@@ -442,7 +501,8 @@ const STAEDTE = {
 "lat": 46.0553,
 "lon": 14.515,
 "land": "SI",
-"einw1995": 0,
+"einw": 314807,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Zagreb": {
@@ -450,7 +510,8 @@ const STAEDTE = {
 "lat": 45.8,
 "lon": 16.0,
 "land": "HR",
-"einw1995": 0,
+"einw": 722526,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Zürich": {
@@ -458,7 +519,8 @@ const STAEDTE = {
 "lat": 47.3819,
 "lon": 8.5481,
 "land": "CH",
-"einw1995": 1048,
+"einw": 1048000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Basel": {
@@ -466,7 +528,8 @@ const STAEDTE = {
 "lat": 47.5804,
 "lon": 7.59,
 "land": "CH",
-"einw1995": 0,
+"einw": 830000,
+"einwQuelle": "aktuell",
 "knoten": true
 },
 "Manchester": {
@@ -474,7 +537,8 @@ const STAEDTE = {
 "lat": 53.5024,
 "lon": -2.2499,
 "land": "GB",
-"einw1995": 2262,
+"einw": 2262000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Birmingham": {
@@ -482,7 +546,8 @@ const STAEDTE = {
 "lat": 52.4769,
 "lon": -1.9219,
 "land": "GB",
-"einw1995": 2291,
+"einw": 2291000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "London": {
@@ -490,7 +555,8 @@ const STAEDTE = {
 "lat": 51.5019,
 "lon": -0.1187,
 "land": "GB",
-"einw1995": 7908,
+"einw": 7908000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Dublin": {
@@ -498,7 +564,8 @@ const STAEDTE = {
 "lat": 53.335,
 "lon": -6.2509,
 "land": "IE",
-"einw1995": 946,
+"einw": 946000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Lisboa": {
@@ -506,7 +573,8 @@ const STAEDTE = {
 "lat": 38.7247,
 "lon": -9.1468,
 "land": "PT",
-"einw1995": 2600,
+"einw": 2600000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Porto": {
@@ -514,7 +582,8 @@ const STAEDTE = {
 "lat": 41.152,
 "lon": -8.6219,
 "land": "PT",
-"einw1995": 1206,
+"einw": 1206000,
+"einwQuelle": "1995",
 "knoten": true
 },
 "Roma": {
@@ -522,7 +591,8 @@ const STAEDTE = {
 "lat": 41.8979,
 "lon": 12.4813,
 "land": "IT",
-"einw1995": 3425,
+"einw": 3425000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "İstanbul": {
@@ -530,7 +600,8 @@ const STAEDTE = {
 "lat": 41.1069,
 "lon": 29.0081,
 "land": "TR",
-"einw1995": 7665,
+"einw": 7665000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "București": {
@@ -538,7 +609,8 @@ const STAEDTE = {
 "lat": 44.4353,
 "lon": 26.098,
 "land": "RO",
-"einw1995": 2018,
+"einw": 2018000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "Saint Petersburg": {
@@ -546,7 +618,8 @@ const STAEDTE = {
 "lat": 59.941,
 "lon": 30.3141,
 "land": "RU",
-"einw1995": 4836,
+"einw": 4836000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "Sofia": {
@@ -554,7 +627,8 @@ const STAEDTE = {
 "lat": 42.6853,
 "lon": 23.3147,
 "land": "BG",
-"einw1995": 1168,
+"einw": 1168000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "Beograd": {
@@ -562,7 +636,8 @@ const STAEDTE = {
 "lat": 44.8206,
 "lon": 20.466,
 "land": "RS",
-"einw1995": 1149,
+"einw": 1149000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "Sarajevo": {
@@ -570,7 +645,8 @@ const STAEDTE = {
 "lat": 43.85,
 "lon": 18.383,
 "land": "BA",
-"einw1995": 0,
+"einw": 696731,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Vilnius": {
@@ -578,7 +654,8 @@ const STAEDTE = {
 "lat": 54.6834,
 "lon": 25.3166,
 "land": "LT",
-"einw1995": 0,
+"einw": 542366,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Skopje": {
@@ -586,7 +663,8 @@ const STAEDTE = {
 "lat": 42.0,
 "lon": 21.4335,
 "land": "MK",
-"einw1995": 0,
+"einw": 494087,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Sevilla": {
@@ -594,7 +672,8 @@ const STAEDTE = {
 "lat": 37.405,
 "lon": -5.98,
 "land": "ES",
-"einw1995": 0,
+"einw": 1212045,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Glasgow": {
@@ -602,7 +681,8 @@ const STAEDTE = {
 "lat": 55.8764,
 "lon": -4.2527,
 "land": "GB",
-"einw1995": 1186,
+"einw": 1186000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "Newcastle-upon-Tyne": {
@@ -610,7 +690,8 @@ const STAEDTE = {
 "lat": 55.0023,
 "lon": -1.6019,
 "land": "GB",
-"einw1995": 883,
+"einw": 883000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "Bilbao": {
@@ -618,7 +699,8 @@ const STAEDTE = {
 "lat": 43.25,
 "lon": -2.93,
 "land": "ES",
-"einw1995": 0,
+"einw": 875552,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Nice": {
@@ -626,7 +708,8 @@ const STAEDTE = {
 "lat": 43.717,
 "lon": 7.2631,
 "land": "FR",
-"einw1995": 874,
+"einw": 874000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "Cardiff": {
@@ -634,7 +717,8 @@ const STAEDTE = {
 "lat": 51.5,
 "lon": -3.225,
 "land": "GB",
-"einw1995": 0,
+"einw": 861400,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Palermo": {
@@ -642,7 +726,8 @@ const STAEDTE = {
 "lat": 38.127,
 "lon": 13.3481,
 "land": "IT",
-"einw1995": 850,
+"einw": 850000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "Tiranë": {
@@ -650,7 +735,8 @@ const STAEDTE = {
 "lat": 41.33,
 "lon": 19.82,
 "land": "AL",
-"einw1995": 340,
+"einw": 340000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "Thessaloniki": {
@@ -658,7 +744,8 @@ const STAEDTE = {
 "lat": 40.6981,
 "lon": 22.8831,
 "land": "GR",
-"einw1995": 771,
+"einw": 771000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "Bordeaux": {
@@ -666,7 +753,8 @@ const STAEDTE = {
 "lat": 44.852,
 "lon": -0.597,
 "land": "FR",
-"einw1995": 730,
+"einw": 730000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "Toulouse": {
@@ -674,7 +762,8 @@ const STAEDTE = {
 "lat": 43.6219,
 "lon": 1.448,
 "land": "FR",
-"einw1995": 714,
+"einw": 714000,
+"einwQuelle": "1995",
 "knoten": false
 },
 "Catania": {
@@ -682,7 +771,8 @@ const STAEDTE = {
 "lat": 37.5,
 "lon": 15.08,
 "land": "IT",
-"einw1995": 0,
+"einw": 674542,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Zaragoza": {
@@ -690,7 +780,8 @@ const STAEDTE = {
 "lat": 41.65,
 "lon": -0.89,
 "land": "ES",
-"einw1995": 0,
+"einw": 649404,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Bari": {
@@ -698,7 +789,8 @@ const STAEDTE = {
 "lat": 41.1142,
 "lon": 16.8728,
 "land": "IT",
-"einw1995": 0,
+"einw": 500577,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Nantes": {
@@ -706,7 +798,8 @@ const STAEDTE = {
 "lat": 47.2104,
 "lon": -1.59,
 "land": "FR",
-"einw1995": 0,
+"einw": 438537,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Metz": {
@@ -714,7 +807,8 @@ const STAEDTE = {
 "lat": 49.1203,
 "lon": 6.18,
 "land": "FR",
-"einw1995": 0,
+"einw": 409186,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Murcia": {
@@ -722,7 +816,8 @@ const STAEDTE = {
 "lat": 37.98,
 "lon": -1.13,
 "land": "ES",
-"einw1995": 0,
+"einw": 406807,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Granada": {
@@ -730,7 +825,8 @@ const STAEDTE = {
 "lat": 37.165,
 "lon": -3.585,
 "land": "ES",
-"einw1995": 0,
+"einw": 388290,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "A Coruña": {
@@ -738,7 +834,8 @@ const STAEDTE = {
 "lat": 43.33,
 "lon": -8.42,
 "land": "ES",
-"einw1995": 0,
+"einw": 370610,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Lublin": {
@@ -746,7 +843,8 @@ const STAEDTE = {
 "lat": 51.2504,
 "lon": 22.5727,
 "land": "PL",
-"einw1995": 0,
+"einw": 360044,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Linz": {
@@ -754,7 +852,8 @@ const STAEDTE = {
 "lat": 48.3192,
 "lon": 14.2888,
 "land": "AT",
-"einw1995": 0,
+"einw": 349161,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Gijón": {
@@ -762,7 +861,8 @@ const STAEDTE = {
 "lat": 43.53,
 "lon": -5.67,
 "land": "ES",
-"einw1995": 0,
+"einw": 335972,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Iași": {
@@ -770,7 +870,8 @@ const STAEDTE = {
 "lat": 47.1683,
 "lon": 27.5749,
 "land": "RO",
-"einw1995": 0,
+"einw": 325914,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Valladolid": {
@@ -778,7 +879,8 @@ const STAEDTE = {
 "lat": 41.65,
 "lon": -4.75,
 "land": "ES",
-"einw1995": 0,
+"einw": 322304,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Cluj-Napoca": {
@@ -786,7 +888,8 @@ const STAEDTE = {
 "lat": 46.7884,
 "lon": 23.5984,
 "land": "RO",
-"einw1995": 0,
+"einw": 316748,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Pescara": {
@@ -794,7 +897,8 @@ const STAEDTE = {
 "lat": 42.4554,
 "lon": 14.2187,
 "land": "IT",
-"einw1995": 0,
+"einw": 314789,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Varna": {
@@ -802,7 +906,8 @@ const STAEDTE = {
 "lat": 43.2156,
 "lon": 27.8953,
 "land": "BG",
-"einw1995": 0,
+"einw": 312770,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Galați": {
@@ -810,7 +915,8 @@ const STAEDTE = {
 "lat": 45.4559,
 "lon": 28.0459,
 "land": "RO",
-"einw1995": 0,
+"einw": 311156,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Brașov": {
@@ -818,7 +924,8 @@ const STAEDTE = {
 "lat": 45.6475,
 "lon": 25.6072,
 "land": "RO",
-"einw1995": 0,
+"einw": 311044,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Craiova": {
@@ -826,7 +933,8 @@ const STAEDTE = {
 "lat": 44.3263,
 "lon": 23.8259,
 "land": "RO",
-"einw1995": 0,
+"einw": 304142,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Białystok": {
@@ -834,7 +942,8 @@ const STAEDTE = {
 "lat": 53.1504,
 "lon": 23.17,
 "land": "PL",
-"einw1995": 0,
+"einw": 291855,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Cagliari": {
@@ -842,7 +951,8 @@ const STAEDTE = {
 "lat": 39.2224,
 "lon": 9.104,
 "land": "IT",
-"einw1995": 0,
+"einw": 291511,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Tampere": {
@@ -850,7 +960,8 @@ const STAEDTE = {
 "lat": 61.5,
 "lon": 23.75,
 "land": "FI",
-"einw1995": 0,
+"einw": 259279,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Plymouth": {
@@ -858,7 +969,8 @@ const STAEDTE = {
 "lat": 50.3854,
 "lon": -4.16,
 "land": "GB",
-"einw1995": 0,
+"einw": 247297,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Aarhus": {
@@ -866,7 +978,8 @@ const STAEDTE = {
 "lat": 56.1572,
 "lon": 10.2107,
 "land": "DK",
-"einw1995": 0,
+"einw": 237551,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Košice": {
@@ -874,7 +987,8 @@ const STAEDTE = {
 "lat": 48.7304,
 "lon": 21.25,
 "land": "SK",
-"einw1995": 0,
+"einw": 236563,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Banja Luka": {
@@ -882,7 +996,8 @@ const STAEDTE = {
 "lat": 44.7804,
 "lon": 17.18,
 "land": "BA",
-"einw1995": 0,
+"einw": 221738,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Split": {
@@ -890,7 +1005,8 @@ const STAEDTE = {
 "lat": 43.5204,
 "lon": 16.47,
 "land": "HR",
-"einw1995": 0,
+"einw": 214741,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Bergen": {
@@ -898,7 +1014,8 @@ const STAEDTE = {
 "lat": 60.391,
 "lon": 5.3245,
 "land": "NO",
-"einw1995": 0,
+"einw": 213585,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Rostock": {
@@ -906,7 +1023,8 @@ const STAEDTE = {
 "lat": 54.0704,
 "lon": 12.15,
 "land": "DE",
-"einw1995": 0,
+"einw": 203080,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Pskov": {
@@ -914,7 +1032,8 @@ const STAEDTE = {
 "lat": 57.83,
 "lon": 28.3299,
 "land": "RU",
-"einw1995": 0,
+"einw": 201990,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Aberdeen": {
@@ -922,7 +1041,8 @@ const STAEDTE = {
 "lat": 57.1704,
 "lon": -2.08,
 "land": "GB",
-"einw1995": 0,
+"einw": 189364,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Szeged": {
@@ -930,7 +1050,8 @@ const STAEDTE = {
 "lat": 46.2504,
 "lon": 20.15,
 "land": "HU",
-"einw1995": 0,
+"einw": 187765,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Pécs": {
@@ -938,7 +1059,8 @@ const STAEDTE = {
 "lat": 46.0804,
 "lon": 18.22,
 "land": "HU",
-"einw1995": 0,
+"einw": 186262,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Turku": {
@@ -946,7 +1068,8 @@ const STAEDTE = {
 "lat": 60.4539,
 "lon": 22.255,
 "land": "FI",
-"einw1995": 0,
+"einw": 175945,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Stavanger": {
@@ -954,7 +1077,8 @@ const STAEDTE = {
 "lat": 58.97,
 "lon": 5.68,
 "land": "NO",
-"einw1995": 0,
+"einw": 173132,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Dijon": {
@@ -962,7 +1086,8 @@ const STAEDTE = {
 "lat": 47.3304,
 "lon": 5.03,
 "land": "FR",
-"einw1995": 0,
+"einw": 169946,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Patra": {
@@ -970,7 +1095,8 @@ const STAEDTE = {
 "lat": 38.23,
 "lon": 21.73,
 "land": "GR",
-"einw1995": 0,
+"einw": 163360,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Limoges": {
@@ -978,7 +1104,8 @@ const STAEDTE = {
 "lat": 45.83,
 "lon": 1.25,
 "land": "FR",
-"einw1995": 0,
+"einw": 152199,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Trondheim": {
@@ -986,7 +1113,8 @@ const STAEDTE = {
 "lat": 63.4167,
 "lon": 10.4167,
 "land": "NO",
-"einw1995": 0,
+"einw": 147139,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Le Mans": {
@@ -994,7 +1122,8 @@ const STAEDTE = {
 "lat": 48.0004,
 "lon": 0.1,
 "land": "FR",
-"einw1995": 0,
+"einw": 144515,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Badajoz": {
@@ -1002,7 +1131,8 @@ const STAEDTE = {
 "lat": 38.8804,
 "lon": -6.97,
 "land": "ES",
-"einw1995": 0,
+"einw": 140133,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Oulu": {
@@ -1010,7 +1140,8 @@ const STAEDTE = {
 "lat": 65.0,
 "lon": 25.47,
 "land": "FI",
-"einw1995": 0,
+"einw": 136752,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Edirne": {
@@ -1018,7 +1149,8 @@ const STAEDTE = {
 "lat": 41.6704,
 "lon": 26.57,
 "land": "TR",
-"einw1995": 0,
+"einw": 126470,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Sassari": {
@@ -1026,7 +1158,8 @@ const STAEDTE = {
 "lat": 40.73,
 "lon": 8.57,
 "land": "IT",
-"einw1995": 0,
+"einw": 120729,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Daugavpils": {
@@ -1034,7 +1167,8 @@ const STAEDTE = {
 "lat": 55.88,
 "lon": 26.51,
 "land": "LV",
-"einw1995": 0,
+"einw": 111564,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Ancona": {
@@ -1042,7 +1176,8 @@ const STAEDTE = {
 "lat": 43.6004,
 "lon": 13.4999,
 "land": "IT",
-"einw1995": 0,
+"einw": 100507,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Örebro": {
@@ -1050,7 +1185,8 @@ const STAEDTE = {
 "lat": 59.2803,
 "lon": 15.22,
 "land": "SE",
-"einw1995": 0,
+"einw": 98573,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Catanzaro": {
@@ -1058,7 +1194,8 @@ const STAEDTE = {
 "lat": 38.9004,
 "lon": 16.6,
 "land": "IT",
-"einw1995": 0,
+"einw": 95251,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Kuopio": {
@@ -1066,7 +1203,8 @@ const STAEDTE = {
 "lat": 62.8943,
 "lon": 27.6949,
 "land": "FI",
-"einw1995": 0,
+"einw": 91900,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Ioannina": {
@@ -1074,7 +1212,8 @@ const STAEDTE = {
 "lat": 39.6679,
 "lon": 20.8509,
 "land": "GR",
-"einw1995": 0,
+"einw": 86304,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Chania": {
@@ -1082,7 +1221,8 @@ const STAEDTE = {
 "lat": 35.5122,
 "lon": 24.0156,
 "land": "GR",
-"einw1995": 0,
+"einw": 78728,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Umeå": {
@@ -1090,7 +1230,8 @@ const STAEDTE = {
 "lat": 63.83,
 "lon": 20.24,
 "land": "SE",
-"einw1995": 0,
+"einw": 78197,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Sundsvall": {
@@ -1098,7 +1239,8 @@ const STAEDTE = {
 "lat": 62.4001,
 "lon": 17.3167,
 "land": "SE",
-"einw1995": 0,
+"einw": 73389,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Bourges": {
@@ -1106,7 +1248,8 @@ const STAEDTE = {
 "lat": 47.0837,
 "lon": 2.4,
 "land": "FR",
-"einw1995": 0,
+"einw": 72340,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Gävle": {
@@ -1114,7 +1257,8 @@ const STAEDTE = {
 "lat": 60.667,
 "lon": 17.1666,
 "land": "SE",
-"einw1995": 0,
+"einw": 68635,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Kristiansand": {
@@ -1122,7 +1266,8 @@ const STAEDTE = {
 "lat": 58.1666,
 "lon": 8.0,
 "land": "NO",
-"einw1995": 0,
+"einw": 63814,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Växjö": {
@@ -1130,7 +1275,8 @@ const STAEDTE = {
 "lat": 56.8837,
 "lon": 14.8167,
 "land": "SE",
-"einw1995": 0,
+"einw": 59600,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Lappeenranta": {
@@ -1138,7 +1284,8 @@ const STAEDTE = {
 "lat": 61.0671,
 "lon": 28.1833,
 "land": "FI",
-"einw1995": 0,
+"einw": 59276,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Rodos": {
@@ -1146,7 +1293,8 @@ const STAEDTE = {
 "lat": 36.4412,
 "lon": 28.2225,
 "land": "GR",
-"einw1995": 0,
+"einw": 56969,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Veliko Tarnovo": {
@@ -1154,7 +1302,8 @@ const STAEDTE = {
 "lat": 43.0862,
 "lon": 25.6555,
 "land": "BG",
-"einw1995": 0,
+"einw": 53115,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Tromsø": {
@@ -1162,7 +1311,8 @@ const STAEDTE = {
 "lat": 69.6351,
 "lon": 18.992,
 "land": "NO",
-"einw1995": 0,
+"einw": 52436,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Luleå": {
@@ -1170,7 +1320,8 @@ const STAEDTE = {
 "lat": 65.5966,
 "lon": 22.1584,
 "land": "SE",
-"einw1995": 0,
+"einw": 48638,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Ålesund": {
@@ -1178,7 +1329,8 @@ const STAEDTE = {
 "lat": 62.5454,
 "lon": 6.388,
 "land": "NO",
-"einw1995": 0,
+"einw": 47772,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Kokkola": {
@@ -1186,7 +1338,8 @@ const STAEDTE = {
 "lat": 63.8333,
 "lon": 23.1167,
 "land": "FI",
-"einw1995": 0,
+"einw": 46714,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Östersund": {
@@ -1194,7 +1347,8 @@ const STAEDTE = {
 "lat": 63.1833,
 "lon": 14.65,
 "land": "SE",
-"einw1995": 0,
+"einw": 46178,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Ventspils": {
@@ -1202,7 +1356,8 @@ const STAEDTE = {
 "lat": 57.3899,
 "lon": 21.5606,
 "land": "LV",
-"einw1995": 0,
+"einw": 42884,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Faro": {
@@ -1210,7 +1365,8 @@ const STAEDTE = {
 "lat": 37.0171,
 "lon": -7.9333,
 "land": "PT",
-"einw1995": 0,
+"einw": 41355,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Bastia": {
@@ -1218,7 +1374,8 @@ const STAEDTE = {
 "lat": 42.7032,
 "lon": 9.45,
 "land": "FR",
-"einw1995": 0,
+"einw": 41001,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Rovaniemi": {
@@ -1226,7 +1383,8 @@ const STAEDTE = {
 "lat": 66.5,
 "lon": 25.7159,
 "land": "FI",
-"einw1995": 0,
+"einw": 34781,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Bodø": {
@@ -1234,7 +1392,8 @@ const STAEDTE = {
 "lat": 67.2764,
 "lon": 14.4293,
 "land": "NO",
-"einw1995": 0,
+"einw": 34073,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Mytilini": {
@@ -1242,7 +1401,8 @@ const STAEDTE = {
 "lat": 39.1104,
 "lon": 26.5546,
 "land": "GR",
-"einw1995": 0,
+"einw": 29328,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Almaraz": {
@@ -1250,7 +1410,8 @@ const STAEDTE = {
 "lat": 39.8142,
 "lon": -5.677,
 "land": "ES",
-"einw1995": 0,
+"einw": 0,
+"einwQuelle": "unbekannt",
 "knoten": false
 },
 "Bijelo Polje": {
@@ -1258,7 +1419,8 @@ const STAEDTE = {
 "lat": 43.0383,
 "lon": 19.7476,
 "land": "ME",
-"einw1995": 0,
+"einw": 0,
+"einwQuelle": "unbekannt",
 "knoten": false
 },
 "Ciudad Real": {
@@ -1266,7 +1428,8 @@ const STAEDTE = {
 "lat": 38.9863,
 "lon": -3.9291,
 "land": "ES",
-"einw1995": 0,
+"einw": 0,
+"einwQuelle": "unbekannt",
 "knoten": false
 },
 "Dombås": {
@@ -1274,7 +1437,8 @@ const STAEDTE = {
 "lat": 62.0755,
 "lon": 9.1279,
 "land": "NO",
-"einw1995": 0,
+"einw": 0,
+"einwQuelle": "unbekannt",
 "knoten": false
 },
 "Grimsby": {
@@ -1282,7 +1446,8 @@ const STAEDTE = {
 "lat": 53.5654,
 "lon": -0.0755,
 "land": "GB",
-"einw1995": 0,
+"einw": 0,
+"einwQuelle": "unbekannt",
 "knoten": false
 },
 "Honningsvåg": {
@@ -1290,7 +1455,8 @@ const STAEDTE = {
 "lat": 70.9821,
 "lon": 25.9704,
 "land": "NO",
-"einw1995": 0,
+"einw": 0,
+"einwQuelle": "unbekannt",
 "knoten": false
 },
 "Ivalo": {
@@ -1298,7 +1464,8 @@ const STAEDTE = {
 "lat": 68.6599,
 "lon": 27.5389,
 "land": "FI",
-"einw1995": 0,
+"einw": 0,
+"einwQuelle": "unbekannt",
 "knoten": false
 },
 "Kuusamo": {
@@ -1306,7 +1473,8 @@ const STAEDTE = {
 "lat": 65.9645,
 "lon": 29.1888,
 "land": "FI",
-"einw1995": 0,
+"einw": 0,
+"einwQuelle": "unbekannt",
 "knoten": false
 },
 "Narvik": {
@@ -1314,7 +1482,8 @@ const STAEDTE = {
 "lat": 68.3832,
 "lon": 17.29,
 "land": "NO",
-"einw1995": 0,
+"einw": 20000,
+"einwQuelle": "aktuell",
 "knoten": false
 },
 "Roscoff": {
@@ -1322,7 +1491,8 @@ const STAEDTE = {
 "lat": 48.7238,
 "lon": -3.9871,
 "land": "FR",
-"einw1995": 0,
+"einw": 0,
+"einwQuelle": "unbekannt",
 "knoten": false
 },
 "Alta": {
@@ -1330,7 +1500,8 @@ const STAEDTE = {
 "lat": 69.9666,
 "lon": 23.2417,
 "land": "NO",
-"einw1995": 0,
+"einw": 12077,
+"einwQuelle": "aktuell",
 "knoten": false
 }
 };

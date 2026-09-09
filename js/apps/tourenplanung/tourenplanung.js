@@ -71,7 +71,7 @@ const TourenplanungApp = (function () {
         ${s.knoten ? `<span class="tour-dispo-knoten">Frachtknoten</span>` : ""}
       </div>
       <div class="tour-dispo-info">
-        ${s.einw1995 ? `${(s.einw1995 * 1000).toLocaleString("de-DE")} Einwohner (1995) · ` : ""}
+        ${s.einw ? `${s.einw.toLocaleString("de-DE")} Einwohner${s.einwQuelle === "1995" ? " (1995)" : ""} · ` : ""}
         ${s.lat.toFixed(2)}° N, ${s.lon.toFixed(2)}° O
       </div>
 
@@ -87,6 +87,19 @@ const TourenplanungApp = (function () {
 
   // ---------- Karte: Marken und Ansicht ----------
 
+  /**
+   * Größenstufe einer Stadt nach Einwohnerzahl. Die Marken sollen auf
+   * einen Blick zeigen, wo die großen Zentren liegen - ohne dass Namen
+   * auf der Karte stehen.
+   */
+  function groessenstufe(stadt) {
+    const ew = stadt.einw || 0;
+    if (ew >= 1000000) return 4;
+    if (ew >= 400000) return 3;
+    if (ew >= 120000) return 2;
+    return 1;
+  }
+
   function markenZeichnen() {
     const behaelter = fensterElement.querySelector("#tour-karte-marken");
     if (!behaelter) return;
@@ -94,10 +107,15 @@ const TourenplanungApp = (function () {
     behaelter.innerHTML = Karte.alleStaedte()
       .map((stadt) => {
         const p = Karte.nachBild(stadt.lon, stadt.lat);
-        const klasse = stadt.knoten ? "tour-marke tour-marke-knoten" : "tour-marke";
-        const gewaehlt = gewaehlteStadt && gewaehlteStadt.name === stadt.name
-          ? " tour-marke-gewaehlt" : "";
-        return `<span class="${klasse}${gewaehlt}"
+        const stufe = groessenstufe(stadt);
+        const klassen = [
+          "tour-marke",
+          `tour-marke-s${stufe}`,
+          stadt.knoten ? "tour-marke-knoten" : "",
+          gewaehlteStadt && gewaehlteStadt.name === stadt.name ? "tour-marke-gewaehlt" : ""
+        ].filter(Boolean).join(" ");
+
+        return `<span class="${klassen}"
                       style="left:${p.x}px; top:${p.y}px"
                       data-stadt="${stadt.name}"></span>`;
       })
@@ -220,8 +238,17 @@ const TourenplanungApp = (function () {
     marken.addEventListener("mouseover", (e) => {
       const marke = e.target.closest(".tour-marke");
       if (!marke) return;
+      const stadt = STAEDTE[marke.dataset.stadt];
+      if (!stadt) return;
       const r = rahmen.getBoundingClientRect();
-      tooltipZeigen(marke.dataset.stadt, e.clientX - r.left, e.clientY - r.top);
+      const zusatz = stadt.einw
+        ? ` · ${stadt.einw.toLocaleString("de-DE")} Einw.`
+        : "";
+      tooltipZeigen(
+        `${stadt.name} (${stadt.land})${zusatz}`,
+        e.clientX - r.left,
+        e.clientY - r.top
+      );
     });
 
     marken.addEventListener("mouseout", (e) => {
