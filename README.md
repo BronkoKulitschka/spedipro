@@ -3,7 +3,34 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.15.0)
+## Aktueller Stand (v0.15.1)
+
+**Bedienung und Optik:**
+- Klickbereich der Stadtmarken deutlich vergrößert (unsichtbarer Rahmen
+  von 11 px, Trefferfläche ~27 px statt 5 px)
+- Städtenamen erscheinen ab Zoomstufe 2,2 (größere Städte und
+  Frachtknoten) bzw. 3,2 (alle). Beschriftungen skalieren gegen den
+  Zoom, bleiben also gleich groß
+- "Zurück zum Fahrzeug"-Button in Auslastungs- und Historienfenster;
+  holt den Fuhrpark nach vorne und stellt ihn wieder her, falls
+  minimiert
+- Schrift lesbarer: Fließtext in Tahoma/MS Sans Serif (Originalschriften
+  von Windows 98), Grundgröße 12 -> 13 px. Pixelschrift nur noch für
+  Titelleisten und Überschriften
+- Buttons mit abgerundeten Ecken, Verlauf und Schlagschatten; beim
+  Drücken sinken sie sichtbar ein
+
+**Bugfix Zwei-Finger-Zoom:** Beim Anheben eines Fingers sprang die Karte.
+Ursache war nicht die Zoom-Rechnung (der Punkt zwischen den Fingern
+bleibt exakt stehen), sondern der Gestenwechsel: Die Ein-Finger-Logik
+rechnete mit dem Startpunkt von vor dem Zoomen weiter.
+- Zustandsverfolgung der Geste ("keine"/"ziehen"/"zoomen")
+- Griffpunkt wird beim Wechsel von zwei auf einen Finger neu gesetzt
+- Maus-Handler ignoriert Ereignisse während einer Fingergeste (manche
+  Browser senden nach Berührungen zusätzlich Maus-Ereignisse)
+- Randfälle: nachträglich aufgesetzter zweiter Finger, `touchcancel`
+
+## Vorheriger Stand (v0.15.0)
 
 **Karte deutlich ausgebaut** (`assets/sprites/europa.png`):
 - Höhenrelief aus 78 echten Gipfelpunkten (Natural Earth), benachbarte
@@ -333,6 +360,19 @@ spedipro/
 - Beschriftung auf dem Auflieger (Firmenname). Zu beachten: isometrische
   Schrägstellung des Textes, Pixelschrift ohne Weichzeichnung, Cache-
   Schlüssel dann aus Farbe UND Text
+
+**Prüfungen können durchfallen** - Notiz in `js/core/fristen.js`. HU und
+SP sollen ein Ergebnis haben (bestanden / Mängel / erhebliche Mängel),
+abhängig vom Zustand der Bauteile. Bei Mängeln läuft die Frist nicht
+weiter, das Fahrzeug muss instand gesetzt und nachgeprüft werden; bei
+erheblichen Mängeln keine Weiterfahrt. Sinnvoll erst mit dem
+Werkstatt-Modul.
+
+**Ausfälle ohne Verschleiß-Unterschreitung** - Notiz in
+`js/core/ausfall.js`. Fahrzeuge sollen auch durch zufällige Defekte
+(Lichtmaschine, Anlasser, Druckluft), Reifenschaden durch Fremdkörper,
+Unfälle oder Winterprobleme liegenbleiben. Wahrscheinlichkeit aus Alter,
+Laufleistung, Gesamtzustand und Jahreszeit.
 
 **Tourausfall und Vertragsstrafe** - Notiz in `js/core/ausfall.js`.
 Bleibt ein Fahrzeug mitten in einer Tour liegen und wird nicht zeitnah

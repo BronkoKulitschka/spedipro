@@ -20,6 +20,30 @@
 // gültigen Fristen aus der StVZO gegengeprüft werden, bevor daraus
 // Spielmechanik mit Bußgeldern o.ä. abgeleitet wird.
 
+// ----------------------------------------------------------------------
+// GEPLANT: Prüfungen können auch NICHT bestanden werden
+// ----------------------------------------------------------------------
+// Aktuell setzt `erledigen()` eine Frist einfach zurück - jede Prüfung
+// gilt damit als bestanden. Vorgesehen ist stattdessen:
+//
+//   * Die Prüfung hat ein Ergebnis: bestanden / Mängel / erhebliche
+//     Mängel. Wahrscheinlichkeit abhängig vom Zustand der Bauteile aus
+//     `verschleiss.js` - ein Fahrzeug mit 20 % Bremsen fällt bei der SP
+//     mit hoher Wahrscheinlichkeit durch.
+//   * Bei Mängeln: Frist läuft NICHT weiter, das Fahrzeug muss zuerst
+//     instand gesetzt werden. Danach Nachprüfung, die erneut Geld und
+//     Zeit kostet.
+//   * Bei erheblichen Mängeln: keine Weiterfahrt, das Fahrzeug ist bis
+//     zur Instandsetzung stillgelegt (analog zum Ausfall in
+//     `ausfall.js`, dort den Zustand "stillstehend" mitnutzen).
+//   * Der Mängelbericht sollte benennen, welche Bauteile beanstandet
+//     wurden - das verbindet die Prüfung mit dem Verschleißmodell und
+//     gibt dem Spieler eine klare Handlungsanweisung.
+//
+// Sinnvoll erst umzusetzen, wenn das Werkstatt-Modul steht, weil dort
+// die Instandsetzung und die Nachprüfung stattfinden.
+// ----------------------------------------------------------------------
+
 const Fristen = (function () {
 
   const ARTEN = {

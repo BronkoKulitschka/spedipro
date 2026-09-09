@@ -16,7 +16,8 @@
 }
 
 .fuhrpark-fahrzeugname {
-  font-size: 16px;
+  font-family: var(--font-pixel);
+  font-size: 19px;
   font-weight: bold;
 }
 
@@ -405,6 +406,13 @@
   font-weight: bold;
   font-size: 14px;
 }
+
+/* Kleine Beschriftungen etwas größer, damit sie lesbar bleiben */
+.fuhrpark-callout { font-size: 11px; }
+.fuhrpark-uebersicht-meta,
+.fuhrpark-frist,
+.fuhrpark-historie-eintrag,
+.fuhrpark-auslastung-details { font-size: 12px; }
 
 .fuhrpark-uebersicht-kennzeichen {
   font-family: monospace;

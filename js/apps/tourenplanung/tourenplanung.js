@@ -23,6 +23,12 @@ const TourenplanungApp = (function () {
   const ZOOM_MIN = 0.6;
   const ZOOM_MAX = 4;
 
+  // Ab diesen Zoomstufen werden Städtenamen eingeblendet: in der
+  // vorletzten Stufe nur größere Städte und Frachtknoten, in der
+  // höchsten alle. Bei weiter Ansicht wären 165 Namen unlesbar.
+  const ZOOM_NAMEN_TEIL = 2.2;
+  const ZOOM_NAMEN_ALLE = 3.2;
+
   // ---------- Aufbau ----------
 
   function renderInhalt() {
@@ -117,7 +123,8 @@ const TourenplanungApp = (function () {
 
         return `<span class="${klassen}"
                       style="left:${p.x}px; top:${p.y}px"
-                      data-stadt="${stadt.name}"></span>`;
+                      data-stadt="${stadt.name}"
+              ><span class="tour-marke-name">${stadt.name}</span></span>`;
       })
       .join("");
   }
@@ -127,6 +134,18 @@ const TourenplanungApp = (function () {
     if (!buehne) return;
     buehne.style.transform =
       `translate(${versatzX}px, ${versatzY}px) scale(${zoom})`;
+    namenSichtbarkeit();
+  }
+
+  function namenSichtbarkeit() {
+    const marken = fensterElement.querySelector("#tour-karte-marken");
+    if (!marken) return;
+    marken.classList.toggle("zoom-namen-teil", zoom >= ZOOM_NAMEN_TEIL);
+    marken.classList.toggle("zoom-namen-alle", zoom >= ZOOM_NAMEN_ALLE);
+
+    // Beschriftungen gegen den Zoom skalieren, damit sie in jeder Stufe
+    // gleich groß erscheinen statt mitzuwachsen.
+    marken.style.setProperty("--namen-skalierung", (1 / zoom).toFixed(3));
   }
 
   /** Verschiebung begrenzen, damit die Karte nicht aus dem Fenster wandert. */
@@ -255,12 +274,20 @@ const TourenplanungApp = (function () {
       if (e.target.closest(".tour-marke")) tooltipVerbergen();
     });
 
+    // Zustand der Fingergeste - wird weiter unten gesetzt, hier bereits
+    // deklariert, weil die Maus-Handler ihn abfragen.
+    let touchModus = "keine";
+
     // --- Verschieben mit Maus ---
     let ziehtGerade = false;
     let startX = 0, startY = 0, startVersatzX = 0, startVersatzY = 0;
     let bewegt = 0;
 
     rahmen.addEventListener("mousedown", (e) => {
+      // Nach einer Berührung senden manche Browser zusätzlich
+      // Maus-Ereignisse. Läuft gerade eine Fingergeste, ignorieren -
+      // sonst verschieben beide Handler gleichzeitig.
+      if (touchModus !== "keine") return;
       ziehtGerade = true;
       bewegt = 0;
       startX = e.clientX; startY = e.clientY;
@@ -293,28 +320,53 @@ const TourenplanungApp = (function () {
     }, { passive: false });
 
     // --- Touch: Verschieben mit einem Finger, Zoom mit zwei ---
-    let letzterAbstand = null;
-    let touchStartX = 0, touchStartY = 0;
+    //
+    // Wichtig ist der Wechsel zwischen beiden Modi: Wird beim Zoomen ein
+    // Finger angehoben, greift wieder die Ein-Finger-Logik. Ohne
+    // Neuberechnung des Startpunktes würde sie mit den Werten von VOR
+    // dem Zoomen weiterrechnen - die Karte springt dann.
+    // touchModus ist oben deklariert: "keine" | "ziehen" | "zoomen"
+    let letzterAbstand = 0;
+    let griffX = 0, griffY = 0;
+
+    function ziehenStarten(touch) {
+      touchModus = "ziehen";
+      griffX = touch.clientX - versatzX;
+      griffY = touch.clientY - versatzY;
+    }
+
+    function zoomenStarten(touches) {
+      touchModus = "zoomen";
+      letzterAbstand = fingerAbstand(touches);
+    }
 
     rahmen.addEventListener("touchstart", (e) => {
       if (e.touches.length === 1) {
-        touchStartX = e.touches[0].clientX - versatzX;
-        touchStartY = e.touches[0].clientY - versatzY;
-      } else if (e.touches.length === 2) {
-        letzterAbstand = fingerAbstand(e.touches);
+        ziehenStarten(e.touches[0]);
+      } else if (e.touches.length >= 2) {
+        zoomenStarten(e.touches);
       }
     }, { passive: true });
 
     rahmen.addEventListener("touchmove", (e) => {
-      if (e.touches.length === 1) {
+      if (e.touches.length === 1 && touchModus === "ziehen") {
         e.preventDefault();
-        versatzX = e.touches[0].clientX - touchStartX;
-        versatzY = e.touches[0].clientY - touchStartY;
+        versatzX = e.touches[0].clientX - griffX;
+        versatzY = e.touches[0].clientY - griffY;
         versatzBegrenzen();
         ansichtAnwenden();
-      } else if (e.touches.length === 2 && letzterAbstand) {
+      } else if (e.touches.length >= 2) {
         e.preventDefault();
+        // Zweiter Finger kam nachträglich dazu
+        if (touchModus !== "zoomen") {
+          zoomenStarten(e.touches);
+          return;
+        }
         const abstand = fingerAbstand(e.touches);
+        if (letzterAbstand <= 0) {
+          letzterAbstand = abstand;
+          return;
+        }
         const r = rahmen.getBoundingClientRect();
         const mitteX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left;
         const mitteY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
@@ -324,7 +376,22 @@ const TourenplanungApp = (function () {
     }, { passive: false });
 
     rahmen.addEventListener("touchend", (e) => {
-      if (e.touches.length < 2) letzterAbstand = null;
+      if (e.touches.length === 0) {
+        touchModus = "keine";
+        letzterAbstand = 0;
+      } else if (e.touches.length === 1) {
+        // Von zwei auf einen Finger: Griffpunkt neu setzen, sonst
+        // springt die Karte um die Differenz seit dem Zoombeginn.
+        ziehenStarten(e.touches[0]);
+        letzterAbstand = 0;
+      } else {
+        letzterAbstand = fingerAbstand(e.touches);
+      }
+    }, { passive: true });
+
+    rahmen.addEventListener("touchcancel", () => {
+      touchModus = "keine";
+      letzterAbstand = 0;
     }, { passive: true });
 
     // Bei Fenstergrößenänderung Begrenzung neu anwenden

@@ -51,6 +51,30 @@
 // liefert die Standdauer.
 // ----------------------------------------------------------------------
 
+// ----------------------------------------------------------------------
+// GEPLANT: Ausfälle auch ohne Verschleiß-Unterschreitung
+// ----------------------------------------------------------------------
+// Bisher fällt ein Fahrzeug nur aus, wenn ein Bauteil unter seine
+// kritische Grenze rutscht - also durch planbaren Verschleiß. In der
+// Realität bleiben Lkw auch aus anderen Gründen liegen:
+//
+//   * Zufällige Defekte: Lichtmaschine, Anlasser, Turbolader,
+//     Druckluftanlage, Elektrik. Wahrscheinlichkeit steigt mit Alter
+//     und Laufleistung, ist aber nicht an ein einzelnes Verschleißteil
+//     gebunden.
+//   * Reifenschaden durch Fremdkörper - unabhängig vom Profilzustand.
+//   * Unfälle und Fremdverschulden; Wetter (Schneeverwehung, Sperrung).
+//   * Kraftstoffprobleme im Winter (versulzter Diesel) - passt gut zum
+//     bereits vorhandenen Jahreszeitfaktor.
+//
+// Umsetzungsidee: eine Ausfallwahrscheinlichkeit je Tour berechnen aus
+// Fahrzeugalter, Laufleistung, Gesamtzustand und Jahreszeit. Die
+// Behandlung danach ist dieselbe wie hier (vor Ort oder Bergung), nur
+// die Ursache und die Reparaturkosten unterscheiden sich.
+// Sinnvoll zusammen mit der Tourenplanung, damit ein Ausfall mitten in
+// der Tour auch die Tour selbst betrifft (siehe Notiz weiter unten).
+// ----------------------------------------------------------------------
+
 const Ausfall = (function () {
 
   // Kritische Grenze je Bauteil in Prozent. Bewusst unterschiedlich:

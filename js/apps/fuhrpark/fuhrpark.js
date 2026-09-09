@@ -616,6 +616,11 @@ const FuhrparkApp = (function () {
         <div class="fuhrpark-datumszeile">
           Auslastung der letzten ${Auslastung.ZEITRAUM_TAGE} Tage
         </div>
+        <div class="fuhrpark-blaetter-zeile">
+          <button class="win98-button bevel-out fuhrpark-zurueck" data-zurueck-zum-fahrzeug>
+            &#10094; Zurück zum Fahrzeug
+          </button>
+        </div>
 
         <div class="fuhrpark-auslastung">
           <div class="fuhrpark-gesamtbalken">
@@ -661,6 +666,17 @@ const FuhrparkApp = (function () {
       ergebnis.element.querySelector(".win98-window-content").innerHTML = inhalt;
       ergebnis.element.querySelector(".win98-titlebar-title").textContent = titel;
     }
+
+    // Der Inhalt wird bei jedem Aufruf neu gesetzt, also muss auch der
+    // Zurück-Button jedes Mal neu verdrahtet werden.
+    const zurueck = ergebnis.element.querySelector("[data-zurueck-zum-fahrzeug]");
+    if (zurueck) {
+      zurueck.addEventListener("click", () => {
+        // Holt das Fuhrpark-Fenster nach vorne (und stellt es wieder her,
+        // falls es minimiert war). Die Detailansicht bleibt erhalten.
+        FuhrparkApp.open();
+      });
+    }
   }
 
   /** Vollständige Chronik in einem eigenen Fenster. */
@@ -690,6 +706,11 @@ const FuhrparkApp = (function () {
           <span class="fuhrpark-kennzeichen">${fahrzeug.kennzeichen}</span>
         </div>
         <div class="fuhrpark-datumszeile">${eintraege.length} Einträge, neueste zuerst</div>
+        <div class="fuhrpark-blaetter-zeile">
+          <button class="win98-button bevel-out fuhrpark-zurueck" data-zurueck-zum-fahrzeug>
+            &#10094; Zurück zum Fahrzeug
+          </button>
+        </div>
         <ul class="fuhrpark-historie-vollliste">${zeilen}</ul>
       </div>
     `;

@@ -73,6 +73,15 @@
   cursor: pointer;
 }
 
+/* Unsichtbarer, deutlich größerer Klickbereich um jede Marke. Die
+   sichtbaren Quadrate sind nur wenige Pixel groß - mit dem Finger wäre
+   das sonst kaum zu treffen. */
+.tour-marke::before {
+  content: "";
+  position: absolute;
+  inset: -11px;
+}
+
 .tour-marke-s1 { width: 5px;  height: 5px;  margin: -3px 0 0 -3px; }
 .tour-marke-s2 { width: 7px;  height: 7px;  margin: -4px 0 0 -4px; background: #d64830; }
 .tour-marke-s3 { width: 9px;  height: 9px;  margin: -5px 0 0 -5px; background: #e85828; }
@@ -101,6 +110,40 @@
 
 .tour-marke-gewaehlt::after {
   background: #d02828;
+}
+
+/* ---------- Städtenamen bei hohem Zoom ----------
+   Bei weiter Ansicht wären 165 Namen unlesbarer Filz. Erst in den
+   beiden höchsten Zoomstufen werden sie eingeblendet. */
+.tour-marke-name {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%) scale(var(--namen-skalierung, 1));
+  transform-origin: top center;
+  margin-top: 2px;
+  padding: 0 3px;
+  font-size: 9px;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: #10100c;
+  background: rgba(255, 255, 240, 0.82);
+  border: 1px solid rgba(0, 0, 0, 0.45);
+  border-radius: 2px;
+  pointer-events: none;
+  display: none;
+}
+
+/* Vorletzte Stufe: nur größere Städte und Frachtknoten beschriften */
+.tour-karte-marken.zoom-namen-teil .tour-marke-s3 .tour-marke-name,
+.tour-karte-marken.zoom-namen-teil .tour-marke-s4 .tour-marke-name,
+.tour-karte-marken.zoom-namen-teil .tour-marke-knoten .tour-marke-name {
+  display: block;
+}
+
+/* Höchste Stufe: alle Namen */
+.tour-karte-marken.zoom-namen-alle .tour-marke-name {
+  display: block;
 }
 
 .tour-karte-tooltip {
@@ -159,7 +202,8 @@
 }
 
 .tour-dispo-stadt {
-  font-size: 16px;
+  font-family: var(--font-pixel);
+  font-size: 19px;
   font-weight: bold;
 }
 
