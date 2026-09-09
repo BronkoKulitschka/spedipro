@@ -3,7 +3,30 @@
 Speditionsmanager-Simulator im Windows-98-Look. Europa in den 90er
 Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 
-## Aktueller Stand (v0.15.1)
+## Aktueller Stand (v0.15.2)
+
+**Schrift vereinheitlicht:** Nur noch Tahoma/MS Sans Serif für die
+gesamte Oberfläche (Originalschriften von Windows 98). Die Pixelschrift
+ist entfernt - damit entfällt auch das Nachladen von Google Fonts, die
+Oberfläche läuft jetzt vollständig offline.
+
+**Button-Design zurückgesetzt:** wieder flacher Bevel-Rahmen ohne
+abgerundete Ecken, Verlauf oder Schlagschatten. Fensterecken ebenfalls
+wieder eckig.
+
+**Kartenschrift scharf gestellt.** Zwei Ursachen für die Unschärfe:
+1. Die Namen lagen in der per `transform` skalierten Ebene und wurden
+   mit einem Bruchwert gegenskaliert - Text landet dabei zwischen den
+   Pixeln. Sie sitzen jetzt in einer eigenen, nicht skalierten Ebene;
+   die Positionen werden in JS berechnet und auf ganze Pixel gerundet.
+2. Die Zentrierung per `translateX(-50%)` ergab bei ungerader Textbreite
+   eine weitere halbe Pixelverschiebung. Namen stehen jetzt unten rechts
+   neben der Marke statt zentriert darunter.
+
+Nebeneffekt: Es werden nur noch Namen im sichtbaren Ausschnitt erzeugt,
+bei starkem Zoom also eine Handvoll statt 165.
+
+## Vorheriger Stand (v0.15.1)
 
 **Bedienung und Optik:**
 - Klickbereich der Stadtmarken deutlich vergrößert (unsichtbarer Rahmen

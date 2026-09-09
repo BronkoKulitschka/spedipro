@@ -41,6 +41,11 @@ const TourenplanungApp = (function () {
                    src="${Karte.BILD}" alt="Europakarte" draggable="false">
               <div class="tour-karte-marken" id="tour-karte-marken"></div>
             </div>
+            <!-- Namen liegen bewusst AUSSERHALB der gezoomten Bühne:
+                 Text in einer skalierten Ebene wird unscharf, weil er
+                 auf Zwischenpixel fällt. Hier werden die Positionen
+                 stattdessen bei jeder Ansichtsänderung neu berechnet. -->
+            <div class="tour-karte-namen" id="tour-karte-namen"></div>
             <div class="tour-karte-tooltip hidden" id="tour-karte-tooltip"></div>
           </div>
           <div class="tour-karte-leiste">
@@ -123,8 +128,7 @@ const TourenplanungApp = (function () {
 
         return `<span class="${klassen}"
                       style="left:${p.x}px; top:${p.y}px"
-                      data-stadt="${stadt.name}"
-              ><span class="tour-marke-name">${stadt.name}</span></span>`;
+                      data-stadt="${stadt.name}"></span>`;
       })
       .join("");
   }
@@ -134,18 +138,51 @@ const TourenplanungApp = (function () {
     if (!buehne) return;
     buehne.style.transform =
       `translate(${versatzX}px, ${versatzY}px) scale(${zoom})`;
-    namenSichtbarkeit();
+    namenAktualisieren();
   }
 
-  function namenSichtbarkeit() {
-    const marken = fensterElement.querySelector("#tour-karte-marken");
-    if (!marken) return;
-    marken.classList.toggle("zoom-namen-teil", zoom >= ZOOM_NAMEN_TEIL);
-    marken.classList.toggle("zoom-namen-alle", zoom >= ZOOM_NAMEN_ALLE);
+  /**
+   * Zeichnet die Städtenamen neu. Sie sitzen in einer eigenen, NICHT
+   * skalierten Ebene - dadurch bleibt die Schrift in jeder Zoomstufe
+   * gestochen scharf. Die Bildschirmposition wird aus Zoom und Versatz
+   * berechnet und auf ganze Pixel gerundet, damit kein Text zwischen
+   * zwei Pixeln landet.
+   */
+  function namenAktualisieren() {
+    const ebene = fensterElement.querySelector("#tour-karte-namen");
+    const rahmen = fensterElement.querySelector("#tour-karte-rahmen");
+    if (!ebene || !rahmen) return;
 
-    // Beschriftungen gegen den Zoom skalieren, damit sie in jeder Stufe
-    // gleich groß erscheinen statt mitzuwachsen.
-    marken.style.setProperty("--namen-skalierung", (1 / zoom).toFixed(3));
+    if (zoom < ZOOM_NAMEN_TEIL) {
+      if (ebene.childElementCount) ebene.innerHTML = "";
+      return;
+    }
+
+    const alleZeigen = zoom >= ZOOM_NAMEN_ALLE;
+    const breite = rahmen.clientWidth;
+    const hoehe = rahmen.clientHeight;
+    const rand = 60; // etwas über den Rand hinaus, damit nichts abrupt erscheint
+
+    const teile = [];
+    Karte.alleStaedte().forEach((stadt) => {
+      if (!alleZeigen && !stadt.knoten && groessenstufe(stadt) < 3) return;
+
+      const p = Karte.nachBild(stadt.lon, stadt.lat);
+      const x = Math.round(p.x * zoom + versatzX);
+      const y = Math.round(p.y * zoom + versatzY);
+
+      // Nur beschriften, was auch im Fenster liegt
+      if (x < -rand || x > breite + rand || y < -rand || y > hoehe + rand) return;
+
+      // Name unten rechts neben die Marke setzen, mit Abstand je nach
+      // Markengröße - ohne Zentrierung, damit er auf ganzen Pixeln sitzt.
+      const versatz = 4 + Math.round(groessenstufe(stadt) * 1.5);
+      teile.push(
+        `<span class="tour-stadtname" style="left:${x + versatz}px; top:${y + versatz}px">${stadt.name}</span>`
+      );
+    });
+
+    ebene.innerHTML = teile.join("");
   }
 
   /** Verschiebung begrenzen, damit die Karte nicht aus dem Fenster wandert. */
