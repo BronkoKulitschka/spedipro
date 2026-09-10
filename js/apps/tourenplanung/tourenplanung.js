@@ -386,7 +386,9 @@ const TourenplanungApp = (function () {
       <li class="tour-auswahl tour-auftrag ${tour.auftrag && tour.auftrag.nummer === a.nummer ? "gewaehlt" : ""}"
           data-auftrag="${a.nummer}">
         <span class="tour-auswahl-name">
-          <span class="tour-ware-aufbau tour-aufbau-${g.aufbau}">${aufbauKurz(g.aufbau)}</span>
+          <span class="tour-ware-aufbau tour-aufbau-${g.aufbau} tour-ware-info"
+                data-auftrag-ware="${g.id}"
+                title="Details zu ${g.name}">${aufbauKurz(g.aufbau)}</span>
           ${a.vonName} → ${a.nachName}
           <span class="tour-auftrag-nummer">${a.nummer}</span>
         </span>
@@ -849,7 +851,20 @@ const TourenplanungApp = (function () {
   function dispositionAktualisieren() {
     const dispo = fensterElement.querySelector("#tour-disposition");
     if (!dispo) return;
+
+    // Scrollposition merken: Der Bereich wird bei jedem Zeittakt neu
+    // aufgebaut - ohne das würde die Liste beim Blättern ständig nach
+    // oben springen.
+    const gescrollt = dispo.querySelector(".tour-schrittinhalt, .tour-auswahlliste");
+    const scrollStand = gescrollt ? gescrollt.scrollTop : 0;
+    const eigenerScroll = dispo.scrollTop;
+
     dispo.innerHTML = renderDisposition();
+
+    const neuGescrollt = dispo.querySelector(".tour-schrittinhalt, .tour-auswahlliste");
+    if (neuGescrollt && scrollStand > 0) neuGescrollt.scrollTop = scrollStand;
+    if (eigenerScroll > 0) dispo.scrollTop = eigenerScroll;
+
     dispositionEreignisse(dispo);
     markenZeichnen();
     routeZeichnen();
@@ -866,6 +881,24 @@ const TourenplanungApp = (function () {
         dispositionAktualisieren();
       });
     }
+
+    // Ware in der Stadtübersicht antippen -> Detailfenster
+    dispo.querySelectorAll("[data-wareninfo]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const g = GUETER_NACH_ID[el.dataset.wareninfo];
+        hervorgehobenesGut = g;
+        gutFensterOeffnen(g);
+        markenZeichnen();
+      });
+    });
+
+    // Ware eines Auftrags antippen -> ebenfalls Detailfenster
+    dispo.querySelectorAll("[data-auftrag-ware]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation(); // nicht zugleich den Auftrag auswählen
+        gutFensterOeffnen(GUETER_NACH_ID[el.dataset.auftragWare]);
+      });
+    });
 
     // ---- Schritt 1: Auftrag ----
     dispo.querySelectorAll("[data-filter]").forEach((el) => {
@@ -1494,8 +1527,11 @@ const TourenplanungApp = (function () {
       fahrtenZeichnen();
 
       // Fortschrittsbalken nur auffrischen, wenn sie sichtbar sind
+      // Nur neu aufbauen, wenn sich auch etwas ändert. Während der
+      // Auftragswahl bleibt die Liste stehen, damit man in Ruhe lesen
+      // und blättern kann - neue Aufträge kommen beim nächsten
+      // Auffrischen dazu.
       if (!planungAktiv && Fahrt.anzahl() > 0) dispositionAktualisieren();
-      else if (planungAktiv && tour.schritt === "auftrag") dispositionAktualisieren();
     });
 
     Spielzeit.starten();

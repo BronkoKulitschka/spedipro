@@ -77,39 +77,19 @@ const FuhrparkApp = (function () {
   }
 
   function seedFlotte() {
+    // Die Spedition startet mit einem einzigen Fahrzeug. Alles Weitere
+    // muss erwirtschaftet werden - das ist der Reiz des Aufbaus.
     fahrzeuge = [
       neuesFahrzeugAusTyp("meridian-1830s", {
-        baujahr: 1991,
+        baujahr: 1988,
         kennzeichen: "F-SP 101",
-        kmStand: 312000,
-        standort: "Frankfurt am Main",
+        kmStand: 412000,
+        standort: (typeof Betrieb !== "undefined" && Betrieb.hatDepot())
+          ? Betrieb.depotName()
+          : "Frankfurt am Main",
         lackierung: "rot",
-        verschleiss: { reifen: 72, bremsen: 58, motor: 80, antrieb: 75, karosserie: 88 }
-      }),
-      neuesFahrzeugAusTyp("skanda-143m", {
-        baujahr: 1993,
-        kennzeichen: "F-SP 102",
-        kmStand: 187000,
-        standort: "Köln",
-        lackierung: "blau",
-        verschleiss: { reifen: 90, bremsen: 85, motor: 91, antrieb: 89, karosserie: 94 }
-      }),
-      neuesFahrzeugAusTyp("iveko-turbostar", {
-        baujahr: 1989,
-        kennzeichen: "F-SP 103",
-        kmStand: 455000,
-        standort: "Milano",
-        lackierung: "gelb",
-        status: "außer Betrieb",
-        verschleiss: { reifen: 40, bremsen: 22, motor: 35, antrieb: 30, karosserie: 55 }
-      }),
-      neuesFahrzeugAusTyp("davo-95", {
-        baujahr: 1995,
-        kennzeichen: "F-SP 104",
-        kmStand: 64000,
-        standort: "Rotterdam",
-        lackierung: "gruen",
-        verschleiss: { reifen: 95, bremsen: 96, motor: 97, antrieb: 96, karosserie: 98 }
+        // Gebraucht gekauft, entsprechend abgenutzt - aber fahrbereit
+        verschleiss: { reifen: 64, bremsen: 58, motor: 71, antrieb: 66, karosserie: 74 }
       })
     ];
 
@@ -929,7 +909,11 @@ const FuhrparkApp = (function () {
         ${fristenBlock(fahrzeug)}
 
         <div class="fuhrpark-debug-leiste">
-          <!-- GEPLANT: Der Reparieren-Button wird später durch einen
+          <!-- Verschleiß und Laufleistung entstehen jetzt aus echten
+               Touren der Tourenplanung - die frühere Debug-Tour ist
+               deshalb entfallen.
+
+               GEPLANT: Der Reparieren-Button wird später durch einen
                "Werkstatt"-Button ersetzt, der das Werkstatt-Modul mit
                diesem Fahrzeug im Kontext öffnet. Dort dann zwei Fälle:
                  1) Keine eigene Werkstatt -> Termin bei einer
@@ -943,7 +927,6 @@ const FuhrparkApp = (function () {
                Den Debug-Button erst entfernen, wenn das Werkstatt-Modul
                steht - sonst lässt sich Verschleiß nicht zurücksetzen.
                Details werden beim Bau des Werkstatt-Moduls festgelegt. -->
-          <button class="win98-button bevel-out" id="fuhrpark-btn-tour">🎲 Tour simulieren</button>
           <button class="win98-button bevel-out" id="fuhrpark-btn-reparieren"
                   ${gewaehltesTeil ? "" : "disabled"}>
             🔧 ${gewaehltesTeil ? `${TEIL_LABEL[gewaehltesTeil]} reparieren` : "Teil im Bild wählen"} (Debug)
@@ -1068,62 +1051,6 @@ const FuhrparkApp = (function () {
 
     const visual = fensterElement.querySelector("#fuhrpark-visual");
     if (visual) swipeErkennen(visual);
-
-    const btnTour = fensterElement.querySelector("#fuhrpark-btn-tour");
-    if (btnTour) {
-      btnTour.addEventListener("click", () => {
-        const fahrzeug = fahrzeuge[aktuellerIndex];
-
-        if (Ausfall.istStillstehend(fahrzeug)) {
-          window.alert(
-            "Das Fahrzeug steht und kann keine Tour fahren. " +
-            "Zuerst muss der Schaden behoben werden."
-          );
-          return;
-        }
-
-        const tour = Verschleiss.zufaelligeTour();
-        const ergebnis = Verschleiss.wendeTourAn(fahrzeug, tour);
-
-        Historie.hinzufuegen(fahrzeug, {
-          art: "tour",
-          text: `${tour.km.toLocaleString("de-DE")} km · ${tour.gelaende} · ` +
-                `${tour.strassenqualitaet} · ${tour.beladungProzent}% beladen`,
-          km: tour.km,
-          tage: tour.tage,
-          daten: { verbrauchL: Math.round(ergebnis.verbrauchL) }
-        });
-
-        // Eine Tour kostet Zeit. Solange die Tourenplanung fehlt, spult
-        // der Fuhrpark hier selbst vor, damit die Auslastungsrechnung
-        // überhaupt einen Zeitverlauf sieht.
-        Spielzeit.vorspulen(tour.tage);
-
-        // Ist unterwegs ein Bauteil unter die kritische Grenze gefallen,
-        // bleibt das Fahrzeug liegen.
-        const schaden = Ausfall.pruefe(fahrzeug);
-        if (schaden) {
-          Ausfall.ausloesen(fahrzeug, schaden.teil, schaden.wert);
-          Historie.hinzufuegen(fahrzeug, {
-            art: "schaden",
-            text: `Liegengeblieben in ${fahrzeug.standort}: ` +
-                  `${TEIL_LABEL[schaden.teil]} bei ${schaden.wert.toFixed(0)}%`,
-            daten: { teil: schaden.teil, wert: schaden.wert }
-          });
-        }
-
-        neuZeichnen();
-      });
-    }
-
-    // Bauteil im Bild auswählen
-    fensterElement.querySelectorAll(".fuhrpark-callout").forEach((box) => {
-      box.addEventListener("click", () => {
-        // Erneutes Antippen hebt die Auswahl wieder auf.
-        gewaehltesTeil = gewaehltesTeil === box.dataset.teil ? null : box.dataset.teil;
-        neuZeichnen();
-      });
-    });
 
     const btnReparieren = fensterElement.querySelector("#fuhrpark-btn-reparieren");
     if (btnReparieren) {

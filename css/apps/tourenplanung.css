@@ -158,20 +158,30 @@
   flex: none;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;   /* umbrechen statt Text abschneiden */
   gap: 4px;
 }
 
+/* Höhe NICHT festsetzen: Die Beschriftungen sind unterschiedlich lang,
+   eine feste Höhe zusammen mit fester Breite schneidet den Text ab. */
 .tour-karte-leiste .win98-button {
-  min-width: 32px;
-  height: 26px;
-  font-size: 13px;
+  min-width: 30px;
+  padding: 4px 9px;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .tour-karte-hinweis {
   margin-left: auto;
   font-size: 11px;
+  white-space: nowrap;
   color: var(--win-grey-darker);
 }
+
+/* Antippbares Kürzel für Warendetails */
+.tour-ware-info { cursor: pointer; }
+.tour-ware-info:active { filter: brightness(0.9); }
 
 /* ---------- Dispositionsbereich ---------- */
 

@@ -7,7 +7,32 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.6)
+## Aktueller Stand (v0.15.7)
+
+**Start mit einem Fahrzeug:** ein gebrauchter Meridian 1830 S, Bj. 1988,
+412.000 km, Zustand 58-74 %. Alles Weitere muss erwirtschaftet werden.
+Nebeneffekt: Mit nur einem Planenauflieger passen von 24 Aufträgen etwa
+8 - der Filter "Passend zur Flotte" wird zum wichtigsten Werkzeug, und
+der Anreiz für andere Aufbautypen ist von Anfang an spürbar.
+
+**Verschleiß und Fristen kommen jetzt ausschließlich aus echten Touren.**
+Die Debug-Tour im Fuhrpark ist entfernt. Belegt: Tour gefahren →
+412.000 auf 414.984 km → Bremsen von 58 auf 52,2 % → Wartungsfrist
+wandert auf "fällig bei 449.616 km".
+
+**Behobene Fehler:**
+- Button-Beschriftungen unter der Karte passten nicht: feste Höhe war
+  zusammen mit längerem Text das Problem. Höhe jetzt automatisch,
+  Leiste bricht bei Bedarf um
+- Auftragsliste sprang beim Blättern nach oben: Sie wurde bei jedem
+  Zeittakt neu aufgebaut. Während der Auftragswahl wird jetzt nicht mehr
+  getaktet neu gezeichnet, und die Scrollposition bleibt erhalten
+- Warendetails ließen sich nicht mehr öffnen: Der Klick-Handler war beim
+  Umbau auf Auftragsdisposition versehentlich mitgelöscht worden. Wieder
+  da, zusätzlich ist jetzt auch das Aufbau-Kürzel in der Auftragsliste
+  antippbar (ohne dabei den Auftrag auszuwählen)
+
+## Vorheriger Stand (v0.15.6)
 
 **Tourenplanung nach dem Vorbild echter Speditionssoftware umgebaut.**
 Bisher fahrzeugorientiert (Fahrzeug wählen → Ladung erfinden → Ziel
