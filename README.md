@@ -7,7 +7,43 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.4)
+## Aktueller Stand (v0.15.5)
+
+**Tourenplanung in fünf Schritten** (vorerst nur A nach B):
+1. Standort mit Fahrzeugen
+2. Fahrzeug (stillstehende sind gesperrt)
+3. Ladung - gefiltert danach, was der Aufbau befördern kann; je Ware
+   Höchstmenge und ob Gewicht oder Volumen begrenzt
+4. Ziel - nur Städte mit Bedarf für diese Ware, nach Entfernung sortiert,
+   mit km und Frachterlös
+5. Start - Verschleiß wird berechnet, Spielzeit läuft weiter, Fahrzeug
+   steht danach am Ziel, alles landet in der Historie
+
+Fortschrittsleiste oben, erledigte Schritte anklickbar zum Zurückspringen.
+
+**Neu auf der Karte:**
+- Gelbes Symbol an Städten, in denen Fahrzeuge stehen (mit Anzahl)
+- Antippen einer Ware lässt Lieferstädte grün pulsieren, im Zielschritt
+  die Bedarfsstädte violett - beide eindeutig unterscheidbar von den
+  roten Stadtmarken und der blauen Depotmarke
+- Pulsieren nur am Ring, die Marke bleibt an ihrem Platz
+
+**Warenfenster:** Kategorie, Aufbautyp, Schüttdichte, Warenwert,
+Besonderheiten, Ladung je Auflieger, plus wo die Ware angeboten und
+gebraucht wird.
+
+**Neues Modul `js/core/ladung.js`:** Eignung (welcher Aufbau kann was),
+Höchstmenge (Gewicht oder Volumen), Frachtpreis. Der Preis steigt mit
+Warenwert, Kühlpflicht und Gefahrgut - plausible Größenordnung, keine
+belegten Tarife von 1994 (der damalige Tarifzwang nach GüKG wäre zu
+prüfen).
+
+**Bugfix:** Zwei Fahrzeugstandorte hießen "Mailand" und "Prag", die
+Städtedaten führen sie als "Milano" und "Praha" - die Tourenplanung
+hätte diese Fahrzeuge nicht gefunden. Neue Fahrzeuge stehen jetzt am
+Depot.
+
+## Vorheriger Stand (v0.15.4)
 
 **Depot** (`js/core/betrieb.js`, Anfang des globalen Spielstands):
 - Beim ersten Öffnen der Tourenplanung wird ein Heimatstandort gewählt,
@@ -421,6 +457,7 @@ spedipro/
       karte.js           Kartenprojektion und Entfernungen
       wirtschaft.js      Angebot und Bedarf je Stadt
       betrieb.js         Depot und Betriebsdaten
+      ladung.js          Eignung, Menge, Frachtpreis
     apps/
       fuhrpark/
         fuhrpark.js      Fuhrpark-Programm (Zustand, UI, Debug-Buttons)
@@ -459,6 +496,15 @@ Werkstatt-Modul.
 (Lichtmaschine, Anlasser, Druckluft), Reifenschaden durch Fremdkörper,
 Unfälle oder Winterprobleme liegenbleiben. Wahrscheinlichkeit aus Alter,
 Laufleistung, Gesamtzustand und Jahreszeit.
+
+**Rundtouren mit mehreren Stopps** - aktuell nur A nach B. Das
+Tour-Objekt in  müsste dafür eine Etappenliste führen
+statt eines einzelnen Ziels, jede Etappe mit eigener Ladung.
+
+**Streckenprofil aus der Route** - Touren rechnen derzeit mit
+Durchschnittswerten für Gelände und Straßenqualität. Sobald die Route
+über das Straßennetz berechnet wird, sollten die echten Werte je
+Abschnitt einfließen.
 
 **Tourausfall und Vertragsstrafe** - Notiz in `js/core/ausfall.js`.
 Bleibt ein Fahrzeug mitten in einer Tour liegen und wird nicht zeitnah

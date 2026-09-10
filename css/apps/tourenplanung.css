@@ -371,3 +371,227 @@
   font-size: 12px;
   color: var(--win-grey-darker);
 }
+
+/* ---------- Fahrzeuge auf der Karte ---------- */
+
+/* Zeigt an, dass in dieser Stadt mindestens ein Fahrzeug steht.
+   Sitzt oben rechts an der Marke, damit die Stadtfarbe sichtbar bleibt. */
+.tour-fahrzeugmarke {
+  position: absolute;
+  right: -7px;
+  top: -8px;
+  min-width: 11px;
+  height: 11px;
+  padding: 0 1px;
+  font-size: 9px;
+  line-height: 10px;
+  text-align: center;
+  font-weight: bold;
+  color: #10100c;
+  background: #f4d03f;
+  border: 1px solid #10100c;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.tour-fahrzeugmarke::before {
+  content: "🚛";
+  font-size: 8px;
+}
+
+.tour-fahrzeugmarke:not(:empty)::before {
+  content: "";
+}
+
+/* ---------- Hervorhebung: Lieferanten und Empfänger ---------- */
+
+/* Städte, die die gewählte Ware liefern können: kräftiges Grün,
+   deutlich unterscheidbar von den roten Stadtmarken und der blauen
+   Depotmarke. */
+.tour-marke-lieferant {
+  background: #17c04a;
+  border-color: #06451c;
+  box-shadow: 0 0 0 2px rgba(23, 192, 74, 0.55);
+  z-index: 4;
+  animation: marke-pulsieren 1.6s ease-in-out infinite;
+}
+
+/* Städte, die die Ware brauchen: Violett, ebenfalls eindeutig. */
+.tour-marke-empfaenger {
+  background: #b23ce0;
+  border-color: #3d0a52;
+  box-shadow: 0 0 0 2px rgba(178, 60, 224, 0.55);
+  z-index: 4;
+  animation: marke-pulsieren 1.6s ease-in-out infinite;
+}
+
+.tour-marke-lieferant::after,
+.tour-marke-empfaenger::after {
+  background: #ffffff;
+}
+
+/* Leichtes Pulsieren - der Ring atmet, die Marke selbst bleibt an
+   ihrem Platz, damit nichts springt. */
+@keyframes marke-pulsieren {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(255,255,255,0.25); }
+  50%      { box-shadow: 0 0 0 6px rgba(255,255,255,0.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-marke-lieferant,
+  .tour-marke-empfaenger { animation: none; }
+}
+
+/* ---------- Ablauf der Tourenplanung ---------- */
+
+.tour-ablauf {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 6px;
+}
+
+.tour-schrittleiste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.tour-schritt {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 7px;
+  background: var(--win-grey);
+  border: 1px solid var(--win-grey-dark);
+  color: var(--win-grey-darker);
+}
+
+.tour-schritt-nr {
+  display: inline-block;
+  min-width: 14px;
+  text-align: center;
+  font-weight: bold;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.tour-schritt.aktiv {
+  background: var(--win-blue-title);
+  color: var(--win-white);
+  border-color: #000;
+  font-weight: bold;
+}
+
+.tour-schritt.erledigt {
+  background: #d6e8d6;
+  color: #1a5c1a;
+  cursor: pointer;
+}
+
+.tour-schrittinhalt {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.tour-anleitung {
+  margin: 0 0 6px 0;
+  font-size: 12px;
+  color: var(--win-grey-darker);
+}
+
+.tour-auswahlliste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.tour-auswahl {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 7px;
+  margin-bottom: 3px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+  cursor: pointer;
+}
+
+.tour-auswahl:active { background: var(--win-grey); }
+
+.tour-auswahl.gewaehlt {
+  background: var(--win-blue-title);
+  color: var(--win-white);
+  border-color: #000;
+}
+
+.tour-auswahl.gewaehlt .tour-auswahl-zusatz { color: #cfe0f5; }
+
+.tour-auswahl.gesperrt {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.tour-auswahl-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.tour-auswahl-zusatz {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}
+
+.tour-ungeeignet {
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px dashed var(--win-grey-dark);
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}
+
+.tour-zusammenfassung {
+  padding: 6px 8px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.tour-zusammenfassung-titel {
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+/* ---------- Warenfenster ---------- */
+
+.gut-fenster { font-size: 13px; }
+
+.gut-kopf {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.gut-name {
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.gut-staedte {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}

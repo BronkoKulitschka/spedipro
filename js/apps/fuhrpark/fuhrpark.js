@@ -70,6 +70,12 @@ const FuhrparkApp = (function () {
     return Object.assign(fahrzeug, ueberschreibungen);
   }
 
+  /** Die Startflotte wird sonst erst beim Öffnen des Fuhrparks angelegt -
+      die Tourenplanung braucht sie aber auch ohne das. */
+  function flotteSicherstellen() {
+    if (fahrzeuge.length === 0) seedFlotte();
+  }
+
   function seedFlotte() {
     fahrzeuge = [
       neuesFahrzeugAusTyp("meridian-1830s", {
@@ -92,7 +98,7 @@ const FuhrparkApp = (function () {
         baujahr: 1989,
         kennzeichen: "F-SP 103",
         kmStand: 455000,
-        standort: "Mailand",
+        standort: "Milano",
         lackierung: "gelb",
         status: "außer Betrieb",
         verschleiss: { reifen: 40, bremsen: 22, motor: 35, antrieb: 30, karosserie: 55 }
@@ -291,9 +297,11 @@ const FuhrparkApp = (function () {
   // Platzhalter, bis das Fahrzeughandel-Modul existiert. Dient nur dazu,
   // die Übersichtsliste zum Testen zu füllen.
 
+  // Standorte MÜSSEN Schlüssel aus STAEDTE sein - sonst kann die
+  // Tourenplanung die Fahrzeuge keiner Stadt zuordnen.
   const STANDORTE = [
     "Frankfurt am Main", "Köln", "Hamburg", "München", "Rotterdam",
-    "Mailand", "Lyon", "Wien", "Prag", "Antwerpen"
+    "Milano", "Lyon", "Wien", "Praha", "Antwerpen"
   ];
 
   // Fortlaufende Kennzeichen im Stil der Testflotte (F-SP 1xx).
@@ -312,6 +320,13 @@ const FuhrparkApp = (function () {
     return liste[Math.floor(Math.random() * liste.length)];
   }
 
+  /** Wo ein neu beschafftes Fahrzeug steht: am Depot, sonst irgendwo. */
+  function beschaffungsstandort() {
+    return (typeof Betrieb !== "undefined" && Betrieb.hatDepot())
+      ? Betrieb.depotName()
+      : zufaelligAus(STANDORTE);
+  }
+
   function zufaelligerTyp() {
     return zufaelligAus(FAHRZEUGTYPEN);
   }
@@ -323,7 +338,7 @@ const FuhrparkApp = (function () {
       baujahr: typ.baujahrBis,
       kennzeichen: naechstesKennzeichen(),
       kmStand: 0,
-      standort: zufaelligAus(STANDORTE),
+      standort: beschaffungsstandort(),
       lackierung: Lackierung.zufaelligeFarbe(),
       verschleiss: { reifen: 100, bremsen: 100, motor: 100, antrieb: 100, karosserie: 100 }
     });
@@ -378,7 +393,7 @@ const FuhrparkApp = (function () {
       baujahr,
       kennzeichen: naechstesKennzeichen(),
       kmStand,
-      standort: zufaelligAus(STANDORTE),
+      standort: beschaffungsstandort(),
       lackierung: Lackierung.zufaelligeFarbe(),
       verschleiss
     });
@@ -1214,9 +1229,7 @@ const FuhrparkApp = (function () {
   });
 
   function open() {
-    if (fahrzeuge.length === 0) {
-      seedFlotte();
-    }
+    flotteSicherstellen();
 
     const ergebnis = WindowManager.open({
       id: "fuhrpark",
@@ -1243,7 +1256,21 @@ const FuhrparkApp = (function () {
     }
   }
 
-  return { open };
+  return {
+    open,
+    // Zugriff für andere Module (Tourenplanung braucht die Fahrzeuge).
+    // Bewusst nur lesend gedacht: das Fahrzeug-Objekt selbst wird
+    // durchgereicht, damit Verschleiß und Historie direkt darauf
+    // wirken können.
+    alleFahrzeuge: () => { flotteSicherstellen(); return fahrzeuge; },
+    fahrzeugeAn: (stadtName) => {
+      flotteSicherstellen();
+      return fahrzeuge.filter((f) => f.standort === stadtName);
+    },
+    aktualisieren: () => {
+      if (fensterElement && document.body.contains(fensterElement)) neuZeichnen();
+    }
+  };
 })();
 
 AppRegistry.register({
