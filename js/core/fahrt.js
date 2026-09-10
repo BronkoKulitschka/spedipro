@@ -61,6 +61,17 @@ const Fahrt = (function () {
     return eintrag;
   }
 
+  /** Stellt eine gespeicherte Tour wieder her (siehe speicher.js). */
+  function wiederherstellen(daten) {
+    const eintrag = {
+      ...daten,
+      abgeschlossen: false
+    };
+    laufende.push(eintrag);
+    benachrichtigen();
+    return eintrag;
+  }
+
   /** Die Etappe, auf der das Fahrzeug gerade fährt. */
   function aktuelleEtappe(t) {
     return t.etappen[Math.min(t.etappeIndex, t.etappen.length - 1)];
@@ -219,6 +230,7 @@ const Fahrt = (function () {
     LENKZEIT_STUNDEN,
     RUHEZEIT_STUNDEN,
     starten,
+    wiederherstellen,
     takt,
     abschliessen,
     aktuelleEtappe,

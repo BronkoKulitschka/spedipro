@@ -1190,6 +1190,17 @@ const FuhrparkApp = (function () {
     // durchgereicht, damit Verschleiß und Historie direkt darauf
     // wirken können.
     alleFahrzeuge: () => { flotteSicherstellen(); return fahrzeuge; },
+
+    /** Gespeicherte Flotte übernehmen (siehe speicher.js). */
+    fahrzeugeSetzen: (liste) => {
+      fahrzeuge = (liste || []).map((f) => ({ ...f }));
+      // Nummernkreis fortsetzen, damit keine id doppelt vergeben wird
+      fahrzeuge.forEach((f) => {
+        if (f.id >= naechsteId) naechsteId = f.id + 1;
+      });
+      if (fensterElement && document.body.contains(fensterElement)) neuZeichnen();
+    },
+
     fahrzeugeAn: (stadtName) => {
       flotteSicherstellen();
       return fahrzeuge.filter((f) => f.standort === stadtName);

@@ -115,6 +115,12 @@ const Kunden = (function () {
     return alle().filter((k) => stufe(k).angebote > 0);
   }
 
+  /** Gespeicherte Kunden übernehmen. */
+  function setzen(liste) {
+    zuruecksetzen();
+    (liste || []).forEach((k) => { kunden[k.id] = { ...k }; });
+  }
+
   function zuruecksetzen() {
     Object.keys(kunden).forEach((k) => delete kunden[k]);
   }
@@ -127,6 +133,7 @@ const Kunden = (function () {
     auftragErledigt,
     alle,
     mitBindung,
+    setzen,
     zuruecksetzen
   };
 })();

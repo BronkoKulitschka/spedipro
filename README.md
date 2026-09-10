@@ -7,7 +7,33 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.7)
+## Aktueller Stand (v0.15.8)
+
+**Spielstand mit Hintergrund-Simulation** (`js/core/speicher.js`):
+- Gespeichert werden Spielzeit, Fahrzeuge, Kunden, Aufträge und
+  laufende Touren - automatisch alle 20 Sekunden sowie beim Schließen
+  oder Wegschalten der Seite
+- Beim Laden wird die verstrichene reale Zeit nachgeholt (1 reale Minute
+  = 1 Simulationsstunde). Touren fahren in der Pause weiter und kommen
+  an; ein Hinweis meldet, was passiert ist
+- Nachsimulation in 30-Minuten-Schritten, damit Lenk- und Ruhezeiten
+  greifen. Höchstens 7 Tage werden nachgeholt
+- Routen werden nicht mitgespeichert, sondern beim Laden aus Start- und
+  Zielort neu berechnet - der Spielstand bleibt damit gültig, wenn sich
+  das Straßennetz ändert
+
+**Warendetails im selben Rahmen** statt in einem eigenen Fenster, mit
+Zurück-Knopf. Die Karte bleibt durchgehend sichtbar.
+
+**Springende Liste behoben.** Ursache war der vollständige Neuaufbau des
+Bereichs bei jeder Auswahl. Jetzt wird nur die Markierung umgesetzt und
+der Weiter-Knopf ergänzt - die Liste bleibt unangetastet.
+
+**Laufende Touren bleiben auf der Karte sichtbar** - in Blau, klar
+unterschieden von der orangen Route in Planung. Leerfahrten zur
+Ladestelle gestrichelt und blasser als der beladene Hauptlauf.
+
+## Vorheriger Stand (v0.15.7)
 
 **Start mit einem Fahrzeug:** ein gebrauchter Meridian 1830 S, Bj. 1988,
 412.000 km, Zustand 58-74 %. Alles Weitere muss erwirtschaftet werden.
@@ -529,6 +555,7 @@ spedipro/
       fahrt.js           Laufende Touren mit Etappen und Lenkzeiten
       kunden.js          Auftraggeber und Kundenbindung
       auftraege.js       Auftragspool mit Statusverfolgung
+      speicher.js        Spielstand und Nachsimulation
     apps/
       fuhrpark/
         fuhrpark.js      Fuhrpark-Programm (Zustand, UI, Debug-Buttons)

@@ -54,8 +54,16 @@ const Spielzeit = (function () {
   function istPausiert() { return !laeuft; }
 
   /** Rückt die Uhr um Minuten vor und benachrichtigt alle Beobachter. */
-  function minutenAddieren(minuten) {
+  function minutenAddieren(minuten, still = false) {
     aktuell.setMinutes(aktuell.getMinutes() + minuten);
+    // "still" wird beim Nachsimulieren nach dem Laden gebraucht: dort
+    // sollen nicht bei jedem Schritt alle Anzeigen neu zeichnen.
+    if (!still) beobachter.forEach((rueckruf) => rueckruf(heute()));
+  }
+
+  /** Setzt die Uhr auf einen gespeicherten Stand. */
+  function setzeAuf(datum) {
+    aktuell = new Date(datum.getTime());
     beobachter.forEach((rueckruf) => rueckruf(heute()));
   }
 
@@ -135,6 +143,7 @@ const Spielzeit = (function () {
     istPausiert,
     minutenAddieren,
     stundenAddieren,
+    setzeAuf,
     formatiereUhrzeit,
     formatiereMitUhrzeit,
     vorspulen,

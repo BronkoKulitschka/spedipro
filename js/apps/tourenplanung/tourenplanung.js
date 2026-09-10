@@ -37,6 +37,10 @@ const TourenplanungApp = (function () {
   // liefern können.
   let hervorgehobenesGut = null;
 
+  // Warendetails werden im selben Rahmen gezeigt statt in einem eigenen
+  // Fenster - so bleibt die Karte darüber sichtbar.
+  let detailGut = null;
+
   // Die Tourenplanung läuft nur, wenn sie ausdrücklich gestartet wurde.
   // Sonst zeigt der untere Bereich die Angaben zur gewählten Stadt.
   let planungAktiv = false;
@@ -105,8 +109,43 @@ const TourenplanungApp = (function () {
 
   function renderDisposition() {
     if (!Betrieb.hatDepot()) return renderDepotwahl();
+    if (detailGut) return renderWarendetails(detailGut);
     if (planungAktiv) return renderTourplanung();
     return renderStadtinfo();
+  }
+
+  /** Warendetails im Dispositionsbereich, mit Rückweg zur Liste. */
+  function renderWarendetails(gut) {
+    const lieferstaedte = Karte.alleStaedte()
+      .filter((s) => Wirtschaft.angebot(s).some((g) => g.id === gut.id));
+    const bedarfsstaedte = Karte.alleStaedte()
+      .filter((s) => Wirtschaft.bedarf(s).some((g) => g.id === gut.id));
+    const jeAuflieger = Math.min(25, (Ladung.LADEVOLUMEN_M3 * gut.dichteKgProM3) / 1000);
+
+    return `
+      <div class="tour-detailkopf">
+        <button class="win98-button bevel-out" id="tour-btn-detail-zurueck">&#10094; Zurück</button>
+        <span class="tour-ware-aufbau tour-aufbau-${gut.aufbau}">${aufbauKurz(gut.aufbau)}</span>
+        <span class="tour-dispo-stadt">${gut.name}</span>
+      </div>
+      <div class="tour-detailinhalt">
+        <dl class="fuhrpark-infoliste">
+          <dt>Kategorie</dt><dd>${gut.kategorie}</dd>
+          <dt>Aufbau</dt><dd>${aufbauText(gut.aufbau)}</dd>
+          <dt>Schüttdichte</dt><dd>${gut.dichteKgProM3.toLocaleString("de-DE")} kg/m³</dd>
+          <dt>Warenwert</dt><dd>${gut.wertProTonne.toLocaleString("de-DE")} DM je Tonne</dd>
+          <dt>Besonderheit</dt><dd>${
+            [gut.verderblich ? "kühlpflichtig" : null, gut.gefahrgut ? "Gefahrgut (ADR)" : null]
+              .filter(Boolean).join(", ") || "keine"
+          }</dd>
+          <dt>Ladung je Auflieger</dt><dd>${jeAuflieger.toFixed(1)} t (90 m³, max. 25 t)</dd>
+        </dl>
+        <div class="tour-warentitel">Wird angeboten in ${lieferstaedte.length} Städten</div>
+        <div class="gut-staedte">${lieferstaedte.map((s) => s.name).join(", ")}</div>
+        <div class="tour-warentitel">Wird gebraucht in ${bedarfsstaedte.length} Städten</div>
+        <div class="gut-staedte">${bedarfsstaedte.map((s) => s.name).join(", ")}</div>
+      </div>
+    `;
   }
 
   /** Übersicht der Fahrzeuge, die gerade unterwegs sind. */
@@ -157,6 +196,26 @@ const TourenplanungApp = (function () {
     `;
   }
 
+  /** Hinweis, was während der Pause passiert ist. */
+  function nachholhinweis() {
+    if (!nachholmeldung) return "";
+    const n = nachholmeldung;
+    return `
+      <div class="tour-nachholung">
+        <div class="tour-warentitel">
+          Während der Pause vergangen: ${n.nachgeholteStunden} Stunden
+          <button class="win98-button bevel-out tour-ankunft-weg" id="tour-btn-nachholung-weg">✕</button>
+        </div>
+        <div class="tour-laufend-info">
+          ${n.angekommen > 0
+            ? `${n.angekommen} Tour${n.angekommen > 1 ? "en" : ""} in der Zwischenzeit zugestellt.`
+            : "Keine Tour ist in der Zwischenzeit angekommen."}
+          ${n.gekappt ? ` Es wurden höchstens ${Speicher.MAX_NACHHOLEN_TAGE} Tage nachgeholt.` : ""}
+        </div>
+      </div>
+    `;
+  }
+
   /** Meldung über die zuletzt zugestellte Sendung. */
   function ankunftsmeldung() {
     if (!letzteAnkunft) return "";
@@ -193,6 +252,7 @@ const TourenplanungApp = (function () {
   function renderStadtinfo() {
     if (!gewaehlteStadt) {
       return `
+        ${nachholhinweis()}
         ${ankunftsmeldung()}
         ${laufendeFahrten()}
         <div class="tour-dispo-leer">
@@ -209,6 +269,7 @@ const TourenplanungApp = (function () {
     const fahrzeuge = FuhrparkApp.fahrzeugeAn(s.name);
 
     return `
+      ${nachholhinweis()}
       ${ankunftsmeldung()}
       ${laufendeFahrten()}
       <div class="tour-dispo-kopf">
@@ -663,27 +724,48 @@ const TourenplanungApp = (function () {
     const rahmen = fensterElement.querySelector("#tour-karte-rahmen");
     if (!svg || !rahmen) return;
 
-    if (!aktiveRoute || aktiveRoute.stationen.length < 2) {
-      svg.innerHTML = "";
-      return;
-    }
-
     svg.setAttribute("width", rahmen.clientWidth);
     svg.setAttribute("height", rahmen.clientHeight);
 
-    const punkte = routePunkte();
-    const linie = punkte.map((p) => `${p.x},${p.y}`).join(" ");
+    const teile = [];
 
-    // Zwei Linien übereinander: dunkle Kontur, farbige Linie darauf -
-    // so hebt sich die Route von den beigen Straßen im Kartenbild ab.
-    svg.innerHTML = `
-      <polyline points="${linie}" class="tour-route-kontur" />
-      <polyline points="${linie}" class="tour-route-linie" />
-      ${punkte.map((p, i) =>
-        `<circle cx="${p.x}" cy="${p.y}" r="${i === 0 || i === punkte.length - 1 ? 5 : 3}"
-                 class="${i === 0 ? "tour-route-start" : i === punkte.length - 1 ? "tour-route-ziel" : "tour-route-station"}" />`
-      ).join("")}
-    `;
+    // 1. Angenommene, laufende Touren - bleiben dauerhaft sichtbar,
+    //    damit man den Überblick behält. In Blau, klar unterschieden
+    //    von der orangen Route in Planung.
+    Fahrt.alle().forEach((t) => {
+      t.etappen.forEach((e) => {
+        const punkte = stationenAlsPunkte(e.route.stationen);
+        if (punkte.length < 2) return;
+        const linie = punkte.map((p) => `${p.x},${p.y}`).join(" ");
+        const klasse = e.typ === "anfahrt" ? "tour-route-anfahrt" : "tour-route-laufend";
+        teile.push(`<polyline points="${linie}" class="tour-route-kontur-duenn" />`);
+        teile.push(`<polyline points="${linie}" class="${klasse}" />`);
+      });
+    });
+
+    // 2. Route in Planung - liegt oben und ist kräftiger
+    if (aktiveRoute && aktiveRoute.stationen.length >= 2) {
+      const punkte = routePunkte();
+      const linie = punkte.map((p) => `${p.x},${p.y}`).join(" ");
+      teile.push(`<polyline points="${linie}" class="tour-route-kontur" />`);
+      teile.push(`<polyline points="${linie}" class="tour-route-linie" />`);
+      punkte.forEach((p, i) => {
+        const klasse = i === 0 ? "tour-route-start"
+          : i === punkte.length - 1 ? "tour-route-ziel" : "tour-route-station";
+        teile.push(`<circle cx="${p.x}" cy="${p.y}" r="${i === 0 || i === punkte.length - 1 ? 5 : 3}" class="${klasse}" />`);
+      });
+    }
+
+    svg.innerHTML = teile.join("");
+  }
+
+  /** Stationsnamen in Bildschirmkoordinaten umrechnen. */
+  function stationenAlsPunkte(stationen) {
+    return stationen.map((name) => {
+      const stadt = STAEDTE[name];
+      const p = Karte.nachBild(stadt.lon, stadt.lat);
+      return { x: p.x * zoom + versatzX, y: p.y * zoom + versatzY };
+    });
   }
 
   /** Bildschirmkoordinaten aller Stationen der aktiven Route. */
@@ -871,6 +953,30 @@ const TourenplanungApp = (function () {
     fahrtenZeichnen();
   }
 
+  /**
+   * Legt die Weiter-Schaltfläche an, falls sie noch fehlt. Damit lässt
+   * sich eine Auswahl bestätigen, ohne den ganzen Bereich neu zu bauen -
+   * die Liste behält ihre Scrollposition.
+   */
+  function weiterKnopfAktualisieren(dispo, id, beschriftung, beiKlick) {
+    let knopf = dispo.querySelector(id);
+    if (!knopf) {
+      const leiste = dispo.querySelector(".tour-dispo-aktionen")
+        || (() => {
+          const neu = document.createElement("div");
+          neu.className = "tour-dispo-aktionen";
+          dispo.querySelector(".tour-schrittinhalt").appendChild(neu);
+          return neu;
+        })();
+      knopf = document.createElement("button");
+      knopf.className = "win98-button bevel-out";
+      knopf.id = id.replace("#", "");
+      knopf.innerHTML = beschriftung;
+      leiste.appendChild(knopf);
+      knopf.addEventListener("click", beiKlick);
+    }
+  }
+
   /** Die Inhalte werden bei jedem Schritt neu erzeugt und neu verdrahtet. */
   function dispositionEreignisse(dispo) {
     // ---- Depot ----
@@ -882,12 +988,15 @@ const TourenplanungApp = (function () {
       });
     }
 
-    // Ware in der Stadtübersicht antippen -> Detailfenster
+    const detailZurueck = dispo.querySelector("#tour-btn-detail-zurueck");
+    if (detailZurueck) detailZurueck.addEventListener("click", warendetailsSchliessen);
+
+    // Ware in der Stadtübersicht antippen -> Detailansicht
     dispo.querySelectorAll("[data-wareninfo]").forEach((el) => {
       el.addEventListener("click", () => {
         const g = GUETER_NACH_ID[el.dataset.wareninfo];
         hervorgehobenesGut = g;
-        gutFensterOeffnen(g);
+        warendetailsZeigen(g);
         markenZeichnen();
       });
     });
@@ -896,7 +1005,7 @@ const TourenplanungApp = (function () {
     dispo.querySelectorAll("[data-auftrag-ware]").forEach((el) => {
       el.addEventListener("click", (e) => {
         e.stopPropagation(); // nicht zugleich den Auftrag auswählen
-        gutFensterOeffnen(GUETER_NACH_ID[el.dataset.auftragWare]);
+        warendetailsZeigen(GUETER_NACH_ID[el.dataset.auftragWare]);
       });
     });
 
@@ -912,9 +1021,20 @@ const TourenplanungApp = (function () {
       el.addEventListener("click", () => {
         tour.auftrag = Auftraege.nachNummer(el.dataset.auftrag);
         tour.fahrzeug = null;
-        // Auf der Karte Lade- und Entladeort hervorheben
         aktiveRoute = Route.berechne(tour.auftrag.vonName, tour.auftrag.nachName);
-        dispositionAktualisieren();
+
+        // Bewusst KEIN vollständiger Neuaufbau: Der würde die Liste
+        // zurück an den Anfang springen lassen. Stattdessen nur die
+        // Markierung umsetzen und die Weiter-Schaltfläche nachziehen.
+        dispo.querySelectorAll("[data-auftrag]").forEach((z) =>
+          z.classList.toggle("gewaehlt", z === el));
+        weiterKnopfAktualisieren(dispo, "#tour-btn-weiter-fahrzeug",
+          "Fahrzeug zuordnen &#10095;", () => {
+            tour.schritt = "fahrzeug";
+            dispositionAktualisieren();
+          });
+        routeZeichnen();
+        markenZeichnen();
       });
     });
 
@@ -935,7 +1055,14 @@ const TourenplanungApp = (function () {
         tour.machbarkeit = tour.fahrzeug
           ? Auftraege.terminMachbar(tour.auftrag, tour.fahrzeug.standort)
           : null;
-        dispositionAktualisieren();
+
+        dispo.querySelectorAll("[data-fahrzeug]").forEach((z) =>
+          z.classList.toggle("gewaehlt", z === el));
+        weiterKnopfAktualisieren(dispo, "#tour-btn-weiter-bereit",
+          "Weiter &#10095;", () => {
+            tour.schritt = "bereit";
+            dispositionAktualisieren();
+          });
       });
     });
 
@@ -972,6 +1099,14 @@ const TourenplanungApp = (function () {
         dispositionAktualisieren();
       });
     });
+
+    const nachholWeg = dispo.querySelector("#tour-btn-nachholung-weg");
+    if (nachholWeg) {
+      nachholWeg.addEventListener("click", () => {
+        nachholmeldung = null;
+        dispositionAktualisieren();
+      });
+    }
 
     const meldungWeg = dispo.querySelector("#tour-btn-meldung-weg");
     if (meldungWeg) {
@@ -1139,6 +1274,9 @@ const TourenplanungApp = (function () {
 
   let letzteAnkunft = null;
 
+  // Hinweis auf die Zeit, die während der Pause nachsimuliert wurde
+  let nachholmeldung = null;
+
   // ---------- Darstellung laufender Fahrten ----------
 
   /**
@@ -1230,50 +1368,17 @@ const TourenplanungApp = (function () {
     return "herbst";
   }
 
-  /** Warendetails in einem eigenen Fenster. */
-  function gutFensterOeffnen(gut) {
-    const lieferstaedte = Karte.alleStaedte()
-      .filter((s) => Wirtschaft.angebot(s).some((g) => g.id === gut.id));
-    const bedarfsstaedte = Karte.alleStaedte()
-      .filter((s) => Wirtschaft.bedarf(s).some((g) => g.id === gut.id));
+  /** Zeigt Warendetails im Dispositionsbereich an - die Karte bleibt sichtbar. */
+  function warendetailsZeigen(gut) {
+    detailGut = gut;
+    hervorgehobenesGut = gut;
+    dispositionAktualisieren();
+  }
 
-    const inhalt = `
-      <div class="gut-fenster">
-        <div class="gut-kopf">
-          <span class="tour-ware-aufbau tour-aufbau-${gut.aufbau}">${aufbauKurz(gut.aufbau)}</span>
-          <span class="gut-name">${gut.name}</span>
-        </div>
-        <dl class="fuhrpark-infoliste">
-          <dt>Kategorie</dt><dd>${gut.kategorie}</dd>
-          <dt>Aufbau</dt><dd>${aufbauText(gut.aufbau)}</dd>
-          <dt>Schüttdichte</dt><dd>${gut.dichteKgProM3.toLocaleString("de-DE")} kg/m³</dd>
-          <dt>Warenwert</dt><dd>${gut.wertProTonne.toLocaleString("de-DE")} DM je Tonne</dd>
-          <dt>Besonderheit</dt><dd>${
-            [gut.verderblich ? "kühlpflichtig" : null, gut.gefahrgut ? "Gefahrgut (ADR)" : null]
-              .filter(Boolean).join(", ") || "keine"
-          }</dd>
-          <dt>Ladung je Auflieger</dt><dd>${
-            Math.min(25, (Ladung.LADEVOLUMEN_M3 * gut.dichteKgProM3) / 1000).toFixed(1)
-          } t bei 90 m³ und 25 t Zuladung</dd>
-        </dl>
-
-        <div class="fuhrpark-fristen-titel">Wird angeboten in ${lieferstaedte.length} Städten</div>
-        <div class="gut-staedte">${lieferstaedte.map((s) => s.name).join(", ")}</div>
-
-        <div class="fuhrpark-fristen-titel">Wird gebraucht in ${bedarfsstaedte.length} Städten</div>
-        <div class="gut-staedte">${bedarfsstaedte.map((s) => s.name).join(", ")}</div>
-      </div>
-    `;
-
-    const ergebnis = WindowManager.open({
-      id: "gut-info",
-      title: `Ware – ${gut.name}`,
-      content: inhalt
-    });
-    if (!ergebnis.wurdeNeuErstellt) {
-      ergebnis.element.querySelector(".win98-window-content").innerHTML = inhalt;
-      ergebnis.element.querySelector(".win98-titlebar-title").textContent = `Ware – ${gut.name}`;
-    }
+  function warendetailsSchliessen() {
+    detailGut = null;
+    if (!planungAktiv) hervorgehobenesGut = null;
+    dispositionAktualisieren();
   }
 
   function tooltipZeigen(text, x, y) {
@@ -1504,6 +1609,16 @@ const TourenplanungApp = (function () {
 
     let letzteZeit = Spielzeit.heute().getTime();
 
+    // Spielstand laden, bevor Aufträge erzeugt werden - sonst würde der
+    // gespeicherte Pool überschrieben.
+    if (Speicher.vorhanden()) {
+      const ergebnis = Speicher.laden(tourAbschliessen);
+      if (ergebnis && ergebnis.nachgeholteStunden > 0) {
+        nachholmeldung = ergebnis;
+      }
+    }
+    Speicher.automatikStarten();
+
     // Auftragspool füllen und regelmäßig auffrischen
     Auftraege.auffrischen();
     let letzteAuffrischung = Spielzeit.heute().getTime();
@@ -1549,8 +1664,10 @@ const TourenplanungApp = (function () {
     if (ergebnis.wurdeNeuErstellt) {
       ereignisseBinden();
       markenZeichnen();
-      dispositionAktualisieren();
+      // Erst die Uhr anbinden (dabei wird der Spielstand geladen),
+      // dann zeichnen - sonst fehlt der Hinweis auf die Pause.
       taktVerbinden();
+      dispositionAktualisieren();
       // Erst nach dem Einhängen ins Dokument steht die Fenstergröße fest.
       setTimeout(ansichtZuruecksetzen, 0);
     }

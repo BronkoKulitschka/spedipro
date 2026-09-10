@@ -858,3 +858,64 @@
 
 /* Leer fahrende Fahrzeuge auf der Karte blasser darstellen */
 .tour-fahrzeug-symbol.leer { opacity: 0.75; }
+
+/* Laufende Touren bleiben auf der Karte sichtbar - in Blau, damit sie
+   sich von der orangen Route in Planung unterscheiden. Die Leerfahrt
+   zur Ladestelle ist gestrichelt und blasser. */
+.tour-route-kontur-duenn {
+  fill: none;
+  stroke: #101018;
+  stroke-width: 5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+
+.tour-route-laufend {
+  fill: none;
+  stroke: #2f9ee0;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.tour-route-anfahrt {
+  fill: none;
+  stroke: #7fb8d8;
+  stroke-width: 2.5;
+  stroke-dasharray: 6 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Warendetails im Dispositionsbereich */
+.tour-detailkopf {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--win-grey-dark);
+}
+
+.tour-detailinhalt {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: 6px;
+}
+
+.tour-nachholung {
+  margin-bottom: 6px;
+  padding: 5px 7px;
+  background: #e2ecf5;
+  border: 1px solid #2f7fd0;
+}
+
+.tour-nachholung .tour-warentitel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tour-nachholung .tour-warentitel > button { margin-left: auto; }

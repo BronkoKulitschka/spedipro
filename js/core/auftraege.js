@@ -256,6 +256,19 @@ const Auftraege = (function () {
 
   function alle() { return auftraege.slice(); }
 
+  /** Gespeicherte Aufträge übernehmen. */
+  function setzen(liste) {
+    auftraege.length = 0;
+    (liste || []).forEach((a) => auftraege.push({ ...a }));
+
+    // Nummernkreis fortsetzen, damit keine Nummer doppelt vergeben wird
+    auftraege.forEach((a) => {
+      const nummer = Number(String(a.nummer).replace("A-", ""));
+      if (!Number.isNaN(nummer) && nummer >= naechsteNummer) naechsteNummer = nummer + 1;
+    });
+    benachrichtigen();
+  }
+
   return {
     STATUS,
     BOERSE_ZIEL,
@@ -272,6 +285,7 @@ const Auftraege = (function () {
     freigeben,
     terminMachbar,
     beiAenderung,
-    alle
+    alle,
+    setzen
   };
 })();
