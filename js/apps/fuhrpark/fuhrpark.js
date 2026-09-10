@@ -672,11 +672,102 @@ const FuhrparkApp = (function () {
     const zurueck = ergebnis.element.querySelector("[data-zurueck-zum-fahrzeug]");
     if (zurueck) {
       zurueck.addEventListener("click", () => {
-        // Holt das Fuhrpark-Fenster nach vorne (und stellt es wieder her,
-        // falls es minimiert war). Die Detailansicht bleibt erhalten.
+        // Nebenfenster schließen und zurück zum Fuhrpark. Das Fenster
+        // bleibt nicht als Karteileiche in der Taskleiste zurück.
+        WindowManager.schliessen(id);
         FuhrparkApp.open();
       });
     }
+
+    // Debug-Schaltflächen im Fristenfenster
+    ergebnis.element.querySelectorAll("[data-frist-erledigen]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const fahrzeug = fahrzeuge[aktuellerIndex];
+        const art = btn.dataset.fristErledigen;
+
+        Fristen.erledigen(fahrzeug, art);
+        Historie.hinzufuegen(fahrzeug, {
+          art: art === "wartung" ? "wartung" : "pruefung",
+          text: `${Fristen.ARTEN[art].label} durchgeführt`,
+          daten: { fristart: art }
+        });
+
+        // Fenster mit den neuen Werten neu aufbauen, und die
+        // Detailansicht dahinter ebenfalls auffrischen.
+        fristenFensterOeffnen(fahrzeug);
+        if (ansicht === "detail") neuZeichnen();
+      });
+    });
+  }
+
+  /**
+   * Fristen im Detail, in einem eigenen Fenster.
+   *
+   * GEPLANT: Aus diesem Fenster wird später der Werkstatt-Zugang. Statt
+   * die Frist per Debug-Schaltfläche zurückzusetzen, wird dann ein
+   * Termin vereinbart oder die Prüfung intern durchgeführt - je nachdem,
+   * ob eine eigene Werkstatt vorhanden ist (siehe Notiz an der
+   * Debug-Leiste in der Detailansicht). Auch das Nichtbestehen einer
+   * Prüfung gehört dann hierher (siehe Notiz in js/core/fristen.js).
+   */
+  function fristenFensterOeffnen(fahrzeug) {
+    const zeilen = Fristen.alle(fahrzeug)
+      .map((f) => {
+        const definition = Fristen.ARTEN[f.art];
+        const intervall =
+          definition.typ === "datum"
+            ? `alle ${definition.intervallMonate} Monate`
+            : `alle ${definition.intervallKm.toLocaleString("de-DE")} km`;
+
+        const letzte = fahrzeug.fristen?.[f.art];
+        const zuletzt =
+          definition.typ === "datum"
+            ? letzte?.letzteAm
+              ? Spielzeit.formatiere(new Date(letzte.letzteAm))
+              : "unbekannt"
+            : letzte?.letzteBeiKm !== undefined
+              ? `${letzte.letzteBeiKm.toLocaleString("de-DE")} km`
+              : "unbekannt";
+
+        return `
+          <li class="fuhrpark-fristzeile frist-${f.status}">
+            <div class="fuhrpark-fristzeile-kopf">
+              <span class="fuhrpark-frist-ampel"></span>
+              <span class="fuhrpark-fristzeile-name">${f.label}</span>
+              <span class="fuhrpark-fristzeile-kurz">${f.kurz}</span>
+            </div>
+            <div class="fuhrpark-fristzeile-text">${f.text}</div>
+            <div class="fuhrpark-fristzeile-meta">
+              Rhythmus: ${intervall} · zuletzt: ${zuletzt}
+            </div>
+            <button class="win98-button bevel-out" data-frist-erledigen="${f.art}">
+              📋 ${f.label} durchführen (Debug)
+            </button>
+          </li>
+        `;
+      })
+      .join("");
+
+    const inhalt = `
+      <div class="fuhrpark-historie-fenster">
+        <div class="fuhrpark-kopfzeile">
+          <span class="fuhrpark-fahrzeugname">${fahrzeug.marke} ${fahrzeug.modell}</span>
+          <span class="fuhrpark-kennzeichen">${fahrzeug.kennzeichen}</span>
+        </div>
+        <div class="fuhrpark-datumszeile">
+          ${Spielzeit.formatiereLang(Spielzeit.heute())} ·
+          ${fahrzeug.kmStand.toLocaleString("de-DE")} km
+        </div>
+        <div class="fuhrpark-blaetter-zeile">
+          <button class="win98-button bevel-out fuhrpark-zurueck" data-zurueck-zum-fahrzeug>
+            &#10094; Zurück zum Fahrzeug
+          </button>
+        </div>
+        <ul class="fuhrpark-fristliste">${zeilen}</ul>
+      </div>
+    `;
+
+    fensterAktualisieren("fuhrpark-fristen", `Fristen – ${fahrzeug.kennzeichen}`, inhalt);
   }
 
   /** Vollständige Chronik in einem eigenen Fenster. */
@@ -806,6 +897,7 @@ const FuhrparkApp = (function () {
           <button class="win98-button bevel-out fuhrpark-zurueck" id="fuhrpark-btn-zurueck">&#10094; Übersicht</button>
           <button class="win98-button bevel-out fuhrpark-zurueck" id="fuhrpark-btn-auslastung">📊 Auslastung</button>
           <button class="win98-button bevel-out fuhrpark-zurueck" id="fuhrpark-btn-historie">📜 Historie</button>
+          <button class="win98-button bevel-out fuhrpark-zurueck" id="fuhrpark-btn-fristen">🔧 Fristen</button>
         </div>
 
         <dl class="fuhrpark-infoliste">
@@ -842,12 +934,6 @@ const FuhrparkApp = (function () {
             🔧 ${gewaehltesTeil ? `${TEIL_LABEL[gewaehltesTeil]} reparieren` : "Teil im Bild wählen"} (Debug)
           </button>
           <button class="win98-button bevel-out" id="fuhrpark-btn-verkaufen">💰 Verkaufen (${restwert(fahrzeug).toLocaleString("de-DE")} DM)</button>
-          <select class="win98-button bevel-out" id="fuhrpark-select-frist">
-            ${Object.entries(Fristen.ARTEN)
-              .map(([art, d]) => `<option value="${art}">${d.kurz}</option>`)
-              .join("")}
-          </select>
-          <button class="win98-button bevel-out" id="fuhrpark-btn-frist-erledigen">📋 Frist erledigt (Debug)</button>
         </div>
       </div>
     `;
@@ -1061,25 +1147,6 @@ const FuhrparkApp = (function () {
       });
     }
 
-    const btnFristErledigen = fensterElement.querySelector("#fuhrpark-btn-frist-erledigen");
-    if (btnFristErledigen) {
-      btnFristErledigen.addEventListener("click", () => {
-        const select = fensterElement.querySelector("#fuhrpark-select-frist");
-        const fahrzeug = fahrzeuge[aktuellerIndex];
-        const art = select.value;
-
-        Fristen.erledigen(fahrzeug, art);
-
-        Historie.hinzufuegen(fahrzeug, {
-          art: art === "wartung" ? "wartung" : "pruefung",
-          text: `${Fristen.ARTEN[art].label} durchgeführt`,
-          daten: { fristart: art }
-        });
-
-        neuZeichnen();
-      });
-    }
-
     const btnAuslastung = fensterElement.querySelector("#fuhrpark-btn-auslastung");
     if (btnAuslastung) {
       btnAuslastung.addEventListener("click", () => {
@@ -1091,6 +1158,13 @@ const FuhrparkApp = (function () {
     if (btnHistorie) {
       btnHistorie.addEventListener("click", () => {
         historieFensterOeffnen(fahrzeuge[aktuellerIndex]);
+      });
+    }
+
+    const btnFristen = fensterElement.querySelector("#fuhrpark-btn-fristen");
+    if (btnFristen) {
+      btnFristen.addEventListener("click", () => {
+        fristenFensterOeffnen(fahrzeuge[aktuellerIndex]);
       });
     }
 

@@ -70,32 +70,144 @@ const TourenplanungApp = (function () {
   }
 
   function renderDisposition() {
+    // Ohne Depot ist noch keine Disposition möglich - zuerst muss der
+    // Heimatstandort feststehen.
+    if (!Betrieb.hatDepot()) {
+      return renderDepotwahl();
+    }
+
     if (!gewaehlteStadt) {
       return `
         <div class="tour-dispo-leer">
-          Stadt auf der Karte auswählen, um verfügbare Waren zu sehen.
+          Stadt auf der Karte auswählen, um Angebot und Bedarf zu sehen.
         </div>
       `;
     }
 
     const s = gewaehlteStadt;
+    const istDepot = Betrieb.depotName() === s.name;
+    const angebot = Wirtschaft.angebot(s);
+    const bedarf = Wirtschaft.bedarf(s);
+
     return `
       <div class="tour-dispo-kopf">
         <span class="tour-dispo-stadt">${s.name}</span>
         <span class="tour-dispo-land">${s.land}</span>
         ${s.knoten ? `<span class="tour-dispo-knoten">Frachtknoten</span>` : ""}
+        ${istDepot ? `<span class="tour-dispo-depot">Depot</span>` : ""}
       </div>
       <div class="tour-dispo-info">
-        ${s.einw ? `${s.einw.toLocaleString("de-DE")} Einwohner${s.einwQuelle === "1995" ? " (1995)" : ""} · ` : ""}
-        ${s.lat.toFixed(2)}° N, ${s.lon.toFixed(2)}° O
+        ${Wirtschaft.regionName(s)}
+        ${s.einw ? ` · ${s.einw.toLocaleString("de-DE")} Einwohner${s.einwQuelle === "1995" ? " (1995)" : ""}` : ""}
+        ${
+          Betrieb.hatDepot() && !istDepot
+            ? ` · ${Karte.strassenEntfernung(Betrieb.depot(), s).toLocaleString("de-DE")} km ab Depot`
+            : ""
+        }
       </div>
 
-      <div class="tour-dispo-platzhalter">
-        <div class="tour-dispo-titel">Verfügbare Waren</div>
-        <p>
-          Hier erscheinen später die Frachtangebote dieser Stadt.
-          Das Auftragssystem ist noch nicht gebaut.
-        </p>
+      <div class="tour-warenblock">
+        <div class="tour-warenspalte">
+          <div class="tour-warentitel">Wird hier verladen (${angebot.length})</div>
+          ${warenListe(angebot)}
+        </div>
+        <div class="tour-warenspalte">
+          <div class="tour-warentitel">Wird hier gebraucht (${bedarf.length})</div>
+          ${warenListe(bedarf)}
+        </div>
+      </div>
+
+      ${
+        !istDepot
+          ? `<div class="tour-dispo-aktionen">
+               <button class="win98-button bevel-out" id="tour-btn-depot-hierher">
+                 🏠 Depot hierher verlegen
+               </button>
+             </div>`
+          : ""
+      }
+    `;
+  }
+
+  function warenListe(waren) {
+    if (waren.length === 0) {
+      return `<div class="tour-ware-leer">keine</div>`;
+    }
+    return `
+      <ul class="tour-warenliste">
+        ${waren
+          .map(
+            (g) => `
+              <li class="tour-ware" title="${aufbauText(g.aufbau)}, ${g.wertProTonne.toLocaleString("de-DE")} DM je Tonne">
+                <span class="tour-ware-aufbau tour-aufbau-${g.aufbau}">${aufbauKurz(g.aufbau)}</span>
+                <span class="tour-ware-name">${g.name}</span>
+                ${g.verderblich ? `<span class="tour-ware-merkmal">Kühlung</span>` : ""}
+                ${g.gefahrgut ? `<span class="tour-ware-merkmal tour-merkmal-gefahr">ADR</span>` : ""}
+              </li>
+            `
+          )
+          .join("")}
+      </ul>
+    `;
+  }
+
+  const AUFBAU_TEXT = {
+    plane: "Planenauflieger",
+    kuehl: "Kühlkoffer",
+    tank: "Tankauflieger",
+    silo: "Siloauflieger",
+    kipper: "Kipper",
+    schwer: "Schwerlast/Tieflader",
+    container: "Containerchassis",
+    autotransporter: "Autotransporter"
+  };
+  const AUFBAU_KURZ = {
+    plane: "PL", kuehl: "KÜ", tank: "TA", silo: "SI",
+    kipper: "KI", schwer: "SL", container: "CO", autotransporter: "AT"
+  };
+  function aufbauText(a) { return AUFBAU_TEXT[a] || a; }
+  function aufbauKurz(a) { return AUFBAU_KURZ[a] || "??"; }
+
+  /** Startbildschirm, solange kein Depot gewählt wurde. */
+  function renderDepotwahl() {
+    if (!gewaehlteStadt) {
+      return `
+        <div class="tour-depotwahl">
+          <div class="tour-depotwahl-titel">Standort der Spedition wählen</div>
+          <p>
+            Zuerst braucht die Spedition ein Depot. Von dort starten die
+            Touren, dort stehen die Fahrzeuge zwischen den Fahrten.
+          </p>
+          <p class="tour-depotwahl-hinweis">
+            Eine Stadt auf der Karte antippen. Alle ${Karte.alleStaedte().length}
+            Städte stehen zur Wahl - ein Frachtknoten an einem Hafen bietet
+            mehr Ladung, liegt aber selten zentral.
+          </p>
+        </div>
+      `;
+    }
+
+    const s = gewaehlteStadt;
+    const angebot = Wirtschaft.angebot(s);
+    return `
+      <div class="tour-depotwahl">
+        <div class="tour-dispo-kopf">
+          <span class="tour-dispo-stadt">${s.name}</span>
+          <span class="tour-dispo-land">${s.land}</span>
+          ${s.knoten ? `<span class="tour-dispo-knoten">Frachtknoten</span>` : ""}
+        </div>
+        <div class="tour-dispo-info">
+          ${Wirtschaft.regionName(s)}
+          ${s.einw ? ` · ${s.einw.toLocaleString("de-DE")} Einwohner` : ""}
+        </div>
+        <div class="tour-depotwahl-vorschau">
+          Vor Ort verladbar: ${angebot.map((g) => g.name).join(", ")}
+        </div>
+        <div class="tour-dispo-aktionen">
+          <button class="win98-button bevel-out" id="tour-btn-depot-waehlen">
+            🏠 Hier Depot gründen
+          </button>
+        </div>
       </div>
     `;
   }
@@ -131,6 +243,7 @@ const TourenplanungApp = (function () {
           "tour-marke",
           `tour-marke-s${stufe}`,
           stadt.knoten ? "tour-marke-knoten" : "",
+          Betrieb.depotName() === stadt.name ? "tour-marke-depot" : "",
           gewaehlteStadt && gewaehlteStadt.name === stadt.name ? "tour-marke-gewaehlt" : ""
         ].filter(Boolean).join(" ");
 
@@ -296,9 +409,37 @@ const TourenplanungApp = (function () {
 
   function stadtWaehlen(stadt) {
     gewaehlteStadt = stadt;
-    const dispo = fensterElement.querySelector("#tour-disposition");
-    if (dispo) dispo.innerHTML = renderDisposition();
+    dispositionAktualisieren();
     markenZeichnen();
+  }
+
+  function dispositionAktualisieren() {
+    const dispo = fensterElement.querySelector("#tour-disposition");
+    if (!dispo) return;
+    dispo.innerHTML = renderDisposition();
+
+    // Die Schaltflächen entstehen bei jedem Neuaufbau neu und müssen
+    // deshalb jedes Mal verdrahtet werden.
+    const gruenden = dispo.querySelector("#tour-btn-depot-waehlen");
+    if (gruenden) {
+      gruenden.addEventListener("click", () => {
+        Betrieb.depotSetzen(gewaehlteStadt.name);
+        dispositionAktualisieren();
+        markenZeichnen();
+      });
+    }
+
+    const verlegen = dispo.querySelector("#tour-btn-depot-hierher");
+    if (verlegen) {
+      verlegen.addEventListener("click", () => {
+        const ziel = gewaehlteStadt.name;
+        if (window.confirm(`Depot nach ${ziel} verlegen?`)) {
+          Betrieb.depotSetzen(ziel);
+          dispositionAktualisieren();
+          markenZeichnen();
+        }
+      });
+    }
   }
 
   function tooltipZeigen(text, x, y) {
@@ -506,6 +647,7 @@ const TourenplanungApp = (function () {
     if (ergebnis.wurdeNeuErstellt) {
       ereignisseBinden();
       markenZeichnen();
+      dispositionAktualisieren();
       // Erst nach dem Einhängen ins Dokument steht die Fenstergröße fest.
       setTimeout(ansichtZuruecksetzen, 0);
     }

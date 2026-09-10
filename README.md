@@ -7,7 +7,38 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.3)
+## Aktueller Stand (v0.15.4)
+
+**Depot** (`js/core/betrieb.js`, Anfang des globalen Spielstands):
+- Beim ersten Öffnen der Tourenplanung wird ein Heimatstandort gewählt,
+  frei unter allen 165 Städten, mit Vorschau der dort verladbaren Waren
+- Depot ist auf der Karte blau markiert, bei jeder anderen Stadt steht
+  die Entfernung dorthin
+- Später verlegbar (mit Rückfrage). Wird im Browser gespeichert,
+  Zugriff über try/catch abgesichert
+
+**Güter und Wirtschaftsregionen** (Schritt 1 der Tourenplanung):
+- `js/data/gueter.js` - 72 Warenarten mit Aufbautyp, Schüttdichte,
+  Wert je Tonne, Kühlpflicht und Gefahrgut-Kennzeichnung. Die Dichte
+  entscheidet, ob eine Ladung durch Gewicht oder Volumen begrenzt ist
+  (Dämmstoff: 5,4 t füllen den Auflieger, Stahl erreicht die 25 t)
+- `js/data/regionen.js` - 25 Wirtschaftsregionen mit Angebot und Bedarf,
+  alle 165 Städte zugeordnet
+- `js/core/wirtschaft.js` - leitet Angebot und Bedarf je Stadt ab aus
+  Region, Hafeneigenschaft und Stadtgröße. Was eine Region selbst
+  erzeugt, wird ihr nicht als Bedarf zugewiesen
+- Disposition zeigt beide Spalten mit Aufbau-Kürzel je Ware
+
+**Herkunft der Zuordnung:** Belegte Güterstromdaten für 1994 liegen
+nicht vor. Die Zuordnung ist aus bekannten Wirtschaftsschwerpunkten der
+Regionen abgeleitet (Ruhrgebiet Kohle/Stahl, Norrland Holz/Erz, Poebene
+Maschinen/Textil) und im Code als Annäherung gekennzeichnet.
+
+**Fuhrpark:** Neues Fristen-Fenster neben Historie (später der
+Werkstatt-Zugang), mit Debug-Rücksetzung je Frist. "Zurück zum
+Fahrzeug" schließt die Nebenfenster jetzt, statt sie offen zu lassen.
+
+## Vorheriger Stand (v0.15.3)
 
 **Stadtmarken skalieren nicht mehr mit dem Zoom.** Sie liegen jetzt wie
 die Namen in einer eigenen Ebene außerhalb der gezoomten Bühne; die
@@ -388,6 +419,8 @@ spedipro/
       ausfall.js         Pannen, Stillstand, Bergung
       lackierung.js      Umfärben der Kabine zur Laufzeit
       karte.js           Kartenprojektion und Entfernungen
+      wirtschaft.js      Angebot und Bedarf je Stadt
+      betrieb.js         Depot und Betriebsdaten
     apps/
       fuhrpark/
         fuhrpark.js      Fuhrpark-Programm (Zustand, UI, Debug-Buttons)
@@ -397,6 +430,8 @@ spedipro/
       fahrzeugtypen.js   Katalog fiktiver, an reale 90er-LKW angelehnter Fahrzeugtypen
       staedte.js         165 europäische Städte mit echten Koordinaten
       strassennetz.js    452 Verbindungen zwischen den Städten
+      gueter.js          72 Warenarten mit Transporteigenschaften
+      regionen.js        25 Wirtschaftsregionen (Angebot/Bedarf)
   assets/
     icons/
     sprites/

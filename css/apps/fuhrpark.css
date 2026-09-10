@@ -310,6 +310,64 @@
   border-color: #5a0c0c;
 }
 
+/* ---------- Fristenfenster ---------- */
+
+.fuhrpark-fristliste {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fuhrpark-fristzeile {
+  padding: 6px 8px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+  border-left-width: 4px;
+}
+
+.fuhrpark-fristzeile.frist-ok { border-left-color: #2e8b2e; }
+.fuhrpark-fristzeile.frist-bald { border-left-color: #d4a017; }
+.fuhrpark-fristzeile.frist-ueberfaellig { border-left-color: #b22222; }
+
+.fuhrpark-fristzeile-kopf {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fuhrpark-fristzeile-name {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.fuhrpark-fristzeile-kurz {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--win-grey-darker);
+}
+
+.fuhrpark-fristzeile-text {
+  font-size: 12px;
+  margin: 3px 0 1px 0;
+}
+
+.fuhrpark-fristzeile.frist-ueberfaellig .fuhrpark-fristzeile-text {
+  color: #8a1414;
+  font-weight: bold;
+}
+
+.fuhrpark-fristzeile-meta {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+  margin-bottom: 6px;
+}
+
 /* ---------- Historie ---------- */
 
 /* Einzeiliger Anreißer in der Detailansicht - klickbar */

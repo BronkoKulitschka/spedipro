@@ -239,3 +239,135 @@
   margin: 0;
   color: var(--win-grey-darker);
 }
+
+/* ---------- Depot ---------- */
+
+.tour-marke-depot {
+  background: #2f7fd0;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #10305a;
+  z-index: 3;
+}
+
+.tour-marke-depot::after {
+  background: #ffffff;
+}
+
+.tour-dispo-depot {
+  font-size: 11px;
+  padding: 1px 5px;
+  background: #2f7fd0;
+  color: var(--win-white);
+  border: 1px solid var(--win-grey-darker);
+}
+
+.tour-depotwahl {
+  font-size: 13px;
+}
+
+.tour-depotwahl-titel {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.tour-depotwahl p {
+  margin: 0 0 6px 0;
+}
+
+.tour-depotwahl-hinweis {
+  color: var(--win-grey-darker);
+  font-size: 12px;
+}
+
+.tour-depotwahl-vorschau {
+  font-size: 12px;
+  color: var(--win-grey-darker);
+  margin: 6px 0;
+  padding-top: 6px;
+  border-top: 1px dashed var(--win-grey-dark);
+}
+
+.tour-dispo-aktionen {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--win-grey-dark);
+}
+
+/* ---------- Warenlisten ---------- */
+
+.tour-warenblock {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--win-grey-dark);
+}
+
+.tour-warenspalte {
+  flex: 1;
+  min-width: 0;
+}
+
+.tour-warentitel {
+  font-weight: bold;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.tour-warenliste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tour-ware {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  padding: 1px 0;
+}
+
+.tour-ware-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Kürzel für den benötigten Aufbautyp - zeigt auf einen Blick, welches
+   Fahrzeug die Ladung überhaupt fahren kann. */
+.tour-ware-aufbau {
+  flex-shrink: 0;
+  width: 22px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 1px 0;
+  border: 1px solid var(--win-grey-darker);
+  background: var(--win-grey);
+}
+
+.tour-aufbau-kuehl { background: #bcd8f0; }
+.tour-aufbau-tank { background: #f0c8a0; }
+.tour-aufbau-silo { background: #e0d8a8; }
+.tour-aufbau-kipper { background: #d0c0b0; }
+.tour-aufbau-schwer { background: #c8c8d8; }
+.tour-aufbau-container { background: #b8d8c0; }
+.tour-aufbau-autotransporter { background: #d8c0d8; }
+
+.tour-ware-merkmal {
+  flex-shrink: 0;
+  font-size: 10px;
+  padding: 0 4px;
+  background: #d8e4f0;
+  border: 1px solid var(--win-grey-dark);
+}
+
+.tour-merkmal-gefahr {
+  background: #f5d8b0;
+}
+
+.tour-ware-leer {
+  font-size: 12px;
+  color: var(--win-grey-darker);
+}

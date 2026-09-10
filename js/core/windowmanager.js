@@ -100,5 +100,15 @@ const WindowManager = (function () {
     win.style.zIndex = zCounter++;
   }
 
-  return { open };
+  /** Schließt ein Fenster von außen, z.B. über einen Zurück-Button. */
+  function schliessen(id) {
+    schliesseFenster(id);
+  }
+
+  /** Ist ein Fenster mit dieser id gerade offen? */
+  function istOffen(id) {
+    return Boolean(offeneFenster[id]);
+  }
+
+  return { open, schliessen, istOffen };
 })();
