@@ -8,10 +8,23 @@
 // kommen (eine Tour dauert x Tage) - die Schnittstelle bleibt gleich.
 
 const Spielzeit = (function () {
+  // ---------- Taktgeber ----------
+  // Eine Simulationsstunde dauert eine reale Minute. Damit entspricht
+  // eine reale Sekunde einer Simulationsminute, und ein Spieltag
+  // vergeht in 24 realen Minuten.
+  //
+  // GEPLANT: Das Tempo gehört später in die Einstellungen (pausiert,
+  // langsam, normal, schnell). Dann sollte MINUTEN_JE_SEKUNDE von dort
+  // kommen statt fest zu stehen.
+  const MINUTEN_JE_SEKUNDE = 1;
+  const TAKT_MS = 1000;
+
+  let taktZaehler = null;
+  let laeuft = false;
   // Startdatum der Kampagne. 1994 gewählt, weil dann bereits im Spiel:
   // deutsche Einheit vollzogen, EU-Binnenmarkt seit 1993 in Kraft
   // (Wegfall der Zollformalitäten innerhalb der EU), Osteuropa offen.
-  const STARTDATUM = new Date(1994, 2, 1); // 1. März 1994
+  const STARTDATUM = new Date(1994, 2, 1, 6, 0); // 1. März 1994, 06:00 Uhr
 
   const MONATSNAMEN = [
     "Januar", "Februar", "März", "April", "Mai", "Juni",
@@ -21,13 +34,37 @@ const Spielzeit = (function () {
   let aktuell = new Date(STARTDATUM.getTime());
   const beobachter = [];
 
+
   function heute() {
     return new Date(aktuell.getTime()); // Kopie, damit niemand von außen verstellt
   }
 
-  function vorspulen(tage) {
-    aktuell.setDate(aktuell.getDate() + tage);
+  /** Startet die laufende Uhr. Mehrfaches Aufrufen schadet nicht. */
+  function starten() {
+    if (taktZaehler !== null) return;
+    laeuft = true;
+    taktZaehler = setInterval(() => {
+      if (!laeuft) return;
+      minutenAddieren(MINUTEN_JE_SEKUNDE);
+    }, TAKT_MS);
+  }
+
+  function pausieren() { laeuft = false; }
+  function fortsetzen() { laeuft = true; }
+  function istPausiert() { return !laeuft; }
+
+  /** Rückt die Uhr um Minuten vor und benachrichtigt alle Beobachter. */
+  function minutenAddieren(minuten) {
+    aktuell.setMinutes(aktuell.getMinutes() + minuten);
     beobachter.forEach((rueckruf) => rueckruf(heute()));
+  }
+
+  function stundenAddieren(stunden) {
+    minutenAddieren(Math.round(stunden * 60));
+  }
+
+  function vorspulen(tage) {
+    minutenAddieren(tage * 24 * 60);
     return heute();
   }
 
@@ -54,6 +91,18 @@ const Spielzeit = (function () {
     return neu;
   }
 
+  /** Uhrzeit im 24-Stunden-Format: 07:45 */
+  function formatiereUhrzeit(datum) {
+    const hh = String(datum.getHours()).padStart(2, "0");
+    const mm = String(datum.getMinutes()).padStart(2, "0");
+    return `${hh}:${mm}`;
+  }
+
+  /** Datum mit Uhrzeit: 01.03.1994, 07:45 */
+  function formatiereMitUhrzeit(datum) {
+    return `${formatiere(datum)}, ${formatiereUhrzeit(datum)}`;
+  }
+
   /** Kurzform: 01.03.1994 */
   function formatiere(datum) {
     const tt = String(datum.getDate()).padStart(2, "0");
@@ -78,7 +127,16 @@ const Spielzeit = (function () {
 
   return {
     STARTDATUM,
+    MINUTEN_JE_SEKUNDE,
     heute,
+    starten,
+    pausieren,
+    fortsetzen,
+    istPausiert,
+    minutenAddieren,
+    stundenAddieren,
+    formatiereUhrzeit,
+    formatiereMitUhrzeit,
     vorspulen,
     beiAenderung,
     zuruecksetzen,

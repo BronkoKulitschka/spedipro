@@ -7,7 +7,49 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.5)
+## Aktueller Stand (v0.15.6)
+
+**Tourenplanung nach dem Vorbild echter Speditionssoftware umgebaut.**
+Bisher fahrzeugorientiert (Fahrzeug wählen → Ladung erfinden → Ziel
+suchen), jetzt auftragsorientiert wie in der Disposition: Es liegen
+Transportaufträge vor, die auf verfügbare Fahrzeuge verteilt werden.
+
+**Neue Kernmodule:**
+- `js/core/auftraege.js` - Auftragspool mit Nummer, Lade- und
+  Entladestelle, Ware, Menge, Zeitfenster, Lieferfrist, vereinbartem
+  Entgelt und Auftraggeber. Statuskette offen → disponiert → unterwegs
+  → zugestellt. Aufträge verfallen, wenn sie liegen bleiben.
+  Terminprüfung inklusive Anfahrt.
+- `js/core/kunden.js` - Auftraggeber mit wachsender Bindung über fünf
+  Stufen (Frachtbörse → Gelegenheitskunde → Wiederkehrender Kunde →
+  Stammkunde → Vertragskunde). Preisaufschlag steigt von 0 auf 35 %,
+  gebundene Kunden vergeben eigene Aufträge außerhalb der Börse.
+  Verspätungen drücken den Aufschlag wieder.
+
+**Neuer Ablauf in drei Schritten:**
+1. Auftrag aus dem Pool - sortiert nach Ertrag je Kilometer, Filter für
+   Börse, Kundenaufträge und "passend zur Flotte"
+2. Fahrzeugvorschläge - sortiert nach Eignung und Leerkilometern.
+   Ungeeignete gesperrt mit Begründung (Aufbau, Kapazität, Termin)
+3. Disponieren - mit Deckungsbeitrag (Entgelt minus Spritkosten) vor
+   der Entscheidung
+
+**Touren haben jetzt zwei Etappen:** Leerfahrt zur Ladestelle und
+beladener Hauptlauf, getrennt abgerechnet (Verschleiß und Verbrauch
+unterscheiden sich deutlich). Leer fahrende Fahrzeuge sind auf der Karte
+blasser, der Status wechselt sichtbar von "Anfahrt leer" zu "beladen
+unterwegs".
+
+**Spielzeit läuft in Echtzeit:** eine Simulationsstunde entspricht einer
+realen Minute, ein Spieltag 24 realen Minuten. Touren laufen im
+Hintergrund weiter, mehrere Fahrzeuge gleichzeitig möglich. Lenkzeit
+9 Std/Tag, danach 11 Std Ruhe. Taskleiste zeigt Spieldatum und -uhrzeit.
+
+**Routenberechnung** (`js/core/route.js`): Dijkstra über die 452
+Verbindungen, Fähren mit Bewertungsaufschlag. Strecken sind damit echt
+statt geschätzt (Hamburg–München 812 km über 3 Etappen).
+
+## Vorheriger Stand (v0.15.5)
 
 **Tourenplanung in fünf Schritten** (vorerst nur A nach B):
 1. Standort mit Fahrzeugen
@@ -458,6 +500,10 @@ spedipro/
       wirtschaft.js      Angebot und Bedarf je Stadt
       betrieb.js         Depot und Betriebsdaten
       ladung.js          Eignung, Menge, Frachtpreis
+      route.js           Wegsuche über das Straßennetz
+      fahrt.js           Laufende Touren mit Etappen und Lenkzeiten
+      kunden.js          Auftraggeber und Kundenbindung
+      auftraege.js       Auftragspool mit Statusverfolgung
     apps/
       fuhrpark/
         fuhrpark.js      Fuhrpark-Programm (Zustand, UI, Debug-Buttons)

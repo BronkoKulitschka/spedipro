@@ -133,7 +133,19 @@ html, body {
   height: 24px;
   display: flex;
   align-items: center;
+  gap: 8px;
   padding: 0 8px;
+}
+
+/* Spieldatum neben der Uhr. Auf schmalen Geräten würde beides zusammen
+   zu viel Platz kosten - dort entfällt das Datum, die Uhrzeit bleibt. */
+#clock-date {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  #clock-date { display: none; }
 }
 
 #tray, #taskbar-windows {
@@ -145,6 +157,7 @@ html, body {
 
 #clock {
   font-size: 12px;
+  white-space: nowrap;
 }
 
 /* ---------- Startmenü ---------- */

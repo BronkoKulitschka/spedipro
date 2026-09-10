@@ -595,3 +595,256 @@
   margin-bottom: 8px;
   line-height: 1.4;
 }
+
+/* ---------- Route auf der Karte ---------- */
+
+.tour-route-ebene {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;   /* über der Karte, unter den Marken */
+}
+
+/* Dunkle Kontur unter der farbigen Linie, damit sich die Route von den
+   beigen Straßen im Kartenbild abhebt. */
+.tour-route-kontur {
+  fill: none;
+  stroke: #101018;
+  stroke-width: 7;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.tour-route-linie {
+  fill: none;
+  stroke: #ff8a1e;
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.tour-route-station { fill: #ff8a1e; stroke: #101018; stroke-width: 1.5; }
+.tour-route-start   { fill: #17c04a; stroke: #06451c; stroke-width: 2; }
+.tour-route-ziel    { fill: #b23ce0; stroke: #3d0a52; stroke-width: 2; }
+
+/* ---------- Fahrendes Fahrzeug ---------- */
+
+.tour-fahrt {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.tour-fahrzeug-symbol {
+  position: absolute;
+  font-size: 20px;
+  line-height: 1;
+  filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.6));
+  will-change: left, top;
+}
+
+/* ---------- Abbruchleiste ---------- */
+
+.tour-abbruchleiste {
+  flex-shrink: 0;
+  margin-top: 4px;
+  padding-top: 5px;
+  border-top: 1px solid var(--win-grey-dark);
+}
+
+.tour-mit-schaden {
+  border-color: #8a1414;
+  background: #f3c9c9;
+}
+
+.tour-schadenhinweis {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #8a1414;
+}
+
+/* Waren in der Stadtinfo sind antippbar (Infofenster) */
+.tour-ware[data-wareninfo] {
+  cursor: pointer;
+}
+
+.tour-ware[data-wareninfo]:active {
+  background: var(--win-grey);
+}
+
+/* ---------- Laufende Fahrten ---------- */
+
+.tour-laufende,
+.tour-ankunft {
+  margin-bottom: 6px;
+  padding: 5px 7px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.tour-laufende-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tour-laufend {
+  padding: 3px 0;
+  border-bottom: 1px dotted var(--win-grey-dark);
+}
+
+.tour-laufend:last-child { border-bottom: none; }
+
+.tour-laufend-kopf {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.tour-laufend-kennzeichen {
+  font-family: monospace;
+  font-weight: bold;
+}
+
+.tour-laufend-strecke {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tour-laufend-skip,
+.tour-ankunft-weg {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  font-size: 11px;
+}
+
+.tour-laufend-balken {
+  height: 8px;
+  margin: 3px 0 2px 0;
+  background: var(--win-white);
+  border: 1px solid var(--win-grey-darker);
+}
+
+.tour-laufend-fuellung {
+  height: 100%;
+  background: #ff8a1e;
+}
+
+.tour-laufend.ruht .tour-laufend-fuellung {
+  background: #7f8fa6;
+}
+
+.tour-laufend-info {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}
+
+.tour-ankunft .tour-warentitel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tour-ankunft .tour-warentitel > button { margin-left: auto; }
+
+/* Ruhendes Fahrzeug auf der Karte: gedämpft dargestellt */
+.tour-fahrzeug-symbol.ruht {
+  opacity: 0.6;
+  filter: grayscale(0.6) drop-shadow(1px 1px 1px rgba(0,0,0,0.6));
+}
+
+/* ---------- Auftragspool ---------- */
+
+.tour-filterleiste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-bottom: 5px;
+  flex-shrink: 0;
+}
+
+.tour-filterleiste .win98-button {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.tour-filterleiste .win98-button.aktiv {
+  background: var(--win-blue-title);
+  color: var(--win-white);
+}
+
+.tour-auftrag-nummer {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: normal;
+  color: var(--win-grey-darker);
+}
+
+.tour-auswahl.gewaehlt .tour-auftrag-nummer { color: #cfe0f5; }
+
+.tour-kundenmarke,
+.tour-boersenmarke {
+  display: inline-block;
+  font-size: 10px;
+  padding: 0 4px;
+  margin-right: 4px;
+  border: 1px solid var(--win-grey-darker);
+}
+
+.tour-kundenmarke { background: #d6e8d6; color: #1a5c1a; }
+.tour-boersenmarke { background: var(--win-grey); }
+
+.tour-warnung {
+  display: inline-block;
+  font-size: 10px;
+  padding: 0 4px;
+  margin-left: 4px;
+  background: #f3c9c9;
+  color: #8a1414;
+  border: 1px solid #8a1414;
+}
+
+.tour-puenktlich {
+  display: inline-block;
+  font-size: 10px;
+  padding: 0 4px;
+  margin-left: 4px;
+  background: #d6e8d6;
+  color: #1a5c1a;
+  border: 1px solid #2e8b2e;
+}
+
+.tour-auftragskopf {
+  padding: 4px 7px;
+  margin-bottom: 5px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+  font-size: 12px;
+}
+
+.tour-positiv { color: #1a5c1a; font-weight: bold; }
+.tour-negativ { color: #8a1414; font-weight: bold; }
+
+/* ---------- Status laufender Fahrten ---------- */
+
+.tour-status {
+  display: inline-block;
+  font-size: 10px;
+  padding: 0 4px;
+  margin-right: 4px;
+  border: 1px solid var(--win-grey-darker);
+}
+
+.tour-status-anfahrt { background: #e0e0e8; }
+.tour-status-beladen { background: #f5e0b8; }
+.tour-status-ruht    { background: #d8d8d8; color: var(--win-grey-darker); }
+
+/* Leer fahrende Fahrzeuge auf der Karte blasser darstellen */
+.tour-fahrzeug-symbol.leer { opacity: 0.75; }
