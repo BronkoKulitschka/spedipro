@@ -177,8 +177,6 @@ const TourenplanungApp = (function () {
                   <span class="tour-laufend-strecke">
                     ${auftrag ? auftrag.nummer + " · " : ""}${t.vonName} → ${t.nachName}
                   </span>
-                  <button class="win98-button bevel-out tour-laufend-skip"
-                          data-ueberspringen="${t.fahrzeug.id}">&#9197;</button>
                 </div>
                 <div class="tour-laufend-balken">
                   <div class="tour-laufend-fuellung" style="width:${anteil}%"></div>
@@ -1233,13 +1231,6 @@ const TourenplanungApp = (function () {
       });
     });
 
-    dispo.querySelectorAll("[data-ueberspringen]").forEach((el) => {
-      el.addEventListener("click", () => {
-        fahrtUeberspringen(Number(el.dataset.ueberspringen));
-        dispositionAktualisieren();
-      });
-    });
-
     const nachholWeg = dispo.querySelector("#tour-btn-nachholung-weg");
     if (nachholWeg) {
       nachholWeg.addEventListener("click", () => {
@@ -1523,15 +1514,6 @@ const TourenplanungApp = (function () {
       y: a.y + (b.y - a.y) * teil,
       nachLinks: b.x < a.x
     };
-  }
-
-  /**
-   * Bringt eine laufende Tour sofort ans Ziel. Die Fahrzeit vergeht
-   * dabei trotzdem - Überspringen darf keine Zeit sparen.
-   */
-  function fahrtUeberspringen(fahrzeugId) {
-    const eintrag = Fahrt.fuerFahrzeug(fahrzeugId);
-    if (eintrag) Fahrt.abschliessen(eintrag);
   }
 
   function planungBeenden() {

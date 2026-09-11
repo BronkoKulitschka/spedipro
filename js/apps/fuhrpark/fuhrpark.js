@@ -300,11 +300,19 @@ const FuhrparkApp = (function () {
     return liste[Math.floor(Math.random() * liste.length)];
   }
 
-  /** Wo ein neu beschafftes Fahrzeug steht: am Depot, sonst irgendwo. */
+  /**
+   * Wo ein neu beschafftes Fahrzeug steht.
+   *
+   * Immer am Depot. Ist noch keines gegründet, kommt es dorthin, wo
+   * bereits Fahrzeuge stehen - ein zufälliger Ort wäre für den Spieler
+   * nicht nachvollziehbar und sah aus wie ein Fehler.
+   */
   function beschaffungsstandort() {
-    return (typeof Betrieb !== "undefined" && Betrieb.hatDepot())
-      ? Betrieb.depotName()
-      : zufaelligAus(STANDORTE);
+    if (typeof Betrieb !== "undefined" && Betrieb.hatDepot()) {
+      return Betrieb.depotName();
+    }
+    const vorhandenes = fahrzeuge.find((f) => f.standort);
+    return vorhandenes ? vorhandenes.standort : "Frankfurt am Main";
   }
 
   function zufaelligerTyp() {
@@ -1235,6 +1243,15 @@ const FuhrparkApp = (function () {
     const visual = fensterElement.querySelector("#fuhrpark-visual");
     if (visual) swipeErkennen(visual);
 
+    // Bauteil im Bild auswählen - Ziel der Reparatur
+    fensterElement.querySelectorAll(".fuhrpark-callout").forEach((box) => {
+      box.addEventListener("click", () => {
+        // Erneutes Antippen hebt die Auswahl wieder auf.
+        gewaehltesTeil = gewaehltesTeil === box.dataset.teil ? null : box.dataset.teil;
+        neuZeichnen();
+      });
+    });
+
     const btnReparieren = fensterElement.querySelector("#fuhrpark-btn-reparieren");
     if (btnReparieren) {
       btnReparieren.addEventListener("click", () => {
@@ -1347,8 +1364,52 @@ const FuhrparkApp = (function () {
     }
   });
 
+  /**
+   * Hält die Anzeige während laufender Touren aktuell: Fortschritt und
+   * Ankunftszeit ändern sich ja fortwährend. Bewusst nur die betroffenen
+   * Stellen auffrischen statt alles neu zu bauen - sonst ginge eine
+   * getroffene Bauteilauswahl verloren.
+   */
+  let taktAngemeldet = false;
+  function taktVerbinden() {
+    if (taktAngemeldet || typeof Spielzeit === "undefined") return;
+    taktAngemeldet = true;
+
+    Spielzeit.beiAenderung(() => {
+      if (!fensterElement || !document.body.contains(fensterElement)) return;
+      if (typeof Fahrt === "undefined" || Fahrt.anzahl() === 0) return;
+
+      // Fortschrittsanzeige im Detailfenster
+      const t = ansicht === "detail" ? Fahrt.fuerFahrzeug(fahrzeuge[aktuellerIndex]?.id) : null;
+      if (t) {
+        const balken = fensterElement.querySelector(".fuhrpark-tourhinweis-fuellung");
+        const info = fensterElement.querySelector(".fuhrpark-tourhinweis-info");
+        if (balken) balken.style.width = `${Math.round(Fahrt.fortschritt(t) * 100)}%`;
+        if (info) {
+          info.innerHTML =
+            `${Math.round(t.gesamtGefahreneKm).toLocaleString("de-DE")} von ` +
+            `${Math.round(Fahrt.gesamtKm(t)).toLocaleString("de-DE")} km · ` +
+            `${t.ruhtBis ? "Ruhezeit" : Fahrt.istBeladen(t) ? "beladen" : "Anfahrt leer"} · ` +
+            `Ankunft ${Spielzeit.formatiereMitUhrzeit(Fahrt.ankunft(t))}`;
+        }
+      }
+
+      // Marken in der Übersicht
+      if (ansicht === "uebersicht") {
+        fensterElement.querySelectorAll("[data-tourkarte]").forEach((el) => {
+          const lauf = Fahrt.fuerFahrzeug(Number(el.dataset.tourkarte));
+          if (lauf) {
+            el.innerHTML = `🚛 Auf Tour: ${lauf.vonName} → ${lauf.nachName} ` +
+              `(${Math.round(Fahrt.fortschritt(lauf) * 100)} %)`;
+          }
+        });
+      }
+    });
+  }
+
   function open() {
     flotteSicherstellen();
+    taktVerbinden();
 
     const ergebnis = WindowManager.open({
       id: "fuhrpark",
@@ -1358,8 +1419,13 @@ const FuhrparkApp = (function () {
 
     fensterElement = ergebnis.element;
 
-    // Nur beim ersten Öffnen Events binden - ist das Fenster schon offen,
-    // holt WindowManager es nur nach vorne, der Inhalt bleibt unverändert.
+    if (!ergebnis.wurdeNeuErstellt) {
+      // War das Fenster schon offen, zeigte es bisher den Stand von
+      // damals - etwa ohne die inzwischen gestartete Tour. Deshalb
+      // immer auffrischen.
+      neuZeichnen();
+    }
+
     if (ergebnis.wurdeNeuErstellt) {
       ereignisseBinden();
 

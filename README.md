@@ -7,7 +7,27 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.9)
+## Aktueller Stand (v0.15.10)
+
+**Behobene Fehler:**
+- **Reparatur ging nicht mehr.** Beim Entfernen der Debug-Tour wurde ein
+  Codeblock zu großzügig herausgeschnitten - dabei ging der Klick-Handler
+  für die Bauteil-Auswahl im Bild verloren. Ohne ihn ließ sich kein Teil
+  wählen und der Knopf blieb gesperrt. Handler wieder da.
+- **Fuhrpark zeigte bei laufender Tour veraltete Inhalte.** War das
+  Fenster schon offen, holte der Fenstermanager es nur nach vorne, ohne
+  neu zu zeichnen. Jetzt wird beim erneuten Öffnen immer aufgefrischt;
+  zusätzlich laufen Fortschrittsbalken und Ankunftszeit live mit, ohne
+  eine getroffene Bauteilauswahl zu verwerfen.
+- **Neue Fahrzeuge standen am falschen Ort.** Mit Depot war es korrekt,
+  ohne Depot landeten sie an einem zufälligen Ort aus einer festen Liste.
+  Jetzt: mit Depot dort, ohne Depot bei den vorhandenen Fahrzeugen.
+
+**Schnellvorlauf entfernt** - der ⏭-Knopf an laufenden Touren ist weg,
+samt Funktion und Styling. Die Debug-Knöpfe "+1 Woche / +1 Monat" im
+Fuhrpark bleiben vorerst.
+
+## Vorheriger Stand (v0.15.9)
 
 **Verlorene Touren behoben.** Ursache: Gespeichert wurde nur alle 20
 Sekunden und beim regulären Verlassen der Seite - beendet ein

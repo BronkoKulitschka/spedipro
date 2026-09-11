@@ -728,7 +728,6 @@
   white-space: nowrap;
 }
 
-.tour-laufend-skip,
 .tour-ankunft-weg {
   flex-shrink: 0;
   padding: 1px 6px;
