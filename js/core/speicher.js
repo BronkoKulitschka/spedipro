@@ -22,7 +22,7 @@ const Speicher = (function () {
   const MAX_NACHHOLEN_TAGE = 7;
 
   // Wie oft von selbst gesichert wird (reale Sekunden).
-  const SICHERUNG_INTERVALL_S = 20;
+  const SICHERUNG_INTERVALL_S = 10;
 
   let letzteSicherung = 0;
 
@@ -165,17 +165,31 @@ const Speicher = (function () {
       if (Date.now() - letzteSicherung >= SICHERUNG_INTERVALL_S * 1000) speichern();
     }, SICHERUNG_INTERVALL_S * 1000);
 
-    // Beim Schließen oder Wegschalten sichern - auf Mobilgeräten ist
-    // "visibilitychange" verlässlicher als "beforeunload".
+    // Beim Schließen oder Wegschalten sichern. Auf Mobilgeräten feuert
+    // "beforeunload" oft gar nicht - "pagehide" und "visibilitychange"
+    // sind dort verlässlicher. Alle drei anmelden, doppeltes Sichern
+    // schadet nicht.
     window.addEventListener("beforeunload", speichern);
+    window.addEventListener("pagehide", speichern);
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") speichern();
     });
   }
 
+  /**
+   * Sofort sichern - für Momente, nach denen ein Verlust besonders
+   * ärgerlich wäre: Tourstart, Ankunft, Kauf, Verkauf, Depotwahl.
+   * Ein Handy-Browser kann die Seite jederzeit beenden, ohne dass ein
+   * Ereignis dafür feuert.
+   */
+  function jetztSichern() {
+    return speichern();
+  }
+
   return {
     MAX_NACHHOLEN_TAGE,
     speichern,
+    jetztSichern,
     laden,
     loeschen,
     vorhanden,

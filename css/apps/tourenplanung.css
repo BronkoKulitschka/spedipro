@@ -919,3 +919,53 @@
 }
 
 .tour-nachholung .tour-warentitel > button { margin-left: auto; }
+
+/* Uhr steht still - erkennbar machen, damit niemand auf vergehende
+   Zeit wartet, die nicht vergeht. */
+.tour-uhr-steht {
+  color: var(--win-grey-darker);
+  font-style: italic;
+}
+
+/* ---------- Ausgehende Frachten je Stadt ---------- */
+
+.tour-ausgehend {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--win-grey-dark);
+}
+
+.tour-frachtliste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.tour-fracht {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 2px 0;
+  border-bottom: 1px dotted var(--win-grey-dark);
+}
+
+.tour-fracht.nicht-ladbar {
+  opacity: 0.55;
+}
+
+.tour-fracht-ziel {
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.tour-fracht-daten {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--win-grey-darker);
+}

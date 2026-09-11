@@ -7,7 +7,39 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.8)
+## Aktueller Stand (v0.15.9)
+
+**Verlorene Touren behoben.** Ursache: Gespeichert wurde nur alle 20
+Sekunden und beim regulären Verlassen der Seite - beendet ein
+Handy-Browser die Seite hart, war die Tour weg. Jetzt wird sofort
+gesichert, sobald etwas Wichtiges geschieht (Tourstart, Ankunft,
+Depotwahl), zusätzlich `pagehide` als Auslöser (feuert mobil
+verlässlicher als `beforeunload`), Intervall auf 10 Sekunden verkürzt.
+
+**Zeit läuft nur, wenn Fahrzeuge unterwegs sind.** Sonst steht die Uhr -
+erkennbar am ⏸ hinter der Uhrzeit. Beim Planen verstreichen damit keine
+Fristen.
+
+**Fuhrpark zeigt Fahrzeuge auf Tour:**
+- Blaue Marke in der Übersicht mit Strecke und Fortschritt
+- Hinweisfeld in der Detailansicht (unten im Bild, damit es den
+  Ausfall-Hinweis oben nicht überlagert)
+- Klick öffnet ein eigenes Kartenfenster, das den Ausschnitt automatisch
+  so wählt, dass die ganze Route hineinpasst; mit Fahrzeugposition,
+  laufender Aktualisierung und Zurück-Knopf zum Fuhrpark
+
+**Ausgehende Frachten je Stadt.** Jede Stadt zeigt ihre offenen Frachten
+mit Ziel, Menge, Strecke und Entgelt; nicht ladbare abgeblendet. Ein
+globaler Pool von 24 Aufträgen wäre auf 165 Städte verteilt fast überall
+leer gewesen - Frachten werden deshalb bei Bedarf pro Stadt nacherzeugt
+(mindestens sechs) und bleiben dann bestehen.
+
+**Leerfahrten:** Fehlt ein passendes Fahrzeug, lässt sich eines leer in
+die Stadt schicken - mit Auswahl nach Entfernung und geschätzten
+Spritkosten. Läuft über dieselbe Fahrtlogik, bringt keinen Erlös und
+wird als Leerfahrt in der Historie vermerkt.
+
+## Vorheriger Stand (v0.15.8)
 
 **Spielstand mit Hintergrund-Simulation** (`js/core/speicher.js`):
 - Gespeichert werden Spielzeit, Fahrzeuge, Kunden, Aufträge und

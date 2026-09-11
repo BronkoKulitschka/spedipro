@@ -178,6 +178,27 @@ const Auftraege = (function () {
     );
   }
 
+  /**
+   * Offene Frachten ab einer Stadt. Erzeugt bei Bedarf welche nach.
+   *
+   * Grund: Ein globaler Pool von zwei Dutzend Aufträgen verteilt sich
+   * auf 165 Städte - fast jede wäre leer. Aus Sicht des Spielers bietet
+   * aber jede Stadt Ladung an, die dort erzeugt wird. Die Aufträge
+   * werden einmal erzeugt und bleiben dann bestehen, damit die Liste
+   * nicht bei jedem Blick anders aussieht.
+   */
+  function fuerStadt(stadt, mindestens = 6) {
+    let vorhandene = offene().filter((a) => a.vonName === stadt.name);
+
+    let versuche = 0;
+    while (vorhandene.length < mindestens && versuche < mindestens * 4) {
+      const neu = erzeugen({ von: stadt });
+      if (neu) vorhandene.push(neu);
+      versuche++;
+    }
+    return vorhandene;
+  }
+
   function nachNummer(nummer) {
     return auftraege.find((a) => a.nummer === nummer) || null;
   }
@@ -275,6 +296,7 @@ const Auftraege = (function () {
     erzeugen,
     auffrischen,
     offene,
+    fuerStadt,
     laufende,
     abgeschlossene,
     nachNummer,

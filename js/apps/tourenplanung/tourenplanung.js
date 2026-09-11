@@ -41,6 +41,9 @@ const TourenplanungApp = (function () {
   // Fenster - so bleibt die Karte darüber sichtbar.
   let detailGut = null;
 
+  // Stadt, in die ein Fahrzeug leer umgesetzt werden soll
+  let umsetzZiel = null;
+
   // Die Tourenplanung läuft nur, wenn sie ausdrücklich gestartet wurde.
   // Sonst zeigt der untere Bereich die Angaben zur gewählten Stadt.
   let planungAktiv = false;
@@ -109,6 +112,7 @@ const TourenplanungApp = (function () {
 
   function renderDisposition() {
     if (!Betrieb.hatDepot()) return renderDepotwahl();
+    if (umsetzZiel) return renderUmsetzen(umsetzZiel);
     if (detailGut) return renderWarendetails(detailGut);
     if (planungAktiv) return renderTourplanung();
     return renderStadtinfo();
@@ -289,6 +293,8 @@ const TourenplanungApp = (function () {
         ${fahrzeuge.length ? ` · ${fahrzeuge.length} Fahrzeug${fahrzeuge.length > 1 ? "e" : ""} vor Ort` : ""}
       </div>
 
+      ${ausgehendeFrachten(s)}
+
       <div class="tour-warenblock">
         <div class="tour-warenspalte">
           <div class="tour-warentitel">Wird hier verladen (${angebot.length})</div>
@@ -309,6 +315,120 @@ const TourenplanungApp = (function () {
              </div>`
           : ""
       }
+    `;
+  }
+
+  /**
+   * Offene Frachten, die von dieser Stadt abgehen. Das ist die
+   * Frachtbörse aus Sicht des Verladeorts - so sieht man auf einen
+   * Blick, ob sich ein Fahrzeug hier lohnt.
+   */
+  function ausgehendeFrachten(stadt) {
+    // Bei Bedarf werden Frachten für diese Stadt nacherzeugt - sonst
+    // wäre die Liste fast überall leer.
+    const frachten = Auftraege.fuerStadt(stadt);
+    const verfuegbar = alleVerfuegbaren();
+    const passende = frachten.filter((a) =>
+      verfuegbar.some((f) => Ladung.kannLaden(f, Auftraege.gut(a)))
+    );
+
+    if (frachten.length === 0) {
+      return `
+        <div class="tour-ausgehend">
+          <div class="tour-warentitel">Ausgehende Frachten</div>
+          <div class="tour-ware-leer">
+            Zurzeit keine offenen Frachten ab ${stadt.name}.
+          </div>
+          ${umsetzKnopf(stadt)}
+        </div>
+      `;
+    }
+
+    return `
+      <div class="tour-ausgehend">
+        <div class="tour-warentitel">
+          Ausgehende Frachten (${frachten.length}${
+            passende.length !== frachten.length ? `, davon ${passende.length} ladbar` : ""
+          })
+        </div>
+        <ul class="tour-frachtliste">
+          ${frachten.slice(0, 12).map((a) => {
+            const g = Auftraege.gut(a);
+            const ladbar = verfuegbar.some((f) => Ladung.kannLaden(f, g));
+            return `
+              <li class="tour-fracht ${ladbar ? "" : "nicht-ladbar"}">
+                <span class="tour-ware-aufbau tour-aufbau-${g.aufbau} tour-ware-info"
+                      data-wareninfo="${g.id}">${aufbauKurz(g.aufbau)}</span>
+                <span class="tour-fracht-ziel">→ ${a.nachName}</span>
+                <span class="tour-fracht-daten">
+                  ${a.tonnen.toFixed(1)} t ${g.name} ·
+                  ${a.km.toLocaleString("de-DE")} km ·
+                  ${a.entgelt.toLocaleString("de-DE")} DM
+                </span>
+              </li>
+            `;
+          }).join("")}
+        </ul>
+        ${passende.length === 0 ? `
+          <div class="tour-ware-leer">
+            Kein Fahrzeug im Bestand kann diese Frachten laden.
+          </div>
+          ${umsetzKnopf(stadt)}` : ""}
+      </div>
+    `;
+  }
+
+  /** Schaltfläche, um ein Fahrzeug leer in eine andere Stadt zu schicken. */
+  function umsetzKnopf(stadt) {
+    if (alleVerfuegbaren().length === 0) return "";
+    return `
+      <div class="tour-dispo-aktionen">
+        <button class="win98-button bevel-out" data-umsetzen="${stadt.name}">
+          🚚 Fahrzeug leer hierher schicken
+        </button>
+      </div>
+    `;
+  }
+
+  /** Auswahl, welches Fahrzeug leer umgesetzt werden soll. */
+  function renderUmsetzen(zielName) {
+    const ziel = STAEDTE[zielName];
+    const kandidaten = alleVerfuegbaren()
+      .filter((f) => f.standort !== zielName)
+      .map((f) => ({ f, route: Route.berechne(f.standort, zielName) }))
+      .filter((k) => k.route)
+      .sort((a, b) => a.route.km - b.route.km);
+
+    return `
+      <div class="tour-detailkopf">
+        <button class="win98-button bevel-out" id="tour-btn-detail-zurueck">&#10094; Zurück</button>
+        <span class="tour-dispo-stadt">Leerfahrt nach ${zielName}</span>
+      </div>
+      <div class="tour-detailinhalt">
+        <p class="tour-anleitung">
+          Eine Leerfahrt bringt keinen Erlös, kostet Sprit und Verschleiß.
+          Sinnvoll, wenn am neuen Ort deutlich bessere Frachten warten.
+        </p>
+        <ul class="tour-auswahlliste">
+          ${kandidaten.length === 0
+            ? `<li class="tour-ware-leer">Kein Fahrzeug verfügbar.</li>`
+            : kandidaten.map(({ f, route }) => {
+                const kosten = Math.round((route.km / 100) * f.verbrauchBasisL100km * DIESELPREIS_DM);
+                return `
+                  <li class="tour-auswahl" data-umsetz-fahrzeug="${f.id}" data-umsetz-ziel="${zielName}">
+                    <span class="tour-auswahl-name">
+                      ${f.marke} ${f.modell}
+                      <span class="tour-auftrag-nummer">${f.kennzeichen}</span>
+                    </span>
+                    <span class="tour-auswahl-zusatz">
+                      ab ${f.standort} · ${route.km.toLocaleString("de-DE")} km leer ·
+                      rund ${kosten.toLocaleString("de-DE")} DM Sprit
+                    </span>
+                  </li>
+                `;
+              }).join("")}
+        </ul>
+      </div>
     `;
   }
 
@@ -951,6 +1071,7 @@ const TourenplanungApp = (function () {
     markenZeichnen();
     routeZeichnen();
     fahrtenZeichnen();
+    uhrAnzeigeAktualisieren();
   }
 
   /**
@@ -989,7 +1110,26 @@ const TourenplanungApp = (function () {
     }
 
     const detailZurueck = dispo.querySelector("#tour-btn-detail-zurueck");
-    if (detailZurueck) detailZurueck.addEventListener("click", warendetailsSchliessen);
+    if (detailZurueck) {
+      detailZurueck.addEventListener("click", () => {
+        umsetzZiel = null;
+        warendetailsSchliessen();
+      });
+    }
+
+    dispo.querySelectorAll("[data-umsetzen]").forEach((el) => {
+      el.addEventListener("click", () => {
+        umsetzZiel = el.dataset.umsetzen;
+        dispositionAktualisieren();
+      });
+    });
+
+    dispo.querySelectorAll("[data-umsetz-fahrzeug]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const f = FuhrparkApp.alleFahrzeuge().find((x) => x.id === Number(el.dataset.umsetzFahrzeug));
+        if (f) leerfahrtStarten(f, el.dataset.umsetzZiel);
+      });
+    });
 
     // Ware in der Stadtübersicht antippen -> Detailansicht
     dispo.querySelectorAll("[data-wareninfo]").forEach((el) => {
@@ -1155,6 +1295,57 @@ const TourenplanungApp = (function () {
    * Debug-Touren im Fuhrpark - nur mit echten Streckendaten statt
    * Zufallswerten.
    */
+  /**
+   * Schickt ein Fahrzeug ohne Ladung in eine andere Stadt. Nutzt
+   * dieselbe Fahrtlogik, nur ohne Auftrag und ohne Erlös.
+   */
+  function leerfahrtStarten(fahrzeug, zielName) {
+    const route = Route.berechne(fahrzeug.standort, zielName);
+    if (!route) return;
+
+    Fahrt.starten({
+      fahrzeug,
+      etappen: [{ typ: "umsetzfahrt", route }],
+      auftragNummer: null,
+      vonName: fahrzeug.standort,
+      nachName: zielName,
+      beiAnkunft: leerfahrtAbschliessen
+    });
+
+    umsetzZiel = null;
+    dispositionAktualisieren();
+    Speicher.jetztSichern();
+  }
+
+  function leerfahrtAbschliessen(eintrag) {
+    const f = eintrag.fahrzeug;
+    const km = eintrag.etappen[0].route.km;
+    const tage = Math.max(1, Math.round(km / (Fahrt.SCHNITT_STANDARD * Fahrt.LENKZEIT_STUNDEN)));
+
+    const ergebnis = Verschleiss.wendeTourAn(f, {
+      km, tage,
+      gelaende: "huegelland", strassenqualitaet: "landstrasse",
+      jahreszeit: jahreszeitJetzt(), beladungProzent: 0,
+      fahrverhaltenFaktor: 1.0
+    });
+
+    const kosten = Math.round(ergebnis.verbrauchL * DIESELPREIS_DM);
+
+    Historie.hinzufuegen(f, {
+      art: "tour",
+      text: `Leerfahrt ${eintrag.vonName} → ${eintrag.nachName}, ${km.toLocaleString("de-DE")} km`,
+      km, tage,
+      erloes: 0,
+      kosten,
+      daten: { leerfahrt: true, verbrauchL: Math.round(ergebnis.verbrauchL) }
+    });
+
+    f.standort = eintrag.nachName;
+    dispositionAktualisieren();
+    if (FuhrparkApp.aktualisieren) FuhrparkApp.aktualisieren();
+    Speicher.jetztSichern();
+  }
+
   function tourAusfuehren() {
     const auftrag = tour.auftrag;
     const f = tour.fahrzeug;
@@ -1189,6 +1380,7 @@ const TourenplanungApp = (function () {
     hervorgehobenesGut = null;
     tourZuruecksetzen();
     dispositionAktualisieren();
+    Speicher.jetztSichern(); // Tourstart darf nicht verlorengehen
   }
 
   /**
@@ -1270,6 +1462,7 @@ const TourenplanungApp = (function () {
 
     dispositionAktualisieren();
     if (FuhrparkApp.aktualisieren) FuhrparkApp.aktualisieren();
+    Speicher.jetztSichern();
   }
 
   let letzteAnkunft = null;
@@ -1636,8 +1829,7 @@ const TourenplanungApp = (function () {
 
       if (!fensterElement || !document.body.contains(fensterElement)) return;
 
-      const uhr = fensterElement.querySelector("#tour-karte-uhr");
-      if (uhr) uhr.textContent = Spielzeit.formatiereMitUhrzeit(jetzt);
+      uhrAnzeigeAktualisieren(jetzt);
 
       fahrtenZeichnen();
 
@@ -1649,7 +1841,24 @@ const TourenplanungApp = (function () {
       if (!planungAktiv && Fahrt.anzahl() > 0) dispositionAktualisieren();
     });
 
+    // Die Uhr läuft nur, solange Fahrzeuge unterwegs sind. Wer plant,
+    // soll dabei nicht unter Zeitdruck geraten.
+    Spielzeit.setzeLaufBedingung(() => Fahrt.anzahl() > 0);
     Spielzeit.starten();
+  }
+
+  /** Uhrzeit in der Kartenleiste, mit Hinweis wenn die Zeit steht. */
+  function uhrAnzeigeAktualisieren(jetzt = Spielzeit.heute()) {
+    if (!fensterElement) return;
+    const uhr = fensterElement.querySelector("#tour-karte-uhr");
+    if (!uhr) return;
+
+    const laeuft = Spielzeit.laeuftGerade();
+    uhr.textContent = Spielzeit.formatiereMitUhrzeit(jetzt) + (laeuft ? "" : " ⏸");
+    uhr.classList.toggle("tour-uhr-steht", !laeuft);
+    uhr.title = laeuft
+      ? "Die Zeit läuft, solange Fahrzeuge unterwegs sind"
+      : "Die Zeit steht still - kein Fahrzeug unterwegs";
   }
 
   function open() {

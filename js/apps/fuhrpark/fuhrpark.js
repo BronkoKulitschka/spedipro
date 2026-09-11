@@ -447,6 +447,14 @@ const FuhrparkApp = (function () {
 
     // Ein stehendes Fahrzeug ist die dringlichste Meldung - dann sind
     // Fristen und Auslastung zweitrangig.
+    const unterwegs = typeof Fahrt !== "undefined" ? Fahrt.fuerFahrzeug(fahrzeug.id) : null;
+    const tourHinweis = unterwegs
+      ? `<span class="fuhrpark-frist-marke marke-unterwegs" data-tourkarte="${fahrzeug.id}">
+           🚛 Auf Tour: ${unterwegs.vonName} → ${unterwegs.nachName}
+           (${Math.round(Fahrt.fortschritt(unterwegs) * 100)} %)
+         </span>`
+      : "";
+
     const stillstandHinweis = Ausfall.istStillstehend(fahrzeug)
       ? `<span class="fuhrpark-frist-marke marke-stillstand">⛔ Steht: ${
           TEIL_LABEL[fahrzeug.ausfall.teil]
@@ -476,6 +484,7 @@ const FuhrparkApp = (function () {
             ${fahrzeug.kmStand.toLocaleString("de-DE")} km · ${fahrzeug.standort} ·
             ${fahrzeug.status}
           </div>
+          ${tourHinweis}
           ${stillstandHinweis}
           ${fristHinweis}
           ${auslastungHinweis}
@@ -765,6 +774,151 @@ const FuhrparkApp = (function () {
     fensterAktualisieren("fuhrpark-fristen", `Fristen – ${fahrzeug.kennzeichen}`, inhalt);
   }
 
+  /**
+   * Eigenes Kartenfenster für eine laufende Tour.
+   *
+   * Bewusst ohne Zoom und Verschieben: Der Ausschnitt wird so gewählt,
+   * dass die ganze Route hineinpasst. Wer die große Karte braucht,
+   * nutzt die Tourenplanung.
+   */
+  function tourkarteOeffnen(fahrzeug) {
+    const t = Fahrt.fuerFahrzeug(fahrzeug.id);
+    if (!t) return;
+
+    const inhalt = `
+      <div class="tourkarte-fenster">
+        <div class="fuhrpark-kopfzeile">
+          <span class="fuhrpark-fahrzeugname">${fahrzeug.marke} ${fahrzeug.modell}</span>
+          <span class="fuhrpark-kennzeichen">${fahrzeug.kennzeichen}</span>
+        </div>
+        <div class="fuhrpark-blaetter-zeile">
+          <button class="win98-button bevel-out fuhrpark-zurueck" data-zurueck-zum-fahrzeug>
+            &#10094; Zurück zum Fuhrpark
+          </button>
+        </div>
+        <div class="tourkarte-rahmen" id="tourkarte-rahmen">
+          <img class="tourkarte-bild" id="tourkarte-bild" src="${Karte.BILD}" alt="Karte">
+          <svg class="tourkarte-ebene" id="tourkarte-ebene"></svg>
+        </div>
+        <div class="tourkarte-info" id="tourkarte-info"></div>
+      </div>
+    `;
+
+    fensterAktualisieren("fuhrpark-tourkarte", `Tour – ${fahrzeug.kennzeichen}`, inhalt);
+    tourkarteZeichnen(fahrzeug.id);
+
+    // Bei jedem Zeittakt mitzeichnen, solange das Fenster offen ist
+    if (!tourkarteAngemeldet) {
+      tourkarteAngemeldet = true;
+      Spielzeit.beiAenderung(() => {
+        if (WindowManager.istOffen("fuhrpark-tourkarte") && tourkarteFahrzeugId !== null) {
+          tourkarteZeichnen(tourkarteFahrzeugId);
+        }
+      });
+    }
+    tourkarteFahrzeugId = fahrzeug.id;
+  }
+
+  let tourkarteAngemeldet = false;
+  let tourkarteFahrzeugId = null;
+
+  /** Zeichnet Route und Fahrzeugposition in das Tourkartenfenster. */
+  function tourkarteZeichnen(fahrzeugId) {
+    const fenster = document.querySelector('.win98-window[data-app-id="fuhrpark-tourkarte"]');
+    if (!fenster) return;
+
+    const t = Fahrt.fuerFahrzeug(fahrzeugId);
+    const rahmen = fenster.querySelector("#tourkarte-rahmen");
+    const bild = fenster.querySelector("#tourkarte-bild");
+    const svg = fenster.querySelector("#tourkarte-ebene");
+    const info = fenster.querySelector("#tourkarte-info");
+    if (!rahmen || !svg) return;
+
+    if (!t) {
+      svg.innerHTML = "";
+      if (info) info.textContent = "Die Tour ist abgeschlossen.";
+      return;
+    }
+
+    // Alle Punkte der Tour sammeln, um den Ausschnitt zu bestimmen
+    const alleStationen = [];
+    t.etappen.forEach((e) => e.route.stationen.forEach((n) => alleStationen.push(n)));
+    const punkte = alleStationen.map((n) => {
+      const stadt = STAEDTE[n];
+      return Karte.nachBild(stadt.lon, stadt.lat);
+    });
+
+    const rand = 60;
+    const minX = Math.max(0, Math.min(...punkte.map((p) => p.x)) - rand);
+    const maxX = Math.min(Karte.BILD_BREITE, Math.max(...punkte.map((p) => p.x)) + rand);
+    const minY = Math.max(0, Math.min(...punkte.map((p) => p.y)) - rand);
+    const maxY = Math.min(Karte.BILD_HOEHE, Math.max(...punkte.map((p) => p.y)) + rand);
+
+    const breite = rahmen.clientWidth || 320;
+    const hoehe = rahmen.clientHeight || 220;
+    const massstab = Math.min(breite / (maxX - minX), hoehe / (maxY - minY));
+
+    // Karte so verschieben und skalieren, dass die Route hineinpasst
+    bild.style.width = `${Karte.BILD_BREITE * massstab}px`;
+    bild.style.height = `${Karte.BILD_HOEHE * massstab}px`;
+    bild.style.left = `${-minX * massstab}px`;
+    bild.style.top = `${-minY * massstab}px`;
+
+    const aufSchirm = (name) => {
+      const stadt = STAEDTE[name];
+      const p = Karte.nachBild(stadt.lon, stadt.lat);
+      return { x: (p.x - minX) * massstab, y: (p.y - minY) * massstab };
+    };
+
+    svg.setAttribute("width", breite);
+    svg.setAttribute("height", hoehe);
+
+    const teile = [];
+    t.etappen.forEach((e, i) => {
+      const pts = e.route.stationen.map(aufSchirm);
+      const linie = pts.map((p) => `${p.x},${p.y}`).join(" ");
+      teile.push(`<polyline points="${linie}" class="tour-route-kontur-duenn" />`);
+      teile.push(`<polyline points="${linie}" class="${
+        e.typ === "anfahrt" ? "tour-route-anfahrt" : "tour-route-laufend"
+      }" />`);
+      if (i === 0) {
+        teile.push(`<circle cx="${pts[0].x}" cy="${pts[0].y}" r="5" class="tour-route-start" />`);
+      }
+      if (i === t.etappen.length - 1) {
+        const z = pts[pts.length - 1];
+        teile.push(`<circle cx="${z.x}" cy="${z.y}" r="5" class="tour-route-ziel" />`);
+      }
+    });
+
+    // Fahrzeugposition auf der aktuellen Etappe
+    const etappe = Fahrt.aktuelleEtappe(t);
+    const ePunkte = etappe.route.stationen.map(aufSchirm);
+    const anteil = Fahrt.etappenFortschritt(t);
+    const abschnitte = etappe.route.abschnitte;
+    let restKm = anteil * (etappe.route.km || 1);
+    let idx = 0;
+    while (idx < abschnitte.length - 1 && restKm > abschnitte[idx].km) {
+      restKm -= abschnitte[idx].km; idx++;
+    }
+    const teil = abschnitte[idx] && abschnitte[idx].km > 0 ? restKm / abschnitte[idx].km : 0;
+    const a = ePunkte[idx], b = ePunkte[idx + 1] || ePunkte[idx];
+    const fx = a.x + (b.x - a.x) * teil;
+    const fy = a.y + (b.y - a.y) * teil;
+    teile.push(`<circle cx="${fx}" cy="${fy}" r="7" class="tourkarte-fahrzeug" />`);
+
+    svg.innerHTML = teile.join("");
+
+    if (info) {
+      info.innerHTML = `
+        ${t.vonName} → ${t.nachName} ·
+        ${Math.round(t.gesamtGefahreneKm).toLocaleString("de-DE")} von
+        ${Math.round(Fahrt.gesamtKm(t)).toLocaleString("de-DE")} km ·
+        ${t.ruhtBis ? "Ruhezeit" : Fahrt.istBeladen(t) ? "beladen unterwegs" : "Anfahrt leer"} ·
+        Ankunft ${Spielzeit.formatiereMitUhrzeit(Fahrt.ankunft(t))}
+      `;
+    }
+  }
+
   /** Vollständige Chronik in einem eigenen Fenster. */
   function historieFensterOeffnen(fahrzeug) {
     const eintraege = Historie.alle(fahrzeug);
@@ -802,6 +956,34 @@ const FuhrparkApp = (function () {
     `;
 
     fensterAktualisieren("fuhrpark-historie", `Historie – ${fahrzeug.kennzeichen}`, inhalt);
+  }
+
+  /** Hinweis, wenn das Fahrzeug gerade unterwegs ist. */
+  function tourBlock(fahrzeug) {
+    if (typeof Fahrt === "undefined") return "";
+    const t = Fahrt.fuerFahrzeug(fahrzeug.id);
+    if (!t) return "";
+
+    const anteil = Math.round(Fahrt.fortschritt(t) * 100);
+    return `
+      <div class="fuhrpark-tourhinweis">
+        <div class="fuhrpark-tourhinweis-kopf">
+          🚛 Unterwegs: ${t.vonName} → ${t.nachName}
+          <button class="win98-button bevel-out" data-tourkarte="${fahrzeug.id}">
+            Auf der Karte zeigen
+          </button>
+        </div>
+        <div class="fuhrpark-tourhinweis-balken">
+          <div class="fuhrpark-tourhinweis-fuellung" style="width:${anteil}%"></div>
+        </div>
+        <div class="fuhrpark-tourhinweis-info">
+          ${Math.round(t.gesamtGefahreneKm).toLocaleString("de-DE")} von
+          ${Math.round(Fahrt.gesamtKm(t)).toLocaleString("de-DE")} km ·
+          ${t.ruhtBis ? "Ruhezeit" : Fahrt.istBeladen(t) ? "beladen" : "Anfahrt leer"} ·
+          Ankunft ${Spielzeit.formatiereMitUhrzeit(Fahrt.ankunft(t))}
+        </div>
+      </div>
+    `;
   }
 
   function ausfallBlock(fahrzeug) {
@@ -876,6 +1058,7 @@ const FuhrparkApp = (function () {
             <svg class="fuhrpark-visual-linien" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
             ${boxen}
             ${ausfallBlock(fahrzeug)}
+            ${tourBlock(fahrzeug)}
           </div>
         </div>
 
@@ -1088,6 +1271,15 @@ const FuhrparkApp = (function () {
         }
       });
     }
+
+    fensterElement.querySelectorAll("[data-tourkarte]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation(); // nicht zugleich das Fahrzeug öffnen
+        const id = Number(el.dataset.tourkarte);
+        const fahrzeug = fahrzeuge.find((f) => f.id === id);
+        if (fahrzeug) tourkarteOeffnen(fahrzeug);
+      });
+    });
 
     const btnAuslastung = fensterElement.querySelector("#fuhrpark-btn-auslastung");
     if (btnAuslastung) {

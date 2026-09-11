@@ -58,6 +58,9 @@ const Betrieb = (function () {
     }
     speichern();
     benachrichtigen();
+    // Auch den übrigen Spielstand sichern, damit Depot und Flotte
+    // zusammenpassen.
+    if (typeof Speicher !== "undefined") Speicher.jetztSichern();
   }
 
   function zuruecksetzen() {

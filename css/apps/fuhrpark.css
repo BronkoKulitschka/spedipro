@@ -669,3 +669,97 @@
   color: var(--win-grey-dark);
   margin-right: 2px;
 }
+
+/* ---------- Fahrzeug auf Tour ---------- */
+
+.fuhrpark-frist-marke.marke-unterwegs {
+  background: #2f9ee0;
+  color: var(--win-white);
+  border-color: #10305a;
+  cursor: pointer;
+}
+
+/* Sitzt UNTEN im Bild - oben liegt bereits der Ausfall-/Warnhinweis,
+   beide sollen sich nicht überlagern. */
+.fuhrpark-tourhinweis {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  z-index: 4;
+  padding: 5px 7px;
+  background: #e2ecf5;
+  border: 2px solid #2f7fd0;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.35);
+}
+
+.fuhrpark-tourhinweis-kopf {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.fuhrpark-tourhinweis-kopf > button {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 2px 7px;
+}
+
+.fuhrpark-tourhinweis-balken {
+  height: 8px;
+  margin: 4px 0 2px 0;
+  background: var(--win-white);
+  border: 1px solid var(--win-grey-darker);
+}
+
+.fuhrpark-tourhinweis-fuellung {
+  height: 100%;
+  background: #2f9ee0;
+}
+
+.fuhrpark-tourhinweis-info {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}
+
+/* ---------- Tourkartenfenster ---------- */
+
+.tourkarte-fenster {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 6px;
+}
+
+.tourkarte-rahmen {
+  position: relative;
+  flex: 1;
+  min-height: 160px;
+  overflow: hidden;
+  background: #2a5ca8;
+  border: 1px solid var(--win-grey-darker);
+}
+
+.tourkarte-bild {
+  position: absolute;
+  image-rendering: pixelated;
+}
+
+.tourkarte-ebene {
+  position: absolute;
+  inset: 0;
+}
+
+.tourkarte-fahrzeug {
+  fill: #f4d03f;
+  stroke: #10100c;
+  stroke-width: 2;
+}
+
+.tourkarte-info {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}

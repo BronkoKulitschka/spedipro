@@ -21,6 +21,11 @@ const Spielzeit = (function () {
 
   let taktZaehler = null;
   let laeuft = false;
+
+  // Bedingung, unter der die Uhr überhaupt tickt. Ohne Fahrzeuge
+  // unterwegs steht die Zeit still - sonst würden Fristen und
+  // Auftragsangebote verstreichen, während der Spieler nur plant.
+  let laufBedingung = () => true;
   // Startdatum der Kampagne. 1994 gewählt, weil dann bereits im Spiel:
   // deutsche Einheit vollzogen, EU-Binnenmarkt seit 1993 in Kraft
   // (Wegfall der Zollformalitäten innerhalb der EU), Osteuropa offen.
@@ -45,8 +50,20 @@ const Spielzeit = (function () {
     laeuft = true;
     taktZaehler = setInterval(() => {
       if (!laeuft) return;
+      if (!laufBedingung()) return;
       minutenAddieren(MINUTEN_JE_SEKUNDE);
     }, TAKT_MS);
+  }
+
+  /** Legt fest, wann die Uhr laufen darf. */
+  function setzeLaufBedingung(fn) {
+    laufBedingung = typeof fn === "function" ? fn : () => true;
+    beobachter.forEach((rueckruf) => rueckruf(heute()));
+  }
+
+  /** Läuft die Zeit gerade tatsächlich? */
+  function laeuftGerade() {
+    return laeuft && laufBedingung();
   }
 
   function pausieren() { laeuft = false; }
@@ -141,6 +158,8 @@ const Spielzeit = (function () {
     pausieren,
     fortsetzen,
     istPausiert,
+    setzeLaufBedingung,
+    laeuftGerade,
     minutenAddieren,
     stundenAddieren,
     setzeAuf,
