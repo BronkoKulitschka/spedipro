@@ -788,8 +788,10 @@ const TourenplanungApp = (function () {
     behaelter.innerHTML = Karte.alleStaedte()
       .map((stadt) => {
         const stufe = groessenstufe(stadt);
-        // Steht hier ein Fahrzeug?
-        const fahrzeugeHier = FuhrparkApp.fahrzeugeAn(stadt.name);
+        // Nur Fahrzeuge, die hier auch wirklich stehen - wer unterwegs
+        // ist, wird als fahrender Punkt auf der Route gezeigt.
+        const fahrzeugeHier = FuhrparkApp.fahrzeugeAn(stadt.name)
+          .filter((f) => !Fahrt.istUnterwegs(f.id));
 
         // Kann diese Stadt die gerade betrachtete Ware liefern bzw.
         // braucht sie sie? Im Zielschritt zählt der Bedarf, sonst das
@@ -813,8 +815,18 @@ const TourenplanungApp = (function () {
           gewaehlteStadt && gewaehlteStadt.name === stadt.name ? "tour-marke-gewaehlt" : ""
         ].filter(Boolean).join(" ");
 
+        // Für jedes stehende Fahrzeug ein farbiger Punkt in seiner
+        // Lackierung, nebeneinander angeordnet.
         const fahrzeugMarke = fahrzeugeHier.length > 0
-          ? `<span class="tour-fahrzeugmarke">${fahrzeugeHier.length > 1 ? fahrzeugeHier.length : ""}</span>`
+          ? `<span class="tour-standortpunkte">${
+              fahrzeugeHier.slice(0, 4).map((f) => `
+                <span class="tour-standortpunkt"
+                      style="background:${Lackierung.cssFarbe(f.lackierung)};
+                             border-color:${Lackierung.cssFarbeDunkel(f.lackierung)}"
+                      title="${f.kennzeichen} (${f.lackierung})"></span>
+              `).join("")
+            }${fahrzeugeHier.length > 4
+              ? `<span class="tour-standortmehr">+${fahrzeugeHier.length - 4}</span>` : ""}</span>`
           : "";
 
         return `<span class="${klassen}" data-stadt="${stadt.name}">${fahrzeugMarke}</span>`;
@@ -1147,6 +1159,21 @@ const TourenplanungApp = (function () {
       });
     });
 
+    // Depot verlegen
+    const verlegen = dispo.querySelector("#tour-btn-depot-hierher");
+    if (verlegen) {
+      verlegen.addEventListener("click", () => {
+        const ziel = gewaehlteStadt.name;
+        if (window.confirm(
+          `Depot nach ${ziel} verlegen?\n\n` +
+          `Neue Fahrzeuge werden künftig dort stationiert.`
+        )) {
+          Betrieb.depotSetzen(ziel);
+          dispositionAktualisieren();
+        }
+      });
+    }
+
     // ---- Schritt 1: Auftrag ----
     dispo.querySelectorAll("[data-filter]").forEach((el) => {
       el.addEventListener("click", () => {
@@ -1475,14 +1502,19 @@ const TourenplanungApp = (function () {
     const touren = Fahrt.alle();
     if (touren.length === 0) { ebene.innerHTML = ""; return; }
 
+    // Punkte statt Symbole: Sie sind auf der kleinteiligen Karte besser
+    // zu erkennen und tragen die Lackierung des Fahrzeugs - so sieht man
+    // auf einen Blick, welcher Lkw wo unterwegs ist.
     ebene.innerHTML = touren.map((t) => {
       const p = positionAufRoute(t);
       if (!p) return "";
       const ruht = Boolean(t.ruhtBis);
-      return `<span class="tour-fahrzeug-symbol ${ruht ? "ruht" : ""} ${Fahrt.istBeladen(t) ? "beladen" : "leer"}"
+      const farbe = Lackierung.cssFarbe(t.fahrzeug.lackierung);
+      const rand = Lackierung.cssFarbeDunkel(t.fahrzeug.lackierung);
+      return `<span class="tour-fahrzeugpunkt ${ruht ? "ruht" : ""} ${Fahrt.istBeladen(t) ? "beladen" : "leer"}"
                     style="left:${Math.round(p.x)}px; top:${Math.round(p.y)}px;
-                           transform: translate(-50%,-50%) scaleX(${p.nachLinks ? -1 : 1})"
-                    title="${t.fahrzeug.kennzeichen}: ${t.vonName} → ${t.nachName}">🚛</span>`;
+                           background:${farbe}; border-color:${rand}"
+                    title="${t.fahrzeug.kennzeichen} (${t.fahrzeug.lackierung}): ${t.vonName} → ${t.nachName}"></span>`;
     }).join("");
   }
 
@@ -1864,7 +1896,16 @@ const TourenplanungApp = (function () {
     }
   }
 
-  return { open };
+  return {
+    open,
+    /** Von anderen Modulen aufrufbar, wenn sich die Flotte ändert. */
+    aktualisieren: () => {
+      if (fensterElement && document.body.contains(fensterElement)) {
+        markenZeichnen();
+        dispositionAktualisieren();
+      }
+    }
+  };
 })();
 
 AppRegistry.register({

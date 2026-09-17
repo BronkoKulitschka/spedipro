@@ -11,6 +11,12 @@
 (function () {
   const uhrEl = document.getElementById("clock");
   const datumEl = document.getElementById("clock-date");
+  const versionEl = document.getElementById("tray-version");
+
+  if (versionEl && typeof VERSION !== "undefined") {
+    versionEl.textContent = `v${VERSION}`;
+    versionEl.title = `SpediPro 95, Fassung ${VERSION}`;
+  }
 
   function anzeigeAktualisieren(jetzt) {
     if (!jetzt) return;

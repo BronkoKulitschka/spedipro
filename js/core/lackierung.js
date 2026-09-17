@@ -187,6 +187,24 @@ const Lackierung = (function () {
     return dataUrl;
   }
 
+  /**
+   * Anzeigefarbe eines Fahrzeugs als CSS-Wert - für Punkte auf der
+   * Karte, die zur Lackierung passen. So ist ohne Beschriftung
+   * erkennbar, welches Fahrzeug wo steht.
+   */
+  function cssFarbe(lackierungsName) {
+    const hue = FARBEN[lackierungsName];
+    if (hue === undefined) return "hsl(0, 0%, 55%)";
+    return `hsl(${hue}, 72%, 46%)`;
+  }
+
+  /** Dunklere Variante für Ränder und Konturen. */
+  function cssFarbeDunkel(lackierungsName) {
+    const hue = FARBEN[lackierungsName];
+    if (hue === undefined) return "hsl(0, 0%, 25%)";
+    return `hsl(${hue}, 75%, 22%)`;
+  }
+
   function farbNamen() {
     return Object.keys(FARBEN);
   }
@@ -207,6 +225,8 @@ const Lackierung = (function () {
     umfaerben,
     miniatur,
     farbNamen,
+    cssFarbe,
+    cssFarbeDunkel,
     hueVonName,
     zufaelligeFarbe
   };

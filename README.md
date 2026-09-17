@@ -7,7 +7,42 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.10)
+## Aktueller Stand (v0.15.11)
+
+**Karte neu gestaltet - Stil der KI-Vorlage, Geometrie aus Geodaten.**
+Eine extern erzeugte KI-Karte diente als gestalterische Vorlage. Sie
+direkt zu verwenden schied aus: gemessen nur 73,9 % Übereinstimmung mit
+den echten Umrissen (Britische Inseln zu weit westlich, Norwegen
+gestaucht, Italien und Griechenland verschoben) - Städte wären im Wasser
+gelandet. Stattdessen:
+- Unsere Karte im Stil der Vorlage neu gerendert: gedämpfte erdige
+  Grüntöne, abgestufte Meerestiefe zur Küste, dunkle Gebirgskämme mit
+  Schattenwurf (Licht von Nordwesten), warme Sandtöne im Süden
+- Zusätzlich beide Karten überblendet: 45 % Farbanteil der KI-Karte,
+  aber nur wo beide sich über Land und Wasser einig sind (83,2 % der
+  Fläche). An Konfliktstellen hart auf die eigene Karte - sonst blutet
+  das verschobene KI-Meer über die Küsten
+- Die Helligkeitsstruktur der Vorlage wirkt überall (trägt Relief, keine
+  Geometrie)
+- Geprüft: keine der 165 Städte liegt im Wasser
+- Format auf JPEG gewechselt (199 KB statt 627 KB als PNG, im Vergleich
+  bei dreifacher Vergrößerung nicht zu unterscheiden)
+
+**Höhenfeld verbessert:** engere Kämme statt runder Kuppeln, isolierte
+Einzelgipfel unter 2.200 m entfallen - die erzeugten runde Flecken im
+Flachland.
+
+**Weitere Änderungen:**
+- Versionsnummer in der Taskleiste (`js/core/version.js` als einzige
+  Pflegestelle)
+- "Depot verlegen" funktioniert wieder - der Handler war beim Umbau auf
+  Auftragsdisposition verlorengegangen
+- Fahrzeuge auf der Karte als farbige Punkte in ihrer Lackierung statt
+  als Symbol: stehende als kleine Punkte an der Stadtmarke, fahrende als
+  größerer Punkt mit weißem Ring (leer hohl, beladen gefüllt)
+- Karte frischt nach Fahrzeugkauf oder -verkauf auf
+
+## Vorheriger Stand (v0.15.10)
 
 **Behobene Fehler:**
 - **Reparatur ging nicht mehr.** Beim Entfernen der Debug-Tour wurde ein
@@ -608,6 +643,7 @@ spedipro/
       kunden.js          Auftraggeber und Kundenbindung
       auftraege.js       Auftragspool mit Statusverfolgung
       speicher.js        Spielstand und Nachsimulation
+      version.js         Versionsnummer (einzige Pflegestelle)
     apps/
       fuhrpark/
         fuhrpark.js      Fuhrpark-Programm (Zustand, UI, Debug-Buttons)

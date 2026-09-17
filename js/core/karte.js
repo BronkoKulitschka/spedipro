@@ -10,11 +10,14 @@
 // ausreichend genau.
 //
 // WICHTIG: Diese Werte müssen exakt zu denen passen, mit denen
-// assets/sprites/europa.png gerendert wurde. Wird die Karte neu
+// assets/sprites/europa.jpg gerendert wurde. Wird die Karte neu
 // erzeugt, müssen sie mitgeändert werden.
 
 const Karte = (function () {
-  const BILD = "assets/sprites/europa.png";
+  // Als JPEG statt PNG: Die Karte trägt jetzt feine Geländetextur, die
+  // sich schlecht verlustfrei komprimieren lässt (627 KB als PNG). Als
+  // JPEG mit Qualität 85 sind es 199 KB bei praktisch gleichem Bild.
+  const BILD = "assets/sprites/europa.jpg";
   const BILD_BREITE = 700;
   const BILD_HOEHE = 990;
 

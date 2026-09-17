@@ -382,35 +382,39 @@
   color: var(--win-grey-darker);
 }
 
-/* ---------- Fahrzeuge auf der Karte ---------- */
+/* ---------- Fahrzeuge auf der Karte ----------
+   Punkte statt Symbole: Sie sind auf der kleinteiligen Karte deutlich
+   besser zu erkennen, und ihre Farbe entspricht der Lackierung des
+   Fahrzeugs aus dem Fuhrpark. */
 
-/* Zeigt an, dass in dieser Stadt mindestens ein Fahrzeug steht.
-   Sitzt oben rechts an der Marke, damit die Stadtfarbe sichtbar bleibt. */
-.tour-fahrzeugmarke {
+/* Fahrzeuge, die an einer Stadt stehen - Punkte oben rechts an der Marke */
+.tour-standortpunkte {
   position: absolute;
-  right: -7px;
-  top: -8px;
-  min-width: 11px;
-  height: 11px;
-  padding: 0 1px;
-  font-size: 9px;
-  line-height: 10px;
-  text-align: center;
-  font-weight: bold;
-  color: #10100c;
-  background: #f4d03f;
-  border: 1px solid #10100c;
-  border-radius: 2px;
+  right: -6px;
+  top: -9px;
+  display: flex;
+  gap: 1px;
+  align-items: center;
   pointer-events: none;
 }
 
-.tour-fahrzeugmarke::before {
-  content: "🚛";
-  font-size: 8px;
+.tour-standortpunkt {
+  width: 7px;
+  height: 7px;
+  border: 1px solid;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.85);
 }
 
-.tour-fahrzeugmarke:not(:empty)::before {
-  content: "";
+.tour-standortmehr {
+  font-size: 8px;
+  line-height: 1;
+  font-weight: bold;
+  color: #10100c;
+  background: rgba(255,255,255,0.85);
+  border: 1px solid #10100c;
+  border-radius: 2px;
+  padding: 0 1px;
 }
 
 /* ---------- Hervorhebung: Lieferanten und Empfänger ---------- */
@@ -647,12 +651,27 @@
   z-index: 5;
 }
 
-.tour-fahrzeug-symbol {
+/* Fahrendes Fahrzeug: größerer Punkt mit weißem Ring, damit er sich
+   von den Stadtmarken und der Route abhebt. */
+.tour-fahrzeugpunkt {
   position: absolute;
-  font-size: 20px;
-  line-height: 1;
-  filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.6));
+  width: 13px;
+  height: 13px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.9), 1px 1px 2px rgba(0,0,0,0.5);
   will-change: left, top;
+}
+
+/* Leerfahrt: hohl dargestellt, beladen: gefüllt */
+.tour-fahrzeugpunkt.leer {
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.9), inset 0 0 0 3px rgba(255,255,255,0.85);
+}
+
+/* Ruhezeit: gedämpft */
+.tour-fahrzeugpunkt.ruht {
+  opacity: 0.55;
 }
 
 /* ---------- Abbruchleiste ---------- */
@@ -763,11 +782,7 @@
 
 .tour-ankunft .tour-warentitel > button { margin-left: auto; }
 
-/* Ruhendes Fahrzeug auf der Karte: gedämpft dargestellt */
-.tour-fahrzeug-symbol.ruht {
-  opacity: 0.6;
-  filter: grayscale(0.6) drop-shadow(1px 1px 1px rgba(0,0,0,0.6));
-}
+
 
 /* ---------- Auftragspool ---------- */
 
@@ -855,8 +870,7 @@
 .tour-status-beladen { background: #f5e0b8; }
 .tour-status-ruht    { background: #d8d8d8; color: var(--win-grey-darker); }
 
-/* Leer fahrende Fahrzeuge auf der Karte blasser darstellen */
-.tour-fahrzeug-symbol.leer { opacity: 0.75; }
+
 
 /* Laufende Touren bleiben auf der Karte sichtbar - in Blau, damit sie
    sich von der orangen Route in Planung unterscheiden. Die Leerfahrt

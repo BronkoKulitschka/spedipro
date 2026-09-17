@@ -426,6 +426,17 @@ const FuhrparkApp = (function () {
     );
   }
 
+  /**
+   * Nach Änderungen an der Flotte: Karte auffrischen und sichern.
+   * Ohne das zeigt die Tourenplanung noch den alten Bestand.
+   */
+  function flotteGeaendert() {
+    if (typeof TourenplanungApp !== "undefined" && TourenplanungApp.aktualisieren) {
+      TourenplanungApp.aktualisieren();
+    }
+    if (typeof Speicher !== "undefined") Speicher.jetztSichern();
+  }
+
   function fahrzeugVerkaufen(index) {
     fahrzeuge.splice(index, 1);
     if (aktuellerIndex >= fahrzeuge.length) {
@@ -433,6 +444,7 @@ const FuhrparkApp = (function () {
     }
     ansicht = "uebersicht"; // verkauftes Fahrzeug kann nicht mehr angezeigt werden
     neuZeichnen();
+    flotteGeaendert();
   }
 
   function miniaturQuelle(fahrzeug) {
@@ -912,7 +924,13 @@ const FuhrparkApp = (function () {
     const a = ePunkte[idx], b = ePunkte[idx + 1] || ePunkte[idx];
     const fx = a.x + (b.x - a.x) * teil;
     const fy = a.y + (b.y - a.y) * teil;
-    teile.push(`<circle cx="${fx}" cy="${fy}" r="7" class="tourkarte-fahrzeug" />`);
+    // Punkt in der Lackierung des Fahrzeugs - passt zur Darstellung auf
+    // der großen Karte in der Tourenplanung.
+    const fahrzeug = fahrzeuge.find((f) => f.id === fahrzeugId);
+    const farbe = fahrzeug ? Lackierung.cssFarbe(fahrzeug.lackierung) : "#f4d03f";
+    const randfarbe = fahrzeug ? Lackierung.cssFarbeDunkel(fahrzeug.lackierung) : "#10100c";
+    teile.push(`<circle cx="${fx}" cy="${fy}" r="8" fill="#ffffff" stroke="none" opacity="0.9" />`);
+    teile.push(`<circle cx="${fx}" cy="${fy}" r="6" fill="${farbe}" stroke="${randfarbe}" stroke-width="2" />`);
 
     svg.innerHTML = teile.join("");
 
@@ -1200,6 +1218,7 @@ const FuhrparkApp = (function () {
       btnKaufNeu.addEventListener("click", () => {
         neuesFahrzeugKaufen();
         neuZeichnen();
+        flotteGeaendert();
       });
     }
 
@@ -1208,6 +1227,7 @@ const FuhrparkApp = (function () {
       btnKaufGebraucht.addEventListener("click", () => {
         gebrauchtesFahrzeugKaufen();
         neuZeichnen();
+        flotteGeaendert();
       });
     }
 

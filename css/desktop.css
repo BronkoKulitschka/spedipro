@@ -137,6 +137,19 @@ html, body {
   padding: 0 8px;
 }
 
+/* Versionsnummer ganz links im Infobereich - klein und unaufdringlich,
+   aber jederzeit ablesbar (hilfreich beim Melden von Fehlern). */
+#tray-version {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+  white-space: nowrap;
+}
+
+/* Auf sehr schmalen Geräten zuerst die Version ausblenden */
+@media (max-width: 520px) {
+  #tray-version { display: none; }
+}
+
 /* Spieldatum neben der Uhr. Auf schmalen Geräten würde beides zusammen
    zu viel Platz kosten - dort entfällt das Datum, die Uhrzeit bleibt. */
 #clock-date {
