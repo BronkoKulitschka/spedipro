@@ -1506,6 +1506,23 @@ const FuhrparkApp = (function () {
     /** Zeitwert eines Fahrzeugs - gebraucht von der Buchhaltung. */
     restwertVon: (fahrzeug) => restwert(fahrzeug),
 
+    /**
+     * Stellt alle nicht fahrenden Fahrzeuge ins Depot. Gebraucht bei
+     * der Gründung: Die Startflotte wird erzeugt, sobald die Karte das
+     * erste Mal zeichnet - also BEVOR ein Depot gewählt ist. Ohne das
+     * hier stünde das erste Fahrzeug für immer in Frankfurt am Main,
+     * während die Spedition in Hamburg sitzt. In der Stadtseite der
+     * Tourenplanung wäre dort dann kein Fahrzeug, und es ließe sich
+     * keine Tour starten.
+     */
+    zumDepotVersetzen: (stadtName) => {
+      flotteSicherstellen();
+      fahrzeuge.forEach((f) => {
+        if (typeof Fahrt !== "undefined" && Fahrt.istUnterwegs(f.id)) return;
+        f.standort = stadtName;
+      });
+    },
+
     /** Gespeicherte Flotte übernehmen (siehe speicher.js). */
     fahrzeugeSetzen: (liste) => {
       fahrzeuge = (liste || []).map((f) => ({ ...f }));

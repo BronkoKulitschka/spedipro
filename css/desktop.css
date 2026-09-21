@@ -110,6 +110,11 @@ html, body {
 
 #taskbar-windows {
   flex: 1;
+  /* Auf schmalen Geräten sollen die Fensterknöpfe schrumpfen, nicht
+     der Infobereich - Datum, Uhrzeit und Version müssen lesbar
+     bleiben, sie sind die einzigen ihrer Art im Spiel. */
+  min-width: 0;
+  overflow: hidden;
   display: flex;
   gap: 4px;
   height: 24px;
@@ -161,8 +166,14 @@ html, body {
   white-space: nowrap;
 }
 
+/* Das Spieldatum bleibt auch auf dem Telefon sichtbar: Seit die
+   Tourenplanung keine eigene Uhr mehr hat, ist die Taskleiste die
+   einzige Stelle, an der man sieht, welchen Tag man schreibt - und
+   1994 ist nicht irgendein Jahr, sondern der halbe Spielinhalt.
+   Platz dafür kommt aus kleinerer Schrift, nicht aus Weglassen. */
 @media (max-width: 420px) {
-  #clock-date { display: none; }
+  #clock-date { font-size: 10px; }
+  #clock { font-size: 11px; }
 }
 
 #tray, #taskbar-windows {
@@ -175,6 +186,13 @@ html, body {
 #clock {
   font-size: 12px;
   white-space: nowrap;
+}
+
+/* Uhr steht still - erkennbar machen, damit niemand auf vergehende
+   Zeit wartet, die nicht vergeht. */
+#clock.uhr-steht {
+  color: var(--win-grey-darker);
+  font-style: italic;
 }
 
 /* ---------- Startmenü ---------- */

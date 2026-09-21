@@ -21,21 +21,44 @@
   function anzeigeAktualisieren(jetzt) {
     if (!jetzt) return;
     if (datumEl) datumEl.textContent = Spielzeit.formatiere(jetzt);
-    if (uhrEl) uhrEl.textContent = Spielzeit.formatiereUhrzeit(jetzt);
+    if (!uhrEl) return;
+
+    // Die Uhr läuft nur, solange Fahrzeuge unterwegs sind. Steht sie,
+    // muss man das sehen können - sonst wartet man auf Zeit, die nicht
+    // vergeht. Das ist die einzige Uhr im Spiel; die Programme haben
+    // keine eigene, so wenig wie unter Windows 98.
+    const laeuft = Spielzeit.laeuftGerade();
+    uhrEl.textContent = Spielzeit.formatiereUhrzeit(jetzt) + (laeuft ? "" : " ⏸");
+    uhrEl.classList.toggle("uhr-steht", !laeuft);
+    uhrEl.title = laeuft
+      ? "Die Zeit läuft, solange Fahrzeuge unterwegs sind"
+      : "Die Zeit steht still - kein Fahrzeug unterwegs";
   }
 
   function starten() {
-    if (typeof Spielzeit === "undefined") {
-      // Spielzeit noch nicht da - gleich noch einmal versuchen
+    if (typeof Spielzeit === "undefined" || typeof Fahrt === "undefined") {
+      // Module noch nicht geladen - gleich noch einmal versuchen
       setTimeout(starten, 50);
       return;
     }
 
+    // Steht die Zeit, kommt kein Zeittakt mehr - die Anzeige erführe
+    // nie, dass sie stehengeblieben ist. Der Wechsel passiert genau
+    // dann, wenn eine Tour beginnt oder endet.
+    Fahrt.beiAenderung(() => anzeigeAktualisieren(Spielzeit.heute()));
+
     anzeigeAktualisieren(Spielzeit.heute());
     Spielzeit.beiAenderung(anzeigeAktualisieren);
 
-    // Die Uhr läuft, sobald irgendein Modul sie startet. Falls noch
-    // keines offen ist, hier anstoßen, damit die Taskleiste tickt.
+    // Die Laufbedingung muss hier stehen, nicht erst in der
+    // Tourenplanung: Sonst tickt die Taskleistenuhr ab dem Seitenaufruf
+    // frei vor sich hin, obwohl kein Fahrzeug unterwegs ist - und stoppt
+    // erst, wenn die Tourenplanung zum ersten Mal geöffnet wird. Beides
+    // zusammen sah aus wie zwei Uhren, die verschieden gehen.
+    Spielzeit.setzeLaufBedingung(
+      () => typeof Fahrt !== "undefined" && Fahrt.anzahl() > 0
+    );
+
     Spielzeit.starten();
   }
 

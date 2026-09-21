@@ -117,9 +117,6 @@ const TourenplanungApp = (function () {
             <button class="win98-button bevel-out" id="tour-zoom-plus">+</button>
             <button class="win98-button bevel-out" id="tour-zoom-reset">Ansicht zurücksetzen</button>
             <button class="win98-button bevel-out" id="tour-btn-planung">🚚 Tour planen</button>
-            <span class="tour-karte-hinweis" id="tour-karte-uhr">
-              ${Spielzeit.formatiereMitUhrzeit(Spielzeit.heute())}
-            </span>
           </div>
         </div>
 
@@ -1541,7 +1538,6 @@ const TourenplanungApp = (function () {
     markenZeichnen();
     routeZeichnen();
     fahrtenZeichnen();
-    uhrAnzeigeAktualisieren();
   }
 
   /**
@@ -2540,8 +2536,6 @@ const TourenplanungApp = (function () {
 
       if (!fensterElement || !document.body.contains(fensterElement)) return;
 
-      uhrAnzeigeAktualisieren(jetzt);
-
       fahrtenZeichnen();
 
       // Fortschrittsbalken nur auffrischen, wenn sie sichtbar sind
@@ -2552,25 +2546,16 @@ const TourenplanungApp = (function () {
       if (!planungAktiv && Fahrt.anzahl() > 0) dispositionAktualisieren();
     });
 
-    // Die Uhr läuft nur, solange Fahrzeuge unterwegs sind. Wer plant,
-    // soll dabei nicht unter Zeitdruck geraten.
-    Spielzeit.setzeLaufBedingung(() => Fahrt.anzahl() > 0);
+    // Die Laufbedingung ("nur wenn Fahrzeuge unterwegs sind") setzt
+    // clock.js schon beim Seitenaufruf - sonst liefe die Taskleistenuhr
+    // bis zum ersten Öffnen dieses Fensters frei.
     Spielzeit.starten();
   }
 
-  /** Uhrzeit in der Kartenleiste, mit Hinweis wenn die Zeit steht. */
-  function uhrAnzeigeAktualisieren(jetzt = Spielzeit.heute()) {
-    if (!fensterElement) return;
-    const uhr = fensterElement.querySelector("#tour-karte-uhr");
-    if (!uhr) return;
-
-    const laeuft = Spielzeit.laeuftGerade();
-    uhr.textContent = Spielzeit.formatiereMitUhrzeit(jetzt) + (laeuft ? "" : " ⏸");
-    uhr.classList.toggle("tour-uhr-steht", !laeuft);
-    uhr.title = laeuft
-      ? "Die Zeit läuft, solange Fahrzeuge unterwegs sind"
-      : "Die Zeit steht still - kein Fahrzeug unterwegs";
-  }
+  // Die Uhr steht ausschließlich in der Taskleiste - ein Programm auf
+  // diesem Rechner hat keine eigene Uhr, so wenig wie ein Programm
+  // unter Windows 98 eine hatte. Wer wissen will, wie spät es ist,
+  // schaut nach unten rechts.
 
   function open() {
     const ergebnis = WindowManager.open({

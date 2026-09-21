@@ -272,7 +272,39 @@ const Speicher = (function () {
       });
     });
 
+    startflotteRetten();
+
     return nachholen(stand);
+  }
+
+  /**
+   * Einmalige Reparatur für Spielstände bis 0.15.16.
+   *
+   * Die Startflotte entsteht, sobald die Karte zum ersten Mal zeichnet -
+   * also bevor ein Depot gewählt ist. Sie blieb deshalb am Notbehelfs-
+   * ort Frankfurt am Main stehen, auch wenn die Spedition anderswo
+   * gegründet wurde. In der Stadtseite der Tourenplanung stand dann im
+   * Depot kein Fahrzeug, und es ließ sich keine Tour starten.
+   *
+   * Eingegriffen wird nur im eindeutig kaputten Zustand: Es gibt ein
+   * Depot, kein Fahrzeug steht dort, und keines ist unterwegs. Eine
+   * bewusst verteilte Flotte bleibt damit unangetastet.
+   */
+  function startflotteRetten() {
+    if (!Betrieb.hatDepot()) return;
+    if (Fahrt.anzahl() > 0) return;
+
+    const flotte = FuhrparkApp.alleFahrzeuge();
+    if (flotte.length === 0) return;
+    if (flotte.some((f) => f.standort === Betrieb.depotName())) return;
+
+    FuhrparkApp.zumDepotVersetzen(Betrieb.depotName());
+    protokollEintrag(
+      "hinweis",
+      `${flotte.length} Fahrzeug${flotte.length > 1 ? "e" : ""} ins Depot ` +
+      `${Betrieb.depotName()} gestellt - ${flotte.length > 1 ? "sie standen" : "es stand"} ` +
+      `noch am Gründungsort.`
+    );
   }
 
   /**

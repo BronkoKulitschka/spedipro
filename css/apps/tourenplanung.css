@@ -933,13 +933,6 @@
 
 .tour-nachholung .tour-warentitel > button { margin-left: auto; }
 
-/* Uhr steht still - erkennbar machen, damit niemand auf vergehende
-   Zeit wartet, die nicht vergeht. */
-.tour-uhr-steht {
-  color: var(--win-grey-darker);
-  font-style: italic;
-}
-
 /* ---------- Ausgehende Frachten je Stadt ---------- */
 
 .tour-ausgehend {

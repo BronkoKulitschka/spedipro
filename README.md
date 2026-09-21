@@ -7,7 +7,57 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.16)
+## Aktueller Stand (v0.15.18)
+
+**Nur noch eine Uhr, und die steht in der Taskleiste.** Die Tourenplanung
+hatte eine eigene Zeitanzeige in der Kartenleiste - das brach die
+Vorstellung, vor einem Rechner zu sitzen: Ein Programm unter Windows 98
+hatte keine eigene Uhr, man schaut nach unten rechts. Die Anzeige ist
+ersatzlos entfernt.
+
+Was dabei mitwandern musste:
+- **Das Pausezeichen.** Steht die Zeit (kein Fahrzeug unterwegs), zeigt
+  die Taskleistenuhr ein ⏸ und wird grau-kursiv. Ohne das wartet man
+  auf Zeit, die nicht vergeht
+- **Die Anzeige muss von selbst umschalten.** Steht die Uhr, kommt kein
+  Zeittakt mehr - die Anzeige erführe nie, dass sie steht. `clock.js`
+  hängt sich deshalb zusätzlich an `Fahrt.beiAenderung`: Genau dann
+  wechselt der Zustand
+- **Das Spieldatum bleibt auf dem Telefon sichtbar.** Es war unter
+  420 px ausgeblendet; mit der Uhr in der Tourenplanung wäre sonst gar
+  nicht mehr zu sehen, welchen Tag man schreibt - und 1994 ist nicht
+  irgendein Jahr. Der Platz kommt aus kleinerer Schrift und daraus, dass
+  jetzt die Fensterknöpfe schrumpfen statt des Infobereichs
+
+## Vorheriger Stand (v0.15.17)
+
+**Zwei Fehler behoben, die zusammen das Spiel blockierten.**
+
+*Die Startflotte stand nicht im Depot.* Sie entsteht, sobald die Karte
+zum ersten Mal zeichnet - also bevor ein Depot gewählt ist. Der
+Notbehelfsort war Frankfurt am Main, und dort blieb das Fahrzeug, auch
+wenn die Spedition in Hamburg gegründet wurde. Seit dem
+stadtorientierten Ablauf (0.15.14) braucht die Disposition ein Fahrzeug
+VOR ORT: Auf der Stadtseite des Depots stand keins, der Knopf
+"Fahrzeug wählen" erschien nicht, und es ließ sich keine Tour starten.
+Die Gründung stellt die Flotte jetzt ins Depot
+(`FuhrparkApp.zumDepotVersetzen`).
+
+*Die Taskleistenuhr lief frei.* Die Bedingung "nur laufen, solange
+Fahrzeuge unterwegs sind" wurde erst gesetzt, wenn die Tourenplanung
+zum ersten Mal geöffnet wurde. Bis dahin tickte die Uhr ab dem
+Seitenaufruf. Wer zuerst ein anderes Programm öffnete, sah eine
+laufende Taskleistenuhr und daneben eine stehende Uhr in der
+Tourenplanung. Die Bedingung steht jetzt in `clock.js` und gilt ab dem
+Seitenaufruf.
+
+*Reparatur beim Laden:* Spielstände bis 0.15.16 stecken im blockierten
+Zustand fest. Beim Laden wird eingegriffen, aber nur im eindeutig
+kaputten Fall - es gibt ein Depot, dort steht kein Fahrzeug, und keines
+ist unterwegs. Eine bewusst verteilte Flotte bleibt unangetastet. Der
+Eingriff steht im Abwesenheitsprotokoll.
+
+## Vorheriger Stand (v0.15.16)
 
 **Finanzmodul** (`js/core/finanzen.js`, `js/apps/finanzen/`, Desktop-
 Symbol und Programme-Menü). Kontenrahmen an SKR03 angelehnt, echte

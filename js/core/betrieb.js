@@ -66,6 +66,11 @@ const Betrieb = (function () {
     daten.depot = stadtName;
     if (ersteGruendung) {
       daten.gegruendetAm = Spielzeit.heute().toISOString();
+      // Die Startflotte steht zu diesem Zeitpunkt noch am Notbehelfs-
+      // ort, an dem sie erzeugt wurde. Sie gehört ins Depot.
+      if (typeof FuhrparkApp !== "undefined" && FuhrparkApp.zumDepotVersetzen) {
+        FuhrparkApp.zumDepotVersetzen(stadtName);
+      }
       // Mit dem Depot beginnt der Geschäftsbetrieb: Eigenkapital
       // einlegen, ab da laufen Miete und Verwaltung.
       if (typeof Finanzen !== "undefined") Finanzen.gruenden();
