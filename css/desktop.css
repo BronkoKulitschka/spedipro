@@ -145,9 +145,13 @@ html, body {
   white-space: nowrap;
 }
 
-/* Auf sehr schmalen Geräten zuerst die Version ausblenden */
+/* Auf schmalen Geräten bleibt die Version sichtbar, nur kleiner: Ohne
+   sie lässt sich am Telefon nicht erkennen, welche Fassung der Browser
+   gerade geladen hat - genau das braucht man beim Melden von Fehlern
+   und nach einem Update. */
 @media (max-width: 520px) {
-  #tray-version { display: none; }
+  #tray { gap: 5px; padding: 0 5px; }
+  #tray-version { font-size: 10px; }
 }
 
 /* Spieldatum neben der Uhr. Auf schmalen Geräten würde beides zusammen
