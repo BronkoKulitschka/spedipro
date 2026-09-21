@@ -16,17 +16,23 @@ const TourenplanungApp = (function () {
   let gewaehlteStadt = null;
 
   // ---------- Ablauf der Tourenplanung ----------
-  // Schrittfolge: Startstadt -> Fahrzeug -> Ladung -> Ziel -> Start.
   // Bewusst erst einmal nur A nach B.
   //
   // GEPLANT: Rundtouren mit mehreren Stopps. Dafür müsste `tour` statt
   // eines einzelnen Ziels eine Liste von Etappen führen, jede mit
   // eigener Ladung - der Ablauf bliebe im Kern derselbe.
   //
-  // Ablauf ab 0.15.14: Ausgangspunkt ist die Stadt, nicht der
-  // Auftragspool. Man wählt eine Stadt auf der Karte, drückt "Tour
-  // planen" und sieht dann die Stadtseite: was von dort ausgeht und ob
-  // ein Fahrzeug vor Ort steht. Von da aus Fahrzeug -> Fracht -> Ziel.
+  // Ablauf ab 0.15.23: ohne Startknopf. Eine Stadt auf der Karte
+  // antippen genügt - darunter steht sofort, was von dort ausgeht.
+  // Aus dieser Liste wählt der Pfeil am Zeilenende die Fracht und
+  // schaltet gleich weiter:
+  //
+  //     Stadt (Karte) -> Fracht -> Fahrzeug -> [Ziel] -> Start
+  //
+  // Die Fracht steht damit vor dem Fahrzeug. Das entspricht der
+  // Disposition: Erst weiß man, was zu fahren ist, dann sucht man den
+  // Wagen dazu - und sieht in der Fahrzeugliste sofort, welcher die
+  // Ladung überhaupt nehmen kann.
   //
   // Zwei Frachtarten:
   //   auftrag  fester Auftrag aus Börse oder von einem Kunden; Ziel,
@@ -35,7 +41,7 @@ const TourenplanungApp = (function () {
   //            unter allen Städten mit Bedarf, ohne Frist und ohne
   //            Kundenbindung (Spotmarkt)
   let tour = {
-    schritt: "stadt",  // stadt | fahrzeug | fracht | ziel | bereit
+    schritt: "fracht",  // fracht | fahrzeug | ziel | bereit
     stadt: null,
     fahrzeug: null,
     art: null,         // "auftrag" | "spot"
@@ -48,9 +54,17 @@ const TourenplanungApp = (function () {
 
   function tourZuruecksetzen() {
     tour = {
-      schritt: "stadt", stadt: null, fahrzeug: null, art: null,
+      schritt: "fracht", stadt: null, fahrzeug: null, art: null,
       auftrag: null, gut: null, tonnen: 0, ziel: null, machbarkeit: null
     };
+  }
+
+  /**
+   * Steckt der Disponent gerade in einer Auswahl? Dann darf der
+   * Zeittakt die Liste nicht unter seinen Fingern neu aufbauen.
+   */
+  function inAuswahl() {
+    return tour.schritt !== "fracht" || Boolean(tour.art);
   }
 
   // Wird eine Ware angetippt, sollen alle Städte aufleuchten, die sie
@@ -63,10 +77,6 @@ const TourenplanungApp = (function () {
 
   // Stadt, in die ein Fahrzeug leer umgesetzt werden soll
   let umsetzZiel = null;
-
-  // Die Tourenplanung läuft nur, wenn sie ausdrücklich gestartet wurde.
-  // Sonst zeigt der untere Bereich die Angaben zur gewählten Stadt.
-  let planungAktiv = false;
 
   // Aktuell auf der Karte hervorgehobene Route (Liste von Städtenamen)
   let aktiveRoute = null;
@@ -116,7 +126,6 @@ const TourenplanungApp = (function () {
             <button class="win98-button bevel-out" id="tour-zoom-minus">−</button>
             <button class="win98-button bevel-out" id="tour-zoom-plus">+</button>
             <button class="win98-button bevel-out" id="tour-zoom-reset">Ansicht zurücksetzen</button>
-            <button class="win98-button bevel-out" id="tour-btn-planung">🚚 Tour planen</button>
           </div>
         </div>
 
@@ -131,8 +140,7 @@ const TourenplanungApp = (function () {
     if (!Betrieb.hatDepot()) return renderDepotwahl();
     if (umsetzZiel) return renderUmsetzen(umsetzZiel);
     if (detailGut) return renderWarendetails(detailGut);
-    if (planungAktiv) return renderTourplanung();
-    return renderStadtinfo();
+    return renderTourplanung();
   }
 
   /** Warendetails im Dispositionsbereich, mit Rückweg zur Liste. */
@@ -339,134 +347,6 @@ const TourenplanungApp = (function () {
     `;
   }
 
-  /** Angaben zur gewählten Stadt - der Normalzustand ohne laufende Planung. */
-  function renderStadtinfo() {
-    if (!gewaehlteStadt) {
-      return `
-        ${nachholhinweis()}
-        ${ankunftsmeldung()}
-        ${laufendeFahrten()}
-        ${fahrzeugUebersicht()}
-        <div class="tour-dispo-leer">
-          Stadt auf der Karte auswählen, um Angebot und Bedarf zu sehen.<br>
-          Für eine Fahrt oben auf <strong>Tour planen</strong> tippen.
-        </div>
-      `;
-    }
-
-    const s = gewaehlteStadt;
-    const istDepot = Betrieb.depotName() === s.name;
-    const angebot = Wirtschaft.angebot(s);
-    const bedarf = Wirtschaft.bedarf(s);
-    const fahrzeuge = FuhrparkApp.fahrzeugeAn(s.name);
-
-    return `
-      ${nachholhinweis()}
-      ${ankunftsmeldung()}
-      ${laufendeFahrten()}
-      ${fahrzeugUebersicht()}
-      <div class="tour-dispo-kopf">
-        <span class="tour-dispo-stadt">${s.name}</span>
-        <span class="tour-dispo-land">${s.land}</span>
-        ${s.knoten ? `<span class="tour-dispo-knoten">Frachtknoten</span>` : ""}
-        ${istDepot ? `<span class="tour-dispo-depot">Depot</span>` : ""}
-      </div>
-      <div class="tour-dispo-info">
-        ${Wirtschaft.regionName(s)}
-        ${s.einw ? ` · ${s.einw.toLocaleString("de-DE")} Einwohner` : ""}
-        ${
-          Betrieb.hatDepot() && !istDepot
-            ? ` · ${Karte.strassenEntfernung(Betrieb.depot(), s).toLocaleString("de-DE")} km ab Depot`
-            : ""
-        }
-        ${fahrzeuge.length ? ` · ${fahrzeuge.length} Fahrzeug${fahrzeuge.length > 1 ? "e" : ""} vor Ort` : ""}
-      </div>
-
-      ${ausgehendeFrachten(s)}
-
-      <div class="tour-warenblock">
-        <div class="tour-warenspalte">
-          <div class="tour-warentitel">Wird hier verladen (${angebot.length})</div>
-          ${warenListe(angebot)}
-        </div>
-        <div class="tour-warenspalte">
-          <div class="tour-warentitel">Wird hier gebraucht (${bedarf.length})</div>
-          ${warenListe(bedarf)}
-        </div>
-      </div>
-
-      ${
-        !istDepot
-          ? `<div class="tour-dispo-aktionen">
-               <button class="win98-button bevel-out" id="tour-btn-depot-hierher">
-                 🏠 Depot hierher verlegen
-               </button>
-             </div>`
-          : ""
-      }
-    `;
-  }
-
-  /**
-   * Offene Frachten, die von dieser Stadt abgehen. Das ist die
-   * Frachtbörse aus Sicht des Verladeorts - so sieht man auf einen
-   * Blick, ob sich ein Fahrzeug hier lohnt.
-   */
-  function ausgehendeFrachten(stadt) {
-    // Bei Bedarf werden Frachten für diese Stadt nacherzeugt - sonst
-    // wäre die Liste fast überall leer.
-    const frachten = Auftraege.fuerStadt(stadt);
-    const verfuegbar = alleVerfuegbaren();
-    const passende = frachten.filter((a) =>
-      verfuegbar.some((f) => Ladung.kannLaden(f, Auftraege.gut(a)))
-    );
-
-    if (frachten.length === 0) {
-      return `
-        <div class="tour-ausgehend">
-          <div class="tour-warentitel">Ausgehende Frachten</div>
-          <div class="tour-ware-leer">
-            Zurzeit keine offenen Frachten ab ${stadt.name}.
-          </div>
-          ${umsetzKnopf(stadt)}
-        </div>
-      `;
-    }
-
-    return `
-      <div class="tour-ausgehend">
-        <div class="tour-warentitel">
-          Ausgehende Frachten (${frachten.length}${
-            passende.length !== frachten.length ? `, davon ${passende.length} ladbar` : ""
-          })
-        </div>
-        <ul class="tour-frachtliste">
-          ${frachten.slice(0, 12).map((a) => {
-            const g = Auftraege.gut(a);
-            const ladbar = verfuegbar.some((f) => Ladung.kannLaden(f, g));
-            return `
-              <li class="tour-fracht ${ladbar ? "" : "nicht-ladbar"}">
-                <span class="tour-ware-aufbau tour-aufbau-${g.aufbau} tour-ware-info"
-                      data-wareninfo="${g.id}">${aufbauKurz(g.aufbau)}</span>
-                <span class="tour-fracht-ziel">→ ${a.nachName}</span>
-                <span class="tour-fracht-daten">
-                  ${a.tonnen.toFixed(1)} t ${g.name} ·
-                  ${a.km.toLocaleString("de-DE")} km ·
-                  ${a.entgelt.toLocaleString("de-DE")} DM
-                </span>
-              </li>
-            `;
-          }).join("")}
-        </ul>
-        ${passende.length === 0 ? `
-          <div class="tour-ware-leer">
-            Kein Fahrzeug im Bestand kann diese Frachten laden.
-          </div>
-          ${umsetzKnopf(stadt)}` : ""}
-      </div>
-    `;
-  }
-
   /** Schaltfläche, um ein Fahrzeug leer in eine andere Stadt zu schicken. */
   function umsetzKnopf(stadt) {
     if (alleVerfuegbaren().length === 0) return "";
@@ -540,29 +420,64 @@ const TourenplanungApp = (function () {
 
   // ================= Tourenplanung: Ablauf =================
 
+  /**
+   * Der Dispositionsbereich. Ohne gewählte Stadt steht hier die
+   * Übersicht über Flotte und laufende Fahrten, sonst die Stadtseite
+   * mit dem Planungsablauf darunter.
+   */
   function renderTourplanung() {
+    const s = tour.stadt;
+
+    // Meldungen bleiben oben stehen, der Rest scrollt. Die Übersicht
+    // über Flotte und laufende Fahrten hängt dagegen unten an der
+    // Frachtliste: Zuerst die Entscheidung, dann der Bestand.
+    const meldungen = `${nachholhinweis()}${ankunftsmeldung()}`;
+
+    if (!s) {
+      return `
+        <div class="tour-ablauf">
+          ${meldungen}
+          <div class="tour-schrittinhalt">
+            ${laufendeFahrten()}
+            ${fahrzeugUebersicht()}
+            <div class="tour-dispo-leer">
+              Stadt auf der Karte auswählen. Darunter steht dann, was von
+              dort ausgeht und welches Fahrzeug es nehmen kann.
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     return `
       <div class="tour-ablauf">
+        ${meldungen}
+        ${stadtkopf(s)}
         ${schrittleiste()}
         <div class="tour-schrittinhalt">${schrittInhalt()}</div>
-        <div class="tour-abbruchleiste">
-          <button class="win98-button bevel-out" id="tour-btn-abbrechen">
-            ✕ Planung abbrechen
-          </button>
-        </div>
+        ${tour.art || tour.fahrzeug ? `
+          <div class="tour-abbruchleiste">
+            <button class="win98-button bevel-out" id="tour-btn-abbrechen">
+              ✕ Auswahl verwerfen
+            </button>
+          </div>` : ""}
       </div>
     `;
   }
 
   // Ablauf angelehnt an die Disposition echter Speditionssoftware,
   // aber von der Stadt aus gedacht: Der Disponent schaut sich einen
-  // Ort an, sieht was dort ausgeht und was er dafür zur Verfügung hat.
+  // Ort an, sieht was dort ausgeht und sucht dann den Wagen dazu.
+  //
+  // Die Stadt ist kein eigener Schritt mehr - sie wird auf der Karte
+  // gewählt und steht als Überschrift über der Leiste. Ein Schritt
+  // "Stadt", der nur dieselbe Frachtliste noch einmal zeigt, wäre eine
+  // Stufe ohne Inhalt.
   const SCHRITTE = [
-    { id: "stadt",    nr: 1, titel: "Stadt" },
+    { id: "fracht",   nr: 1, titel: "Fracht" },
     { id: "fahrzeug", nr: 2, titel: "Fahrzeug" },
-    { id: "fracht",   nr: 3, titel: "Fracht" },
-    { id: "ziel",     nr: 4, titel: "Ziel" },
-    { id: "bereit",   nr: 5, titel: "Start" }
+    { id: "ziel",     nr: 3, titel: "Ziel" },
+    { id: "bereit",   nr: 4, titel: "Start" }
   ];
 
   // Weiter als das wird kein Fahrzeug zur Leerfahrt angeboten. Eine
@@ -604,9 +519,8 @@ const TourenplanungApp = (function () {
 
   function schrittInhalt() {
     switch (tour.schritt) {
-      case "stadt": return schrittStadt();
-      case "fahrzeug": return schrittFahrzeug();
       case "fracht": return schrittFracht();
+      case "fahrzeug": return schrittFahrzeug();
       case "ziel": return schrittZiel();
       case "bereit": return schrittBereit();
       default: return "";
@@ -650,22 +564,11 @@ const TourenplanungApp = (function () {
     return Math.round(Ladung.maxMengeTonnen(fahrzeug, gut) * 10) / 10;
   }
 
-  // ---------- 1. Stadtseite ----------
+  // ---------- Stadtkopf ----------
 
-  function schrittStadt() {
-    const s = tour.stadt;
-    if (!s) {
-      return `
-        <p class="tour-anleitung">
-          Eine Stadt auf der Karte antippen. Von dort aus wird disponiert.
-        </p>
-      `;
-    }
-
+  /** Überschrift der gewählten Stadt, über der Schrittleiste. */
+  function stadtkopf(s) {
     const istDepot = Betrieb.depotName() === s.name;
-    const vorOrt = verfuegbareFahrzeuge(s.name);
-    const alleHier = FuhrparkApp.fahrzeugeAn(s.name).filter((f) => !Fahrt.istUnterwegs(f.id));
-
     return `
       <div class="tour-stadtkopf">
         <h2 class="tour-stadtseite-name">${s.name}</h2>
@@ -682,22 +585,15 @@ const TourenplanungApp = (function () {
           ${s.knoten ? `<span class="tour-dispo-knoten">Frachtknoten</span>` : ""}
         </div>
       </div>
-
-      ${fahrzeugstatus(s, vorOrt, alleHier)}
-      ${ausgangsuebersicht(s)}
-
-      <div class="tour-dispo-aktionen">
-        ${vorOrt.length > 0
-          ? `<button class="win98-button bevel-out" id="tour-btn-weiter-fahrzeug">
-               Fahrzeug wählen &#10095;
-             </button>`
-          : ""}
-      </div>
     `;
   }
 
   /** Steht hier ein Fahrzeug? Die erste Frage jeder Disposition. */
-  function fahrzeugstatus(stadt, vorOrt, alleHier) {
+  function fahrzeugstatus(stadt) {
+    const vorOrt = verfuegbareFahrzeuge(stadt.name);
+    const alleHier = FuhrparkApp.fahrzeugeAn(stadt.name)
+      .filter((f) => !Fahrt.istUnterwegs(f.id));
+
     if (vorOrt.length > 0) {
       return `
         <div class="tour-vorort tour-vorort-ja">
@@ -719,17 +615,18 @@ const TourenplanungApp = (function () {
       `;
     }
 
+    // Die Liste der anforderbaren Fahrzeuge steht erst im nächsten
+    // Schritt: Welches infrage kommt, hängt von der Fracht ab.
     const blockiert = alleHier.length - vorOrt.length;
     return `
       <div class="tour-vorort tour-vorort-nein">
         <span class="tour-vorort-titel">Kein Fahrzeug vor Ort</span>
-        ${blockiert > 0
-          ? `<span class="tour-vorort-kennzeichen">
-               ${blockiert} Fahrzeug${blockiert > 1 ? "e" : ""} hier, aber nicht einsatzbereit
-             </span>`
-          : ""}
+        <span class="tour-vorort-kennzeichen">
+          ${blockiert > 0
+            ? `${blockiert} Fahrzeug${blockiert > 1 ? "e" : ""} hier, aber nicht einsatzbereit · `
+            : ""}Fracht wählen, dann lässt sich eins leer herbestellen
+        </span>
       </div>
-      ${anforderungsliste(stadt)}
     `;
   }
 
@@ -737,10 +634,14 @@ const TourenplanungApp = (function () {
    * Kein Fahrzeug da: die nächstgelegenen freien Fahrzeuge anbieten.
    * Die Leerfahrt kostet Sprit und Verschleiß, bringt aber keinen
    * Erlös - deshalb stehen die Kosten direkt an jedem Vorschlag.
+   *
+   * Angeboten wird nur, was die gewählte Fracht auch nehmen kann. Ein
+   * Kipper, der 900 km leer anrollt und dann keine Papierrollen laden
+   * darf, ist kein Vorschlag, sondern eine Falle.
    */
   function anforderungsliste(stadt) {
     const kandidaten = alleVerfuegbaren()
-      .filter((f) => f.standort !== stadt.name)
+      .filter((f) => f.standort !== stadt.name && !frachtHindernis(f))
       .map((f) => ({ f, route: Route.berechne(f.standort, stadt.name) }))
       .filter((k) => k.route && k.route.km <= ANFORDERUNG_MAX_KM)
       .sort((a, b) => a.route.km - b.route.km)
@@ -749,9 +650,10 @@ const TourenplanungApp = (function () {
     if (kandidaten.length === 0) {
       return `
         <div class="tour-ware-leer">
-          Kein freies Fahrzeug in Reichweite (bis
+          Kein passendes freies Fahrzeug in Reichweite (bis
           ${ANFORDERUNG_MAX_KM.toLocaleString("de-DE")} km).
         </div>
+        ${umsetzKnopf(stadt)}
       `;
     }
 
@@ -787,136 +689,207 @@ const TourenplanungApp = (function () {
     `;
   }
 
+  // ---------- 1. Fracht ----------
+
   /**
    * Was geht von hier aus? Oben die festen Aufträge mit Ziel und Frist,
    * darunter das freie Warenangebot der Region, bei dem der Disponent
    * das Ziel selbst sucht.
+   *
+   * Das ist zugleich die Stadtseite: Wer eine Stadt auf der Karte
+   * antippt, landet hier. Der Pfeil am Zeilenende wählt die Fracht und
+   * schaltet gleich zum Fahrzeug weiter.
    */
-  function ausgangsuebersicht(stadt) {
-    const frachten = Auftraege.fuerStadt(stadt);
-    const angebot = Wirtschaft.angebot(stadt);
+  function schrittFracht() {
+    const s = tour.stadt;
+    const frachten = Auftraege.fuerStadt(s);
+    const angebot = Wirtschaft.angebot(s);
+    const kandidaten = frachtKandidaten(s.name);
+    const istDepot = Betrieb.depotName() === s.name;
 
     return `
+      ${fahrzeugstatus(s)}
+
       <div class="tour-ausgang">
-        <div class="tour-warentitel">Ausgehend ab ${stadt.name}</div>
+        <div class="tour-warentitel">Ausgehend ab ${s.name}</div>
 
         <div class="tour-ausgang-teil">Feste Aufträge (${frachten.length})</div>
-        ${frachten.length === 0
-          ? `<div class="tour-ware-leer">Zurzeit keine offenen Aufträge.</div>`
-          : `<ul class="tour-frachtliste">
-              ${frachten.slice(0, 10).map((a) => {
-                const g = Auftraege.gut(a);
-                return `
-                  <li class="tour-fracht">
-                    ${ablaufBalken(a, null)}
-                    <span class="tour-ware-aufbau tour-aufbau-${g.aufbau} tour-ware-info"
-                          data-wareninfo="${g.id}">${aufbauKurz(g.aufbau)}</span>
-                    <span class="tour-fracht-ziel">→ ${a.nachName}</span>
-                    <span class="tour-fracht-daten">
-                      ${a.tonnen.toFixed(1)} t ${g.name} ·
-                      ${a.km.toLocaleString("de-DE")} km ·
-                      ${a.entgelt.toLocaleString("de-DE")} DM
-                    </span>
-                  </li>
-                `;
-              }).join("")}
-            </ul>`}
+        <ul class="tour-auswahlliste tour-liste-voll">
+          ${frachten.length === 0
+            ? `<li class="tour-ware-leer">Zurzeit keine offenen Aufträge.</li>`
+            : frachten.slice(0, 15).map((a) => frachtZeileAuftrag(a, kandidaten)).join("")}
+        </ul>
 
         <div class="tour-ausgang-teil">Warenangebot der Region (${angebot.length})</div>
-        ${warenListe(angebot)}
+        <ul class="tour-auswahlliste tour-liste-voll">
+          ${angebot.length === 0
+            ? `<li class="tour-ware-leer">Die Region bietet nichts an.</li>`
+            : angebot.map((g) => frachtZeileSpot(g, kandidaten)).join("")}
+        </ul>
       </div>
+
+      <div class="tour-dispo-aktionen">
+        ${!istDepot
+          ? `<button class="win98-button bevel-out" id="tour-btn-depot-hierher">
+               🏠 Depot hierher verlegen
+             </button>`
+          : ""}
+        ${frachtGewaehlt()
+          ? `<button class="win98-button bevel-out" id="tour-btn-weiter-fahrzeug">
+               Fahrzeug wählen &#10095;
+             </button>`
+          : ""}
+      </div>
+
+      ${laufendeFahrten()}
+      ${fahrzeugUebersicht()}
     `;
   }
 
-  // ---------- 2. Fahrzeug vor Ort wählen ----------
+  /**
+   * Gegen welche Fahrzeuge eine Frachtzeile geprüft wird, solange noch
+   * keins gewählt ist: die vor Ort stehenden, sonst der ganze freie
+   * Bestand - denn wer nichts vor Ort hat, kann eins anfordern.
+   */
+  function frachtKandidaten(stadtName) {
+    const vorOrt = verfuegbareFahrzeuge(stadtName);
+    return vorOrt.length ? vorOrt : alleVerfuegbaren();
+  }
 
-  function schrittFahrzeug() {
-    const s = tour.stadt;
-    const vorOrt = verfuegbareFahrzeuge(s.name);
+  /**
+   * Warum dieses Fahrzeug die gewählte Fracht nicht nehmen kann.
+   * Gibt null zurück, wenn nichts dagegen spricht.
+   */
+  function frachtHindernis(f) {
+    if (tour.art === "auftrag" && tour.auftrag) {
+      const a = tour.auftrag;
+      const g = Auftraege.gut(a);
+      if (!Ladung.kannLaden(f, g)) return `Aufbau ${f.aufbautyp} ungeeignet`;
+      const maxT = Ladung.maxMengeTonnen(f, g);
+      if (maxT < a.tonnen) {
+        return `nur ${maxT.toFixed(1)} t möglich, gebraucht werden ${a.tonnen.toFixed(1)} t`;
+      }
+      return null;
+    }
+    if (tour.art === "spot" && tour.gut) {
+      const g = tour.gut;
+      if (!Ladung.kannLaden(f, g)) return `Aufbau ${f.aufbautyp} ungeeignet`;
+      if (spotMenge(f, g) <= 0) return "keine Menge ladbar";
+      return null;
+    }
+    return null;
+  }
 
-    if (vorOrt.length === 0) {
+  /** Kurzzeile über der Liste: welche Fracht gerade disponiert wird. */
+  function frachtkopf() {
+    if (tour.art === "auftrag") {
+      const a = tour.auftrag;
+      const g = Auftraege.gut(a);
       return `
-        <div class="tour-ware-leer">
-          In ${s.name} steht kein einsatzbereites Fahrzeug mehr.
-        </div>
-        <div class="tour-dispo-aktionen">
-          <button class="win98-button bevel-out" data-zurueck-schritt="stadt">&#10094; Zurück</button>
+        <div class="tour-auftragskopf">
+          ${a.nummer} · ${a.tonnen.toFixed(1)} t ${g.name} → ${a.nachName} ·
+          <strong>${a.entgelt.toLocaleString("de-DE")} DM</strong>
         </div>
       `;
     }
-
-    return `
-      <p class="tour-anleitung">
-        Fahrzeuge in ${s.name}. Der Aufbau entscheidet, welche Fracht
-        anschließend zur Wahl steht.
-      </p>
-      <ul class="tour-auswahlliste">
-        ${vorOrt.map((f) => `
-          <li class="tour-auswahl ${tour.fahrzeug && tour.fahrzeug.id === f.id ? "gewaehlt" : ""}"
-              data-fahrzeug="${f.id}">
-            ${weiterPfeil("fracht")}
-            <span class="tour-auswahl-name">
-              <span class="tour-flottenpunkt"
-                    style="background:${Lackierung.cssFarbe(f.lackierung)};
-                           border-color:${Lackierung.cssFarbeDunkel(f.lackierung)}"></span>
-              ${f.marke} ${f.modell}
-              <span class="tour-auftrag-nummer">${f.kennzeichen}</span>
-            </span>
-            <span class="tour-auswahl-zusatz">
-              ${f.aufbautyp} · Zuladung ${(f.zuladungKg / 1000).toFixed(1)} t ·
-              ${Math.round(f.kmStand).toLocaleString("de-DE")} km
-            </span>
-            <span class="tour-auswahl-zusatz">
-              Zustand ${Math.round(Verschleiss.gesamtzustand(f))} %
-            </span>
-          </li>
-        `).join("")}
-      </ul>
-      <div class="tour-dispo-aktionen">
-        <button class="win98-button bevel-out" data-zurueck-schritt="stadt">&#10094; Zurück</button>
-        ${tour.fahrzeug
-          ? `<button class="win98-button bevel-out" id="tour-btn-weiter-fracht">Fracht wählen &#10095;</button>`
-          : ""}
-      </div>
-    `;
+    if (tour.art === "spot") {
+      return `
+        <div class="tour-auftragskopf">
+          Spotladung ${tour.gut.name} ab ${tour.stadt.name} ·
+          Menge und Ziel nach Fahrzeug
+        </div>
+      `;
+    }
+    return "";
   }
 
-  // ---------- 3. Fracht wählen ----------
+  // ---------- 2. Fahrzeug wählen ----------
 
-  function schrittFracht() {
+  /**
+   * Erst die Fracht, dann der Wagen: Die Liste zeigt, was vor Ort
+   * steht, und sperrt jedes Fahrzeug, das die Ladung nicht nehmen kann,
+   * mit dem Grund daneben. Steht nichts Passendes da, folgt direkt die
+   * Leerfahrt-Anforderung.
+   */
+  function schrittFahrzeug() {
     const s = tour.stadt;
-    const f = tour.fahrzeug;
-    const frachten = Auftraege.fuerStadt(s);
-    const angebot = Wirtschaft.angebot(s);
+    const vorOrt = verfuegbareFahrzeuge(s.name);
+    const passend = vorOrt.filter((f) => !frachtHindernis(f));
+
+    // Passende zuerst - gesperrte Zeilen stehen darunter zur Erklärung
+    const sortiert = [...passend, ...vorOrt.filter((f) => frachtHindernis(f))];
 
     return `
-      <div class="tour-auftragskopf">
-        ${f.marke} ${f.modell} (${f.kennzeichen}) · ${f.aufbautyp} ·
-        bis ${(f.zuladungKg / 1000).toFixed(1)} t
-      </div>
+      ${frachtkopf()}
 
-      <div class="tour-ausgang-teil">Feste Aufträge ab ${s.name}</div>
-      <ul class="tour-auswahlliste tour-liste-voll">
-        ${frachten.length === 0
-          ? `<li class="tour-ware-leer">Zurzeit keine offenen Aufträge.</li>`
-          : frachten.slice(0, 15).map((a) => frachtZeileAuftrag(a, f)).join("")}
-      </ul>
+      ${vorOrt.length === 0
+        ? `<div class="tour-ware-leer">
+             In ${s.name} steht kein einsatzbereites Fahrzeug.
+           </div>`
+        : `<p class="tour-anleitung">
+             ${passend.length} von ${vorOrt.length} Fahrzeug${vorOrt.length > 1 ? "en" : ""}
+             in ${s.name} ${passend.length === 1 ? "kann" : "können"} diese Fracht nehmen.
+           </p>
+           <ul class="tour-auswahlliste">
+             ${sortiert.map((f) => fahrzeugZeile(f)).join("")}
+           </ul>`}
 
-      <div class="tour-ausgang-teil">Warenangebot der Region</div>
-      <ul class="tour-auswahlliste tour-liste-voll">
-        ${angebot.length === 0
-          ? `<li class="tour-ware-leer">Die Region bietet nichts an.</li>`
-          : angebot.map((g) => frachtZeileSpot(g, f)).join("")}
-      </ul>
+      ${passend.length === 0 ? anforderungsliste(s) : ""}
 
       <div class="tour-dispo-aktionen">
-        <button class="win98-button bevel-out" data-zurueck-schritt="fahrzeug">&#10094; Zurück</button>
-        ${frachtGewaehlt()
+        <button class="win98-button bevel-out" data-zurueck-schritt="fracht">
+          &#10094; Andere Fracht
+        </button>
+        ${tour.fahrzeug
           ? `<button class="win98-button bevel-out" id="tour-btn-weiter-ziel">
                ${tour.art === "auftrag" ? "Weiter" : "Ziel wählen"} &#10095;
              </button>`
           : ""}
       </div>
+    `;
+  }
+
+  function fahrzeugZeile(f) {
+    const hindernis = frachtHindernis(f);
+    const gewaehlt = tour.fahrzeug && tour.fahrzeug.id === f.id;
+
+    // Bei einem festen Auftrag zählt auch, ob dieser Wagen den Termin
+    // überhaupt noch schafft - die Anfahrt zur Ladestelle inbegriffen.
+    let terminhinweis = "";
+    if (!hindernis && tour.art === "auftrag") {
+      const m = Auftraege.terminMachbar(tour.auftrag, f.standort);
+      if (m && !m.puenktlich) {
+        terminhinweis = `<span class="tour-warnung">Liefertermin nicht zu halten</span>`;
+      }
+    }
+
+    const menge = hindernis
+      ? 0
+      : tour.art === "spot" ? spotMenge(f, tour.gut) : tour.auftrag.tonnen;
+
+    return `
+      <li class="tour-auswahl ${gewaehlt ? "gewaehlt" : ""} ${hindernis ? "gesperrt" : ""}"
+          data-fahrzeug="${f.id}">
+        ${hindernis ? "" : weiterPfeil("ziel")}
+        <span class="tour-auswahl-name">
+          <span class="tour-flottenpunkt"
+                style="background:${Lackierung.cssFarbe(f.lackierung)};
+                       border-color:${Lackierung.cssFarbeDunkel(f.lackierung)}"></span>
+          ${f.marke} ${f.modell}
+          <span class="tour-auftrag-nummer">${f.kennzeichen}</span>
+        </span>
+        <span class="tour-auswahl-zusatz">
+          ${f.aufbautyp} · Zuladung ${(f.zuladungKg / 1000).toFixed(1)} t ·
+          ${Math.round(f.kmStand).toLocaleString("de-DE")} km ·
+          Zustand ${Math.round(Verschleiss.gesamtzustand(f))} %
+        </span>
+        <span class="tour-auswahl-zusatz">
+          ${hindernis
+            ? `<span class="tour-warnung">${hindernis}</span>`
+            : `lädt ${menge.toFixed(1)} t`}
+          ${terminhinweis}
+        </span>
+      </li>
     `;
   }
 
@@ -931,7 +904,7 @@ const TourenplanungApp = (function () {
    * nicht mehr halten kann. So sieht man die Dringlichkeit, ohne jede
    * Zeile lesen zu müssen.
    */
-  function ablaufBalken(a, fahrzeug) {
+  function ablaufBalken(a, verspaetet) {
     // Klassenname bewusst "tour-fristbalken": "tour-ablauf" gehört seit
     // jeher dem Rahmen um den Planungsablauf. Die Doppelbelegung machte
     // diesen Rahmen absolut positioniert und pointer-events: none - die
@@ -944,11 +917,6 @@ const TourenplanungApp = (function () {
     else if (rest < 0.5) klasse = "tour-frist-mittel";
 
     // Termin nicht mehr zu halten - das schlägt alles andere.
-    let verspaetet = false;
-    if (fahrzeug) {
-      const m = Auftraege.terminMachbar(a, fahrzeug.standort);
-      verspaetet = !m || !m.puenktlich;
-    }
     if (verspaetet) klasse = "tour-frist-spaet";
 
     const titel = verspaetet
@@ -966,23 +934,41 @@ const TourenplanungApp = (function () {
                     title="Auswählen und weiter">&#10095;</button>`;
   }
 
-  function frachtZeileAuftrag(a, f) {
+  /**
+   * Eine Auftragszeile in der Frachtliste.
+   *
+   * Geprüft wird gegen alle Fahrzeuge, die für diese Stadt infrage
+   * kommen - ein Fahrzeug ist ja noch nicht gewählt. Gesperrt ist die
+   * Zeile erst, wenn keines davon die Ladung nehmen könnte.
+   */
+  function frachtZeileAuftrag(a, kandidaten) {
     const g = Auftraege.gut(a);
-    const kannLaden = Ladung.kannLaden(f, g);
-    const maxT = Ladung.maxMengeTonnen(f, g);
-    const reicht = maxT >= a.tonnen;
-    const gesperrt = !kannLaden || !reicht;
-    const gruende = [];
-    if (!kannLaden) gruende.push(`Aufbau ${f.aufbautyp} ungeeignet`);
-    if (kannLaden && !reicht) gruende.push(`nur ${maxT.toFixed(1)} t möglich`);
+    const ladbar = kandidaten.filter((f) => Ladung.kannLaden(f, g));
+    const passend = ladbar.filter((f) => Ladung.maxMengeTonnen(f, g) >= a.tonnen);
+    const gesperrt = passend.length === 0;
+
+    let grund = "";
+    if (ladbar.length === 0) {
+      grund = "Kein passender Aufbau verfügbar";
+    } else if (gesperrt) {
+      const maxT = Math.max(...ladbar.map((f) => Ladung.maxMengeTonnen(f, g)));
+      grund = `Zuladung reicht nicht (höchstens ${maxT.toFixed(1)} t)`;
+    }
+
+    // Der Balken wird rot, wenn kein einziges passendes Fahrzeug den
+    // Termin noch halten könnte - die Anfahrt eingerechnet.
+    const verspaetet = gesperrt || !passend.some((f) => {
+      const m = Auftraege.terminMachbar(a, f.standort);
+      return m && m.puenktlich;
+    });
 
     const gewaehlt = tour.art === "auftrag" && tour.auftrag && tour.auftrag.nummer === a.nummer;
 
     return `
       <li class="tour-auswahl tour-auftrag ${gewaehlt ? "gewaehlt" : ""} ${gesperrt ? "gesperrt" : ""}"
           data-fracht-auftrag="${a.nummer}">
-        ${ablaufBalken(a, f)}
-        ${gesperrt ? "" : weiterPfeil("bereit")}
+        ${ablaufBalken(a, verspaetet)}
+        ${gesperrt ? "" : weiterPfeil("fahrzeug")}
         <span class="tour-auswahl-name">
           <span class="tour-ware-aufbau tour-aufbau-${g.aufbau} tour-ware-info"
                 data-auftrag-ware="${g.id}">${aufbauKurz(g.aufbau)}</span>
@@ -998,22 +984,22 @@ const TourenplanungApp = (function () {
             ? `<span class="tour-kundenmarke">${a.kundeName}</span>`
             : `<span class="tour-boersenmarke">Frachtbörse</span>`}
           Liefern bis ${Spielzeit.formatiereMitUhrzeit(new Date(a.lieferFrist))}
-          ${gruende.length ? `<span class="tour-warnung">${gruende.join(", ")}</span>` : ""}
+          ${grund ? `<span class="tour-warnung">${grund}</span>` : ""}
         </span>
       </li>
     `;
   }
 
-  function frachtZeileSpot(g, f) {
-    const kannLaden = Ladung.kannLaden(f, g);
-    const menge = kannLaden ? spotMenge(f, g) : 0;
-    const gesperrt = !kannLaden || menge <= 0;
+  function frachtZeileSpot(g, kandidaten) {
+    const ladbar = kandidaten.filter((f) => Ladung.kannLaden(f, g));
+    const menge = ladbar.length ? Math.max(...ladbar.map((f) => spotMenge(f, g))) : 0;
+    const gesperrt = menge <= 0;
     const gewaehlt = tour.art === "spot" && tour.gut && tour.gut.id === g.id;
 
     return `
       <li class="tour-auswahl ${gewaehlt ? "gewaehlt" : ""} ${gesperrt ? "gesperrt" : ""}"
           data-fracht-gut="${g.id}">
-        ${gesperrt ? "" : weiterPfeil("ziel")}
+        ${gesperrt ? "" : weiterPfeil("fahrzeug")}
         <span class="tour-auswahl-name">
           <span class="tour-ware-aufbau tour-aufbau-${g.aufbau} tour-ware-info"
                 data-auftrag-ware="${g.id}">${aufbauKurz(g.aufbau)}</span>
@@ -1022,7 +1008,7 @@ const TourenplanungApp = (function () {
         </span>
         <span class="tour-auswahl-zusatz">
           ${gesperrt
-            ? `<span class="tour-warnung">Aufbau ${f.aufbautyp} ungeeignet</span>`
+            ? `<span class="tour-warnung">Kein passender Aufbau verfügbar</span>`
             : `bis ${menge.toFixed(1)} t ladbar · ${g.wertProTonne.toLocaleString("de-DE")} DM je Tonne Warenwert`}
         </span>
         <span class="tour-auswahl-zusatz">
@@ -1034,7 +1020,7 @@ const TourenplanungApp = (function () {
     `;
   }
 
-  // ---------- 4. Ziel wählen (nur am freien Markt) ----------
+  // ---------- 3. Ziel wählen (nur am freien Markt) ----------
 
   function schrittZiel() {
     const s = tour.stadt;
@@ -1090,7 +1076,7 @@ const TourenplanungApp = (function () {
           `).join("")}
       </ul>
       <div class="tour-dispo-aktionen">
-        <button class="win98-button bevel-out" data-zurueck-schritt="fracht">&#10094; Zurück</button>
+        <button class="win98-button bevel-out" data-zurueck-schritt="fahrzeug">&#10094; Zurück</button>
         ${tour.ziel
           ? `<button class="win98-button bevel-out" id="tour-btn-weiter-bereit">Weiter &#10095;</button>`
           : ""}
@@ -1098,7 +1084,7 @@ const TourenplanungApp = (function () {
     `;
   }
 
-  // ---------- 5. Losfahren ----------
+  // ---------- 4. Losfahren ----------
 
   function schrittBereit() {
     const f = tour.fahrzeug;
@@ -1136,7 +1122,7 @@ const TourenplanungApp = (function () {
             </div>` : ""}
         </div>
         <div class="tour-dispo-aktionen">
-          <button class="win98-button bevel-out" data-zurueck-schritt="fracht">&#10094; Zurück</button>
+          <button class="win98-button bevel-out" data-zurueck-schritt="fahrzeug">&#10094; Zurück</button>
           <button class="win98-button bevel-out" id="tour-btn-tour-starten">🚚 Losfahren</button>
         </div>
       `;
@@ -1571,14 +1557,18 @@ const TourenplanungApp = (function () {
   // ---------- Auswahl ----------
 
   function stadtWaehlen(stadt) {
+    const gewechselt = !gewaehlteStadt || gewaehlteStadt.name !== stadt.name;
     gewaehlteStadt = stadt;
 
-    // Während der Planung ist die Stadt der Ausgangspunkt. Solange man
-    // noch im ersten Schritt steht, darf man sie auf der Karte wechseln -
-    // danach würde das die getroffene Auswahl entwerten.
-    if (planungAktiv && tour.schritt === "stadt") {
-      tour.stadt = stadt;
+    // Die Karte ist der Einstieg: Eine andere Stadt antippen heißt, von
+    // dort aus neu zu disponieren. Eine schon getroffene Auswahl gilt
+    // für die alte Stadt und fällt damit weg.
+    if (gewechselt) {
+      tourZuruecksetzen();
+      aktiveRoute = null;
+      hervorgehobenesGut = null;
     }
+    tour.stadt = stadt;
 
     dispositionAktualisieren();
     markenZeichnen();
@@ -1654,26 +1644,31 @@ const TourenplanungApp = (function () {
     dispo.querySelectorAll("[data-fracht-auftrag], [data-fracht-gut]")
       .forEach((z) => z.classList.toggle("gewaehlt", z === zeile));
 
-    weiterKnopfAktualisieren(dispo, "#tour-btn-weiter-ziel",
-      tour.art === "auftrag" ? "Weiter &#10095;" : "Ziel wählen &#10095;", () => {
-        tour.schritt = tour.art === "auftrag" ? "bereit" : "ziel";
+    weiterKnopfAktualisieren(dispo, "#tour-btn-weiter-fahrzeug",
+      "Fahrzeug wählen &#10095;", () => {
+        tour.schritt = "fahrzeug";
         dispositionAktualisieren();
       });
 
-    // Die Beschriftung hängt an der Frachtart und muss nachziehen,
-    // wenn man von einem Auftrag auf eine Spotladung wechselt.
-    const knopf = dispo.querySelector("#tour-btn-weiter-ziel");
-    if (knopf) {
-      knopf.innerHTML = tour.art === "auftrag"
-        ? "Weiter &#10095;"
-        : "Ziel wählen &#10095;";
-    }
-
-    // Ohne Neuaufbau muss auch die Schrittleiste von Hand nachziehen:
+    // Ohne Neuaufbau muss die Schrittleiste von Hand nachziehen:
     // Bei einem festen Auftrag gibt der Auftraggeber das Ziel vor.
     const zielSchritt = dispo.querySelector('.tour-schritt[data-schritt="ziel"]');
     if (zielSchritt) {
       zielSchritt.classList.toggle("entfaellt", tour.art === "auftrag");
+    }
+  }
+
+  /**
+   * Fahrzeug in die Planung übernehmen. Erst jetzt stehen Menge und
+   * Termin fest - beides hängt am Wagen und an seinem Standort.
+   */
+  function fahrzeugUebernehmen(f) {
+    tour.fahrzeug = f;
+    if (tour.art === "auftrag" && tour.auftrag) {
+      tour.tonnen = tour.auftrag.tonnen;
+      tour.machbarkeit = Auftraege.terminMachbar(tour.auftrag, f.standort);
+    } else if (tour.art === "spot" && tour.gut) {
+      tour.tonnen = spotMenge(f, tour.gut);
     }
   }
 
@@ -1694,12 +1689,12 @@ const TourenplanungApp = (function () {
     let ziel = pfeil.dataset.weiterSchritt;
     // Bei einem festen Auftrag gibt der Auftraggeber das Ziel vor.
     if (ziel === "ziel" && tour.art === "auftrag") ziel = "bereit";
-    if (ziel === "bereit" && tour.art === "spot" && !tour.ziel) ziel = "ziel";
 
     // Nur weiterschalten, wenn der Schritt auch vollständig ist.
-    if (ziel === "fracht" && !tour.fahrzeug) return;
-    if (ziel === "ziel" && !frachtGewaehlt()) return;
+    if (ziel === "fahrzeug" && !frachtGewaehlt()) return;
+    if (ziel === "ziel" && !tour.fahrzeug) return;
     if (ziel === "bereit") {
+      if (!tour.fahrzeug) return;
       if (tour.art === "auftrag" && !tour.auftrag) return;
       if (tour.art === "spot" && !tour.ziel) return;
       if (!tour.art) return;
@@ -1785,66 +1780,7 @@ const TourenplanungApp = (function () {
       });
     }
 
-    // ---- Schritt 1: Stadtseite ----
-    const weiterFahrzeug = dispo.querySelector("#tour-btn-weiter-fahrzeug");
-    if (weiterFahrzeug) {
-      weiterFahrzeug.addEventListener("click", () => {
-        tour.schritt = "fahrzeug";
-        dispositionAktualisieren();
-      });
-    }
-
-    // Leerfahrt anfordern: Das Fahrzeug fährt nur hin, disponiert wird
-    // neu, wenn es da ist. Deshalb endet die Planung hier.
-    dispo.querySelectorAll("[data-anfordern]").forEach((el) => {
-      el.addEventListener("click", () => {
-        const id = Number(el.dataset.anfordern);
-        const f = alleVerfuegbaren().find((x) => x.id === id);
-        if (!f) return;
-        const ziel = el.dataset.anfordernZiel;
-        if (!window.confirm(
-          `${f.kennzeichen} leer von ${f.standort} nach ${ziel} schicken?\n\n` +
-          `Die Fahrt bringt keinen Erlös. Disponiert wird neu, sobald ` +
-          `das Fahrzeug angekommen ist.`
-        )) return;
-        planungBeenden();
-        leerfahrtStarten(f, ziel);
-      });
-    });
-
-    // ---- Schritt 2: Fahrzeug vor Ort ----
-    dispo.querySelectorAll("[data-fahrzeug]").forEach((el) => {
-      el.addEventListener("click", () => {
-        if (el.classList.contains("gesperrt")) return;
-        const id = Number(el.dataset.fahrzeug);
-        tour.fahrzeug = FuhrparkApp.alleFahrzeuge().find((f) => f.id === id) || null;
-        // Fahrzeugwechsel macht eine schon gewählte Fracht ungültig:
-        // Der Aufbau entscheidet, was überhaupt geladen werden darf.
-        tour.art = null;
-        tour.auftrag = null;
-        tour.gut = null;
-        tour.ziel = null;
-        tour.tonnen = 0;
-
-        dispo.querySelectorAll("[data-fahrzeug]").forEach((z) =>
-          z.classList.toggle("gewaehlt", z === el));
-        weiterKnopfAktualisieren(dispo, "#tour-btn-weiter-fracht",
-          "Fracht wählen &#10095;", () => {
-            tour.schritt = "fracht";
-            dispositionAktualisieren();
-          });
-      });
-    });
-
-    const weiterFracht = dispo.querySelector("#tour-btn-weiter-fracht");
-    if (weiterFracht) {
-      weiterFracht.addEventListener("click", () => {
-        tour.schritt = "fracht";
-        dispositionAktualisieren();
-      });
-    }
-
-    // ---- Schritt 3: Fracht ----
+    // ---- Schritt 1: Fracht ----
     dispo.querySelectorAll("[data-fracht-auftrag]").forEach((el) => {
       el.addEventListener("click", (e) => {
         if (el.classList.contains("gesperrt")) return;
@@ -1856,7 +1792,10 @@ const TourenplanungApp = (function () {
         tour.gut = null;
         tour.ziel = null;
         tour.tonnen = a.tonnen;
-        tour.machbarkeit = Auftraege.terminMachbar(a, tour.fahrzeug.standort);
+        // Die Machbarkeit hängt am Standort des Fahrzeugs und wird
+        // deshalb erst bei dessen Wahl gerechnet.
+        tour.machbarkeit = null;
+        tour.fahrzeug = null;
         aktiveRoute = Route.berechne(a.vonName, a.nachName);
 
         frachtAuswahlZeigen(dispo, el);
@@ -1875,7 +1814,9 @@ const TourenplanungApp = (function () {
         tour.auftrag = null;
         tour.ziel = null;
         tour.machbarkeit = null;
-        tour.tonnen = spotMenge(tour.fahrzeug, g);
+        tour.fahrzeug = null;
+        // Wie viel geht drauf? Das entscheidet erst das Fahrzeug.
+        tour.tonnen = 0;
         // Städte mit Bedarf auf der Karte aufleuchten lassen
         hervorgehobenesGut = g;
         aktiveRoute = null;
@@ -1883,6 +1824,52 @@ const TourenplanungApp = (function () {
         frachtAuswahlZeigen(dispo, el);
         routeZeichnen();
         markenZeichnen();
+      });
+    });
+
+    const weiterFahrzeug = dispo.querySelector("#tour-btn-weiter-fahrzeug");
+    if (weiterFahrzeug) {
+      weiterFahrzeug.addEventListener("click", () => {
+        if (!frachtGewaehlt()) return;
+        tour.schritt = "fahrzeug";
+        dispositionAktualisieren();
+      });
+    }
+
+    // ---- Schritt 2: Fahrzeug ----
+    dispo.querySelectorAll("[data-fahrzeug]").forEach((el) => {
+      el.addEventListener("click", () => {
+        if (el.classList.contains("gesperrt")) return;
+        const id = Number(el.dataset.fahrzeug);
+        const f = FuhrparkApp.alleFahrzeuge().find((x) => x.id === id) || null;
+        if (!f) return;
+        fahrzeugUebernehmen(f);
+
+        dispo.querySelectorAll("[data-fahrzeug]").forEach((z) =>
+          z.classList.toggle("gewaehlt", z === el));
+        weiterKnopfAktualisieren(dispo, "#tour-btn-weiter-ziel",
+          tour.art === "auftrag" ? "Weiter &#10095;" : "Ziel wählen &#10095;", () => {
+            tour.schritt = tour.art === "auftrag" ? "bereit" : "ziel";
+            dispositionAktualisieren();
+          });
+      });
+    });
+
+    // Leerfahrt anfordern: Das Fahrzeug fährt nur hin, disponiert wird
+    // neu, wenn es da ist. Deshalb endet die Planung hier.
+    dispo.querySelectorAll("[data-anfordern]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = Number(el.dataset.anfordern);
+        const f = alleVerfuegbaren().find((x) => x.id === id);
+        if (!f) return;
+        const ziel = el.dataset.anfordernZiel;
+        if (!window.confirm(
+          `${f.kennzeichen} leer von ${f.standort} nach ${ziel} schicken?\n\n` +
+          `Die Fahrt bringt keinen Erlös. Disponiert wird neu, sobald ` +
+          `das Fahrzeug angekommen ist.`
+        )) return;
+        auswahlVerwerfen();
+        leerfahrtStarten(f, ziel);
       });
     });
 
@@ -1894,7 +1881,7 @@ const TourenplanungApp = (function () {
       });
     }
 
-    // ---- Schritt 4: Ziel (nur am freien Markt) ----
+    // ---- Schritt 3: Ziel (nur am freien Markt) ----
     dispo.querySelectorAll("[data-ziel]").forEach((el) => {
       el.addEventListener("click", () => {
         tour.ziel = STAEDTE[el.dataset.ziel] || null;
@@ -1939,7 +1926,7 @@ const TourenplanungApp = (function () {
       dispo.addEventListener("click", weiterAusZeile);
     }
 
-    // ---- Schritt 5: Losfahren ----
+    // ---- Schritt 4: Losfahren ----
     const starten = dispo.querySelector("#tour-btn-tour-starten");
     if (starten) starten.addEventListener("click", tourAusfuehren);
 
@@ -1982,7 +1969,7 @@ const TourenplanungApp = (function () {
     }
 
     const abbrechen = dispo.querySelector("#tour-btn-abbrechen");
-    if (abbrechen) abbrechen.addEventListener("click", planungBeenden);
+    if (abbrechen) abbrechen.addEventListener("click", auswahlVerwerfen);
 
     const neueTour = dispo.querySelector("#tour-btn-neue-tour");
     if (neueTour) {
@@ -2158,10 +2145,10 @@ const TourenplanungApp = (function () {
       beiAnkunft: tourAbschliessen
     });
 
-    planungAktiv = false;
     aktiveRoute = null;
     hervorgehobenesGut = null;
     tourZuruecksetzen();
+    tour.stadt = gewaehlteStadt;
     dispositionAktualisieren();
     Speicher.jetztSichern(); // Tourstart darf nicht verlorengehen
   }
@@ -2329,11 +2316,15 @@ const TourenplanungApp = (function () {
     };
   }
 
-  function planungBeenden() {
-    planungAktiv = false;
+  /**
+   * Zurück auf die Frachtliste der Stadt. Die Stadt selbst bleibt
+   * stehen - verworfen wird nur, was darauf aufbaut.
+   */
+  function auswahlVerwerfen() {
     hervorgehobenesGut = null;
     aktiveRoute = null;
     tourZuruecksetzen();
+    tour.stadt = gewaehlteStadt;
     dispositionAktualisieren();
   }
 
@@ -2365,7 +2356,7 @@ const TourenplanungApp = (function () {
 
   function warendetailsSchliessen() {
     detailGut = null;
-    if (!planungAktiv) hervorgehobenesGut = null;
+    if (!tour.gut) hervorgehobenesGut = null;
     dispositionAktualisieren();
   }
 
@@ -2395,24 +2386,6 @@ const TourenplanungApp = (function () {
       .addEventListener("click", () => zoomAendern(1 / 1.35));
     fensterElement.querySelector("#tour-zoom-reset")
       .addEventListener("click", ansichtZuruecksetzen);
-
-    fensterElement.querySelector("#tour-btn-planung")
-      .addEventListener("click", () => {
-        if (!Betrieb.hatDepot()) {
-          window.alert("Zuerst ein Depot gründen - Stadt auf der Karte auswählen.");
-          return;
-        }
-        if (!gewaehlteStadt) {
-          window.alert("Zuerst eine Stadt auf der Karte auswählen - von dort wird disponiert.");
-          return;
-        }
-        planungAktiv = true;
-        aktiveRoute = null;
-        hervorgehobenesGut = null;
-        tourZuruecksetzen();
-        tour.stadt = gewaehlteStadt;
-        dispositionAktualisieren();
-      });
 
     // --- Marken: Auswahl und Tooltip ---
     marken.addEventListener("click", (e) => {
@@ -2614,7 +2587,6 @@ const TourenplanungApp = (function () {
     }
 
     // Eine laufende Planung bezieht sich auf die alte Welt.
-    planungAktiv = false;
     aktiveRoute = null;
     hervorgehobenesGut = null;
     detailGut = null;
@@ -2673,7 +2645,7 @@ const TourenplanungApp = (function () {
       // Ohne Karte: Im Takt ändern sich nur Fortschrittsbalken und
       // Ankunftszeiten in der Liste. Die Fahrzeugpunkte auf der Karte
       // zeichnet fahrtenZeichnen() oben ohnehin schon.
-      if (!planungAktiv && Fahrt.anzahl() > 0) {
+      if (!inAuswahl() && Fahrt.anzahl() > 0) {
         dispositionAktualisieren({ nurListe: true });
       }
     });

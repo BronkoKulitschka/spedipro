@@ -7,7 +7,40 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.22)
+## Aktueller Stand (v0.15.23)
+
+**Tourenplanung ohne Startknopf - die Karte ist der Einstieg.**
+Eine Stadt antippen genügt: Darunter steht sofort, was von dort
+ausgeht. Der Knopf "Tour planen" ist ersatzlos entfallen.
+
+Neue Schrittfolge - die Fracht steht jetzt vor dem Fahrzeug:
+
+    Stadt (Karte) -> 1 Fracht -> 2 Fahrzeug -> 3 Ziel -> 4 Start
+
+Das entspricht der Disposition: Erst weiß man, was zu fahren ist, dann
+sucht man den Wagen dazu. Die Frachtliste prüft jede Zeile gegen alle
+Fahrzeuge, die für diese Stadt infrage kommen, und sperrt sie erst,
+wenn keines die Ladung nehmen könnte - mit dem Grund daneben ("Kein
+passender Aufbau verfügbar", "Zuladung reicht nicht"). Der Fristbalken
+wird rot, sobald kein passendes Fahrzeug den Termin mehr halten kann,
+Anfahrt eingerechnet.
+
+Die Fahrzeugliste ist umgekehrt nach der Fracht gefiltert: Wer sie
+nicht laden kann, steht gesperrt darunter, damit der Grund sichtbar
+bleibt. Steht nichts Passendes vor Ort, folgt direkt die
+Leerfahrt-Anforderung - und auch die bietet nur noch Fahrzeuge an, die
+diese Ladung überhaupt nehmen dürfen. Ein Kipper, der 900 km leer
+anrollt und dann keine Papierrollen laden darf, war kein Vorschlag,
+sondern eine Falle.
+
+Weiteres: Der Pfeil am Zeilenende wählt und schaltet in einem Zug
+weiter - auch in der Frachtliste. "Planung abbrechen" heißt jetzt
+"Auswahl verwerfen" und führt auf die Frachtliste der Stadt zurück;
+eine andere Stadt auf der Karte tut dasselbe. Die Übersicht über
+Flotte und laufende Fahrten steht unter der Frachtliste statt darüber:
+zuerst die Entscheidung, dann der Bestand.
+
+## Vorheriger Stand (v0.15.22)
 
 **Tourenplanung war nicht mehr bedienbar - Namenskollision behoben.**
 Der neue Fristbalken bekam in 0.15.21 die Klasse `tour-ablauf`. So
