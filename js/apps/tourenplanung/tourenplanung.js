@@ -808,6 +808,7 @@ const TourenplanungApp = (function () {
                 const g = Auftraege.gut(a);
                 return `
                   <li class="tour-fracht">
+                    ${ablaufBalken(a, null)}
                     <span class="tour-ware-aufbau tour-aufbau-${g.aufbau} tour-ware-info"
                           data-wareninfo="${g.id}">${aufbauKurz(g.aufbau)}</span>
                     <span class="tour-fracht-ziel">→ ${a.nachName}</span>
@@ -853,6 +854,7 @@ const TourenplanungApp = (function () {
         ${vorOrt.map((f) => `
           <li class="tour-auswahl ${tour.fahrzeug && tour.fahrzeug.id === f.id ? "gewaehlt" : ""}"
               data-fahrzeug="${f.id}">
+            ${weiterPfeil("fracht")}
             <span class="tour-auswahl-name">
               <span class="tour-flottenpunkt"
                     style="background:${Lackierung.cssFarbe(f.lackierung)};
@@ -922,6 +924,44 @@ const TourenplanungApp = (function () {
     return (tour.art === "auftrag" && tour.auftrag) || (tour.art === "spot" && tour.gut);
   }
 
+  /**
+   * Der Ablaufbalken hinter der Schrift. Er zeigt, wie viel Standzeit
+   * ein Auftrag noch hat, bevor ihn jemand anders nimmt - und färbt
+   * sich rot, wenn das gewählte Fahrzeug den Liefertermin ohnehin
+   * nicht mehr halten kann. So sieht man die Dringlichkeit, ohne jede
+   * Zeile lesen zu müssen.
+   */
+  function ablaufBalken(a, fahrzeug) {
+    const rest = Auftraege.restanteil(a);
+    const stunden = Auftraege.restStunden(a);
+
+    let klasse = "tour-ablauf-viel";
+    if (rest < 0.2) klasse = "tour-ablauf-knapp";
+    else if (rest < 0.5) klasse = "tour-ablauf-mittel";
+
+    // Termin nicht mehr zu halten - das schlägt alles andere.
+    let verspaetet = false;
+    if (fahrzeug) {
+      const m = Auftraege.terminMachbar(a, fahrzeug.standort);
+      verspaetet = !m || !m.puenktlich;
+    }
+    if (verspaetet) klasse = "tour-ablauf-spaet";
+
+    const titel = verspaetet
+      ? `Liefertermin nicht zu halten · noch ${stunden} Std am Markt`
+      : `Noch ${stunden} Std am Markt`;
+
+    return `<span class="tour-ablauf ${klasse}"
+                  style="width:${Math.round(rest * 100)}%"
+                  title="${titel}"></span>`;
+  }
+
+  /** Pfeil am Zeilenende: auswählen und gleich weiter zum nächsten Schritt. */
+  function weiterPfeil(schritt) {
+    return `<button class="tour-weiterpfeil" data-weiter-schritt="${schritt}"
+                    title="Auswählen und weiter">&#10095;</button>`;
+  }
+
   function frachtZeileAuftrag(a, f) {
     const g = Auftraege.gut(a);
     const kannLaden = Ladung.kannLaden(f, g);
@@ -937,6 +977,8 @@ const TourenplanungApp = (function () {
     return `
       <li class="tour-auswahl tour-auftrag ${gewaehlt ? "gewaehlt" : ""} ${gesperrt ? "gesperrt" : ""}"
           data-fracht-auftrag="${a.nummer}">
+        ${ablaufBalken(a, f)}
+        ${gesperrt ? "" : weiterPfeil("bereit")}
         <span class="tour-auswahl-name">
           <span class="tour-ware-aufbau tour-aufbau-${g.aufbau} tour-ware-info"
                 data-auftrag-ware="${g.id}">${aufbauKurz(g.aufbau)}</span>
@@ -967,6 +1009,7 @@ const TourenplanungApp = (function () {
     return `
       <li class="tour-auswahl ${gewaehlt ? "gewaehlt" : ""} ${gesperrt ? "gesperrt" : ""}"
           data-fracht-gut="${g.id}">
+        ${gesperrt ? "" : weiterPfeil("ziel")}
         <span class="tour-auswahl-name">
           <span class="tour-ware-aufbau tour-aufbau-${g.aufbau} tour-ware-info"
                 data-auftrag-ware="${g.id}">${aufbauKurz(g.aufbau)}</span>
@@ -1022,6 +1065,7 @@ const TourenplanungApp = (function () {
           : ziele.slice(0, 25).map((e) => `
             <li class="tour-auswahl ${tour.ziel && tour.ziel.name === e.z.name ? "gewaehlt" : ""}"
                 data-ziel="${e.z.name}">
+              ${weiterPfeil("bereit")}
               <span class="tour-auswahl-name">
                 ${e.z.name}
                 <span class="tour-auftrag-nummer">${e.z.land}</span>
@@ -1826,6 +1870,36 @@ const TourenplanungApp = (function () {
         dispositionAktualisieren();
       });
     }
+
+    // ---- Pfeil in der Zeile: auswählen und gleich weiter ----
+    //
+    // Bewusst am Dispositionsbereich und nicht am Pfeil selbst: Beim
+    // Blasen läuft erst der Klick auf die Zeile (der auswählt), dann
+    // dieser hier. Andersherum würde er weiterschalten, bevor etwas
+    // gewählt ist.
+    dispo.addEventListener("click", (e) => {
+      const pfeil = e.target.closest("[data-weiter-schritt]");
+      if (!pfeil || !dispo.contains(pfeil)) return;
+      const zeile = pfeil.closest(".tour-auswahl");
+      if (zeile && zeile.classList.contains("gesperrt")) return;
+
+      let ziel = pfeil.dataset.weiterSchritt;
+      // Bei einem festen Auftrag gibt der Auftraggeber das Ziel vor.
+      if (ziel === "ziel" && tour.art === "auftrag") ziel = "bereit";
+      if (ziel === "bereit" && tour.art === "spot" && !tour.ziel) ziel = "ziel";
+
+      // Nur weiterschalten, wenn der Schritt auch vollständig ist.
+      if (ziel === "fracht" && !tour.fahrzeug) return;
+      if (ziel === "ziel" && !frachtGewaehlt()) return;
+      if (ziel === "bereit") {
+        if (tour.art === "auftrag" && !tour.auftrag) return;
+        if (tour.art === "spot" && !tour.ziel) return;
+        if (!tour.art) return;
+      }
+
+      tour.schritt = ziel;
+      dispositionAktualisieren();
+    });
 
     // ---- Schritt 5: Losfahren ----
     const starten = dispo.querySelector("#tour-btn-tour-starten");

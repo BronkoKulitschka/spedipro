@@ -7,7 +7,34 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.20)
+## Aktueller Stand (v0.15.21)
+
+**Ablaufbalken hinter der Schrift.** Jede Auftragszeile trägt jetzt
+einen Balken, der die ganze Zeilenhöhe füllt und mit der Restlaufzeit
+schrumpft - grün, ab der Hälfte gelb, im letzten Fünftel orange. So
+sieht man die Dringlichkeit, ohne jede Zeile zu lesen. Gezeigt wird die
+Standzeit am Markt (Ladefenster plus zwei Tage), nicht die Lieferfrist:
+Danach nimmt den Auftrag jemand anders.
+
+**Rot, wenn der Termin nicht mehr zu halten ist.** Kann das gewählte
+Fahrzeug von seinem Standort aus nicht mehr rechtzeitig liefern, wird
+der Balken rot und schraffiert - eine Absage, keine Abstufung, deshalb
+auch ohne Farbsehen erkennbar. Grundlage ist `Auftraege.terminMachbar`,
+dieselbe Prüfung, die auch die Warnung im Text erzeugt.
+
+**Weiter direkt aus der Zeile.** Am rechten Rand jeder wählbaren Zeile
+sitzt ein Pfeil, der auswählt und gleich weiterschaltet. Bei langen
+Listen musste man vorher bis ans Ende scrollen, um den Weiter-Knopf zu
+finden - bei zwanzig Aufträgen war der außer Sicht. Der Knopf unten
+bleibt, für alle, die erst vergleichen wollen.
+
+Beim Bauen kam noch ein Anzeigefehler heraus: Die Kartenbühne trägt
+`will-change: transform` und liegt damit auf einer eigenen
+Compositing-Ebene. Sobald die Listenzeilen positioniert wurden, zeichnete
+Chromium die Karte über die Auftragsliste. `#tour-disposition` bekommt
+deshalb einen eigenen Stapelkontext.
+
+## Vorheriger Stand (v0.15.20)
 
 **Echte Straßen statt gerader Linien.** Das Straßennetz kommt jetzt aus
 **Natural Earth 10m roads** (Public Domain) — derselben Quelle wie

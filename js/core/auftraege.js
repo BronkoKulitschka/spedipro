@@ -244,6 +244,35 @@ const Auftraege = (function () {
     benachrichtigen();
   }
 
+  /**
+   * Wann dieser Auftrag vom Markt verschwindet. Nach dem Ladefenster
+   * bleibt er noch VERFALL_TAGE liegen, dann nimmt ihn jemand anders.
+   */
+  function verfallAm(auftrag) {
+    const grenze = new Date(auftrag.ladeEnde);
+    grenze.setDate(grenze.getDate() + VERFALL_TAGE);
+    return grenze;
+  }
+
+  /**
+   * Wie viel von der Standzeit eines Auftrags noch übrig ist, als
+   * Anteil zwischen 0 und 1. Grundlage für die Ablaufanzeige in der
+   * Auftragsliste.
+   */
+  function restanteil(auftrag) {
+    const jetzt = Spielzeit.heute().getTime();
+    const angelegt = new Date(auftrag.angelegtAm).getTime();
+    const ende = verfallAm(auftrag).getTime();
+    if (ende <= angelegt) return 0;
+    return Math.max(0, Math.min(1, (ende - jetzt) / (ende - angelegt)));
+  }
+
+  /** Verbleibende Stunden bis zum Verfall. */
+  function restStunden(auftrag) {
+    const ms = verfallAm(auftrag).getTime() - Spielzeit.heute().getTime();
+    return Math.max(0, Math.round(ms / 3600000));
+  }
+
   // ---------- Hilfen für die Disposition ----------
 
   /** Bleibt genug Zeit, den Auftrag rechtzeitig zuzustellen? */
@@ -319,6 +348,9 @@ const Auftraege = (function () {
     zustellen,
     freigeben,
     terminMachbar,
+    verfallAm,
+    restanteil,
+    restStunden,
     beiAenderung,
     alle,
     setzen
