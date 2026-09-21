@@ -7,7 +7,37 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.21)
+## Aktueller Stand (v0.15.22)
+
+**Tourenplanung war nicht mehr bedienbar - Namenskollision behoben.**
+Der neue Fristbalken bekam in 0.15.21 die Klasse `tour-ablauf`. So
+heißt aber seit jeher der Rahmen um den ganzen Planungsablauf. Beide
+Regeln galten damit für denselben Kasten, und der Rahmen erbte
+`position: absolute`, `pointer-events: none` und verlor sein
+Flex-Layout: Die komplette Tourenplanung nahm keine Klicks und keine
+Wischgesten mehr an. Der Balken heißt jetzt `tour-fristbalken`.
+
+Das ist nach `.tour-stadtname` in 0.15.14 die zweite Kollision dieser
+Art. Ein neuer Test prüft deshalb nicht nur den Balken, sondern
+ausdrücklich, dass der Planungsrahmen `position: static`,
+`pointer-events: auto` und `display: flex` behält.
+
+**Zwei weitere Funde auf dem Weg dorthin:**
+
+*Der Weiter-Pfeil meldete sich bei jedem Zeittakt neu an.* Sein
+Zuhörer hängt am Dispositionsbereich selbst, nicht an einem frisch
+erzeugten Kind - und der bleibt bestehen. Gemessen: nach 300
+Neuaufbauten 302 Kopien, nach 25 Spielstunden 449. Jetzt genau eine,
+gesichert über ein Kennzeichen am Element.
+
+*Die Karte wurde jede Spielminute neu gezeichnet.* Dabei ändern sich
+nur Fortschrittsbalken und Ankunftszeiten in der Liste. Die 165
+Städtemarken jedes Mal neu aufzubauen kostete auf Telefon-Niveau
+gemessene 59 ms je Takt gegenüber 1 ms ohne. Der Zeittakt baut jetzt
+nur noch die Liste auf; die Fahrzeugpunkte zeichnet ohnehin eine
+eigene Funktion. Lange Aufgaben über 20 Sekunden: von 219 ms auf 74 ms.
+
+## Vorheriger Stand (v0.15.21)
 
 **Ablaufbalken hinter der Schrift.** Jede Auftragszeile trägt jetzt
 einen Balken, der die ganze Zeilenhöhe füllt und mit der Restlaufzeit

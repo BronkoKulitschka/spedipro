@@ -932,12 +932,16 @@ const TourenplanungApp = (function () {
    * Zeile lesen zu müssen.
    */
   function ablaufBalken(a, fahrzeug) {
+    // Klassenname bewusst "tour-fristbalken": "tour-ablauf" gehört seit
+    // jeher dem Rahmen um den Planungsablauf. Die Doppelbelegung machte
+    // diesen Rahmen absolut positioniert und pointer-events: none - die
+    // ganze Tourenplanung war damit tot und ließ sich nicht scrollen.
     const rest = Auftraege.restanteil(a);
     const stunden = Auftraege.restStunden(a);
 
-    let klasse = "tour-ablauf-viel";
-    if (rest < 0.2) klasse = "tour-ablauf-knapp";
-    else if (rest < 0.5) klasse = "tour-ablauf-mittel";
+    let klasse = "tour-frist-viel";
+    if (rest < 0.2) klasse = "tour-frist-knapp";
+    else if (rest < 0.5) klasse = "tour-frist-mittel";
 
     // Termin nicht mehr zu halten - das schlägt alles andere.
     let verspaetet = false;
@@ -945,13 +949,13 @@ const TourenplanungApp = (function () {
       const m = Auftraege.terminMachbar(a, fahrzeug.standort);
       verspaetet = !m || !m.puenktlich;
     }
-    if (verspaetet) klasse = "tour-ablauf-spaet";
+    if (verspaetet) klasse = "tour-frist-spaet";
 
     const titel = verspaetet
       ? `Liefertermin nicht zu halten · noch ${stunden} Std am Markt`
       : `Noch ${stunden} Std am Markt`;
 
-    return `<span class="tour-ablauf ${klasse}"
+    return `<span class="tour-fristbalken ${klasse}"
                   style="width:${Math.round(rest * 100)}%"
                   title="${titel}"></span>`;
   }
@@ -1580,7 +1584,19 @@ const TourenplanungApp = (function () {
     markenZeichnen();
   }
 
-  function dispositionAktualisieren() {
+  /**
+   * Baut den Dispositionsbereich neu auf.
+   *
+   * @param {object} [optionen]
+   * @param {boolean} [optionen.nurListe] Karte auslassen. Der Zeittakt
+   *   feuert jede Spielminute; die Marken der 165 Städte dabei jedes
+   *   Mal neu zu zeichnen kostet auf einem Telefon ein Vielfaches des
+   *   Listenaufbaus - und ändert nichts, solange sich weder Flotte noch
+   *   Auswahl noch Hervorhebung geändert haben. Gemessen: 59 ms je
+   *   Takt mit Karte, 1 ms ohne.
+   */
+  function dispositionAktualisieren(optionen) {
+    const nurListe = Boolean(optionen && optionen.nurListe);
     const dispo = fensterElement.querySelector("#tour-disposition");
     if (!dispo) return;
 
@@ -1598,8 +1614,10 @@ const TourenplanungApp = (function () {
     if (eigenerScroll > 0) dispo.scrollTop = eigenerScroll;
 
     dispositionEreignisse(dispo);
-    markenZeichnen();
-    routeZeichnen();
+    if (!nurListe) {
+      markenZeichnen();
+      routeZeichnen();
+    }
     fahrtenZeichnen();
   }
 
@@ -1657,6 +1675,38 @@ const TourenplanungApp = (function () {
     if (zielSchritt) {
       zielSchritt.classList.toggle("entfaellt", tour.art === "auftrag");
     }
+  }
+
+  /**
+   * Klick auf den Weiter-Pfeil einer Zeile: auswählen und gleich
+   * weiterschalten. Liegt als eigene Funktion vor, weil sie nur ein
+   * einziges Mal am Dispositionsbereich angemeldet werden darf.
+   */
+  function weiterAusZeile(e) {
+    const dispo = fensterElement && fensterElement.querySelector("#tour-disposition");
+    if (!dispo) return;
+
+    const pfeil = e.target.closest("[data-weiter-schritt]");
+    if (!pfeil || !dispo.contains(pfeil)) return;
+    const zeile = pfeil.closest(".tour-auswahl");
+    if (zeile && zeile.classList.contains("gesperrt")) return;
+
+    let ziel = pfeil.dataset.weiterSchritt;
+    // Bei einem festen Auftrag gibt der Auftraggeber das Ziel vor.
+    if (ziel === "ziel" && tour.art === "auftrag") ziel = "bereit";
+    if (ziel === "bereit" && tour.art === "spot" && !tour.ziel) ziel = "ziel";
+
+    // Nur weiterschalten, wenn der Schritt auch vollständig ist.
+    if (ziel === "fracht" && !tour.fahrzeug) return;
+    if (ziel === "ziel" && !frachtGewaehlt()) return;
+    if (ziel === "bereit") {
+      if (tour.art === "auftrag" && !tour.auftrag) return;
+      if (tour.art === "spot" && !tour.ziel) return;
+      if (!tour.art) return;
+    }
+
+    tour.schritt = ziel;
+    dispositionAktualisieren();
   }
 
   /** Die Inhalte werden bei jedem Schritt neu erzeugt und neu verdrahtet. */
@@ -1877,29 +1927,17 @@ const TourenplanungApp = (function () {
     // Blasen läuft erst der Klick auf die Zeile (der auswählt), dann
     // dieser hier. Andersherum würde er weiterschalten, bevor etwas
     // gewählt ist.
-    dispo.addEventListener("click", (e) => {
-      const pfeil = e.target.closest("[data-weiter-schritt]");
-      if (!pfeil || !dispo.contains(pfeil)) return;
-      const zeile = pfeil.closest(".tour-auswahl");
-      if (zeile && zeile.classList.contains("gesperrt")) return;
-
-      let ziel = pfeil.dataset.weiterSchritt;
-      // Bei einem festen Auftrag gibt der Auftraggeber das Ziel vor.
-      if (ziel === "ziel" && tour.art === "auftrag") ziel = "bereit";
-      if (ziel === "bereit" && tour.art === "spot" && !tour.ziel) ziel = "ziel";
-
-      // Nur weiterschalten, wenn der Schritt auch vollständig ist.
-      if (ziel === "fracht" && !tour.fahrzeug) return;
-      if (ziel === "ziel" && !frachtGewaehlt()) return;
-      if (ziel === "bereit") {
-        if (tour.art === "auftrag" && !tour.auftrag) return;
-        if (tour.art === "spot" && !tour.ziel) return;
-        if (!tour.art) return;
-      }
-
-      tour.schritt = ziel;
-      dispositionAktualisieren();
-    });
+    //
+    // NUR EINMAL anmelden. Diese Funktion läuft bei jedem Zeittakt
+    // erneut, und anders als die übrigen Zuhörer hängt dieser nicht an
+    // einem frisch erzeugten Kind, sondern am Behälter selbst - der
+    // bleibt bestehen. Ohne die Sperre sammelten sich mit jeder Minute
+    // Spielzeit weitere Kopien an, jeder Klick löste sie alle aus, jede
+    // baute neu auf: Nach kurzer Zeit stand das Fenster.
+    if (!dispo.dataset.weiterGebunden) {
+      dispo.dataset.weiterGebunden = "ja";
+      dispo.addEventListener("click", weiterAusZeile);
+    }
 
     // ---- Schritt 5: Losfahren ----
     const starten = dispo.querySelector("#tour-btn-tour-starten");
@@ -2632,7 +2670,12 @@ const TourenplanungApp = (function () {
       // Auftragswahl bleibt die Liste stehen, damit man in Ruhe lesen
       // und blättern kann - neue Aufträge kommen beim nächsten
       // Auffrischen dazu.
-      if (!planungAktiv && Fahrt.anzahl() > 0) dispositionAktualisieren();
+      // Ohne Karte: Im Takt ändern sich nur Fortschrittsbalken und
+      // Ankunftszeiten in der Liste. Die Fahrzeugpunkte auf der Karte
+      // zeichnet fahrtenZeichnen() oben ohnehin schon.
+      if (!planungAktiv && Fahrt.anzahl() > 0) {
+        dispositionAktualisieren({ nurListe: true });
+      }
     });
 
     // Die Laufbedingung ("nur wenn Fahrzeuge unterwegs sind") setzt

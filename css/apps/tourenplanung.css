@@ -548,10 +548,15 @@
   overflow: hidden;
 }
 
-/* Ablaufbalken hinter der Schrift: zeigt, wie lange der Auftrag noch
+/* Fristbalken hinter der Schrift: zeigt, wie lange der Auftrag noch
    am Markt liegt. Liegt unter dem Text, nicht darüber - lesbar bleibt
-   die Zeile trotzdem, weil die Farben blass sind. */
-.tour-ablauf {
+   die Zeile trotzdem, weil die Farben blass sind.
+
+   NICHT "tour-ablauf" nennen: So heißt seit jeher der Rahmen um den
+   Planungsablauf. Die Doppelbelegung gab diesem Rahmen
+   position: absolute und pointer-events: none - die Tourenplanung war
+   damit nicht mehr bedienbar und ließ sich nicht scrollen. */
+.tour-fristbalken {
   position: absolute;
   left: 0;
   top: 0;
@@ -560,14 +565,14 @@
   pointer-events: none;
 }
 
-.tour-ablauf-viel   { background: rgba(47, 143, 63, 0.20); }
-.tour-ablauf-mittel { background: rgba(217, 165, 32, 0.28); }
-.tour-ablauf-knapp  { background: rgba(200, 110, 30, 0.34); }
+.tour-frist-viel    { background: rgba(47, 143, 63, 0.20); }
+.tour-frist-mittel  { background: rgba(217, 165, 32, 0.28); }
+.tour-frist-knapp   { background: rgba(200, 110, 30, 0.34); }
 
 /* Termin nicht mehr zu halten - das ist keine Abstufung mehr, sondern
    eine Absage. Deshalb kräftiger und mit Streifen, damit es auch
    ohne Farbsehen auffällt. */
-.tour-ablauf-spaet {
+.tour-frist-spaet {
   background: repeating-linear-gradient(
     135deg,
     rgba(176, 48, 48, 0.38) 0 6px,
@@ -576,9 +581,9 @@
 }
 
 /* Der Inhalt muss über den Balken. Der Balken selbst ist
-   ausgenommen - sonst gewinnt diese Regel gegen .tour-ablauf und
+   ausgenommen - sonst gewinnt diese Regel gegen .tour-fristbalken und
    macht ihn wieder zu einem gewöhnlichen Element im Textfluss. */
-.tour-auswahl > span:not(.tour-ablauf) {
+.tour-auswahl > span:not(.tour-fristbalken) {
   position: relative;
   z-index: 1;
 }
@@ -1033,7 +1038,7 @@
   border-bottom: 1px dotted var(--win-grey-dark);
 }
 
-.tour-fracht > span:not(.tour-ablauf) {
+.tour-fracht > span:not(.tour-fristbalken) {
   position: relative;
   z-index: 1;
 }
