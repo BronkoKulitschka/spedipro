@@ -914,12 +914,23 @@ const FuhrparkApp = (function () {
       return { x: (p.x - minX) * massstab, y: (p.y - minY) * massstab };
     };
 
+    const geoAufSchirm = (g) => {
+      const p = Karte.nachBild(g[0], g[1]);
+      return { x: (p.x - minX) * massstab, y: (p.y - minY) * massstab };
+    };
+
+    // Dem echten Straßenverlauf folgen, wie auf der großen Karte
+    const verlaufPunkte = (route) =>
+      route.verlauf && route.verlauf.length >= 2
+        ? route.verlauf.map(geoAufSchirm)
+        : route.stationen.map(aufSchirm);
+
     svg.setAttribute("width", breite);
     svg.setAttribute("height", hoehe);
 
     const teile = [];
     t.etappen.forEach((e, i) => {
-      const pts = e.route.stationen.map(aufSchirm);
+      const pts = verlaufPunkte(e.route);
       const linie = pts.map((p) => `${p.x},${p.y}`).join(" ");
       teile.push(`<polyline points="${linie}" class="tour-route-kontur-duenn" />`);
       teile.push(`<polyline points="${linie}" class="${
@@ -936,18 +947,28 @@ const FuhrparkApp = (function () {
 
     // Fahrzeugposition auf der aktuellen Etappe
     const etappe = Fahrt.aktuelleEtappe(t);
-    const ePunkte = etappe.route.stationen.map(aufSchirm);
     const anteil = Fahrt.etappenFortschritt(t);
-    const abschnitte = etappe.route.abschnitte;
-    let restKm = anteil * (etappe.route.km || 1);
-    let idx = 0;
-    while (idx < abschnitte.length - 1 && restKm > abschnitte[idx].km) {
-      restKm -= abschnitte[idx].km; idx++;
+    const hier = etappe.route.verlauf && etappe.route.verlauf.length >= 2
+      ? Route.punktAuf(etappe.route.verlauf, anteil)
+      : null;
+    let fx, fy;
+    if (hier) {
+      const pos = geoAufSchirm(hier);
+      fx = pos.x;
+      fy = pos.y;
+    } else {
+      const ePunkte = etappe.route.stationen.map(aufSchirm);
+      const abschnitte = etappe.route.abschnitte;
+      let restKm = anteil * (etappe.route.km || 1);
+      let idx = 0;
+      while (idx < abschnitte.length - 1 && restKm > abschnitte[idx].km) {
+        restKm -= abschnitte[idx].km; idx++;
+      }
+      const teil = abschnitte[idx] && abschnitte[idx].km > 0 ? restKm / abschnitte[idx].km : 0;
+      const a = ePunkte[idx], b = ePunkte[idx + 1] || ePunkte[idx];
+      fx = a.x + (b.x - a.x) * teil;
+      fy = a.y + (b.y - a.y) * teil;
     }
-    const teil = abschnitte[idx] && abschnitte[idx].km > 0 ? restKm / abschnitte[idx].km : 0;
-    const a = ePunkte[idx], b = ePunkte[idx + 1] || ePunkte[idx];
-    const fx = a.x + (b.x - a.x) * teil;
-    const fy = a.y + (b.y - a.y) * teil;
     // Punkt in der Lackierung des Fahrzeugs - passt zur Darstellung auf
     // der großen Karte in der Tourenplanung.
     const fahrzeug = fahrzeuge.find((f) => f.id === fahrzeugId);

@@ -7,7 +7,49 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.19)
+## Aktueller Stand (v0.15.20)
+
+**Echte Straßen statt gerader Linien.** Das Straßennetz kommt jetzt aus
+**Natural Earth 10m roads** (Public Domain) — derselben Quelle wie
+Küsten, Flüsse und Städte. Werkzeuge und Ablauf: `werkzeug/LIESMICH.md`.
+
+- **435 von 452 Verbindungen** haben einen echten Verlauf, zusammen
+  6.463 Stützpunkte. Die übrigen 17 behalten die alte Schätzung und
+  tragen `quelle: "schaetzung"`
+- **Die Kilometer sind gemessen, nicht geschätzt.** Bisher stand in
+  `strassennetz.js` ausdrücklich, die Angabe sei „die Luftlinie mit
+  Umwegfaktor 1,2 — eine Schätzung, die später durch echte
+  Streckenlängen ersetzt werden sollte". Damit war jede Entfernung,
+  Fahrzeit, Spritrechnung und jeder Frachtpreis im Spiel auf eine
+  Faustregel gebaut. Im Median lag sie nur 0,8 % daneben, im Einzelfall
+  aber deutlich: Bremerhaven–Hamburg war als **Fähre** eingetragen,
+  weil die Wasseranteil-Heuristik Weser- und Elbmündung falsch deutete
+- **Der Typ kommt aus dem benutzten Weg**, nicht aus einer Schätzung
+  über Wasseranteile. Aus 70 vermeintlichen Fährverbindungen wurden 40
+  tatsächliche
+- **Karte und Route stammen aus derselben Quelle.** Ins Kartenbild ist
+  genau das Netz gemalt, das auch gefahren wird — nicht alles, was
+  Natural Earth kennt. Deshalb können Bild und Routenlinie nicht
+  auseinanderlaufen. Das war der Grund, den naheliegenden Weg (OSM-
+  Screenshot als Hintergrund) nicht zu gehen: Eine Karte mit echten
+  Autobahnen, über die eine schnurgerade Routenlinie läuft, fällt mehr
+  auf als eine ehrlich abstrahierte Karte
+- **Fahrzeug und Routenlinie folgen dem Verlauf**, in der Tourenplanung
+  wie im Kartenfenster des Fuhrparks. `Route.berechne()` liefert dafür
+  `verlauf`, `Route.punktAuf()` den Punkt nach zurückgelegter Strecke
+
+Beim Aufbau mussten zwei Eigenheiten der Daten ausgeglichen werden:
+Natural Earth erfasst Abschnitte als einzelne Linienzüge, die sich an
+Kreuzungen überschneiden, ohne gemeinsamen Stützpunkt — ohne Ausgleich
+hingen nur 27 % des Netzes zusammen. Und Hafenstädte wie Venezia oder
+Roscoff sind dem Fährnetz näher als der Autobahn; ohne Filter fuhr der
+Router von Bologna nach Venezia 2.468 km über das Mittelmeer.
+
+**Einschränkung:** Natural Earth bildet das Netz von heute ab, nicht das
+von 1994. Die A 20 und der Ausbau in den neuen Ländern kamen später,
+der Kanaltunnel öffnete im Mai 1994.
+
+## Vorheriger Stand (v0.15.19)
 
 **Der Unterwegs-Hinweis steht jetzt unter dem Bild**, nicht mehr darauf.
 Als Überlagerung verdeckte er die hinteren Bauteile samt ihrer
@@ -806,6 +848,11 @@ spedipro/
       tourenplanung.css
       spielstaende.css
       finanzen.css
+  werkzeug/            Skripte zur Datenerzeugung (laufen nicht im Spiel)
+    LIESMICH.md        Herkunft und Ablauf
+    netz2.py           Straßengraph aus Natural Earth
+    routen.py          Städte anbinden, Wege suchen
+    strassen_zeichnen.py  Netz in die Karte malen
   docs/
     historischer-rahmen-1994.md   Zeitliche Gegebenheiten (zu verifizieren)
     kosten-1994.md                Kostendaten mit Quellen, offene Punkte markiert
@@ -844,7 +891,7 @@ spedipro/
     data/
       fahrzeugtypen.js   Katalog fiktiver, an reale 90er-LKW angelehnter Fahrzeugtypen
       staedte.js         165 europäische Städte mit echten Koordinaten
-      strassennetz.js    452 Verbindungen zwischen den Städten
+      strassennetz.js    452 Verbindungen mit echtem Verlauf und Länge
       gueter.js          72 Warenarten mit Transporteigenschaften
       regionen.js        25 Wirtschaftsregionen (Angebot/Bedarf)
       kostensaetze.js    Alle Geldbeträge mit Quelle bzw. belegt: false

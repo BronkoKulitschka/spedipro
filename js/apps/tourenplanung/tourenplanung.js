@@ -1294,7 +1294,7 @@ const TourenplanungApp = (function () {
     //    von der orangen Route in Planung.
     Fahrt.alle().forEach((t) => {
       t.etappen.forEach((e) => {
-        const punkte = stationenAlsPunkte(e.route.stationen);
+        const punkte = verlaufAlsPunkte(e.route);
         if (punkte.length < 2) return;
         const linie = punkte.map((p) => `${p.x},${p.y}`).join(" ");
         const klasse = e.typ === "anfahrt" ? "tour-route-anfahrt" : "tour-route-laufend";
@@ -1305,18 +1305,37 @@ const TourenplanungApp = (function () {
 
     // 2. Route in Planung - liegt oben und ist kräftiger
     if (aktiveRoute && aktiveRoute.stationen.length >= 2) {
-      const punkte = routePunkte();
+      const punkte = verlaufAlsPunkte(aktiveRoute);
       const linie = punkte.map((p) => `${p.x},${p.y}`).join(" ");
       teile.push(`<polyline points="${linie}" class="tour-route-kontur" />`);
       teile.push(`<polyline points="${linie}" class="tour-route-linie" />`);
-      punkte.forEach((p, i) => {
+
+      // Kreise nur an den Städten, nicht an jedem Stützpunkt der
+      // Straße - sonst wäre die Route eine Perlenkette.
+      const stationen = routePunkte();
+      stationen.forEach((p, i) => {
         const klasse = i === 0 ? "tour-route-start"
-          : i === punkte.length - 1 ? "tour-route-ziel" : "tour-route-station";
-        teile.push(`<circle cx="${p.x}" cy="${p.y}" r="${i === 0 || i === punkte.length - 1 ? 5 : 3}" class="${klasse}" />`);
+          : i === stationen.length - 1 ? "tour-route-ziel" : "tour-route-station";
+        teile.push(`<circle cx="${p.x}" cy="${p.y}" r="${i === 0 || i === stationen.length - 1 ? 5 : 3}" class="${klasse}" />`);
       });
     }
 
     svg.innerHTML = teile.join("");
+  }
+
+  /**
+   * Der Straßenverlauf einer Route in Bildschirmkoordinaten. Fällt auf
+   * die Stationen zurück, wenn eine Verbindung keinen erfassten Verlauf
+   * hat (siehe quelle: "schaetzung" im Straßennetz).
+   */
+  function verlaufAlsPunkte(route) {
+    if (route.verlauf && route.verlauf.length >= 2) {
+      return route.verlauf.map((g) => {
+        const p = Karte.nachBild(g[0], g[1]);
+        return { x: p.x * zoom + versatzX, y: p.y * zoom + versatzY };
+      });
+    }
+    return stationenAlsPunkte(route.stationen);
   }
 
   /** Stationsnamen in Bildschirmkoordinaten umrechnen. */
@@ -2172,33 +2191,29 @@ const TourenplanungApp = (function () {
     }).join("");
   }
 
-  /** Bildschirmposition eines Fahrzeugs auf seiner Route. */
+  /**
+   * Bildschirmposition eines Fahrzeugs auf seiner Route.
+   * Folgt dem tatsächlichen Straßenverlauf - demselben, der auch in die
+   * Karte gezeichnet ist. Vorher wurde zwischen den Städten gerade
+   * abgekürzt, das Fahrzeug fuhr sichtbar neben der Straße.
+   */
   function positionAufRoute(t) {
     const etappe = Fahrt.aktuelleEtappe(t);
-    const punkte = etappe.route.stationen.map((name) => {
-      const stadt = STAEDTE[name];
-      const b = Karte.nachBild(stadt.lon, stadt.lat);
-      return { x: b.x * zoom + versatzX, y: b.y * zoom + versatzY };
-    });
-    if (punkte.length < 2) return null;
+    const verlauf = etappe.route.verlauf;
+    if (!verlauf || verlauf.length < 2) return null;
 
-    // Anteil auf die Streckenabschnitte umlegen - nach km, damit die
-    // Anzeige zum tatsächlichen Fortschritt passt.
     const anteil = Fahrt.etappenFortschritt(t);
-    const abschnitte = etappe.route.abschnitte;
-    const gesamtKm = etappe.route.km || 1;
-    let restKm = anteil * gesamtKm;
-    let i = 0;
-    while (i < abschnitte.length - 1 && restKm > abschnitte[i].km) {
-      restKm -= abschnitte[i].km;
-      i++;
-    }
-    const teil = abschnitte[i] && abschnitte[i].km > 0 ? restKm / abschnitte[i].km : 0;
-    const a = punkte[i], b = punkte[i + 1] || punkte[i];
+    const hier = Route.punktAuf(verlauf, anteil);
+    // Zweiter Punkt kurz dahinter, nur um die Blickrichtung zu kennen
+    const gleich = Route.punktAuf(verlauf, Math.min(1, anteil + 0.01));
+    if (!hier) return null;
+
+    const b = Karte.nachBild(hier[0], hier[1]);
+    const b2 = gleich ? Karte.nachBild(gleich[0], gleich[1]) : b;
     return {
-      x: a.x + (b.x - a.x) * teil,
-      y: a.y + (b.y - a.y) * teil,
-      nachLinks: b.x < a.x
+      x: b.x * zoom + versatzX,
+      y: b.y * zoom + versatzY,
+      nachLinks: b2.x < b.x
     };
   }
 
