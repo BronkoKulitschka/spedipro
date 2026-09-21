@@ -214,6 +214,16 @@ const Fahrt = (function () {
     return ziel;
   }
 
+  /**
+   * Alle laufenden Touren verwerfen, ohne Zeit vergehen zu lassen und
+   * ohne Rückrufe auszulösen - für "Neues Spiel". Abschliessen wäre
+   * hier falsch: Das würde die Touren noch zustellen und abrechnen.
+   */
+  function zuruecksetzen() {
+    laufende.length = 0;
+    benachrichtigen();
+  }
+
   function alle() { return laufende.slice(); }
   function anzahl() { return laufende.length; }
   function fuerFahrzeug(fahrzeugId) {
@@ -233,6 +243,7 @@ const Fahrt = (function () {
     wiederherstellen,
     takt,
     abschliessen,
+    zuruecksetzen,
     aktuelleEtappe,
     etappenFortschritt,
     gesamtKm,

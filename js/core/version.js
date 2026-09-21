@@ -6,4 +6,4 @@
 // müsste man die Nummer an mehreren Stellen pflegen und würde es
 // zwangsläufig irgendwann vergessen.
 
-const VERSION = "0.15.14";
+const VERSION = "0.15.15";

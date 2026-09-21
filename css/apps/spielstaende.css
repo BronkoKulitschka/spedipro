@@ -1,0 +1,185 @@
+/* spielstaende.css
+   Spielstandverwaltung und Abwesenheitsprotokoll.
+   Drei Karten untereinander statt einer Tabelle - auf dem Telefon ist
+   eine vierspaltige Tabelle unlesbar. */
+
+.stand-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  padding: 8px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.stand-hinweis,
+.stand-fusszeile {
+  margin: 0;
+  font-size: 11px;
+  color: var(--win-grey-darker);
+  line-height: 1.35;
+}
+
+.stand-fusszeile {
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px solid var(--win-grey-dark);
+}
+
+.stand-meldung {
+  padding: 4px 7px;
+  font-size: 12px;
+  border: 1px solid var(--win-grey-darker);
+  background: var(--win-grey-light);
+}
+
+.stand-meldung.gut      { background: #dcf0dc; border-color: #2f8f3f; }
+.stand-meldung.schlecht { background: #f4e2e2; border-color: #b03030; }
+
+.stand-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stand-platz {
+  padding: 6px 8px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+/* Der aktive Platz ist der, auf den laufend gesichert wird - das muss
+   man auf einen Blick sehen, sonst speichert man ins Leere. */
+.stand-platz.aktiv {
+  border: 2px solid var(--win-blue-title);
+  padding: 5px 7px;
+}
+
+.stand-platz.stand-veraltet {
+  background: #f2efe2;
+}
+
+.stand-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.stand-nummer {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.stand-depot {
+  font-size: 13px;
+  color: var(--win-grey-darker);
+}
+
+.stand-marke-aktiv,
+.stand-marke-alt {
+  font-size: 10px;
+  padding: 1px 5px;
+  border: 1px solid var(--win-grey-darker);
+}
+
+.stand-marke-aktiv { background: var(--win-blue-title); color: var(--win-white); }
+.stand-marke-alt   { background: #d9a520; color: #10100c; }
+
+.stand-leertext {
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--win-grey-darker);
+  text-align: center;
+}
+
+.stand-daten {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1px 8px;
+  margin: 0 0 5px 0;
+  font-size: 12px;
+}
+
+.stand-daten dt { color: var(--win-grey-darker); }
+.stand-daten dd { margin: 0; }
+
+.stand-warnung {
+  margin-bottom: 5px;
+  padding: 4px 6px;
+  font-size: 11px;
+  line-height: 1.35;
+  background: #f4e2e2;
+  border: 1px solid #b03030;
+}
+
+.stand-knoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.stand-knoepfe .win98-button {
+  font-size: 12px;
+  padding: 3px 8px;
+}
+
+/* ---------- Während deiner Abwesenheit ---------- */
+
+.protokoll-kopf {
+  padding: 4px 7px;
+  font-size: 13px;
+  font-weight: bold;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.protokoll-leer {
+  padding: 12px 0;
+  font-size: 13px;
+  color: var(--win-grey-darker);
+  text-align: center;
+}
+
+.protokoll-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.protokoll-eintrag {
+  display: grid;
+  grid-template-columns: 18px auto 1fr;
+  gap: 5px;
+  align-items: baseline;
+  padding: 3px 2px;
+  font-size: 12px;
+  border-bottom: 1px dotted var(--win-grey-dark);
+}
+
+.protokoll-eintrag:last-child { border-bottom: none; }
+
+.protokoll-symbol { text-align: center; }
+
+.protokoll-zeit {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+  white-space: nowrap;
+}
+
+.protokoll-text { line-height: 1.35; }
+
+.protokoll-verfall .protokoll-text { color: #8f2020; }
+.protokoll-frist .protokoll-text   { color: #8f5a10; }
+.protokoll-ausfall .protokoll-text { color: #8f2020; font-weight: bold; }
+
+@media (max-width: 480px) {
+  /* Zeitstempel unter den Text, sonst bleibt für den Text nichts übrig */
+  .protokoll-eintrag {
+    grid-template-columns: 18px 1fr;
+  }
+  .protokoll-zeit { grid-column: 2; }
+  .protokoll-text { grid-column: 2; }
+}

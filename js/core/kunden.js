@@ -69,7 +69,8 @@ const Kunden = (function () {
       gefahreneAuftraege: 0,
       puenktlich: 0,
       verspaetet: 0,
-      umsatz: 0
+      umsatz: 0,
+      letzterAuftragAm: null
     };
     return kunden[id];
   }
@@ -104,6 +105,45 @@ const Kunden = (function () {
     kunde.umsatz += entgelt || 0;
     if (puenktlich) kunde.puenktlich += 1;
     else kunde.verspaetet += 1;
+    kunde.letzterAuftragAm = Spielzeit.heute().toISOString();
+  }
+
+  // Nach so vielen Spieltagen ohne Auftrag kühlt eine Beziehung ab.
+  // In der Praxis vergibt ein Verlader seine Ladung anderweitig, wenn
+  // sich monatelang niemand meldet - die Bindung ist dann weg.
+  const ABKUEHLUNG_TAGE = 30;
+
+  /**
+   * Lässt Beziehungen altern, zu denen lange nichts gefahren wurde.
+   * Je angebrochene Abkühlungsperiode fällt ein gefahrener Auftrag
+   * weg; dadurch rutscht der Kunde irgendwann eine Stufe zurück.
+   * @returns {Array} Kunden, die dabei eine Stufe verloren haben
+   */
+  function altern(jetzt) {
+    const verloren = [];
+
+    alle().forEach((k) => {
+      if (k.gefahreneAuftraege <= 0) return;
+      if (!k.letzterAuftragAm) {
+        // Alter Spielstand ohne Datum - ab jetzt mitzählen.
+        k.letzterAuftragAm = jetzt.toISOString();
+        return;
+      }
+      const tage = Spielzeit.tageZwischen(new Date(k.letzterAuftragAm), jetzt);
+      if (tage < ABKUEHLUNG_TAGE) return;
+
+      const vorher = stufe(k).name;
+      k.gefahreneAuftraege -= 1;
+      // Zähler weiterrücken, sonst verlöre der Kunde bei jedem Takt
+      // erneut einen Auftrag.
+      const neu = new Date(k.letzterAuftragAm);
+      neu.setDate(neu.getDate() + ABKUEHLUNG_TAGE);
+      k.letzterAuftragAm = neu.toISOString();
+
+      if (stufe(k).name !== vorher) verloren.push(k);
+    });
+
+    return verloren;
   }
 
   function alle() {
@@ -131,6 +171,7 @@ const Kunden = (function () {
     stufe,
     preisfaktor,
     auftragErledigt,
+    altern,
     alle,
     mitBindung,
     setzen,

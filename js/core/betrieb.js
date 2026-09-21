@@ -15,23 +15,33 @@ const Betrieb = (function () {
     gegruendetAm: null // ISO-Datum der Spielzeit
   };
 
-  function laden() {
+  /**
+   * Betriebsdaten für den Spielstand herausgeben bzw. übernehmen.
+   * Sie liegen NICHT mehr unter einem eigenen Schlüssel: Seit es drei
+   * Spielstandplätze gibt, müssen Depot und Flotte zum selben Platz
+   * gehören - ein global gespeichertes Depot würde beim Wechsel
+   * stehenbleiben und zur falschen Flotte passen.
+   */
+  function alsDaten() {
+    return { ...daten };
+  }
+
+  function setzen(neueDaten) {
+    daten = { depot: null, gegruendetAm: null, ...(neueDaten || {}) };
+    benachrichtigen();
+  }
+
+  /** Einmalige Übernahme der alten, global gespeicherten Daten. */
+  function altenStandUebernehmen() {
     try {
       const roh = window.localStorage.getItem(SPEICHER_SCHLUESSEL);
       if (roh) daten = { ...daten, ...JSON.parse(roh) };
+      window.localStorage.removeItem(SPEICHER_SCHLUESSEL);
     } catch (fehler) {
       // Speicher kann gesperrt sein (privates Fenster, strenge
       // Einstellungen). Dann läuft das Spiel eben ohne Speicherstand
       // weiter, statt beim Start abzubrechen.
       console.warn("Betriebsdaten nicht ladbar:", fehler.message);
-    }
-  }
-
-  function speichern() {
-    try {
-      window.localStorage.setItem(SPEICHER_SCHLUESSEL, JSON.stringify(daten));
-    } catch (fehler) {
-      console.warn("Betriebsdaten nicht speicherbar:", fehler.message);
     }
   }
 
@@ -56,7 +66,6 @@ const Betrieb = (function () {
     if (!daten.gegruendetAm) {
       daten.gegruendetAm = Spielzeit.heute().toISOString();
     }
-    speichern();
     benachrichtigen();
     // Auch den übrigen Spielstand sichern, damit Depot und Flotte
     // zusammenpassen.
@@ -65,7 +74,6 @@ const Betrieb = (function () {
 
   function zuruecksetzen() {
     daten = { depot: null, gegruendetAm: null };
-    speichern();
     benachrichtigen();
   }
 
@@ -75,10 +83,12 @@ const Betrieb = (function () {
   function beiAenderung(rueckruf) { beobachter.push(rueckruf); }
   function benachrichtigen() { beobachter.forEach((r) => r(depot())); }
 
-  laden();
+  altenStandUebernehmen();
 
   return {
     hatDepot,
+    daten: alsDaten,
+    setzen,
     depot,
     depotName,
     depotSetzen,

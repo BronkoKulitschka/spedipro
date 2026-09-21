@@ -301,6 +301,11 @@ const TourenplanungApp = (function () {
             : "Keine Tour ist in der Zwischenzeit angekommen."}
           ${n.gekappt ? ` Es wurden höchstens ${Speicher.MAX_NACHHOLEN_TAGE} Tage nachgeholt.` : ""}
         </div>
+        <div class="tour-dispo-aktionen">
+          <button class="win98-button bevel-out" id="tour-btn-protokoll">
+            Protokoll ansehen
+          </button>
+        </div>
       </div>
     `;
   }
@@ -1825,6 +1830,13 @@ const TourenplanungApp = (function () {
       });
     });
 
+    const protokollKnopf = dispo.querySelector("#tour-btn-protokoll");
+    if (protokollKnopf) {
+      protokollKnopf.addEventListener("click", () => {
+        ProtokollFenster.zeigen(nachholmeldung);
+      });
+    }
+
     const nachholWeg = dispo.querySelector("#tour-btn-nachholung-weg");
     if (nachholWeg) {
       nachholWeg.addEventListener("click", () => {
@@ -2055,6 +2067,17 @@ const TourenplanungApp = (function () {
     const spritkosten = Math.round(verbrauchL * DIESELPREIS_DM);
     const deckungsbeitrag = auftrag.entgelt - spritkosten;
 
+    // Fürs Abwesenheitsprotokoll: Wer nach einer Pause zurückkommt,
+    // will wissen, welche Tour was gebracht hat - nicht nur wie viele.
+    Speicher.melden(
+      "ankunft",
+      `${f.kennzeichen}: ${auftrag.vonName} → ${auftrag.nachName}, ` +
+      `${auftrag.tonnen.toFixed(1)} t ${g.name}, ` +
+      `${deckungsbeitrag.toLocaleString("de-DE")} DM Deckungsbeitrag` +
+      (auftrag.puenktlich ? "" : " (verspätet)"),
+      { auftrag: auftrag.nummer, fahrzeugId: f.id, deckungsbeitrag }
+    );
+
     Historie.hinzufuegen(f, {
       art: "tour",
       text: `${auftrag.nummer}: ${auftrag.vonName} → ${auftrag.nachName}, ` +
@@ -2085,6 +2108,12 @@ const TourenplanungApp = (function () {
         text: `Liegengeblieben in ${f.standort}: ${schaden.teil} bei ${schaden.wert.toFixed(0)}%`,
         daten: { teil: schaden.teil, wert: schaden.wert }
       });
+      Speicher.melden(
+        "ausfall",
+        `${f.kennzeichen} liegengeblieben in ${f.standort}: ` +
+        `${schaden.teil} bei ${schaden.wert.toFixed(0)} %`,
+        { fahrzeugId: f.id, teil: schaden.teil }
+      );
     }
 
     letzteAnkunft = {
@@ -2431,6 +2460,42 @@ const TourenplanungApp = (function () {
    * Verbindet die Anzeige mit der laufenden Uhr. Bei jedem Takt rücken
    * die Touren vor, das Fenster zeichnet sie neu.
    */
+  /**
+   * Lädt einen Spielstand und hängt die Ankunftsbehandlung ein. Liegt
+   * hier, weil nur die Tourenplanung weiß, was bei einer Ankunft zu
+   * tun ist - die Spielstandverwaltung ruft es auf.
+   */
+  function spielstandLaden(nr) {
+    const ergebnis = Speicher.laden(
+      nr === undefined ? Speicher.aktiver() : nr,
+      tourAbschliessen
+    );
+    if (ergebnis && ergebnis.fehler) return ergebnis;
+
+    if (ergebnis && ergebnis.nachgeholteStunden > 0) {
+      nachholmeldung = ergebnis;
+    } else {
+      nachholmeldung = null;
+    }
+
+    // Eine laufende Planung bezieht sich auf die alte Welt.
+    planungAktiv = false;
+    aktiveRoute = null;
+    hervorgehobenesGut = null;
+    detailGut = null;
+    umsetzZiel = null;
+    letzteAnkunft = null;
+    gewaehlteStadt = null;
+    tourZuruecksetzen();
+
+    if (fensterElement && document.body.contains(fensterElement)) {
+      markenZeichnen();
+      dispositionAktualisieren();
+    }
+    FuhrparkApp.aktualisieren();
+    return ergebnis;
+  }
+
   let taktAngemeldet = false;
   function taktVerbinden() {
     if (taktAngemeldet) return;
@@ -2440,12 +2505,7 @@ const TourenplanungApp = (function () {
 
     // Spielstand laden, bevor Aufträge erzeugt werden - sonst würde der
     // gespeicherte Pool überschrieben.
-    if (Speicher.vorhanden()) {
-      const ergebnis = Speicher.laden(tourAbschliessen);
-      if (ergebnis && ergebnis.nachgeholteStunden > 0) {
-        nachholmeldung = ergebnis;
-      }
-    }
+    if (Speicher.vorhanden()) spielstandLaden();
     Speicher.automatikStarten();
 
     // Auftragspool füllen und regelmäßig auffrischen
@@ -2520,6 +2580,10 @@ const TourenplanungApp = (function () {
 
   return {
     open,
+    /** Spielstand laden - wird von der Spielstandverwaltung benutzt. */
+    spielstandLaden,
+    /** Stellt sicher, dass Uhr, Auftragspool und Automatik laufen. */
+    starten: taktVerbinden,
     /** Von anderen Modulen aufrufbar, wenn sich die Flotte ändert. */
     aktualisieren: () => {
       if (fensterElement && document.body.contains(fensterElement)) {

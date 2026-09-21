@@ -7,7 +7,69 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.11)
+## Aktueller Stand (v0.15.15)
+
+**Spielstandverwaltung mit drei festen Plätzen** (`js/apps/spielstaende/`).
+Erreichbar über das Startmenü, Eintrag "Spielstände..." - bewusst kein
+Desktop-Symbol und kein Eintrag unter "Programme": Spielstände gehören
+zum Spiel, nicht in den Arbeitsalltag der Spedition.
+- Je Platz: Depot, Spielzeit, Zeitpunkt der letzten Sicherung, Anzahl
+  Fahrzeuge und laufender Touren
+- Laden, Speichern, Löschen, Neues Spiel, Ausgeben als `.json` und
+  Einlesen einer Datei
+- Gesichert wird laufend **nur auf den aktiven Platz**. Sonst würde die
+  Automatik alle zehn Sekunden den zuletzt angesehenen Platz
+  überschreiben. Laden und Speichern wechseln den aktiven Platz mit
+- Ein Spiel ohne Depot wird nicht gesichert - sonst wäre Platz 1 belegt,
+  sobald man das Spiel nur öffnet
+- **Fassungswechsel löschen nichts mehr.** Ein Stand aus einer älteren
+  Fassung bleibt liegen, wird als "Fassung n - nicht ladbar" markiert
+  und lässt sich weiterhin ausgeben. Vorher wurde er beim ersten Start
+  einer neuen Fassung stillschweigend entsorgt - bei laufender
+  Entwicklung die häufigste Verlustursache
+- Der alte Ein-Platz-Spielstand (`spedipro.spielstand`) wird beim ersten
+  Start einmalig auf Platz 1 übernommen
+- Betriebsdaten (Depot, Gründungsdatum) liegen nicht mehr unter einem
+  eigenen Schlüssel, sondern im Spielstand - ein global gespeichertes
+  Depot würde beim Platzwechsel stehenbleiben und zur falschen Flotte
+  passen
+
+**Nachholsimulation mit Ereignisprotokoll.** Ein Browser rechnet nicht,
+während er geschlossen ist; auch ein Service Worker nicht, sobald der
+Prozess beendet ist. Deshalb wird die verstrichene Zeit beim Öffnen
+nachgeholt - das ist kein Notbehelf, sondern das übliche Verfahren.
+- Neben den Touren laufen jetzt auch Marktvorgänge mit: Die Frachtbörse
+  frischt je Spieltag auf, unangetastete Aufträge verfallen, neu
+  überfällige HU-/SP-/Wartungsfristen werden erkannt, Kundenbeziehungen
+  kühlen nach 30 Spieltagen ohne Auftrag ab (`Kunden.altern`)
+- Jedes Ereignis landet mit Zeitstempel im Protokoll: Ankunft mit
+  Deckungsbeitrag und Pünktlichkeit, verfallener Auftrag mit entgangenem
+  Entgelt, überfällige Frist, liegengebliebenes Fahrzeug
+- Das Fenster "Während deiner Abwesenheit" zeigt die Liste; in der
+  Tourenplanung führt ein Knopf dorthin
+- Das Protokoll wird mitgespeichert und übersteht das Schließen des
+  Fensters. Höchstens 120 Einträge, Deckel weiter bei 7 nachgeholten
+  Tagen
+
+**Tourenplanung von der Stadt aus** (v0.15.14): Stadt wählen, "Tour
+planen", dann Stadtseite mit Überschrift, Fahrzeugstatus und der Liste
+"Ausgehend ab <Stadt>" aus festen Aufträgen und freiem Warenangebot.
+Mit Fahrzeug vor Ort: Fahrzeug → Fracht → Ziel → Losfahren; bei einem
+festen Auftrag entfällt die Zielwahl. Ohne Fahrzeug: die fünf
+nächstgelegenen freien Fahrzeuge bis 1500 km als Leerfahrt anfordern.
+
+**Flottenübersicht in der Tourenplanung** (v0.15.12): Dauerhafte Liste
+aller eigenen Fahrzeuge mit Lackierungspunkt, Standort und Status; Klick
+springt zur Stadt. Städte mit eigenem Fahrzeug tragen einen Ring auf der
+Karte.
+
+**Cache-Busting** (v0.15.13): Alle Skript- und CSS-Verweise tragen
+`?v=<Version>`, damit nach einem Push keine alte Datei aus dem Cache
+kommt. Die Versionsnummer in der Taskleiste bleibt auch auf schmalen
+Geräten sichtbar - ohne sie lässt sich am Telefon nicht erkennen, welche
+Fassung geladen ist.
+
+## Vorheriger Stand (v0.15.11)
 
 **Karte neu gestaltet - Stil der KI-Vorlage, Geometrie aus Geodaten.**
 Eine extern erzeugte KI-Karte diente als gestalterische Vorlage. Sie
@@ -642,13 +704,15 @@ spedipro/
       fahrt.js           Laufende Touren mit Etappen und Lenkzeiten
       kunden.js          Auftraggeber und Kundenbindung
       auftraege.js       Auftragspool mit Statusverfolgung
-      speicher.js        Spielstand und Nachsimulation
+      speicher.js        Spielstände (3 Plätze), Nachsimulation, Protokoll
       version.js         Versionsnummer (einzige Pflegestelle)
     apps/
       fuhrpark/
         fuhrpark.js      Fuhrpark-Programm (Zustand, UI, Debug-Buttons)
       tourenplanung/
         tourenplanung.js Karte, Zoom/Verschieben, Disposition
+      spielstaende/
+        spielstaende.js  Spielstandverwaltung und Abwesenheitsprotokoll
     data/
       fahrzeugtypen.js   Katalog fiktiver, an reale 90er-LKW angelehnter Fahrzeugtypen
       staedte.js         165 europäische Städte mit echten Koordinaten
@@ -747,6 +811,5 @@ in `js/apps/fuhrpark/fuhrpark.js`:
 
 ## Nächste Schritte
 
-- gameState + Speichern/Laden (localStorage)
 - Weiteres Programm: Personal-Modul (liefert Fahrverhalten-Faktor)
 - Eigenes Pixelart-Icon für Fuhrpark (aktuell Emoji-Platzhalter)

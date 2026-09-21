@@ -56,6 +56,17 @@
     }
   });
 
+  // Spielstände gehören zum Spiel, nicht in die Programmliste der
+  // Spedition - deshalb ein eigener Eintrag direkt im Startmenü.
+  const spielstaendeItem = document.getElementById("spielstaende-item");
+  if (spielstaendeItem) {
+    spielstaendeItem.addEventListener("click", (event) => {
+      event.stopPropagation();
+      SpielstaendeApp.open();
+      closeStartMenu();
+    });
+  }
+
   document.getElementById("shutdown-item").addEventListener("click", () => {
     alert("Beenden ist im Prototyp noch nicht implementiert.");
   });
