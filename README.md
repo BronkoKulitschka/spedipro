@@ -7,7 +7,62 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.15)
+## Aktueller Stand (v0.15.16)
+
+**Finanzmodul** (`js/core/finanzen.js`, `js/apps/finanzen/`, Desktop-
+Symbol und Programme-Menü). Kontenrahmen an SKR03 angelehnt, echte
+Kontonummern: 8400 Frachterlöse, 4500 Kraftstoffe, 4510 Kfz-Steuer,
+4520 Versicherung, 4530 laufende Kfz-Betriebskosten, 4210 Miete, 4970
+Verwaltung, 4830 Abschreibungen, 2110 Zinsen, dazu 1200 Bank, 0320
+Fuhrpark und 0630 Darlehen.
+- Gebucht wird vereinfacht: Konto und Betrag gegen die Bank, kein Soll
+  und Haben. Jede Buchung trägt Beleg, Datum, Text und - wo zutreffend
+  - Fahrzeug-ID und Kilometer
+- Zahlungsziele gibt es bewusst nicht; eine Zustellung bringt das Geld
+  sofort. Offene Posten und Mahnwesen wären der nächste Schritt
+- Zum Monatsersten laufen Kfz-Steuer, Versicherung, Abschreibung,
+  Depotmiete, Verwaltung, Kreditraten und Kontokorrentzinsen. Das läuft
+  auch in der Nachholsimulation mit
+- Abschreibung linear über die Nutzungsdauer der Branchentabelle. Der
+  vorhandene Fuhrpark geht bei der Gründung als Sacheinlage ein, sonst
+  wäre das Startfahrzeug ein kostenloses Betriebsmittel
+- Kauf wird aus der Kasse bezahlt, der Rest finanziert: Ratenkredit mit
+  gleichbleibender Tilgung, Zins aus Diskontsatz plus Aufschlag
+- Sechs Ansichten: Übersicht, Journal (nach Monat und Konto filterbar),
+  BWA, Kosten je Fahrzeug in DM/km, Bank mit Darlehen, und Sätze
+
+**Kostensätze mit Beleglage** (`js/data/kostensaetze.js`, Recherche in
+`docs/kosten-1994.md`). Alle Geldbeträge liegen an einer Stelle, jeder
+mit Quelle oder mit `belegt: false`. Die Ansicht "Sätze" im
+Finanzprogramm zeigt beides nebeneinander - vier belegte Sätze grün,
+acht vorläufige gelb.
+
+Belegt und im Spiel:
+- **Dieselpreis 1994: 1,14 DM/l**, jahresabhängig von 1990 bis 1998.
+  Der bisherige Festwert 1,05 DM war geschätzt und zu niedrig
+- **Nutzungsdauer** nach AfA-Tabelle des Wirtschaftszweigs
+  Personen- und Güterbeförderung: Zugmaschine 5 Jahre, Anhänger 6.
+  Nicht die 9 bzw. 11 Jahre der allgemeinen Tabelle
+- **Diskontsatz** der Bundesbank mit allen Stufen 1993 bis 1996; zum
+  Spielstart 5,25 %
+- **Keine Lkw-Maut 1994.** Die Eurovignette startete erst zum
+  01.01.1995 - eine Straßenbenutzungsgebühr im Startjahr wäre falsch
+
+Noch vorläufig und im Programm so gekennzeichnet: Kfz-Steuer (Mechanik
+bekannt, DM-Beträge der Fassung 1994 nicht), Versicherungsprämien,
+Depotmiete, Verwaltung, Zinsaufschläge, Reifen je km, Neupreise.
+
+**Nebenbefund für die Routenplanung:** In der Schweiz galt bis zu den
+bilateralen Verträgen eine Gewichtslimite von **28 t**. Ein
+40-Tonnen-Sattelzug durfte die Schweiz 1994 nicht durchfahren. Betrifft
+`route.js`, noch nicht umgesetzt.
+
+**Marktrahmen bestätigt:** Der Tarifzwang im Güterfernverkehr endete
+zum 01.01.1994, zwei Monate vor Spielstart. Frei verhandelte
+Frachtpreise und der Spotmarkt in der Tourenplanung sind damit
+historisch korrekt.
+
+## Vorheriger Stand (v0.15.15)
 
 **Spielstandverwaltung mit drei festen Plätzen** (`js/apps/spielstaende/`).
 Erreichbar über das Startmenü, Eintrag "Spielstände..." - bewusst kein
@@ -682,8 +737,12 @@ spedipro/
     desktop.css       Desktop, Taskbar, Startmenü, Desktop-Icons
     apps/
       fuhrpark.css     Styling des Fuhrpark-Fensters
+      tourenplanung.css
+      spielstaende.css
+      finanzen.css
   docs/
     historischer-rahmen-1994.md   Zeitliche Gegebenheiten (zu verifizieren)
+    kosten-1994.md                Kostendaten mit Quellen, offene Punkte markiert
   js/
     core/
       clock.js          Taskbar-Uhr
@@ -705,6 +764,7 @@ spedipro/
       kunden.js          Auftraggeber und Kundenbindung
       auftraege.js       Auftragspool mit Statusverfolgung
       speicher.js        Spielstände (3 Plätze), Nachsimulation, Protokoll
+      finanzen.js        Kontenrahmen, Journal, Monatsabschluss, Kredite
       version.js         Versionsnummer (einzige Pflegestelle)
     apps/
       fuhrpark/
@@ -713,12 +773,15 @@ spedipro/
         tourenplanung.js Karte, Zoom/Verschieben, Disposition
       spielstaende/
         spielstaende.js  Spielstandverwaltung und Abwesenheitsprotokoll
+      finanzen/
+        finanzen.js      Finanzprogramm (Übersicht, Journal, BWA, Sätze)
     data/
       fahrzeugtypen.js   Katalog fiktiver, an reale 90er-LKW angelehnter Fahrzeugtypen
       staedte.js         165 europäische Städte mit echten Koordinaten
       strassennetz.js    452 Verbindungen zwischen den Städten
       gueter.js          72 Warenarten mit Transporteigenschaften
       regionen.js        25 Wirtschaftsregionen (Angebot/Bedarf)
+      kostensaetze.js    Alle Geldbeträge mit Quelle bzw. belegt: false
   assets/
     icons/
     sprites/

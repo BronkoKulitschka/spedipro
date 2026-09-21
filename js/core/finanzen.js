@@ -1,0 +1,506 @@
+// finanzen.js
+// Buchhaltung der Spedition.
+//
+// Kontenrahmen an SKR03 angelehnt - die Nummern sind die echten,
+// damit die Auswertungen aussehen wie das, was ein Steuerberater 1994
+// geliefert hätte. Gebucht wird aber vereinfacht: jede Buchung hat ein
+// Konto und einen Betrag, der gegen die Bank läuft. Kein Soll und
+// Haben, keine Bilanz - das wäre Bedienungsaufwand ohne Spielwert.
+//
+// Zahlungsziele gibt es bewusst nicht: Eine Zustellung bringt das Geld
+// sofort aufs Konto. Offene Posten und Mahnwesen wären der nächste
+// Schritt, wenn Liquidität zum Spielproblem werden soll.
+//
+// Alle Beträge in DM. Kostensätze und ihre Beleglage: kostensaetze.js
+
+const Finanzen = (function () {
+
+  // ---------- Kontenrahmen ----------
+
+  const KONTEN = {
+    // Erlöse
+    8400: { name: "Frachterlöse", art: "erloes" },
+    8200: { name: "Sonstige Erlöse", art: "erloes" },
+
+    // Fahrzeugkosten - alles, was einem Fahrzeug zurechenbar ist
+    4500: { name: "Kraftstoffe", art: "aufwand", gruppe: "fahrzeug" },
+    4510: { name: "Kfz-Steuer", art: "aufwand", gruppe: "fahrzeug" },
+    4520: { name: "Kfz-Versicherung", art: "aufwand", gruppe: "fahrzeug" },
+    4530: { name: "Laufende Kfz-Betriebskosten", art: "aufwand", gruppe: "fahrzeug" },
+    4540: { name: "Maut, Vignetten und Fähren", art: "aufwand", gruppe: "fahrzeug" },
+
+    // Betriebskosten
+    4210: { name: "Miete Depot", art: "aufwand", gruppe: "betrieb" },
+    4970: { name: "Verwaltung", art: "aufwand", gruppe: "betrieb" },
+    4830: { name: "Abschreibungen", art: "aufwand", gruppe: "betrieb" },
+    2110: { name: "Zinsaufwand", art: "aufwand", gruppe: "betrieb" },
+
+    // Bestände - nicht erfolgswirksam
+    1200: { name: "Bank", art: "bestand" },
+    320: { name: "Fuhrpark", art: "bestand" },
+    630: { name: "Darlehen", art: "bestand" }
+  };
+
+  // ---------- Zustand ----------
+
+  let bank = 0;                 // Kontostand in DM, darf negativ werden
+  let journal = [];             // alle Buchungen
+  let naechsteBelegNr = 1;
+  let kredite = [];             // laufende Darlehen
+  let naechsteKreditNr = 1;
+  let letzterAbschluss = null;  // ISO-Datum des zuletzt gebuchten Monats
+  const beobachter = [];
+
+  // Journal begrenzen: Ein Spielstand soll nicht unbegrenzt wachsen.
+  // Für die Auswertung zählt ohnehin nur die jüngere Vergangenheit.
+  const JOURNAL_MAX = 2000;
+
+  function beiAenderung(rueckruf) { beobachter.push(rueckruf); }
+  function benachrichtigen() { beobachter.forEach((r) => r()); }
+
+  // ---------- Buchen ----------
+
+  /**
+   * Eine Buchung erfassen. Positive Beträge sind Zuflüsse (Erlöse),
+   * negative Abflüsse (Aufwand, Anschaffung).
+   * @param {number} konto Kontonummer aus KONTEN
+   * @param {number} betrag DM, Vorzeichen wie oben
+   * @param {string} text Buchungstext
+   * @param {object} [zusatz] { fahrzeugId, auftrag, ohneBank }
+   */
+  function buchen(konto, betrag, text, zusatz = {}) {
+    const gerundet = Math.round(betrag);
+    const eintrag = {
+      beleg: naechsteBelegNr++,
+      datum: Spielzeit.heute().toISOString(),
+      konto,
+      kontoName: KONTEN[konto] ? KONTEN[konto].name : String(konto),
+      text,
+      betrag: gerundet,
+      fahrzeugId: zusatz.fahrzeugId || null,
+      auftrag: zusatz.auftrag || null,
+      km: zusatz.km || 0
+    };
+
+    journal.push(eintrag);
+    if (journal.length > JOURNAL_MAX) journal = journal.slice(-JOURNAL_MAX);
+
+    // Bestandsbuchungen (Anschaffung gegen Darlehen) berühren die Bank
+    // nicht - dafür gibt es ohneBank.
+    if (!zusatz.ohneBank) bank += gerundet;
+
+    benachrichtigen();
+    return eintrag;
+  }
+
+  // ---------- Vorgänge aus anderen Modulen ----------
+
+  /** Eine zugestellte Sendung: Erlös rein, Sprit raus. */
+  function tourAbgerechnet({ auftrag, fahrzeug, verbrauchL, km }) {
+    buchen(8400, auftrag.entgelt,
+      `${auftrag.nummer}: ${auftrag.vonName} → ${auftrag.nachName}`,
+      { fahrzeugId: fahrzeug.id, auftrag: auftrag.nummer });
+
+    spritBuchen(fahrzeug, verbrauchL, `Tour ${auftrag.nummer}`);
+    reifenBuchen(fahrzeug, km, `Tour ${auftrag.nummer}`);
+  }
+
+  /** Leerfahrt: nur Kosten, kein Erlös. */
+  function leerfahrtAbgerechnet({ fahrzeug, verbrauchL, km, von, nach }) {
+    spritBuchen(fahrzeug, verbrauchL, `Leerfahrt ${von} → ${nach}`);
+    reifenBuchen(fahrzeug, km, `Leerfahrt ${von} → ${nach}`);
+  }
+
+  function spritBuchen(fahrzeug, verbrauchL, anlass) {
+    const preis = Kostensaetze.dieselpreis();
+    buchen(4500, -(verbrauchL * preis),
+      `${fahrzeug.kennzeichen}: ${Math.round(verbrauchL).toLocaleString("de-DE")} l ` +
+      `zu ${preis.toFixed(2)} DM (${anlass})`,
+      { fahrzeugId: fahrzeug.id });
+  }
+
+  function reifenBuchen(fahrzeug, km, anlass) {
+    if (!km) return;
+    buchen(4530, -(km * Kostensaetze.REIFEN_JE_KM_DM),
+      `${fahrzeug.kennzeichen}: Reifen und Schmierstoffe, ` +
+      `${Math.round(km).toLocaleString("de-DE")} km (${anlass})`,
+      { fahrzeugId: fahrzeug.id, km });
+  }
+
+  /** Werkstatt, Bergung, Ersatzteile. */
+  function reparaturGebucht({ fahrzeug, betrag, text }) {
+    buchen(4530, -Math.abs(betrag), `${fahrzeug.kennzeichen}: ${text}`,
+      { fahrzeugId: fahrzeug.id });
+  }
+
+  /**
+   * Fahrzeugkauf. Wird finanziert, entsteht ein Darlehen; die Bank
+   * sieht dann nur die Anzahlung.
+   */
+  function fahrzeugGekauft({ fahrzeug, preis, anzahlung, laufzeitJahre }) {
+    const kredithoehe = Math.max(0, Math.round(preis - (anzahlung || preis)));
+
+    buchen(320, -preis,
+      `Anschaffung ${fahrzeug.marke} ${fahrzeug.modell} (${fahrzeug.kennzeichen})`,
+      { fahrzeugId: fahrzeug.id, ohneBank: true });
+
+    // Der Teil, der bar bezahlt wird, geht vom Konto.
+    buchen(1200, -(preis - kredithoehe),
+      `Zahlung ${fahrzeug.kennzeichen}`,
+      { fahrzeugId: fahrzeug.id });
+
+    if (kredithoehe > 0) {
+      kreditAufnehmen({
+        betrag: kredithoehe,
+        laufzeitJahre: laufzeitJahre || Kostensaetze.nutzungsdauer("zugmaschine"),
+        zweck: `Fahrzeug ${fahrzeug.kennzeichen}`,
+        ohneAuszahlung: true
+      });
+    }
+
+    // Anschaffungswert und Datum am Fahrzeug festhalten - die
+    // Abschreibung braucht beides.
+    fahrzeug.anschaffungDM = preis;
+    fahrzeug.anschaffungAm = Spielzeit.heute().toISOString();
+    fahrzeug.restbuchwertDM = preis;
+  }
+
+  function fahrzeugVerkauft({ fahrzeug, erloes }) {
+    buchen(8200, erloes,
+      `Verkauf ${fahrzeug.marke} ${fahrzeug.modell} (${fahrzeug.kennzeichen})`,
+      { fahrzeugId: fahrzeug.id });
+    buchen(320, (fahrzeug.restbuchwertDM || 0),
+      `Abgang ${fahrzeug.kennzeichen}`,
+      { fahrzeugId: fahrzeug.id, ohneBank: true });
+    fahrzeug.restbuchwertDM = 0;
+  }
+
+  // ---------- Kredite ----------
+
+  /**
+   * Darlehen aufnehmen. Annuität wäre genauer, aber ein Ratenkredit
+   * mit gleichbleibender Tilgung ist nachvollziehbarer und war für
+   * Fahrzeugfinanzierungen durchaus üblich.
+   */
+  function kreditAufnehmen({ betrag, laufzeitJahre, zweck, ohneAuszahlung }) {
+    const zins = Kostensaetze.kreditzins();
+    const kredit = {
+      nr: naechsteKreditNr++,
+      zweck: zweck || "Investition",
+      aufgenommenAm: Spielzeit.heute().toISOString(),
+      ursprung: Math.round(betrag),
+      restschuld: Math.round(betrag),
+      zinssatz: zins,
+      monate: Math.round(laufzeitJahre * 12),
+      tilgungJeMonat: Math.round(betrag / (laufzeitJahre * 12))
+    };
+    kredite.push(kredit);
+
+    buchen(630, betrag,
+      `Darlehen ${kredit.nr} über ${Math.round(betrag).toLocaleString("de-DE")} DM ` +
+      `zu ${zins.toFixed(2)} %`,
+      { ohneBank: true });
+
+    if (!ohneAuszahlung) {
+      buchen(1200, betrag, `Auszahlung Darlehen ${kredit.nr}`);
+    }
+
+    benachrichtigen();
+    return kredit;
+  }
+
+  function offeneKredite() {
+    return kredite.filter((k) => k.restschuld > 0);
+  }
+
+  function restschuldGesamt() {
+    return offeneKredite().reduce((s, k) => s + k.restschuld, 0);
+  }
+
+  // ---------- Monatsabschluss ----------
+
+  /**
+   * Bucht alle wiederkehrenden Posten eines Monats. Wird vom Zeittakt
+   * angestoßen und läuft auch in der Nachholsimulation mit - sonst
+   * stünde nach einer Woche Pause kein einziger Fixkostenposten in der
+   * Rechnung.
+   */
+  function monatspruefung() {
+    const jetzt = Spielzeit.heute();
+    const marke = `${jetzt.getFullYear()}-${jetzt.getMonth()}`;
+    if (letzterAbschluss === marke) return false;
+
+    // Beim allerersten Aufruf nur merken, nicht rückwirkend buchen.
+    if (letzterAbschluss === null) {
+      letzterAbschluss = marke;
+      return false;
+    }
+
+    letzterAbschluss = marke;
+    monatBuchen();
+    return true;
+  }
+
+  function monatBuchen() {
+    const fahrzeuge = FuhrparkApp.alleFahrzeuge();
+
+    fahrzeuge.forEach((f) => {
+      buchen(4510, -(Kostensaetze.KFZ_STEUER_JAHR_DM / 12),
+        `${f.kennzeichen}: Kfz-Steuer`, { fahrzeugId: f.id });
+      buchen(4520, -(Kostensaetze.VERSICHERUNG_JAHR_DM / 12),
+        `${f.kennzeichen}: Versicherung`, { fahrzeugId: f.id });
+      abschreibungBuchen(f);
+    });
+
+    if (Betrieb.hatDepot()) {
+      buchen(4210, -Kostensaetze.DEPOTMIETE_MONAT_DM,
+        `Miete Depot ${Betrieb.depotName()}`);
+    }
+    buchen(4970, -Kostensaetze.VERWALTUNG_MONAT_DM, "Verwaltung");
+
+    kreditRatenBuchen();
+    dispozinsBuchen();
+  }
+
+  /**
+   * Lineare Abschreibung über die Nutzungsdauer der Branchentabelle.
+   * Ein voll abgeschriebenes Fahrzeug belastet das Ergebnis nicht mehr,
+   * fährt aber weiter - genau das macht alte Fahrzeuge betriebs-
+   * wirtschaftlich attraktiv, solange sie halten.
+   */
+  function abschreibungBuchen(f) {
+    if (!f.anschaffungDM) return;
+    if ((f.restbuchwertDM || 0) <= 0) return;
+
+    const jahre = Kostensaetze.nutzungsdauer("zugmaschine");
+    const jeMonat = f.anschaffungDM / (jahre * 12);
+    const betrag = Math.min(jeMonat, f.restbuchwertDM);
+
+    f.restbuchwertDM = Math.max(0, f.restbuchwertDM - betrag);
+    buchen(4830, -betrag, `${f.kennzeichen}: Abschreibung`,
+      { fahrzeugId: f.id, ohneBank: true });
+  }
+
+  function kreditRatenBuchen() {
+    offeneKredite().forEach((k) => {
+      const zinsen = k.restschuld * (k.zinssatz / 100) / 12;
+      const tilgung = Math.min(k.tilgungJeMonat, k.restschuld);
+
+      buchen(2110, -zinsen, `Darlehen ${k.nr}: Zinsen`);
+      buchen(1200, -tilgung, `Darlehen ${k.nr}: Tilgung`);
+      buchen(630, -tilgung, `Darlehen ${k.nr}: Restschuld`, { ohneBank: true });
+
+      k.restschuld = Math.max(0, k.restschuld - tilgung);
+    });
+  }
+
+  function dispozinsBuchen() {
+    if (bank >= 0) return;
+    const zinsen = Math.abs(bank) * (Kostensaetze.dispozins() / 100) / 12;
+    buchen(2110, -zinsen, "Kontokorrentzinsen");
+  }
+
+  // ---------- Auswertung ----------
+
+  function kontostand() { return Math.round(bank); }
+
+  function dispoRest() {
+    return Math.round(bank + Kostensaetze.DISPOLINIE_DM);
+  }
+
+  /** Ist die Linie ausgeschöpft? Dann geht nichts mehr. */
+  function zahlungsfaehig(betrag) {
+    return bank - Math.abs(betrag) >= -Kostensaetze.DISPOLINIE_DM;
+  }
+
+  function buchungen({ monat, konto, fahrzeugId } = {}) {
+    return journal.filter((b) => {
+      if (konto && b.konto !== konto) return false;
+      if (fahrzeugId && b.fahrzeugId !== fahrzeugId) return false;
+      if (monat) {
+        const d = new Date(b.datum);
+        if (`${d.getFullYear()}-${d.getMonth()}` !== monat) return false;
+      }
+      return true;
+    }).slice().reverse();
+  }
+
+  /** Monatsmarken, für die Buchungen vorliegen - jüngste zuerst. */
+  function monate() {
+    const menge = new Set();
+    journal.forEach((b) => {
+      const d = new Date(b.datum);
+      menge.add(`${d.getFullYear()}-${d.getMonth()}`);
+    });
+    return [...menge].sort().reverse();
+  }
+
+  function monatsName(marke) {
+    const [jahr, monat] = marke.split("-").map(Number);
+    const namen = ["Januar", "Februar", "März", "April", "Mai", "Juni",
+      "Juli", "August", "September", "Oktober", "November", "Dezember"];
+    return `${namen[monat]} ${jahr}`;
+  }
+
+  /**
+   * Betriebswirtschaftliche Auswertung eines Monats: Erlöse, Aufwand
+   * je Konto, Ergebnis. Bestandskonten bleiben draußen - sie sind
+   * nicht erfolgswirksam, außer der Abschreibung, die es ist.
+   */
+  function bwa(monat) {
+    const liste = journal.filter((b) => {
+      const d = new Date(b.datum);
+      return `${d.getFullYear()}-${d.getMonth()}` === monat;
+    });
+
+    const erloese = [];
+    const aufwand = [];
+    let summeErloes = 0;
+    let summeAufwand = 0;
+
+    Object.keys(KONTEN).forEach((nr) => {
+      const konto = KONTEN[nr];
+      if (konto.art === "bestand") return;
+
+      const betrag = liste
+        .filter((b) => String(b.konto) === String(nr))
+        .reduce((s, b) => s + b.betrag, 0);
+      if (betrag === 0) return;
+
+      const zeile = { konto: Number(nr), name: konto.name, betrag };
+      if (konto.art === "erloes") { erloese.push(zeile); summeErloes += betrag; }
+      else { aufwand.push(zeile); summeAufwand += betrag; }
+    });
+
+    return {
+      monat,
+      name: monatsName(monat),
+      erloese,
+      aufwand: aufwand.sort((a, b) => a.betrag - b.betrag),
+      summeErloes: Math.round(summeErloes),
+      summeAufwand: Math.round(summeAufwand),
+      ergebnis: Math.round(summeErloes + summeAufwand)
+    };
+  }
+
+  /**
+   * Kosten je Fahrzeug und Kilometer - die Rechnung, die eine
+   * Spedition tatsächlich führt. Ein Fahrzeug, das mehr kostet als es
+   * einfährt, muss weg.
+   */
+  function fahrzeugRechnung() {
+    return FuhrparkApp.alleFahrzeuge().map((f) => {
+      const eigene = journal.filter((b) => b.fahrzeugId === f.id);
+      const erloes = eigene
+        .filter((b) => b.betrag > 0 && KONTEN[b.konto] && KONTEN[b.konto].art === "erloes")
+        .reduce((s, b) => s + b.betrag, 0);
+      const kosten = eigene
+        .filter((b) => b.betrag < 0 && KONTEN[b.konto] && KONTEN[b.konto].art === "aufwand")
+        .reduce((s, b) => s + b.betrag, 0);
+
+      // Kilometer aus dem Journal, nicht vom Tacho: Ein gebraucht
+      // gekauftes Fahrzeug bringt fremde Kilometer mit, die nicht in
+      // unsere Kostenrechnung gehören.
+      const km = Math.max(1, Math.round(eigene.reduce((s2, b) => s2 + (b.km || 0), 0)));
+      return {
+        fahrzeug: f,
+        km,
+        erloes: Math.round(erloes),
+        kosten: Math.round(kosten),
+        ergebnis: Math.round(erloes + kosten),
+        erloesJeKm: erloes / km,
+        kostenJeKm: Math.abs(kosten) / km
+      };
+    }).sort((a, b) => b.ergebnis - a.ergebnis);
+  }
+
+  // ---------- Spielstand ----------
+
+  function daten() {
+    return {
+      bank,
+      journal,
+      naechsteBelegNr,
+      kredite,
+      naechsteKreditNr,
+      letzterAbschluss
+    };
+  }
+
+  function setzen(d) {
+    if (!d) { zuruecksetzen(); return; }
+    bank = d.bank || 0;
+    journal = Array.isArray(d.journal) ? d.journal.slice() : [];
+    naechsteBelegNr = d.naechsteBelegNr || 1;
+    kredite = Array.isArray(d.kredite) ? d.kredite.map((k) => ({ ...k })) : [];
+    naechsteKreditNr = d.naechsteKreditNr || 1;
+    letzterAbschluss = d.letzterAbschluss || null;
+    benachrichtigen();
+  }
+
+  function zuruecksetzen() {
+    bank = 0;
+    journal = [];
+    naechsteBelegNr = 1;
+    kredite = [];
+    naechsteKreditNr = 1;
+    letzterAbschluss = null;
+    benachrichtigen();
+  }
+
+  /**
+   * Gründung: Eigenkapital einlegen und den vorhandenen Fuhrpark als
+   * Sacheinlage aufnehmen. Ohne das hätte das Startfahrzeug keinen
+   * Anschaffungswert und würde nie abgeschrieben - es stünde als
+   * kostenloses Betriebsmittel in der Rechnung.
+   */
+  function gruenden() {
+    zuruecksetzen();
+    buchen(1200, Kostensaetze.STARTKAPITAL_DM, "Einlage Eigenkapital");
+
+    FuhrparkApp.alleFahrzeuge().forEach((f) => {
+      if (f.anschaffungDM) return;
+      const wert = FuhrparkApp.restwertVon
+        ? FuhrparkApp.restwertVon(f)
+        : (f.neupreisDM || 0);
+      if (!wert) return;
+
+      f.anschaffungDM = wert;
+      f.anschaffungAm = Spielzeit.heute().toISOString();
+      f.restbuchwertDM = wert;
+      buchen(320, wert,
+        `Sacheinlage ${f.marke} ${f.modell} (${f.kennzeichen})`,
+        { fahrzeugId: f.id, ohneBank: true });
+    });
+
+    const jetzt = Spielzeit.heute();
+    letzterAbschluss = `${jetzt.getFullYear()}-${jetzt.getMonth()}`;
+  }
+
+  return {
+    KONTEN,
+    buchen,
+    tourAbgerechnet,
+    leerfahrtAbgerechnet,
+    reparaturGebucht,
+    fahrzeugGekauft,
+    fahrzeugVerkauft,
+    kreditAufnehmen,
+    offeneKredite,
+    restschuldGesamt,
+    monatspruefung,
+    kontostand,
+    dispoRest,
+    zahlungsfaehig,
+    buchungen,
+    monate,
+    monatsName,
+    bwa,
+    fahrzeugRechnung,
+    daten,
+    setzen,
+    zuruecksetzen,
+    gruenden,
+    beiAenderung
+  };
+})();

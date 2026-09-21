@@ -1,0 +1,353 @@
+/* finanzen.css
+   Buchhaltung. Zahlen stehen rechtsbündig und in gleicher Breite,
+   damit Beträge untereinander vergleichbar sind - so wie auf einem
+   Kontoauszug. */
+
+.fin-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.fin-reiter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 5px 6px 0 6px;
+  flex-shrink: 0;
+}
+
+.fin-reiter-eintrag {
+  padding: 3px 8px;
+  font-size: 12px;
+  background: var(--win-grey);
+  border: 1px solid var(--win-grey-dark);
+  border-bottom: none;
+  color: var(--win-grey-darker);
+  cursor: pointer;
+}
+
+.fin-reiter-eintrag.aktiv {
+  background: var(--win-grey-light);
+  color: #10100c;
+  font-weight: bold;
+}
+
+.fin-inhalt {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 7px;
+  border-top: 1px solid var(--win-grey-dark);
+}
+
+/* ---------- Kontostand ---------- */
+
+.fin-kontostand {
+  padding: 7px 9px;
+  margin-bottom: 7px;
+  background: #dcf0dc;
+  border: 2px solid #2f8f3f;
+}
+
+.fin-kontostand.negativ {
+  background: #f4e2e2;
+  border-color: #b03030;
+}
+
+.fin-kontostand-titel {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}
+
+.fin-kontostand-wert {
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.fin-kontostand-zusatz {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}
+
+.fin-warnung {
+  padding: 5px 7px;
+  margin-bottom: 7px;
+  font-size: 12px;
+  line-height: 1.35;
+  background: #f4e2e2;
+  border: 1px solid #b03030;
+}
+
+/* ---------- Blöcke und Kennzahlen ---------- */
+
+.fin-block {
+  margin-bottom: 7px;
+  padding: 5px 7px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.fin-block-titel {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 3px;
+  padding-bottom: 2px;
+  border-bottom: 1px dotted var(--win-grey-dark);
+}
+
+.fin-kennzahlen {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1px 10px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.fin-kennzahlen-eng { font-size: 12px; }
+
+.fin-kennzahlen dt { color: var(--win-grey-darker); }
+.fin-kennzahlen dd { margin: 0; text-align: right; }
+
+.fin-positiv { color: #1a6b2a; }
+.fin-negativ { color: #8f2020; }
+
+.fin-leer,
+.fin-hinweis {
+  font-size: 12px;
+  color: var(--win-grey-darker);
+  line-height: 1.4;
+}
+
+.fin-leer {
+  padding: 12px 0;
+  text-align: center;
+}
+
+.fin-hinweis { margin: 0 0 6px 0; }
+
+/* ---------- Journal ---------- */
+
+.fin-filterleiste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.fin-auswahl {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 2px 4px;
+  background: var(--win-white);
+  border: 1px solid var(--win-grey-darker);
+}
+
+.fin-journal {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Beleg, Datum, Konto und Betrag haben feste Breiten, nur der Text
+   dehnt sich - sonst tanzen die Spalten von Zeile zu Zeile. */
+.fin-buchung {
+  display: grid;
+  grid-template-columns: 30px 38px 34px 1fr auto;
+  gap: 4px;
+  align-items: baseline;
+  padding: 3px 2px;
+  font-size: 11px;
+  border-bottom: 1px dotted var(--win-grey-dark);
+}
+
+.fin-buchung:last-child { border-bottom: none; }
+
+.fin-beleg,
+.fin-datum,
+.fin-konto {
+  color: var(--win-grey-darker);
+}
+
+.fin-text {
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.fin-betrag {
+  text-align: right;
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+@media (max-width: 480px) {
+  /* Auf dem Telefon Text unter die Kopfzeile, sonst bleibt nichts übrig */
+  .fin-buchung {
+    grid-template-columns: 30px 38px 34px 1fr;
+  }
+  .fin-text { grid-column: 2 / -1; }
+  .fin-betrag { grid-column: 4; grid-row: 1; }
+}
+
+/* ---------- BWA ---------- */
+
+.fin-tabelle {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.fin-tabelle td {
+  padding: 2px 4px;
+  border-bottom: 1px dotted var(--win-grey-dark);
+}
+
+.fin-zahl {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fin-zeile-gruppe td {
+  padding-top: 7px;
+  font-weight: bold;
+  border-bottom: 1px solid var(--win-grey-darker);
+}
+
+.fin-zeile-summe td {
+  font-weight: bold;
+  background: var(--win-grey-light);
+}
+
+.fin-zeile-ergebnis td {
+  padding-top: 5px;
+  font-size: 13px;
+  font-weight: bold;
+  border-top: 2px solid var(--win-grey-darker);
+  border-bottom: none;
+}
+
+.fin-zeile-leer { color: var(--win-grey-darker); }
+
+/* ---------- Je Fahrzeug ---------- */
+
+.fin-fahrzeugliste,
+.fin-kreditliste,
+.fin-satzliste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fin-fahrzeug,
+.fin-kredit {
+  margin-bottom: 6px;
+  padding: 5px 7px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.fin-fahrzeug-kopf,
+.fin-kredit-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.fin-flottenpunkt {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border: 1px solid;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.85);
+}
+
+.fin-fahrzeug-kennzeichen,
+.fin-kredit-nr {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.fin-fahrzeug-typ,
+.fin-kredit-zweck {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}
+
+.fin-fahrzeug-kopf .fin-betrag { margin-left: auto; }
+
+/* ---------- Bank ---------- */
+
+.fin-formular {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.fin-formular label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}
+
+.fin-formular input,
+.fin-formular select {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 2px 4px;
+  width: 110px;
+  background: var(--win-white);
+  border: 1px solid var(--win-grey-darker);
+}
+
+/* ---------- Kostensätze ---------- */
+
+.fin-satz {
+  margin-bottom: 4px;
+  padding: 4px 7px;
+  border: 1px solid var(--win-grey-dark);
+}
+
+.fin-satz.belegt      { background: #dcf0dc; border-color: #2f8f3f; }
+.fin-satz.vorlaeufig  { background: #f6f0dc; border-color: #d9a520; }
+
+.fin-satz-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.fin-satz-name { font-size: 13px; font-weight: bold; }
+
+.fin-satz-wert {
+  margin-left: auto;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.fin-satz-quelle {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--win-grey-darker);
+}
+
+.fin-satz-marke {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 0 4px;
+  font-size: 10px;
+  border: 1px solid var(--win-grey-darker);
+}
+
+.fin-satz.belegt .fin-satz-marke     { background: #2f8f3f; color: var(--win-white); }
+.fin-satz.vorlaeufig .fin-satz-marke { background: #d9a520; color: #10100c; }

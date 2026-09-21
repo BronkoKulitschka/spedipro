@@ -505,7 +505,7 @@ const TourenplanungApp = (function () {
           ${kandidaten.length === 0
             ? `<li class="tour-ware-leer">Kein Fahrzeug verfügbar.</li>`
             : kandidaten.map(({ f, route }) => {
-                const kosten = Math.round((route.km / 100) * f.verbrauchBasisL100km * DIESELPREIS_DM);
+                const kosten = Math.round((route.km / 100) * f.verbrauchBasisL100km * dieselpreis());
                 return `
                   <li class="tour-auswahl" data-umsetz-fahrzeug="${f.id}" data-umsetz-ziel="${zielName}">
                     <span class="tour-auswahl-name">
@@ -631,7 +631,7 @@ const TourenplanungApp = (function () {
 
   /** Spritkosten einer Strecke für ein bestimmtes Fahrzeug. */
   function spritkostenFuer(fahrzeug, km) {
-    return Math.round((km / 100) * fahrzeug.verbrauchBasisL100km * DIESELPREIS_DM);
+    return Math.round((km / 100) * fahrzeug.verbrauchBasisL100km * dieselpreis());
   }
 
   /** Reine Fahrzeit inklusive der vorgeschriebenen Ruhezeiten. */
@@ -1129,9 +1129,10 @@ const TourenplanungApp = (function () {
   }
 
 
-  // Dieselpreis in DM je Liter. Grobe Größenordnung für Mitte der 90er,
-  // nicht belegt - vor einer ernsthaften Wirtschaftsbilanz prüfen.
-  const DIESELPREIS_DM = 1.05;
+  // Dieselpreis in DM je Liter - belegt und jahresabhängig, siehe
+  // js/data/kostensaetze.js und docs/kosten-1994.md. Für 1994 sind das
+  // 1,14 DM; der frühere Festwert 1,05 war geschätzt und zu niedrig.
+  function dieselpreis() { return Kostensaetze.dieselpreis(); }
 
   const AUFBAU_TEXT = {
     plane: "Planenauflieger", kuehl: "Kühlkoffer", tank: "Tankauflieger",
@@ -1926,7 +1927,7 @@ const TourenplanungApp = (function () {
       fahrverhaltenFaktor: 1.0
     });
 
-    const kosten = Math.round(ergebnis.verbrauchL * DIESELPREIS_DM);
+    const kosten = Math.round(ergebnis.verbrauchL * dieselpreis());
 
     Historie.hinzufuegen(f, {
       art: "tour",
@@ -1935,6 +1936,14 @@ const TourenplanungApp = (function () {
       erloes: 0,
       kosten,
       daten: { leerfahrt: true, verbrauchL: Math.round(ergebnis.verbrauchL) }
+    });
+
+    Finanzen.leerfahrtAbgerechnet({
+      fahrzeug: f,
+      verbrauchL: ergebnis.verbrauchL,
+      km,
+      von: eintrag.vonName,
+      nach: eintrag.nachName
     });
 
     f.standort = eintrag.nachName;
@@ -2064,7 +2073,10 @@ const TourenplanungApp = (function () {
 
     Auftraege.zustellen(auftrag);
 
-    const spritkosten = Math.round(verbrauchL * DIESELPREIS_DM);
+    // Erlös und Fahrzeugkosten in die Buchhaltung
+    Finanzen.tourAbgerechnet({ auftrag, fahrzeug: f, verbrauchL, km: gesamtKm });
+
+    const spritkosten = Math.round(verbrauchL * dieselpreis());
     const deckungsbeitrag = auftrag.entgelt - spritkosten;
 
     // Fürs Abwesenheitsprotokoll: Wer nach einer Pause zurückkommt,
@@ -2522,6 +2534,9 @@ const TourenplanungApp = (function () {
       const vergangeneMinuten = (jetzt.getTime() - letzteZeit) / 60000;
       letzteZeit = jetzt.getTime();
       if (vergangeneMinuten > 0) Fahrt.takt(vergangeneMinuten);
+
+      // Zum Monatsersten die wiederkehrenden Posten buchen
+      Finanzen.monatspruefung();
 
       if (!fensterElement || !document.body.contains(fensterElement)) return;
 

@@ -62,9 +62,13 @@ const Betrieb = (function () {
     if (!STAEDTE[stadtName]) {
       throw new Error(`Unbekannte Stadt: ${stadtName}`);
     }
+    const ersteGruendung = !daten.gegruendetAm;
     daten.depot = stadtName;
-    if (!daten.gegruendetAm) {
+    if (ersteGruendung) {
       daten.gegruendetAm = Spielzeit.heute().toISOString();
+      // Mit dem Depot beginnt der Geschäftsbetrieb: Eigenkapital
+      // einlegen, ab da laufen Miete und Verwaltung.
+      if (typeof Finanzen !== "undefined") Finanzen.gruenden();
     }
     benachrichtigen();
     // Auch den übrigen Spielstand sichern, damit Depot und Flotte

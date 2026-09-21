@@ -337,7 +337,27 @@ const FuhrparkApp = (function () {
       kosten: typ.neupreisDM
     });
     fahrzeuge.push(fahrzeug);
+    anschaffungBuchen(fahrzeug, typ.neupreisDM);
     return fahrzeug;
+  }
+
+  /**
+   * Anschaffung in die Buchhaltung geben. Reicht das Konto nicht, wird
+   * der Rest finanziert - so wie eine Spedition ein Fahrzeug auch
+   * tatsächlich bezahlt.
+   */
+  function anschaffungBuchen(fahrzeug, preis) {
+    if (typeof Finanzen === "undefined") return;
+
+    // Aus eigener Kasse höchstens so viel, dass die Kreditlinie
+    // unangetastet bleibt.
+    const eigen = Math.max(0, Math.min(preis, Finanzen.kontostand()));
+    Finanzen.fahrzeugGekauft({
+      fahrzeug,
+      preis,
+      anzahlung: eigen,
+      laufzeitJahre: Kostensaetze.nutzungsdauer("zugmaschine")
+    });
   }
 
   function gebrauchtesFahrzeugKaufen() {
@@ -438,6 +458,10 @@ const FuhrparkApp = (function () {
   }
 
   function fahrzeugVerkaufen(index) {
+    const fahrzeug = fahrzeuge[index];
+    if (fahrzeug && typeof Finanzen !== "undefined") {
+      Finanzen.fahrzeugVerkauft({ fahrzeug, erloes: restwert(fahrzeug) });
+    }
     fahrzeuge.splice(index, 1);
     if (aktuellerIndex >= fahrzeuge.length) {
       aktuellerIndex = Math.max(0, fahrzeuge.length - 1);
@@ -1354,6 +1378,16 @@ const FuhrparkApp = (function () {
         daten: { teil: ergebnis.teil, weg }
       });
 
+      if (typeof Finanzen !== "undefined") {
+        Finanzen.reparaturGebucht({
+          fahrzeug,
+          betrag: ergebnis.kosten,
+          text: weg === "vorOrt"
+            ? `${TEIL_LABEL[ergebnis.teil]} vor Ort instand gesetzt`
+            : `Bergung und Erneuerung ${TEIL_LABEL[ergebnis.teil]}`
+        });
+      }
+
       // Die Instandsetzung kostet Standzeit.
       Spielzeit.vorspulen(ergebnis.tage);
       neuZeichnen();
@@ -1468,6 +1502,9 @@ const FuhrparkApp = (function () {
     // durchgereicht, damit Verschleiß und Historie direkt darauf
     // wirken können.
     alleFahrzeuge: () => { flotteSicherstellen(); return fahrzeuge; },
+
+    /** Zeitwert eines Fahrzeugs - gebraucht von der Buchhaltung. */
+    restwertVon: (fahrzeug) => restwert(fahrzeug),
 
     /** Gespeicherte Flotte übernehmen (siehe speicher.js). */
     fahrzeugeSetzen: (liste) => {

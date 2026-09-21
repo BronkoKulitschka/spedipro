@@ -283,6 +283,7 @@ const ProtokollFenster = (function () {
     frist: "⚠",
     ausfall: "⛔",
     kunde: "👤",
+    geld: "🖩",
     hinweis: "ℹ"
   };
 

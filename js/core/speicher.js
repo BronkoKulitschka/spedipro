@@ -134,6 +134,7 @@ const Speicher = (function () {
       kunden: Kunden.alle(),
       auftraege: Auftraege.alle(),
       fahrten: Fahrt.alle().map(kompakteFahrt),
+      finanzen: Finanzen.daten(),
       protokoll
     };
   }
@@ -250,6 +251,7 @@ const Speicher = (function () {
     FuhrparkApp.fahrzeugeSetzen(stand.fahrzeuge || []);
     Kunden.setzen(stand.kunden || []);
     Auftraege.setzen(stand.auftraege || []);
+    Finanzen.setzen(stand.finanzen);
     protokoll = Array.isArray(stand.protokoll) ? stand.protokoll.slice() : [];
 
     // Laufende Touren wiederherstellen: Routen neu berechnen
@@ -336,6 +338,13 @@ const Speicher = (function () {
 
   /** Ein Spieltag Marktgeschehen: Verfall, Nachschub, Kundenpflege. */
   function marktTakt() {
+    // Monatsabschluss: Ohne ihn stünde nach einer Woche Pause kein
+    // einziger Fixkostenposten in der Rechnung.
+    if (typeof Finanzen !== "undefined" && Finanzen.monatspruefung()) {
+      protokollEintrag("geld",
+        `Monatsabschluss gebucht - Kontostand ${Finanzen.kontostand().toLocaleString("de-DE")} DM`);
+    }
+
     const vorher = Auftraege.alle().filter((a) => a.status === Auftraege.STATUS.offen);
     Auftraege.auffrischen();
     const nachher = Auftraege.alle();
@@ -461,6 +470,7 @@ const Speicher = (function () {
     FuhrparkApp.fahrzeugeSetzen([]);
     Kunden.zuruecksetzen();
     Auftraege.setzen([]);
+    Finanzen.zuruecksetzen();
     Fahrt.zuruecksetzen();
     protokollLoeschen();
 
