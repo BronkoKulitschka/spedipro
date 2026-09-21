@@ -7,7 +7,162 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.23)
+## Geplant: Lizenzen, Genehmigungen und Berechtigungen
+
+*Entwurf, noch nichts davon gebaut. Zahlen sind bis zur Recherche
+Platzhalter und als solche gekennzeichnet.*
+
+Der Spieler soll nicht von Anfang an überallhin fahren und alles laden
+dürfen. Er erarbeitet sich das Recht dazu Stück für Stück. Das ist
+kein Kunstgriff: 1994 war der Güterkraftverkehr in Deutschland genau
+so gestaffelt - der Nahverkehr frei, der Fernverkehr kontingentiert,
+das Ausland an Lizenzen und zwischenstaatliche Kontingente gebunden.
+Die Spielmechanik ergibt sich aus der Rechtslage, nicht umgekehrt.
+
+### Drei Ebenen
+
+Eine Fracht lässt sich nur fahren, wenn alle drei zusammenpassen:
+
+| Ebene | Was sie sperrt | Wo sie sitzt |
+|---|---|---|
+| **Betrieb** | Fernverkehr, EU-Ausland, einzelne Drittländer, Abfall | neues Programm „Genehmigungen" |
+| **Fahrzeug** | Kühlkette (ATP), Tank, Silo, Schwerlast | Fristen-Modul, wo HU und SP schon liegen |
+| **Fahrer** | Führerscheinklasse, ADR | Personalmodul, sobald es kommt |
+
+Solange es kein Personal gibt, hält der Unternehmer selbst die
+Fahrerqualifikationen - mit dem Personalmodul wandern sie an die
+einzelne Person, und plötzlich ist es ein Unterschied, wer fährt.
+
+### Die vier Währungen des Fortschritts
+
+Damit sich Berechtigungen nicht einfach kaufen lassen, kostet jede
+eine andere Mischung aus vier Dingen:
+
+1. **Geld** - Lehrgangs- und Prüfungsgebühren, Verwaltungsgebühren.
+2. **Zeit** - Lehrgänge dauern Tage, Behörden bearbeiten Wochen. Beides
+   läuft in der Spielzeit mit, wie eine Tour. Man beantragt und wartet.
+3. **Voraussetzungen** - manches setzt anderes voraus: ohne fachliche
+   Eignung keine Fernverkehrsgenehmigung, ohne nationale Genehmigung
+   keine EU-Lizenz. Dazu **finanzielle Leistungsfähigkeit**: ein
+   Mindest-Eigenkapital je Fahrzeug, das die Buchhaltung ausweist.
+4. **Knappheit** - Fernverkehrsgenehmigungen und Drittland-Kontingente
+   waren begrenzt. Sie sind nicht bestellbar, sondern stehen auf einer
+   Warteliste oder werden von einem aufgebenden Kollegen übernommen.
+   Das ist der eigentliche Engpass des Aufstiegs.
+
+Dazu ein fünftes, das nur verloren gehen kann: **Zuverlässigkeit**.
+Lenkzeitverstöße, Überladung, versäumte HU, reihenweise verspätete
+Lieferungen - das führt zu Auflagen, im Wiederholungsfall zum Entzug
+der Genehmigung. Die Kundenbewertung, die es schon gibt, bekommt damit
+ein behördliches Gegenstück.
+
+### Der Stufenplan
+
+**1. Nahverkehr.** Start mit einem 3,5-t-Transporter, 50 km um das
+Depot. Keine Genehmigung nötig - so war es auch in Wirklichkeit.
+Kleine Frachten, kleine Erlöse, Klasse 3 reicht.
+
+**2. Fachliche Eignung.** Lehrgang und IHK-Prüfung. Kostet Geld und
+mehrere Wochen, in denen der Betrieb weiterläuft. Schlüssel zu allem
+Weiteren.
+
+**3. Güterfernverkehrsgenehmigung.** Braucht fachliche Eignung,
+Zuverlässigkeit und Eigenkapitalnachweis - und einen freien Platz im
+Kontingent. Ab hier fällt die 50-km-Grenze im Inland.
+
+**4. Führerschein Klasse 2 und der erste schwere Zug.** Fahrschule,
+ärztliche Untersuchung, Gebühren. Erst jetzt lohnen sich die
+Sattelzüge, die heute am Anfang stehen.
+
+**5. Gemeinschaftslizenz (EU-Lizenz).** Auf Grundlage der nationalen
+Genehmigung. Öffnet die EG-Staaten - und damit den halben Kontinent.
+
+**6. Drittländer.** Schweiz, Polen, Tschechien, Ungarn, Jugoslawien,
+Österreich bis zum Beitritt 1995: bilaterale Genehmigungen oder
+CEMT-Genehmigung, jahresweise zugeteilt und je Fahrt verbraucht.
+Österreich zusätzlich mit **Ökopunkten** ab 1993 - je Transitfahrt
+ein Kontingent, dessen Verbrauch vom Stickoxidwert des Fahrzeugs
+abhängt. Ein sauberer Motor wird damit zur Fahrerlaubnis.
+
+**7. Spezialisierungen.** Jede öffnet einen Frachtbereich:
+
+- **ADR** - Gefahrgutfahrerschulung (Basiskurs, Aufbaukurse für Tank
+  und einzelne Klassen), fünf Jahre gültig, danach Auffrischung. Dazu
+  im Betrieb der **Gefahrgutbeauftragte** mit eigener Prüfung.
+- **ATP/FRC** - Bescheinigung für den Kühlkoffer, sechs Jahre, dann
+  Nachprüfung. Läuft sie ab, ist der Kühlauflieger totes Kapital.
+- **Beförderungserlaubnis Abfall** - Zuverlässigkeit und Sachkunde,
+  öffnet Abfall und Schrott.
+- **Schwertransport** - Dauer- oder Einzelerlaubnis nach StVO, mit
+  Auflagen, Begleitfahrzeugen und eigener Routenprüfung.
+
+### Anschluss an das, was schon steht
+
+Der Eingriff ist kleiner, als er klingt:
+
+- Die Frachtliste sperrt heute schon Zeilen mit Begründung. Statt
+  „Kein passender Aufbau verfügbar" stünde dort „ADR-Schein fehlt"
+  oder „Keine Genehmigung für Polen".
+- `route.js` muss die **durchfahrenen Länder** liefern, nicht nur das
+  Ziel - sonst prüft man die Erlaubnis für Italien und fährt ohne
+  Ökopunkte durch Österreich.
+- Das Fristen-Modul kann Gültigkeiten und Nachschulungen bereits; ATP
+  und ADR sind nur weitere Fristen.
+- Die Buchhaltung liefert den Eigenkapitalnachweis und bucht Gebühren
+  und Lehrgänge als Betriebsausgaben.
+- Neues Programm **„Genehmigungen"** auf dem Schreibtisch: eine
+  Aktenübersicht mit vier Zuständen je Eintrag - *vorhanden* (mit
+  Ablaufdatum), *beantragt* (mit Restlaufzeit), *möglich* (alle
+  Voraussetzungen erfüllt, Antrag stellen) und *gesperrt* (mit der
+  Liste dessen, was noch fehlt). Letzteres ist die Fortschrittsanzeige
+  des Spiels.
+
+### Zu recherchieren, bevor gebaut wird
+
+Nichts davon setze ich aus dem Gedächtnis an. Offen sind:
+Kontingentgrößen und Vergabepraxis der Fernverkehrsgenehmigungen,
+Gebühren und Lehrgangskosten 1994, Bearbeitungsdauern der Behörden,
+die Marktpreise gehandelter Genehmigungen, die Ökopunkte-Rechnung, die
+Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
+Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
+Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
+
+## Aktueller Stand (v0.15.24)
+
+**Der Fuhrpark zeigte nur ein Fahrzeug, wenn man ihn zuerst öffnete.**
+Das Laden des Spielstands hing am ersten Öffnen der Tourenplanung. Wer
+stattdessen mit dem Fuhrpark anfing, bekam nicht seine Flotte zu
+sehen, sondern eine frisch angelegte Startflotte mit einem einzigen
+Fahrzeug - der Fuhrpark legt sie nämlich selbst an, wenn keine da ist.
+Die übrigen Fahrzeuge tauchten erst auf, sobald die Tourenplanung den
+Stand nachlud. Der Spielstand wird jetzt beim Seitenaufruf geladen,
+unabhängig davon, welches Programm zuerst geöffnet wird.
+
+Dabei kam ein zweiter Fehler mit heraus: Ankunfts- und
+Nachholmeldungen liefen durch Zeichenfunktionen, die ein offenes
+Fenster voraussetzten. Ohne Fenster warf das eine Ausnahme und brach
+die Nachholsimulation mittendrin ab - aus vier nachzuholenden
+Spieltagen wurde einer. Die Funktionen prüfen jetzt erst, ob es
+überhaupt etwas zu zeichnen gibt.
+
+**Die eigene Flotte steht in der Tourenplanung immer ganz oben**, in
+jedem Schritt. Wer disponiert, muss jederzeit sehen, was er hat.
+Ab etwa vier Zeilen scrollt die Liste in sich selbst, damit sie bei
+wachsendem Fuhrpark nicht die halbe Seite frisst.
+
+**Neuer Knopf "⌂ Übersicht"** neben dem Stadtnamen: hebt die
+Stadtauswahl auf und führt zurück in den Zustand beim Öffnen.
+
+**Vom Fuhrpark auf die Karte.** Die Detailansicht hat einen Knopf
+"🗺 Auf der Karte". Er wechselt in die Tourenplanung: Fährt das
+Fahrzeug gerade, wird seine Strecke hervorgehoben und der
+Kartenausschnitt darauf gelegt; steht es, wird sein Standort gewählt,
+sodass sich von dort sofort disponieren lässt. In beiden Fällen ist
+seine Zeile in der Flottenliste markiert. Der bisherige Knopf im
+Unterwegs-Block heißt jetzt "Tourkarte" - er zeigt weiterhin das
+kleine Einzelfenster zur laufenden Fahrt.
+
+## Vorheriger Stand (v0.15.23)
 
 **Tourenplanung ohne Startknopf - die Karte ist der Einstieg.**
 Eine Stadt antippen genügt: Darunter steht sofort, was von dort

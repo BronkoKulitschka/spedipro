@@ -1065,11 +1065,46 @@
 /* Zeigt dauerhaft, wo jedes eigene Fahrzeug steht. Ein Klick auf eine
    Zeile wählt die Stadt aus und rückt sie in die Kartenmitte. */
 
+/* Die eigene Flotte steht in jedem Schritt fest oben. Damit sie bei
+   wachsendem Fuhrpark nicht die halbe Seite frisst, scrollt sie
+   ab etwa vier Zeilen in sich selbst. */
 .tour-flotte {
+  flex: none;
   margin-bottom: 6px;
   padding: 5px 7px;
   background: var(--win-grey-light);
   border: 1px solid var(--win-grey-dark);
+  max-height: 124px;
+  overflow-y: auto;
+}
+
+.tour-flotte .tour-warentitel {
+  position: sticky;
+  top: -5px;
+  background: var(--win-grey-light);
+  padding-bottom: 2px;
+}
+
+/* Aus dem Fuhrpark heraus verfolgtes Fahrzeug */
+.tour-flotteneintrag.verfolgt {
+  background: var(--win-blue, #000080);
+  color: var(--win-white, #ffffff);
+}
+
+.tour-stadtleiste {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  flex: none;
+}
+
+.tour-stadtleiste .tour-stadtkopf { flex: 1; min-width: 0; }
+
+.tour-stadtleiste .win98-button {
+  flex: none;
+  font-size: 11px;
+  padding: 2px 6px;
 }
 
 .tour-flottenliste {

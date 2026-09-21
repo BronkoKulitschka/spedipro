@@ -78,6 +78,10 @@ const TourenplanungApp = (function () {
   // Stadt, in die ein Fahrzeug leer umgesetzt werden soll
   let umsetzZiel = null;
 
+  // Fahrzeug, dessen Strecke gerade hervorgehoben wird - gesetzt aus
+  // dem Fuhrpark heraus ("Auf der Karte verfolgen").
+  let verfolgtesFahrzeug = null;
+
   // Aktuell auf der Karte hervorgehobene Route (Liste von Städtenamen)
   let aktiveRoute = null;
 
@@ -225,8 +229,10 @@ const TourenplanungApp = (function () {
                 : "frei";
 
             return `
-              <li class="tour-flotteneintrag ${zustand === "frei" ? "ist-frei" : ""}"
+              <li class="tour-flotteneintrag ${zustand === "frei" ? "ist-frei" : ""}
+                         ${verfolgtesFahrzeug === f.id ? "verfolgt" : ""}"
                   data-fahrzeug-suchen="${zielStadt || ""}"
+                  data-flotte-fahrzeug="${f.id}"
                   title="${f.kennzeichen} · ${ort}">
                 <span class="tour-flottenpunkt"
                       style="background:${Lackierung.cssFarbe(f.lackierung)};
@@ -428,18 +434,18 @@ const TourenplanungApp = (function () {
   function renderTourplanung() {
     const s = tour.stadt;
 
-    // Meldungen bleiben oben stehen, der Rest scrollt. Die Übersicht
-    // über Flotte und laufende Fahrten hängt dagegen unten an der
-    // Frachtliste: Zuerst die Entscheidung, dann der Bestand.
-    const meldungen = `${nachholhinweis()}${ankunftsmeldung()}`;
+    // Meldungen und die eigene Flotte stehen fest oben, in jedem
+    // Schritt. Wer disponiert, muss jederzeit sehen, was er hat -
+    // dafür soll er nicht erst zurückblättern müssen. Der Rest der
+    // Seite scrollt darunter.
+    const kopf = `${nachholhinweis()}${ankunftsmeldung()}${fahrzeugUebersicht()}`;
 
     if (!s) {
       return `
         <div class="tour-ablauf">
-          ${meldungen}
+          ${kopf}
           <div class="tour-schrittinhalt">
             ${laufendeFahrten()}
-            ${fahrzeugUebersicht()}
             <div class="tour-dispo-leer">
               Stadt auf der Karte auswählen. Darunter steht dann, was von
               dort ausgeht und welches Fahrzeug es nehmen kann.
@@ -451,8 +457,14 @@ const TourenplanungApp = (function () {
 
     return `
       <div class="tour-ablauf">
-        ${meldungen}
-        ${stadtkopf(s)}
+        ${kopf}
+        <div class="tour-stadtleiste">
+          ${stadtkopf(s)}
+          <button class="win98-button bevel-out" id="tour-btn-uebersicht"
+                  title="Stadtauswahl aufheben">
+            ⌂ Übersicht
+          </button>
+        </div>
         ${schrittleiste()}
         <div class="tour-schrittinhalt">${schrittInhalt()}</div>
         ${tour.art || tour.fahrzeug ? `
@@ -742,7 +754,6 @@ const TourenplanungApp = (function () {
       </div>
 
       ${laufendeFahrten()}
-      ${fahrzeugUebersicht()}
     `;
   }
 
@@ -1242,7 +1253,7 @@ const TourenplanungApp = (function () {
   let markenListe = [];
 
   function markenZeichnen() {
-    const behaelter = fensterElement.querySelector("#tour-karte-marken");
+    const behaelter = fensterElement && fensterElement.querySelector("#tour-karte-marken");
     if (!behaelter) return;
 
     behaelter.innerHTML = Karte.alleStaedte()
@@ -1314,8 +1325,8 @@ const TourenplanungApp = (function () {
    * darübergelegt - genau entlang derselben Stützpunkte.
    */
   function routeZeichnen() {
-    const svg = fensterElement.querySelector("#tour-route-ebene");
-    const rahmen = fensterElement.querySelector("#tour-karte-rahmen");
+    const svg = fensterElement && fensterElement.querySelector("#tour-route-ebene");
+    const rahmen = fensterElement && fensterElement.querySelector("#tour-karte-rahmen");
     if (!svg || !rahmen) return;
 
     svg.setAttribute("width", rahmen.clientWidth);
@@ -1419,7 +1430,7 @@ const TourenplanungApp = (function () {
   }
 
   function ansichtAnwenden() {
-    const buehne = fensterElement.querySelector("#tour-karte-buehne");
+    const buehne = fensterElement && fensterElement.querySelector("#tour-karte-buehne");
     if (!buehne) return;
     buehne.style.transform =
       `translate(${versatzX}px, ${versatzY}px) scale(${zoom})`;
@@ -1475,7 +1486,7 @@ const TourenplanungApp = (function () {
 
   /** Verschiebung begrenzen, damit die Karte nicht aus dem Fenster wandert. */
   function versatzBegrenzen() {
-    const rahmen = fensterElement.querySelector("#tour-karte-rahmen");
+    const rahmen = fensterElement && fensterElement.querySelector("#tour-karte-rahmen");
     if (!rahmen) return;
 
     const sichtbarB = rahmen.clientWidth;
@@ -1587,6 +1598,12 @@ const TourenplanungApp = (function () {
    */
   function dispositionAktualisieren(optionen) {
     const nurListe = Boolean(optionen && optionen.nurListe);
+    // Ohne geöffnetes Fenster gibt es nichts zu zeichnen. Seit der
+    // Spielstand schon beim Seitenaufruf geladen wird, laufen Ankunfts-
+    // und Nachholmeldungen durch diese Funktion, bevor es ein Fenster
+    // gibt - vorher warf das hier eine Ausnahme und brach das Nachholen
+    // mittendrin ab.
+    if (!fensterElement) return;
     const dispo = fensterElement.querySelector("#tour-disposition");
     if (!dispo) return;
 
@@ -1971,6 +1988,15 @@ const TourenplanungApp = (function () {
     const abbrechen = dispo.querySelector("#tour-btn-abbrechen");
     if (abbrechen) abbrechen.addEventListener("click", auswahlVerwerfen);
 
+    const uebersicht = dispo.querySelector("#tour-btn-uebersicht");
+    if (uebersicht) {
+      uebersicht.addEventListener("click", () => {
+        zurueckZurUebersicht();
+        markenZeichnen();
+        routeZeichnen();
+      });
+    }
+
     const neueTour = dispo.querySelector("#tour-btn-neue-tour");
     if (neueTour) {
       neueTour.addEventListener("click", () => {
@@ -2314,6 +2340,89 @@ const TourenplanungApp = (function () {
       y: b.y * zoom + versatzY,
       nachLinks: b2.x < b.x
     };
+  }
+
+  /**
+   * Zurück auf die Übersicht: keine Stadt gewählt, keine Planung,
+   * nur Flotte und laufende Fahrten - der Zustand beim Öffnen.
+   */
+  function zurueckZurUebersicht() {
+    gewaehlteStadt = null;
+    verfolgtesFahrzeug = null;
+    hervorgehobenesGut = null;
+    aktiveRoute = null;
+    detailGut = null;
+    umsetzZiel = null;
+    tourZuruecksetzen();
+    dispositionAktualisieren();
+  }
+
+  /**
+   * Ein Fahrzeug auf der Karte zeigen - gerufen aus dem Fuhrpark.
+   * Fährt es gerade, wird seine Strecke hervorgehoben und der
+   * Ausschnitt darauf gelegt. Steht es, wird sein Standort gewählt,
+   * damit man gleich von dort aus disponieren kann.
+   */
+  function fahrzeugZeigen(id) {
+    open();
+
+    const f = FuhrparkApp.alleFahrzeuge().find((x) => x.id === id);
+    if (!f) return;
+
+    verfolgtesFahrzeug = id;
+    hervorgehobenesGut = null;
+
+    const lauf = Fahrt.fuerFahrzeug(id);
+    if (lauf) {
+      // Unterwegs: die Strecke hervorheben, keine Stadt auswählen -
+      // disponieren lässt sich mit diesem Wagen ohnehin nicht.
+      gewaehlteStadt = null;
+      tourZuruecksetzen();
+      const haupt = lauf.etappen.find((e) => e.typ === "hauptlauf") || lauf.etappen[0];
+      aktiveRoute = haupt ? haupt.route : null;
+      dispositionAktualisieren();
+      if (aktiveRoute) aufRouteZentrieren(aktiveRoute);
+      return;
+    }
+
+    const stadt = STAEDTE[f.standort];
+    if (stadt) {
+      stadtWaehlen(stadt);
+      verfolgtesFahrzeug = id; // stadtWaehlen setzt die Planung zurück
+      aufStadtZentrieren(stadt);
+      dispositionAktualisieren();
+    } else {
+      dispositionAktualisieren();
+    }
+  }
+
+  /**
+   * Legt den Kartenausschnitt so, dass die ganze Strecke hineinpasst.
+   * Ohne das läge eine Fahrt Hamburg-Lisboa zur Hälfte außerhalb.
+   */
+  function aufRouteZentrieren(route) {
+    const rahmen = fensterElement && fensterElement.querySelector("#tour-karte-rahmen");
+    const punkte = route && route.verlauf;
+    if (!rahmen || !punkte || punkte.length < 2) return;
+
+    let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+    punkte.forEach((p) => {
+      const b = Karte.nachBild(p[0], p[1]);
+      x1 = Math.min(x1, b.x); x2 = Math.max(x2, b.x);
+      y1 = Math.min(y1, b.y); y2 = Math.max(y2, b.y);
+    });
+
+    const rand = 24;
+    const breite = Math.max(1, x2 - x1);
+    const hoehe = Math.max(1, y2 - y1);
+    zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX,
+      Math.min((rahmen.clientWidth - 2 * rand) / breite,
+               (rahmen.clientHeight - 2 * rand) / hoehe)));
+
+    versatzX = rahmen.clientWidth / 2 - ((x1 + x2) / 2) * zoom;
+    versatzY = rahmen.clientHeight / 2 - ((y1 + y2) / 2) * zoom;
+    versatzBegrenzen();
+    ansichtAnwenden();
   }
 
   /**
@@ -2688,6 +2797,8 @@ const TourenplanungApp = (function () {
     spielstandLaden,
     /** Stellt sicher, dass Uhr, Auftragspool und Automatik laufen. */
     starten: taktVerbinden,
+    /** Ein Fahrzeug auf der Karte zeigen - benutzt der Fuhrpark. */
+    fahrzeugZeigen,
     /** Von anderen Modulen aufrufbar, wenn sich die Flotte ändert. */
     aktualisieren: () => {
       if (fensterElement && document.body.contains(fensterElement)) {
@@ -2707,4 +2818,15 @@ AppRegistry.register({
 document.addEventListener("DOMContentLoaded", () => {
   const icon = document.getElementById("icon-tourenplanung");
   if (icon) icon.addEventListener("click", () => TourenplanungApp.open());
+
+  // Den Spielstand gleich beim Seitenaufruf laden, nicht erst beim
+  // Öffnen der Tourenplanung.
+  //
+  // Vorher hing das Laden am ersten Öffnen dieses Fensters. Wer
+  // zuerst den Fuhrpark öffnete, sah deshalb nicht seine Flotte,
+  // sondern eine frisch angelegte Startflotte mit einem einzigen
+  // Fahrzeug - die übrigen kamen erst zum Vorschein, sobald die
+  // Tourenplanung den Stand nachlud. Der Fuhrpark legt seine
+  // Startflotte nämlich selbst an, wenn keine da ist.
+  TourenplanungApp.starten();
 });

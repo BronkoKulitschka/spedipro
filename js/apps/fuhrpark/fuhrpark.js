@@ -1062,7 +1062,7 @@ const FuhrparkApp = (function () {
         <div class="fuhrpark-tourhinweis-kopf">
           🚛 Unterwegs: ${t.vonName} → ${t.nachName}
           <button class="win98-button bevel-out" data-tourkarte="${fahrzeug.id}">
-            Auf der Karte zeigen
+            Tourkarte
           </button>
         </div>
         <div class="fuhrpark-tourhinweis-balken">
@@ -1169,6 +1169,7 @@ const FuhrparkApp = (function () {
           <button class="win98-button bevel-out fuhrpark-zurueck" id="fuhrpark-btn-auslastung">📊 Auslastung</button>
           <button class="win98-button bevel-out fuhrpark-zurueck" id="fuhrpark-btn-historie">📜 Historie</button>
           <button class="win98-button bevel-out fuhrpark-zurueck" id="fuhrpark-btn-fristen">🔧 Fristen</button>
+          <button class="win98-button bevel-out fuhrpark-zurueck" id="fuhrpark-btn-karte">🗺 Auf der Karte</button>
         </div>
 
         <dl class="fuhrpark-infoliste">
@@ -1385,6 +1386,19 @@ const FuhrparkApp = (function () {
       });
     });
 
+    // In die Tourenplanung wechseln und das Fahrzeug dort zeigen:
+    // unterwegs mit seiner Strecke, sonst an seinem Standort, von dem
+    // aus sich gleich disponieren lässt.
+    const btnKarte = fensterElement.querySelector("#fuhrpark-btn-karte");
+    if (btnKarte) {
+      btnKarte.addEventListener("click", () => {
+        const f = fahrzeuge[aktuellerIndex];
+        if (f && typeof TourenplanungApp !== "undefined" && TourenplanungApp.fahrzeugZeigen) {
+          TourenplanungApp.fahrzeugZeigen(f.id);
+        }
+      });
+    }
+
     const btnAuslastung = fensterElement.querySelector("#fuhrpark-btn-auslastung");
     if (btnAuslastung) {
       btnAuslastung.addEventListener("click", () => {
@@ -1505,6 +1519,11 @@ const FuhrparkApp = (function () {
   }
 
   function open() {
+    // Erst den Spielstand, dann die Flotte: Sonst legte der Fuhrpark
+    // eine neue Startflotte an, obwohl längst eine gespeicherte da war.
+    if (typeof TourenplanungApp !== "undefined" && TourenplanungApp.starten) {
+      TourenplanungApp.starten();
+    }
     flotteSicherstellen();
     taktVerbinden();
 
