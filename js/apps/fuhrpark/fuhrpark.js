@@ -1008,6 +1008,27 @@ const FuhrparkApp = (function () {
     fensterAktualisieren("fuhrpark-historie", `Historie – ${fahrzeug.kennzeichen}`, inhalt);
   }
 
+  /**
+   * Standort und Status müssen die laufende Tour kennen. Sonst stand
+   * dort "Hamburg" und "verfügbar", während das Fahrzeug längst
+   * zwischen zwei Städten unterwegs war.
+   */
+  function laufendeTour(fahrzeug) {
+    return typeof Fahrt !== "undefined" ? Fahrt.fuerFahrzeug(fahrzeug.id) : null;
+  }
+
+  function standortText(fahrzeug) {
+    const t = laufendeTour(fahrzeug);
+    return t ? `unterwegs (${t.vonName} → ${t.nachName})` : fahrzeug.standort;
+  }
+
+  function statusText(fahrzeug) {
+    const t = laufendeTour(fahrzeug);
+    if (!t) return fahrzeug.status;
+    if (t.ruhtBis) return "Ruhezeit";
+    return Fahrt.istBeladen(t) ? "auf Tour, beladen" : "auf Tour, Anfahrt leer";
+  }
+
   /** Hinweis, wenn das Fahrzeug gerade unterwegs ist. */
   function tourBlock(fahrzeug) {
     if (typeof Fahrt === "undefined") return "";
@@ -1108,9 +1129,10 @@ const FuhrparkApp = (function () {
             <svg class="fuhrpark-visual-linien" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
             ${boxen}
             ${ausfallBlock(fahrzeug)}
-            ${tourBlock(fahrzeug)}
           </div>
         </div>
+
+        ${tourBlock(fahrzeug)}
 
         <div class="fuhrpark-gesamtbalken">
           <span class="fuhrpark-gesamtbalken-label">Gesamtzustand</span>
@@ -1133,8 +1155,8 @@ const FuhrparkApp = (function () {
           <dt>Aufbau</dt><dd>${fahrzeug.aufbautyp}</dd>
           <dt>Lackierung</dt><dd>${fahrzeug.lackierung}</dd>
           <dt>Laufleistung</dt><dd>${fahrzeug.kmStand.toLocaleString("de-DE")} km</dd>
-          <dt>Standort</dt><dd>${fahrzeug.standort}</dd>
-          <dt>Status</dt><dd>${fahrzeug.status}</dd>
+          <dt>Standort</dt><dd>${standortText(fahrzeug)}</dd>
+          <dt>Status</dt><dd>${statusText(fahrzeug)}</dd>
           <dt>Verbrauch gesamt</dt><dd>${fahrzeug.verbrauchGesamtL.toFixed(0)} l</dd>
           <dt>Restwert (geschätzt)</dt><dd>${restwert(fahrzeug).toLocaleString("de-DE")} DM</dd>
         </dl>

@@ -7,7 +7,23 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-## Aktueller Stand (v0.15.18)
+## Aktueller Stand (v0.15.19)
+
+**Der Unterwegs-Hinweis steht jetzt unter dem Bild**, nicht mehr darauf.
+Als Überlagerung verdeckte er die hinteren Bauteile samt ihrer
+Beschriftung - Reifen und Antrieb lagen genau darunter, und das
+ausgerechnet dann, wenn man nachsehen will, wie es einem Fahrzeug auf
+Tour geht. Er sitzt zwischen Fahrzeugbild und Zustandsbalken und
+schiebt nichts mehr zu. Der Ausfall-Hinweis bleibt im Bild: Ein
+liegengebliebenes Fahrzeug soll auffallen.
+
+**Standort und Status kennen die laufende Tour.** Dabei fiel auf, dass
+in der Infoliste "Hamburg" und "verfügbar" stand, während das Fahrzeug
+längst zwischen zwei Städten unterwegs war. Jetzt steht dort
+"unterwegs (Hamburg → Newcastle-upon-Tyne)" und "auf Tour, beladen"
+bzw. "auf Tour, Anfahrt leer" oder "Ruhezeit".
+
+## Vorheriger Stand (v0.15.18)
 
 **Nur noch eine Uhr, und die steht in der Taskleiste.** Die Tourenplanung
 hatte eine eigene Zeitanzeige in der Kartenleiste - das brach die

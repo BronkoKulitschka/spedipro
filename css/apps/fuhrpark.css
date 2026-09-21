@@ -681,16 +681,15 @@
 
 /* Sitzt UNTEN im Bild - oben liegt bereits der Ausfall-/Warnhinweis,
    beide sollen sich nicht überlagern. */
+/* Steht unter dem Bild, nicht darauf: Über dem Fahrzeug verdeckte der
+   Hinweis die hinteren Bauteile samt ihrer Beschriftung - gerade dann,
+   wenn man nachsehen will, wie es dem Fahrzeug auf Tour geht. */
 .fuhrpark-tourhinweis {
-  position: absolute;
-  left: 4px;
-  right: 4px;
-  bottom: 4px;
-  z-index: 4;
+  flex-shrink: 0;
+  margin: 5px 0 0 0;
   padding: 5px 7px;
   background: #e2ecf5;
   border: 2px solid #2f7fd0;
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.35);
 }
 
 .fuhrpark-tourhinweis-kopf {
