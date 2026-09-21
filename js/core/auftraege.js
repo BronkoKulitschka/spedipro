@@ -277,6 +277,18 @@ const Auftraege = (function () {
 
   function alle() { return auftraege.slice(); }
 
+  /**
+   * Nimmt einen fertig gebauten Auftrag in den Pool auf. Gebraucht für
+   * Spotladungen: Die entstehen nicht am Markt, sondern in dem Moment,
+   * in dem der Disponent Ware und Ziel selbst festlegt. Ab dann läuft
+   * die übliche Statuskette darüber.
+   */
+  function aufnehmen(auftrag) {
+    auftraege.push(auftrag);
+    benachrichtigen();
+    return auftrag;
+  }
+
   /** Gespeicherte Aufträge übernehmen. */
   function setzen(liste) {
     auftraege.length = 0;
@@ -300,6 +312,7 @@ const Auftraege = (function () {
     laufende,
     abgeschlossene,
     nachNummer,
+    aufnehmen,
     gut,
     disponieren,
     beginnen,

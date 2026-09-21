@@ -683,6 +683,17 @@ Werkstatt-Modul.
 Unfälle oder Winterprobleme liegenbleiben. Wahrscheinlichkeit aus Alter,
 Laufleistung, Gesamtzustand und Jahreszeit.
 
+**Stadtpanorama im Kartenfenster** - sobald eine Stadt ausgewählt ist,
+soll an die Stelle der Europakarte eine Panorama-Ansicht dieser Stadt
+treten, in derselben Pixelart wie der Rest des Spiels. Offen: ein Bild
+je Stadt sind 165 Motive - realistischer ist ein Baukasten aus wenigen
+Silhouetten je Stadttyp (Seehafen, Binnenhafen, Industriestadt,
+Altstadt, Alpenstadt) plus Wahrzeichen für die großen Knoten. Das
+Kartenfenster muss dafür zwischen Karte und Panorama umschalten können,
+ohne Zoom und Versatz der Karte zu verlieren; ein Knopf für den Weg
+zurück zur Karte gehört dazu. Auf der Panorama-Ansicht sitzen keine
+Marken - die Routen bleiben nur auf der Karte sichtbar.
+
 **Rundtouren mit mehreren Stopps** - aktuell nur A nach B. Das
 Tour-Objekt in  müsste dafür eine Etappenliste führen
 statt eines einzelnen Ziels, jede Etappe mit eigener Ladung.

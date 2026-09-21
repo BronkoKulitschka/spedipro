@@ -1060,3 +1060,100 @@
   box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #2f8f3f;
   z-index: 3;
 }
+
+/* ---------- Stadtseite der Tourenplanung ---------- */
+
+.tour-stadtkopf {
+  margin-bottom: 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--win-grey-dark);
+}
+
+.tour-stadtseite-name {
+  margin: 0 0 2px 0;
+  font-size: 17px;
+  font-weight: bold;
+  line-height: 1.15;
+}
+
+.tour-stadtzeile {
+  font-size: 12px;
+  color: var(--win-grey-darker);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Steht hier ein Fahrzeug? Die Antwort muss auf einen Blick lesbar
+   sein - deshalb farbig abgesetzt statt als Fließtext. */
+.tour-vorort {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding: 4px 7px;
+  border: 1px solid var(--win-grey-dark);
+}
+
+.tour-vorort-titel { font-weight: bold; font-size: 13px; }
+
+.tour-vorort-kennzeichen {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}
+
+.tour-vorort-ja    { background: #dcf0dc; border-color: #2f8f3f; }
+.tour-vorort-nein  { background: #f4e2e2; border-color: #b03030; }
+
+.tour-vorort-ja .tour-standortpunkte { position: static; }
+
+.tour-anfordern {
+  margin-bottom: 6px;
+  padding: 5px 7px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+/* Zwischenüberschrift innerhalb der Ausgangsliste. Bewusst kein
+   eigener Rahmen: Die Liste soll in einem Zug durchscrollen. */
+.tour-ausgang-teil {
+  margin: 7px 0 3px 0;
+  padding-bottom: 2px;
+  font-size: 12px;
+  font-weight: bold;
+  border-bottom: 1px dotted var(--win-grey-dark);
+}
+
+.tour-ausgang-teil:first-of-type { margin-top: 3px; }
+
+.tour-spotmarke {
+  font-size: 10px;
+  padding: 0 4px;
+  background: #5f6f8f;
+  color: var(--win-white);
+  border: 1px solid var(--win-grey-darker);
+}
+
+/* Bei festen Aufträgen gibt der Auftraggeber das Ziel vor - der
+   Schritt bleibt in der Leiste stehen, aber sichtbar ausgegraut. */
+.tour-schritt.entfaellt {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+/* Fünf Schritte passen auf dem Telefon nicht nebeneinander - enger
+   setzen, damit höchstens zwei Zeilen entstehen. */
+@media (max-width: 480px) {
+  .tour-schritt { font-size: 10px; padding: 2px 4px; gap: 3px; }
+  .tour-schritt-nr { min-width: 12px; }
+}
+
+/* Im Frachtschritt stehen zwei Listen untereinander. Jede für sich
+   scrollen zu lassen, zerschneidet beide - stattdessen scrollt der
+   ganze Schrittinhalt in einem Zug. */
+.tour-auswahlliste.tour-liste-voll {
+  flex: 0 0 auto;
+  overflow: visible;
+}
