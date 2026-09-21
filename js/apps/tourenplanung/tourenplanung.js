@@ -152,6 +152,73 @@ const TourenplanungApp = (function () {
     `;
   }
 
+  /**
+   * Ständige Übersicht über die eigene Flotte. Sie beantwortet die Frage,
+   * die auf der Karte am meisten Sucherei kostet: Wo steht welches
+   * Fahrzeug? Freie Fahrzeuge stehen oben, ein Klick springt zur Stadt.
+   */
+  function fahrzeugUebersicht() {
+    const flotte = FuhrparkApp.alleFahrzeuge();
+    if (flotte.length === 0) return "";
+
+    function rang(f) {
+      if (Fahrt.istUnterwegs(f.id)) return 1;
+      if (f.status === "stillstehend") return 2;
+      return 0;
+    }
+
+    const sortiert = flotte.slice().sort((a, b) => {
+      const r = rang(a) - rang(b);
+      if (r !== 0) return r;
+      const o = (a.standort || "").localeCompare(b.standort || "");
+      if (o !== 0) return o;
+      return a.kennzeichen.localeCompare(b.kennzeichen);
+    });
+
+    const frei = flotte.filter(
+      (f) => f.status !== "stillstehend" && !Fahrt.istUnterwegs(f.id)
+    ).length;
+
+    return `
+      <div class="tour-flotte">
+        <div class="tour-warentitel">
+          Eigene Fahrzeuge (${flotte.length}${frei > 0 ? `, ${frei} frei` : ""})
+        </div>
+        <ul class="tour-flottenliste">
+          ${sortiert.map((f) => {
+            const tour = Fahrt.fuerFahrzeug(f.id);
+            const unterwegs = Boolean(tour);
+            const steht = f.status === "stillstehend";
+            const ort = unterwegs
+              ? `${tour.vonName} → ${tour.nachName}`
+              : f.standort || "unbekannt";
+            const zielStadt = unterwegs ? tour.nachName : f.standort;
+            const zustand = steht
+              ? "steht"
+              : unterwegs
+                ? (tour.ruhtBis ? "Ruhezeit" : "unterwegs")
+                : "frei";
+
+            return `
+              <li class="tour-flotteneintrag ${zustand === "frei" ? "ist-frei" : ""}"
+                  data-fahrzeug-suchen="${zielStadt || ""}"
+                  title="${f.kennzeichen} · ${ort}">
+                <span class="tour-flottenpunkt"
+                      style="background:${Lackierung.cssFarbe(f.lackierung)};
+                             border-color:${Lackierung.cssFarbeDunkel(f.lackierung)}"></span>
+                <span class="tour-flotten-kennzeichen">${f.kennzeichen}</span>
+                <span class="tour-flotten-ort">${ort}</span>
+                <span class="tour-flotten-status tour-flotten-${zustand === "Ruhezeit" ? "ruht" : zustand}">
+                  ${zustand}
+                </span>
+              </li>
+            `;
+          }).join("")}
+        </ul>
+      </div>
+    `;
+  }
+
   /** Übersicht der Fahrzeuge, die gerade unterwegs sind. */
   function laufendeFahrten() {
     const touren = Fahrt.alle();
@@ -257,6 +324,7 @@ const TourenplanungApp = (function () {
         ${nachholhinweis()}
         ${ankunftsmeldung()}
         ${laufendeFahrten()}
+        ${fahrzeugUebersicht()}
         <div class="tour-dispo-leer">
           Stadt auf der Karte auswählen, um Angebot und Bedarf zu sehen.<br>
           Für eine Fahrt oben auf <strong>Tour planen</strong> tippen.
@@ -274,6 +342,7 @@ const TourenplanungApp = (function () {
       ${nachholhinweis()}
       ${ankunftsmeldung()}
       ${laufendeFahrten()}
+      ${fahrzeugUebersicht()}
       <div class="tour-dispo-kopf">
         <span class="tour-dispo-stadt">${s.name}</span>
         <span class="tour-dispo-land">${s.land}</span>
@@ -811,6 +880,9 @@ const TourenplanungApp = (function () {
           `tour-marke-s${stufe}`,
           stadt.knoten ? "tour-marke-knoten" : "",
           Betrieb.depotName() === stadt.name ? "tour-marke-depot" : "",
+          // Städte mit eigenem Fahrzeug bekommen einen Ring, damit man
+          // sie auch ohne Zoom auf der Karte wiederfindet.
+          fahrzeugeHier.length > 0 ? "tour-marke-flotte" : "",
           hervorgehoben,
           gewaehlteStadt && gewaehlteStadt.name === stadt.name ? "tour-marke-gewaehlt" : ""
         ].filter(Boolean).join(" ");
@@ -1052,6 +1124,25 @@ const TourenplanungApp = (function () {
     ansichtAnwenden();
   }
 
+  /**
+   * Rückt eine Stadt in die Mitte des Kartenfensters, ohne den Zoom zu
+   * verändern - außer man ist so weit herausgezoomt, dass man nichts
+   * erkennt. Wird aus der Flottenübersicht heraus benutzt.
+   */
+  function aufStadtZentrieren(stadt) {
+    const rahmen = fensterElement && fensterElement.querySelector("#tour-karte-rahmen");
+    if (!rahmen || !stadt) return;
+
+    if (zoom < 1.4) zoom = Math.min(ZOOM_MAX, 1.8);
+
+    const p = Karte.nachBild(stadt.lon, stadt.lat);
+    versatzX = rahmen.clientWidth / 2 - p.x * zoom;
+    versatzY = rahmen.clientHeight / 2 - p.y * zoom;
+
+    versatzBegrenzen();
+    ansichtAnwenden();
+  }
+
   // ---------- Auswahl ----------
 
   function stadtWaehlen(stadt) {
@@ -1110,6 +1201,16 @@ const TourenplanungApp = (function () {
 
   /** Die Inhalte werden bei jedem Schritt neu erzeugt und neu verdrahtet. */
   function dispositionEreignisse(dispo) {
+    // ---- Flottenübersicht: Fahrzeug auf der Karte suchen ----
+    dispo.querySelectorAll("[data-fahrzeug-suchen]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const stadt = STAEDTE[el.dataset.fahrzeugSuchen];
+        if (!stadt) return;
+        stadtWaehlen(stadt);
+        aufStadtZentrieren(stadt);
+      });
+    });
+
     // ---- Depot ----
     const gruenden = dispo.querySelector("#tour-btn-depot-waehlen");
     if (gruenden) {
