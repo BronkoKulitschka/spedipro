@@ -127,7 +127,67 @@ Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
 Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
 Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
 
-## Aktueller Stand (v0.15.28)
+## Aktueller Stand (v0.15.29)
+
+**Anlass: „Warum kann ich kein Stückgut von Leipzig nach Berlin
+fahren?"** Man konnte - die Liste zeigte es nur nie. Von Leipzig aus
+fragen 83 Städte Stückgut nach, Berlin war Platz 83 davon, und die
+Liste brach nach 25 Einträgen ab. Die ersten 25 lagen sämtlich auf der
+iberischen Halbinsel.
+
+**Der Grund lag tiefer als die Sortierung: Laden und Abladen kosteten
+nichts.** Ein Fahrzeug hielt, die Ware war drin, weiter. Damit war
+jeder Kurzlauf rechnerisch dreimal so gut wie eine Ferntour - nicht
+weil Kurzläufe so gut sind, sondern weil die Rampe fehlte.
+
+**Standzeit je Stopp.** Rund zwei Stunden laden, zwei abladen; Silo
+und Tank brauchen zum Pumpen länger, ein Kipper ist in Minuten leer.
+Die Zeit vergeht wirklich: Das Fahrzeug steht, bevor es losrollt, und
+die Tourenliste zeigt „an der Rampe". Was das mit den Zahlen macht:
+
+| Ziel | vorher je Tag | mit Standzeit |
+|---|---|---|
+| Berlin, 180 km | 9.400 DM | 3.854 DM |
+| Lisboa, 2.957 km | 3.226 DM | 3.107 DM |
+
+Aus einem Faktor 3 wird ein Unterschied von 20 %. Das ist kein
+Balancing-Regler, sondern eine fehlende Tatsache - und sie trägt sich
+selbst: Wer zehn Kurzläufe hintereinander fährt, verliert zwei
+Arbeitstage an Rampen. Die Sätze stehen in `kostensaetze.js` und sind
+als nicht belegt gekennzeichnet.
+
+**Die Zielliste hat zwei Abschnitte** statt eines Schnitts bei 25: „In
+der Nähe, bis 400 km" und „Fernverkehr", jeder für sich sortiert,
+jeder mit seinen besten zehn. Damit steht Berlin oben in seinem
+Abschnitt und Wien oben in seinem, und keine 58 Möglichkeiten
+verschwinden stillschweigend.
+
+**Sortiert wird nach Deckungsbeitrag je Tag**, und beide Zahlen stehen
+da. Der Deckungsbeitrag sagt, was in die Kasse kommt; der Tageswert
+sagt, was die Tour wert war - nur er lässt sich zwischen 180 und 2.900
+km vergleichen. Der Gütebalken hängt jetzt am Tageswert. Bewusst
+keine Formel, die beides zu einer Punktzahl verrechnet: Dann
+optimierte der Spieler eine Zahl, die es in der Wirklichkeit nicht
+gibt, statt eine Entscheidung zu treffen.
+
+**Rückfracht-Aussicht je Ziel.** Eine Ferntour in eine Stadt ohne
+Rückladung heißt, denselben Weg leer zurück - das gehört in die
+Entscheidung, nicht in die Überraschung danach. Gewertet wird die Güte
+des Frachtplatzes (Frachtknoten und Großstadt gegen Landstädtchen),
+nicht die Zahl der offenen Aufträge: Die Börse erzeugt für jede
+angesteuerte Stadt mindestens sechs, sobald man hinsieht - „keine
+Rückfracht" wäre dort schlicht falsch gewesen.
+
+**Bindungsdauer.** Jede Zielzeile sagt „bindet 13 Std", die
+Zusammenfassung nennt die Gesamtdauer samt Rampenanteil. Bei einem
+Fahrzeug ist das die härteste Währung, härter als DM.
+
+Nebeneffekt, der so gewollt ist: Der Tageswert hat sein Maximum jetzt
+bei 500 bis 600 km - ein Lenktag hin, laden, abladen. Ferntouren
+lohnen sich nur noch mit guter Rückladung, und genau dafür gibt es die
+Anschluss- und Beiladungsplanung.
+
+## Vorheriger Stand (v0.15.28)
 
 **Beiladung: mehrere Sendungen zugleich an Bord.** Auf dem
 Abschlussbildschirm stehen jetzt zwei Wege weiter - „+ Beiladung ab

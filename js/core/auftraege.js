@@ -295,6 +295,13 @@ const Auftraege = (function () {
     const ladeAnkunft = new Date(start.getTime());
     ladeAnkunft.setHours(ladeAnkunft.getHours() + Math.ceil(dauerStunden(anfahrt.km)));
 
+    // An der Rampe wird geladen und am Ziel abgeladen - beides kostet
+    // Zeit und gehört in jede Terminrechnung.
+    const standLaden = typeof Kostensaetze !== "undefined"
+      ? Kostensaetze.standzeit("laden", "standard") : 0;
+    const standAbladen = typeof Kostensaetze !== "undefined"
+      ? Kostensaetze.standzeit("abladen", "standard") : 0;
+
     // Vor dem Ladefenster muss gewartet werden - die Ware steht noch
     // nicht bereit. Danach ist der Verlader weg.
     const ladeBeginn = new Date(auftrag.ladeBeginn);
@@ -303,8 +310,8 @@ const Auftraege = (function () {
     const abfahrt = wartet ? new Date(ladeBeginn.getTime()) : new Date(ladeAnkunft.getTime());
     const ladefensterVerpasst = ladeAnkunft > ladeEnde;
 
-    const ankunft = new Date(abfahrt.getTime());
-    ankunft.setHours(ankunft.getHours() + Math.ceil(dauerStunden(hauptlauf.km)));
+    const ankunft = new Date(abfahrt.getTime()
+      + (standLaden + dauerStunden(hauptlauf.km) + standAbladen) * 3600000);
 
     return {
       anfahrtKm: anfahrt.km,

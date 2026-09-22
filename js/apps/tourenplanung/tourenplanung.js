@@ -233,6 +233,7 @@ const TourenplanungApp = (function () {
             const anteil = Math.round(Fahrt.fortschritt(t) * 100);
             const beladen = Fahrt.istBeladen(t);
             const ruht = Boolean(t.ruhtBis);
+            const steht = Boolean(t.stehtBis);
             // An Bord können mehrere Sendungen sein; maßgeblich für die
             // Fristwarnung ist die nächste, die abgeladen wird.
             const anBord = Fahrt.ladung(t).map((nr) => Auftraege.nachNummer(nr))
@@ -259,8 +260,11 @@ const TourenplanungApp = (function () {
                   <div class="tour-laufend-fuellung" style="width:${anteil}%"></div>
                 </div>
                 <div class="tour-laufend-info">
-                  <span class="tour-status tour-status-${ruht ? "ruht" : beladen ? "beladen" : "anfahrt"}">
-                    ${ruht ? "Ruhezeit" : beladen ? "beladen unterwegs" : "Anfahrt leer"}
+                  <span class="tour-status tour-status-${
+                    steht ? "ruht" : ruht ? "ruht" : beladen ? "beladen" : "anfahrt"}">
+                    ${steht ? "an der Rampe"
+                      : ruht ? "Ruhezeit"
+                      : beladen ? "beladen unterwegs" : "Anfahrt leer"}
                   </span>
                   ${Math.round(t.gesamtGefahreneKm).toLocaleString("de-DE")} von
                   ${Math.round(Fahrt.gesamtKm(t)).toLocaleString("de-DE")} km ·
@@ -621,7 +625,10 @@ const TourenplanungApp = (function () {
       warnung: "", warnungLaden: "", warnungZiel: "",
       zustellung: null, abholung: null
     }));
+    let standGesamt = 0;
     let zeit = new Date(Spielzeit.heute().getTime());
+
+    const aufbau = f.aufbautyp ? String(f.aufbautyp).toLowerCase() : "standard";
 
     folge.stopps.forEach((stopp, i) => {
       if (i > 0) {
@@ -629,8 +636,15 @@ const TourenplanungApp = (function () {
         zeit = new Date(zeit.getTime() + Auftraege.dauerStunden(km) * 3600000);
       }
 
+      // Standzeit an der Rampe - für jede Sendung, die hier wechselt.
+      const standHier = (stopp.abladen.length * Kostensaetze.standzeit("abladen", aufbau))
+        + (stopp.laden.length * Kostensaetze.standzeit("laden", aufbau));
+      standGesamt += i < folge.etappen.length ? standHier : stopp.abladen.length
+        * Kostensaetze.standzeit("abladen", aufbau);
+
       stopp.abladen.forEach((k) => {
         const s = sendungen[k];
+        zeit = new Date(zeit.getTime() + Kostensaetze.standzeit("abladen", aufbau) * 3600000);
         je[k].zustellung = new Date(zeit.getTime());
         if (s.art === "auftrag" && zeit > new Date(s.auftrag.lieferFrist)) {
           je[k].warnungZiel = "Liefertermin nicht zu halten";
@@ -640,6 +654,7 @@ const TourenplanungApp = (function () {
       stopp.laden.forEach((k) => {
         const s = sendungen[k];
         je[k].abholung = new Date(zeit.getTime());
+        zeit = new Date(zeit.getTime() + Kostensaetze.standzeit("laden", aufbau) * 3600000);
         if (s.art !== "auftrag") return;
         const ladeBeginn = new Date(s.auftrag.ladeBeginn);
         const ladeEnde = new Date(s.auftrag.ladeEnde);
@@ -658,7 +673,12 @@ const TourenplanungApp = (function () {
     // Für die Listen, die nur eine Warnung je Sendung zeigen können.
     je.forEach((x) => { x.warnung = x.warnungZiel || x.warnungLaden; });
 
-    return { ...folge, je };
+    // Gesamtdauer der Tour: fahren, ruhen, stehen. Das ist die Zeit,
+    // für die das Fahrzeug gebunden ist - bei kleinem Fuhrpark die
+    // härteste Währung.
+    const dauer = (zeit - Spielzeit.heute()) / 3600000;
+
+    return { ...folge, je, dauerStunden: dauer, standStunden: standGesamt };
   }
 
   /**
@@ -1280,55 +1300,154 @@ const TourenplanungApp = (function () {
 
     const ziele = Karte.alleStaedte()
       .filter((z) => z.name !== s.name && Wirtschaft.bedarf(z).some((b) => b.id === g.id))
-      .map((z) => {
-        const route = Route.berechne(s.name, z.name);
-        if (!route) return null;
-        const entgelt = Math.round(Ladung.frachtpreis(g, menge, route.km) * SPOT_FAKTOR);
-        const sprit = f ? spritkostenFuer(f, route.km) : 0;
-        return { z, route, entgelt, sprit, db: entgelt - sprit };
-      })
-      .filter(Boolean)
-      .sort((a, b) => b.db - a.db);
+      .map((z) => zielBewerten(z, g, menge, f))
+      .filter(Boolean);
 
-    const besterDb = ziele.length ? Math.max(1, ziele[0].db) : 1;
+    // Zwei Abschnitte statt einer gekappten Liste.
+    //
+    // Nach Deckungsbeitrag je Tour sortiert, standen früher 25 Ziele
+    // auf der iberischen Halbinsel ganz oben und alles Nahe fiel hinten
+    // heraus - Leipzig-Berlin war Platz 83 von 83 und damit unsichtbar,
+    // obwohl es je Tag das bessere Geschäft ist. Jetzt bekommt jede
+    // Entfernungsklasse ihre eigene Rangliste.
+    const nah = ziele.filter((e) => e.route.km <= NAHBEREICH_KM)
+      .sort((a, b) => b.dbTag - a.dbTag).slice(0, ZIELE_JE_ABSCHNITT);
+    const fern = ziele.filter((e) => e.route.km > NAHBEREICH_KM)
+      .sort((a, b) => b.dbTag - a.dbTag).slice(0, ZIELE_JE_ABSCHNITT);
+
+    const bester = Math.max(1, ...ziele.map((e) => e.dbTag));
 
     return `
       ${schrittTitel(`Wohin mit ${g.name}?`,
         f ? `gerechnet mit ${menge.toFixed(1)} t` : "kein passendes Fahrzeug")}
-      <ul class="tour-auswahlliste">
-        ${ziele.length === 0
-          ? `<li class="tour-ware-leer">Niemand fragt diese Ware nach.</li>`
-          : ziele.slice(0, 25).map((e) => `
-            <li class="tour-auswahl ${tour.ziel && tour.ziel.name === e.z.name ? "gewaehlt" : ""}"
-                data-ziel="${e.z.name}"
-                data-vorschau-art="ziel"
-                data-vorschau-von="${s.name}"
-                data-vorschau-ziel="${e.z.name}">
-              ${guetebalken(e.db / besterDb,
-                  e.db <= 0 ? "tour-frist-spaet"
-                  : e.db > besterDb * 0.66 ? "tour-frist-viel"
-                  : e.db > besterDb * 0.33 ? "tour-frist-mittel" : "tour-frist-knapp",
-                  `Deckungsbeitrag ${e.db.toLocaleString("de-DE")} DM`)}
-              ${ZEILENPFEIL}
-              <span class="tour-auswahl-name">
-                ${e.z.name}
-                <span class="tour-auftrag-nummer">${e.z.land}</span>
-              </span>
-              <span class="tour-auswahl-zusatz">
-                ${e.route.km.toLocaleString("de-DE")} km ·
-                ${dauerText(fahrdauerStunden(e.route.km))} ·
-                ${e.entgelt.toLocaleString("de-DE")} DM
-              </span>
-              <span class="tour-auswahl-zusatz">
-                Sprit rund ${e.sprit.toLocaleString("de-DE")} DM ·
-                Deckungsbeitrag
-                <strong class="${e.db > 0 ? "tour-positiv" : "tour-negativ"}">
-                  ${e.db.toLocaleString("de-DE")} DM
-                </strong>
-              </span>
-            </li>
-          `).join("")}
-      </ul>
+      ${ziele.length === 0
+        ? `<div class="tour-ware-leer">Niemand fragt diese Ware nach.</div>`
+        : `
+          <div class="tour-ausgang-teil">
+            In der Nähe, bis ${NAHBEREICH_KM} km (${ziele.filter((e) => e.route.km <= NAHBEREICH_KM).length})
+          </div>
+          <ul class="tour-auswahlliste">
+            ${nah.length === 0
+              ? `<li class="tour-ware-leer">Kein Abnehmer in der Nähe.</li>`
+              : nah.map((e) => zielZeile(e, bester, s)).join("")}
+          </ul>
+          <div class="tour-ausgang-teil">
+            Fernverkehr (${ziele.filter((e) => e.route.km > NAHBEREICH_KM).length})
+          </div>
+          <ul class="tour-auswahlliste">
+            ${fern.length === 0
+              ? `<li class="tour-ware-leer">Kein Abnehmer in der Ferne.</li>`
+              : fern.map((e) => zielZeile(e, bester, s)).join("")}
+          </ul>`}
+    `;
+  }
+
+  // Bis hierher gilt eine Fahrt als Nahverkehr. 400 km sind gut ein
+  // Lenktag hin - man ist abends wieder am Ausgangsort oder kommt am
+  // nächsten Morgen an.
+  const NAHBEREICH_KM = 400;
+
+  // Wie viele Ziele je Abschnitt angeboten werden.
+  const ZIELE_JE_ABSCHNITT = 10;
+
+  /**
+   * Ein Ziel durchrechnen: Erlös, Sprit, Dauer - und daraus der
+   * Deckungsbeitrag JE TAG.
+   *
+   * Der Deckungsbeitrag einer Tour sagt, was in die Kasse kommt; der
+   * je Tag sagt, was sie wert war. Nur der zweite lässt sich zwischen
+   * 180 und 2.900 km vergleichen, und nur er entspricht dem, woran ein
+   * Spediteur sein Geschäft misst.
+   */
+  function zielBewerten(z, gut, menge, fahrzeug) {
+    const route = Route.berechne(tour.stadt.name, z.name);
+    if (!route) return null;
+
+    const entgelt = Math.round(Ladung.frachtpreis(gut, menge, route.km) * SPOT_FAKTOR);
+    const sprit = fahrzeug ? spritkostenFuer(fahrzeug, route.km) : 0;
+    const db = entgelt - sprit;
+
+    const aufbau = fahrzeug && fahrzeug.aufbautyp
+      ? String(fahrzeug.aufbautyp).toLowerCase() : "standard";
+    const stunden = Auftraege.dauerStunden(route.km)
+      + Kostensaetze.standzeit("laden", aufbau)
+      + Kostensaetze.standzeit("abladen", aufbau);
+    const tage = Math.max(0.1, stunden / 24);
+
+    return {
+      z, route, entgelt, sprit, db,
+      stunden, tage,
+      dbTag: Math.round(db / tage),
+      rueckfracht: rueckfrachtAngebot(z)
+    };
+  }
+
+  /**
+   * Wie gut die Aussicht auf eine Rückladung ist.
+   *
+   * Nicht die Zahl der offenen Aufträge: Die Börse erzeugt für jede
+   * angesteuerte Stadt mindestens sechs, sobald man hinsieht - für
+   * entfernte Städte stünde dort also immer "keine", und das wäre
+   * schlicht falsch. Es zählt die Güte des Frachtplatzes: Eine
+   * Millionenstadt oder ein Frachtknoten hat immer etwas, ein
+   * Landstädtchen selten etwas Gutes. Dazu die Aufträge, die schon
+   * offen sind.
+   */
+  function rueckfrachtAngebot(stadt) {
+    const offene = Auftraege.offene().filter((a) => a.vonName === stadt.name).length;
+    const einw = stadt.einw || 0;
+
+    let stufe = "duenn";
+    if (stadt.knoten || einw >= 1000000) stufe = "stark";
+    else if (einw >= 400000) stufe = "mittel";
+
+    const text = stufe === "stark" ? "starker Frachtplatz"
+      : stufe === "mittel" ? "mittlerer Frachtplatz"
+      : "dünner Frachtplatz";
+
+    return { stufe, offene, text: offene > 0 ? `${text}, ${offene} offen` : text };
+  }
+
+  function zielZeile(e, besterDbTag, ausgangsstadt) {
+    const gewaehlt = tour.ziel && tour.ziel.name === e.z.name;
+    const anteil = e.dbTag / besterDbTag;
+    const klasse = e.db <= 0 ? "tour-frist-spaet"
+      : anteil > 0.66 ? "tour-frist-viel"
+      : anteil > 0.33 ? "tour-frist-mittel" : "tour-frist-knapp";
+
+    return `
+      <li class="tour-auswahl ${gewaehlt ? "gewaehlt" : ""}"
+          data-ziel="${e.z.name}"
+          data-vorschau-art="ziel"
+          data-vorschau-von="${ausgangsstadt.name}"
+          data-vorschau-ziel="${e.z.name}">
+        ${guetebalken(anteil, klasse,
+            `${e.dbTag.toLocaleString("de-DE")} DM Deckungsbeitrag je Tag`)}
+        ${ZEILENPFEIL}
+        <span class="tour-auswahl-name">
+          ${e.z.name}
+          <span class="tour-auftrag-nummer">${e.z.land}</span>
+        </span>
+        <span class="tour-auswahl-zusatz">
+          ${e.route.km.toLocaleString("de-DE")} km ·
+          bindet ${dauerText(Math.round(e.stunden))} ·
+          ${e.entgelt.toLocaleString("de-DE")} DM
+        </span>
+        <span class="tour-auswahl-zusatz">
+          Deckungsbeitrag
+          <strong class="${e.db > 0 ? "tour-positiv" : "tour-negativ"}">
+            ${e.db.toLocaleString("de-DE")} DM</strong>
+          · <strong class="tour-jetag">${e.dbTag.toLocaleString("de-DE")} DM je Tag</strong>
+        </span>
+        <span class="tour-auswahl-zusatz">
+          Rückfracht:
+          ${e.rueckfracht.stufe === "stark"
+            ? `<span class="tour-rueck-gut">${e.rueckfracht.text}</span>`
+            : e.rueckfracht.stufe === "mittel"
+              ? `<span class="tour-rueck-mittel">${e.rueckfracht.text}</span>`
+              : `<span class="tour-rueck-duenn">${e.rueckfracht.text}</span>`}
+        </span>
+      </li>
     `;
   }
 
@@ -1566,7 +1685,10 @@ const TourenplanungApp = (function () {
       `;
     }
 
-    const tage = Math.max(1, Math.round(Auftraege.dauerStunden(plan.km) / 24));
+    // Bindungsdauer: fahren, ruhen und an den Rampen stehen.
+    const stunden = plan.dauerStunden || Auftraege.dauerStunden(plan.km);
+    const tage = Math.max(1, Math.round(stunden / 24));
+    const dbTag = Math.round(summe.db / Math.max(0.1, stunden / 24));
     const letzteStadt = plan.stopps[plan.stopps.length - 1].stadt;
     const mehrere = alle.length > 1;
 
@@ -1585,12 +1707,17 @@ const TourenplanungApp = (function () {
             summe.leerKm > 0
               ? ` · ${Math.round(summe.leerKm).toLocaleString("de-DE")} km leer`
               : ""}</dd>
-          <dt>Unterwegs</dt><dd>rund ${tage} Tag${tage > 1 ? "e" : ""}</dd>
+          <dt>Bindet den Wagen</dt>
+          <dd>${dauerText(Math.round(stunden))}${
+            plan.standStunden ? ` · davon ${plan.standStunden.toFixed(1)} Std an Rampen` : ""}</dd>
           <dt>Entgelt</dt><dd>${summe.erloes.toLocaleString("de-DE")} DM</dd>
           <dt>Spritkosten</dt><dd>rund ${summe.sprit.toLocaleString("de-DE")} DM</dd>
           <dt>Deckungsbeitrag</dt>
           <dd class="${summe.db > 0 ? "tour-positiv" : "tour-negativ"}">
             ${summe.db.toLocaleString("de-DE")} DM</dd>
+          <dt>Je Tag</dt>
+          <dd class="${dbTag > 0 ? "tour-positiv" : "tour-negativ"}">
+            ${dbTag.toLocaleString("de-DE")} DM</dd>
         </dl>
         ${plan.je.some((x) => x.warnungLaden || x.warnungZiel) ? `
           <div class="tour-schadenhinweis">

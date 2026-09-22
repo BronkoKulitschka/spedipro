@@ -193,6 +193,7 @@ const Speicher = (function () {
       gesamtGefahreneKm: t.gesamtGefahreneKm,
       gefahreneStundenHeute: t.gefahreneStundenHeute,
       ruhtBis: t.ruhtBis,
+      stehtBis: t.stehtBis,
       startZeit: t.startZeit
     };
   }

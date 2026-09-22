@@ -92,7 +92,35 @@ const Kostensaetze = (function () {
   // das Werkstattmodul, sobald es steht.
   const REIFEN_JE_KM_DM = 0.08;
 
+  /**
+   * Standzeit an der Rampe, in Stunden je Vorgang.
+   *
+   * Bis 0.15.28 kostete ein Halt nichts: anhalten, Ware ist drin,
+   * weiter. Damit war jeder Kurzlauf rechnerisch dreimal so gut wie
+   * eine Ferntour - nicht weil Kurzläufe so gut sind, sondern weil die
+   * Rampe fehlte. Ein Lkw steht beim Be- und Entladen, und bei vielen
+   * kleinen Sendungen steht er den halben Tag.
+   *
+   * Die Zahlen sind NICHT belegt. Sie liegen in der Größenordnung, die
+   * für Stückgut an einer Rampe üblich ist; Silo und Tank brauchen zum
+   * Ab- und Aufpumpen länger, ein Kipper ist in Minuten leer.
+   */
+  const STANDZEIT_STUNDEN = {
+    laden:   { standard: 2.0, silo: 3.0, tank: 3.0, kipper: 0.75, container: 1.0 },
+    abladen: { standard: 2.0, silo: 3.0, tank: 3.0, kipper: 0.5,  container: 1.0 }
+  };
+
   // ---------- Zugriff ----------
+
+  /**
+   * Standzeit für einen Vorgang an einem Stopp.
+   * @param {string} art "laden" oder "abladen"
+   * @param {string} aufbau Aufbauart des Fahrzeugs
+   */
+  function standzeit(art, aufbau) {
+    const tabelle = STANDZEIT_STUNDEN[art] || STANDZEIT_STUNDEN.laden;
+    return tabelle[aufbau] !== undefined ? tabelle[aufbau] : tabelle.standard;
+  }
 
   /** Dieselpreis in DM je Liter zum gegebenen Spieldatum. */
   function dieselpreis(datum) {
@@ -209,6 +237,13 @@ const Kostensaetze = (function () {
         quelle: "geschätzt"
       },
       {
+        name: "Standzeit je Rampe",
+        wert: `${STANDZEIT_STUNDEN.laden.standard.toFixed(1)} Std laden, ` +
+              `${STANDZEIT_STUNDEN.abladen.standard.toFixed(1)} Std abladen`,
+        belegt: false,
+        quelle: "plausible Größenordnung, keine erhobenen Rampenzeiten 1994"
+      },
+      {
         name: "Neupreise Fahrzeuge",
         wert: "150.000 bis 210.000 DM",
         belegt: false,
@@ -226,6 +261,8 @@ const Kostensaetze = (function () {
     DISPOLINIE_DM,
     REIFEN_JE_KM_DM,
     EUROVIGNETTE_AB,
+    STANDZEIT_STUNDEN,
+    standzeit,
     dieselpreis,
     nutzungsdauer,
     diskontsatz,

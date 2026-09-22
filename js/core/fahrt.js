@@ -67,6 +67,7 @@ const Fahrt = (function () {
       gesamtGefahreneKm: 0,
       gefahreneStundenHeute: 0,
       ruhtBis: null,
+      stehtBis: null,
       startZeit: Spielzeit.heute().toISOString(),
       abgeschlossen: false
     };
@@ -74,6 +75,7 @@ const Fahrt = (function () {
 
     // Am Startpunkt wird geladen, bevor es losgeht.
     if (typeof eintrag.beiStopp === "function") eintrag.beiStopp(eintrag, 0);
+    standzeitSetzen(eintrag, 0);
 
     benachrichtigen();
     return eintrag;
@@ -161,6 +163,11 @@ const Fahrt = (function () {
         t.gefahreneStundenHeute = 0;
       }
 
+      // Steht es an der Rampe? Anders als die Ruhezeit zählt das auf
+      // die Lenkzeit nicht an - gearbeitet wird trotzdem.
+      if (t.stehtBis && jetzt < new Date(t.stehtBis)) return;
+      if (t.stehtBis) t.stehtBis = null;
+
       let stunden = vergangeneMinuten / 60;
 
       // Nur so lange fahren, wie die Lenkzeit reicht
@@ -180,7 +187,10 @@ const Fahrt = (function () {
         t.gefahreneKm -= etappe.route.km;
         t.etappeIndex += 1;
         stoppErreicht(t, t.etappeIndex);
+        standzeitSetzen(t, t.etappeIndex);
         etappe = aktuelleEtappe(t);
+        // Während der Rampenzeit geht es nicht weiter.
+        if (t.stehtBis) break;
       }
 
       // Lenkzeit ausgeschöpft -> Ruhezeit einlegen
@@ -212,6 +222,47 @@ const Fahrt = (function () {
   }
 
   /**
+   * Standzeit an einem Stopp: Für jede Sendung, die dort auf- oder
+   * abgeht, steht das Fahrzeug an der Rampe. Am letzten Stopp wird nur
+   * noch abgeladen; danach ist die Tour ohnehin zu Ende, deshalb wird
+   * dort keine Standzeit mehr gesetzt.
+   */
+  function standzeitSetzen(t, index) {
+    const stopp = t.stopps && t.stopps[index];
+    if (!stopp || index >= t.etappen.length) return;
+    const stunden = standzeitAn(t, index);
+    if (stunden <= 0) return;
+    const ende = new Date(Spielzeit.heute().getTime() + stunden * 3600000);
+    t.stehtBis = ende.toISOString();
+  }
+
+  /** Wie lange an diesem Stopp gestanden wird, in Stunden. */
+  function standzeitAn(t, index) {
+    const stopp = t.stopps && t.stopps[index];
+    if (!stopp || typeof Kostensaetze === "undefined") return 0;
+    const aufbau = t.fahrzeug && t.fahrzeug.aufbautyp
+      ? String(t.fahrzeug.aufbautyp).toLowerCase()
+      : "standard";
+    let stunden = 0;
+    (stopp.abladen || []).forEach(() => { stunden += Kostensaetze.standzeit("abladen", aufbau); });
+    (stopp.laden || []).forEach(() => { stunden += Kostensaetze.standzeit("laden", aufbau); });
+    return stunden;
+  }
+
+  /** Summe der Standzeiten, die auf dieser Tour noch bevorstehen. */
+  function restStandzeit(t) {
+    let stunden = 0;
+    for (let i = t.etappeIndex + 1; i < t.etappen.length; i++) {
+      stunden += standzeitAn(t, i);
+    }
+    if (t.stehtBis) {
+      const rest = (new Date(t.stehtBis) - Spielzeit.heute()) / 3600000;
+      if (rest > 0) stunden += rest;
+    }
+    return stunden;
+  }
+
+  /**
    * Ein Stopp ist erreicht. Der Rückruf entscheidet, was dort geschieht -
    * abladen, abrechnen, neu beladen. Er darf keine Umgebung einfangen,
    * sondern muss aus `t.stopps[index]` lesen: Nach dem Laden eines
@@ -238,13 +289,14 @@ const Fahrt = (function () {
       (tourEintrag.gefahreneStundenHeute + restStunden) / LENKZEIT_STUNDEN
     ) * RUHEZEIT_STUNDEN;
 
-    Spielzeit.stundenAddieren(restStunden + ruhezeiten);
+    Spielzeit.stundenAddieren(restStunden + ruhezeiten + restStandzeit(tourEintrag));
 
     // Alle noch offenen Stopps nachholen (Zu- und Abladung unterwegs)
     while (tourEintrag.etappeIndex < tourEintrag.etappen.length - 1) {
       tourEintrag.etappeIndex += 1;
       stoppErreicht(tourEintrag, tourEintrag.etappeIndex);
     }
+    tourEintrag.stehtBis = null;
     tourEintrag.gesamtGefahreneKm = gesamtKm(tourEintrag);
     tourEintrag.gefahreneKm = aktuelleEtappe(tourEintrag).route.km;
     tourEintrag.abgeschlossen = true;
@@ -278,6 +330,9 @@ const Fahrt = (function () {
       const weitereTage = Math.ceil(danach / LENKZEIT_STUNDEN);
       restStunden += weitereTage * RUHEZEIT_STUNDEN;
     }
+    // Rampenzeiten der noch bevorstehenden Stopps kommen dazu.
+    restStunden += restStandzeit(t);
+
     const ziel = Spielzeit.heute();
     ziel.setMinutes(ziel.getMinutes() + Math.round(restStunden * 60));
     return ziel;
@@ -316,6 +371,8 @@ const Fahrt = (function () {
     aktuelleEtappe,
     naechsterStopp,
     stoppStand,
+    standzeitAn,
+    restStandzeit,
     ladung,
     etappenFortschritt,
     gesamtKm,

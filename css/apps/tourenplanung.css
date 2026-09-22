@@ -1195,6 +1195,22 @@
 /* Zeile, die gerade gespickt wird (gedrückt gehalten auf dem Telefon) */
 .tour-auswahl.spickt { outline: 2px solid #b23ce0; outline-offset: -2px; }
 
+/* Deckungsbeitrag je Tag - die Kennzahl, nach der sortiert wird. */
+.tour-jetag {
+  padding: 0 3px;
+  background: #10305a;
+  color: #ffffff;
+}
+
+/* Wie viel von dort aus wieder ausgeht - das Risiko der Leerrückfahrt. */
+.tour-rueck-gut { color: #1c6b2c; font-weight: bold; }
+.tour-rueck-mittel { color: var(--win-grey-darker); }
+.tour-rueck-duenn {
+  padding: 0 3px;
+  background: #d9a520;
+  color: #10100c;
+}
+
 /* ---------- Ladungsstand ----------
    Zwei Balken, weil zwei Grenzen gelten: Gewicht und Laderaum laufen
    unterschiedlich schnell voll. */
