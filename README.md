@@ -127,7 +127,150 @@ Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
 Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
 Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
 
-## Aktueller Stand (v0.15.34)
+## Aktueller Stand (v0.15.36)
+
+**Ladungen bearbeiten - Stufe 1 der Überarbeitung der Disposition.**
+
+Ausgangspunkt war die Frage, warum sich das Zusammenstellen einer Tour
+sperrig anfühlt. Beim Durchsehen des Ablaufs war der Befund eindeutig:
+**Eine Sendung ließ sich anlegen und löschen, aber nicht ändern.** Die
+Felder des Frachtbriefs sprangen nur in die gerade angefangene Sendung
+zurück; wer bei Sendung 2 das Ziel anders wollte, musste sie streichen
+und den Dreischritt neu gehen. Dazu gab es zwei Sorten Sendung, die
+verschieden funktionierten - eine „in Arbeit" und die festgelegten -,
+und aus genau dieser Unterscheidung kamen drei der gemeldeten Fehler
+(0.15.31, 0.15.32 und die abgebrochene Beiladung).
+
+Der Umbau geht in zwei Stufen. Diese ist die erste.
+
+**1. Eine Sendung antippen heißt sie bearbeiten.** In der
+Sendungsliste des Frachtbriefs und in der Stoppfolge der Durchsicht
+ist jede Sendung anklickbar. Der Brief heißt dann „Sendung 2 ändern",
+und es gilt derselbe Ablauf wie für eine neue.
+
+Technisch wird die Sendung dafür aus `geplant` herausgenommen und wie
+eine angefangene behandelt - dadurch rechnet der ganze Rest des Moduls
+unverändert weiter, ohne Sonderfall. Gemerkt werden ihr Platz
+(`tour.bearbeitet`) und ihre alte Fassung (`tour.urfassung`). Daraus
+folgen zwei Eigenschaften, die den Unterschied ausmachen:
+
+- **Das Bearbeiten ist nicht zerstörend.** Solange die neue Fassung
+  nicht vollständig ist, gilt die alte; „↺ Änderung" stellt sie her.
+- **Die Sendung bleibt an ihrem Platz.** Sie wandert nicht ans Ende
+  der Tour, nur weil man eine Kleinigkeit geändert hat. Dafür gibt es
+  jetzt `alleSendungen()` als die eine Stelle, die Tour und
+  Bearbeitung zusammensetzt - Durchsicht, Stoppfolge und Losschicken
+  benutzen sie gemeinsam.
+
+Ändert man eine Sendung, wird die ganze Tour neu durchgerechnet. Eine
+andere Sendung kann dadurch einen Warnhinweis bekommen, ohne selbst
+angefasst worden zu sein - das ist richtig so und im Test ausdrücklich
+festgehalten.
+
+**2. Die Menge ist einstellbar - bei Spotware.** Ein Schieberegler von
+1 t bis zu dem, was hineinpasst, voreingestellt wie bisher das
+Maximum. Der Restplatzbalken steht direkt darunter und wandert beim
+Schieben mit, man sieht also sofort, was für eine Beiladung frei
+bliebe.
+
+Bei einem **Auftrag** gibt es nichts einzustellen: 23,4 t Papier des
+Kunden sind 23,4 t, und wer teilte, ließe den Rest liegen und müsste
+den Termin trotzdem halten. Spotware kauft der Disponent dagegen
+selbst ein - dort ist die Menge die eigentliche Entscheidung.
+
+Beim Ziehen wird bewusst **nicht** alles neu gezeichnet - der Schieber
+wäre sonst mitten in der Bewegung weg. Es wandern nur Anzeige und
+Restplatzbalken mit; erst beim Loslassen rechnet die Liste komplett
+neu. Eine von Hand eingestellte Menge bleibt danach stehen und wird
+nur gekappt, wenn ein kleinerer Wagen gewählt wird.
+
+**3. Aus zwei Knöpfen wird einer.** Statt „+ Beiladung ab Hamburg" und
+„+ Sendung ab Le Mans" gibt es einen „+ Sendung" und danach die Frage
+„Wo soll geladen werden?" mit den Halten der Tour:
+
+```
+1  Hamburg     noch 20,0 t frei
+2  Hannover    Ende der Tour · Auflieger leer
+```
+
+Der Unterschied Beiladung/Anschluss ist damit kein Fachwort mehr,
+sondern eine Stelle in der Tour - und was dort frei ist, steht
+daneben. Die Frage tritt an die Stelle des Knopfes und wird in den
+Blick gerollt: Sie steht am Ende einer langen Durchsicht, und eine
+Frage, die man nicht sieht, ist keine.
+
+Was Stufe 1 **nicht** anfasst und was in Stufe 2 kommt: die
+Stoppreihenfolge von Hand umsortieren, und der Umzug auf die
+Stoppfolge als einzige Darstellung der Tour.
+
+Geprüft mit `browsertest-sendung-aendern.js`. Drei bestehende Tests
+(`beiladung`, `etappen`, `karte`) benutzten die alten Knöpfe und sind
+auf den neuen Weg umgestellt - die Verhaltensänderung ist gewollt.
+Dabei fiel auf, dass mehrere Tests Städte ansprachen, die es gar nicht
+gibt (`Dortmund`, `Kassel`); `Auftraege.erzeugen` nimmt dann eine
+beliebige, und der Test prüfte etwas anderes als gedacht. Jetzt stehen
+dort nur Städte aus `js/data/staedte.js`. Die ganze Suite - 21 Tests -
+läuft grün.
+
+## Vorheriger Stand (v0.15.35)
+
+**Der Tooltip blieb stehen.** Gemeldet mit Bild: ein Kasten
+„Frankfurt am Main (DE) · 2.895.000 Einw." über einer Karte, die
+längst woanders war. Nachgestellt im Browser, und es waren zwei
+Ursachen:
+
+```
+nach mouseover:                 sichtbar
+nach Neuzeichnen der Marken:    sichtbar   <- bleibt hängen
+nach Wegbewegen der Maus:       weg
+nach Fingertipp:                sichtbar   <- bleibt hängen
+```
+
+Der Kasten hing an `mouseover`/`mouseout`. Ein **Fingertipp** erzeugt
+ein künstliches `mouseover`, aber nie ein `mouseout` - der Finger
+schwebt ja nirgendwohin. Und **`markenZeichnen()`** ersetzt die ganze
+Markenebene; wird die Marke unter dem Zeiger dabei weggeworfen, kommt
+ebenfalls kein `mouseout`. Deshalb überlebte er Verschieben, Zoomen
+und jeden Uhrentakt.
+
+Dazu ein dritter Punkt: Die Position ist in Rahmenkoordinaten
+gerechnet und wandert beim Verschieben nicht mit. Auch ein Kasten, der
+sich schlösse, zeigte nach dem Verschieben auf die falsche Stadt.
+Verbergen beim Ansichtswechsel ist also nicht nur Reparatur.
+
+Neu: Er verschwindet bei jedem Neuzeichnen der Marken, bei jeder
+Ansichtsänderung und beim Verlassen der Karte. Am Finger hängt er
+jetzt am Aufliegen - aufsetzen zeigt den Namen, loslassen nimmt ihn
+weg. Ein Tipp wählt die Stadt ohnehin, und dann steht ihr Name unten
+im Bereich; ein Kasten, der danach noch zwei Sekunden nachhängt, wäre
+genau der Geist gewesen, der repariert werden sollte.
+
+**Fahrzeuge zeigen, wohin sie fahren.** Statt runder Punkte sind
+rollende Wagen jetzt langgezogene Dreiecke mit der Spitze in
+Fahrtrichtung. Wer an einer Rampe steht oder Ruhezeit hat, bleibt ein
+Quadrat - er hat in diesem Augenblick keine Fahrtrichtung, und eine
+Spitze würde eine behaupten. Die Form trägt damit eine Aussage, die
+vorher nur in der Liste stand.
+
+Zwei Entscheidungen dahinter:
+
+- Der Kurs wird aus den **Bildkoordinaten** gerechnet, nicht aus Länge
+  und Breite. Die Karte ist eine Plattkarte, in der derselbe
+  geographische Kurs weiter oben anders aussieht als weiter unten; wer
+  geographisch peilt, bekommt eine Spitze, die neben der Straße zeigt.
+- Der Umriss kommt über `drop-shadow`, nicht über `border` oder
+  `box-shadow`: `clip-path` beschneidet den Rahmen mit und schneidet
+  äußere Schatten ganz weg, ein `drop-shadow` folgt dagegen der
+  beschnittenen Form.
+
+Geprüft mit `browsertest-karte-marken.js`. Er stellt den gemeldeten
+Fehler nach (Fingertipp, Neuzeichnen, Ansichtswechsel) und rechnet für
+das Dreieck eine Richtungsprobe: Kurs laut Marke gegen die Strecke,
+die der Wagen in den nächsten zwei Stunden tatsächlich zurücklegt -
+zuletzt 57° gegen 77°, also 20° Abweichung, wie es bei einer kurvigen
+Straße sein soll. Die ganze Suite - 20 Tests - läuft grün.
+
+## Vorheriger Stand (v0.15.34)
 
 **Platz beim Zusammenstellen einer Tour.** Gemeldet wurde: Mit vier
 Etappenzielen bleibt unten von der Auftragsliste nichts mehr übrig.

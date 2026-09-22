@@ -774,20 +774,50 @@
 
 /* Fahrendes Fahrzeug: größerer Punkt mit weißem Ring, damit er sich
    von den Stadtmarken und der Route abhebt. */
+/* ---------- Fahrzeuge auf der Karte ----------
+   Rollt ein Wagen, ist er ein langgezogenes Dreieck mit der Spitze in
+   Fahrtrichtung; steht er an einer Rampe oder hat Ruhezeit, ist er ein
+   Quadrat. Die Form trägt damit eine Aussage, die vorher nur in der
+   Liste stand.
+
+   Der Umriss kommt über drop-shadow und NICHT über border oder
+   box-shadow: clip-path beschneidet den Rahmen mit und schneidet
+   äußere Schatten ganz weg, ein drop-shadow folgt dagegen der
+   beschnittenen Form. */
 .tour-fahrzeugpunkt {
   position: absolute;
-  width: 13px;
-  height: 13px;
-  margin: -7px 0 0 -7px;
-  border: 2px solid;
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.9), 1px 1px 2px rgba(0,0,0,0.5);
-  will-change: left, top;
+  transform-origin: 50% 50%;
+  filter:
+    drop-shadow(0 0 1px rgba(255,255,255,0.95))
+    drop-shadow(0 0 2px rgba(255,255,255,0.85))
+    drop-shadow(1px 1px 1px rgba(0,0,0,0.55));
+  will-change: left, top, transform;
 }
 
-/* Leerfahrt: hohl dargestellt, beladen: gefüllt */
+/* Fahrend: Dreieck. Breiter als hoch, damit die Spitze spitz wirkt
+   und die Richtung auch bei weiter Ansicht ablesbar bleibt. */
+.tour-fahrzeugpunkt.rollt {
+  width: 18px;
+  height: 12px;
+  margin: -6px 0 0 -9px;
+  border: 0;
+  clip-path: polygon(100% 50%, 0 0, 0 100%);
+}
+
+/* Stehend: Quadrat. Keine Spitze, weil es in diesem Augenblick keine
+   Fahrtrichtung gibt - eine Spitze würde eine behaupten. */
+.tour-fahrzeugpunkt.haelt {
+  width: 11px;
+  height: 11px;
+  margin: -6px 0 0 -6px;
+  border: 2px solid;
+}
+
+/* Leerfahrt: blass, beladen: voll in der Lackierung. Aufgehellt wird
+   über einen Verlauf statt über einen inneren Schatten - der folgt
+   dem Rechteck und nicht dem Dreieck. */
 .tour-fahrzeugpunkt.leer {
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.9), inset 0 0 0 3px rgba(255,255,255,0.85);
+  background-image: linear-gradient(rgba(255,255,255,0.72), rgba(255,255,255,0.72));
 }
 
 /* Ruhezeit: gedämpft */
@@ -1344,6 +1374,110 @@
   display: flex;
   gap: 5px;
 }
+
+/* ---------- Mengenregler ----------
+   Nur bei Spotware: Dort kauft der Disponent selbst ein, und die
+   Menge entscheidet darüber, was für eine Beiladung frei bleibt. Der
+   Restplatzbalken steht direkt darunter und wandert beim Schieben
+   mit. */
+.tour-mengenregler {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+
+.tour-menge-marke { flex: none; color: var(--win-grey-darker); }
+
+.tour-menge-schieber {
+  flex: 1;
+  min-width: 70px;
+  height: 18px;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+/* Die Rinne: versenkt, wie jeder Schieberegler dieser Zeit. */
+.tour-menge-schieber::-webkit-slider-runnable-track {
+  height: 6px;
+  background: var(--win-white, #ffffff);
+  border: 1px solid var(--win-grey-darker);
+  border-right-color: var(--win-white, #ffffff);
+  border-bottom-color: var(--win-white, #ffffff);
+}
+.tour-menge-schieber::-moz-range-track {
+  height: 6px;
+  background: var(--win-white, #ffffff);
+  border: 1px solid var(--win-grey-darker);
+}
+
+/* Der Griff: erhaben, eckig, und breit genug für einen Finger. */
+.tour-menge-schieber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 18px;
+  margin-top: -7px;
+  background: var(--win-grey);
+  border: 1px solid var(--win-grey-darker);
+  border-top-color: var(--win-white, #ffffff);
+  border-left-color: var(--win-white, #ffffff);
+}
+.tour-menge-schieber::-moz-range-thumb {
+  width: 12px;
+  height: 18px;
+  border-radius: 0;
+  background: var(--win-grey);
+  border: 1px solid var(--win-grey-darker);
+  border-top-color: var(--win-white, #ffffff);
+  border-left-color: var(--win-white, #ffffff);
+}
+
+.tour-menge-wert {
+  flex: none;
+  min-width: 42px;
+  padding: 0 3px;
+  text-align: right;
+  font-weight: bold;
+  background: #10305a;
+  color: var(--win-white, #ffffff);
+}
+
+.tour-menge-max { flex: none; color: var(--win-grey-darker); }
+
+/* ---------- Wo soll geladen werden? ----------
+   Die Antwort auf den einen "+ Sendung"-Knopf. */
+.tour-ladeortwahl {
+  margin: 5px 0;
+  padding: 4px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.tour-ladeort-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Eine Sendung, die sich antippen und ändern lässt. Der Zeiger und
+   der leichte Wechsel beim Überfahren sind der einzige Hinweis - ein
+   eigenes Stiftsymbol je Zeile wäre bei vier Sendungen Lärm. */
+.tour-etappe.aenderbar,
+.tour-stopp-zeile.aenderbar { cursor: pointer; }
+
+.tour-etappe.aenderbar:hover { background: #ffffe0; }
+.tour-stopp-zeile.aenderbar:hover { background: #ffffe0; }
+
+.tour-etappe.aenderbar:active,
+.tour-stopp-zeile.aenderbar:active { background: var(--win-grey); }
 
 /* ---------- Restplatz ----------
    Die Balken sagen, wie voll der Auflieger auf dem vollsten Abschnitt

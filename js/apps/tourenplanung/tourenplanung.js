@@ -60,15 +60,31 @@ const TourenplanungApp = (function () {
     gut: null,         // bei art === "spot"
     tonnen: 0,
     ziel: null,
-    machbarkeit: null
+    machbarkeit: null,
+    // Wird eine schon festgelegte Sendung bearbeitet, liegt sie
+    // solange NICHT in `geplant`, sondern hier in der Bearbeitung -
+    // dadurch rechnet der ganze Rest des Moduls unverändert weiter.
+    // `bearbeitet` merkt sich den Platz, an den sie zurückgehört,
+    // `urfassung` die Fassung von vorher: Abbrechen stellt sie wieder
+    // her, das Bearbeiten ist also nicht zerstörend.
+    bearbeitet: null,
+    urfassung: null,
+    // Sobald der Spieler die Menge selbst einstellt, darf sie nicht
+    // mehr automatisch auf das Maximum zurückspringen.
+    mengeVonHand: false
   };
+
+  /** Steht die Frage "wo soll geladen werden?" gerade im Bereich? */
+  let ladeortWahl = false;
 
   function tourZuruecksetzen() {
     tour = {
       schritt: "fracht", stadt: null, fahrzeug: null, geplant: [],
       art: null, auftrag: null, gut: null, tonnen: 0, ziel: null,
-      machbarkeit: null
+      machbarkeit: null, bearbeitet: null, urfassung: null,
+      mengeVonHand: false
     };
+    ladeortWahl = false;
   }
 
   /** Die gerade zusammengestellte Etappe zurücksetzen, Rest behalten. */
@@ -79,6 +95,58 @@ const TourenplanungApp = (function () {
     tour.tonnen = 0;
     tour.ziel = null;
     tour.machbarkeit = null;
+    tour.bearbeitet = null;
+    tour.urfassung = null;
+    tour.mengeVonHand = false;
+  }
+
+  /**
+   * Alle Sendungen der Tour, die gerade bearbeitete an IHREM Platz.
+   *
+   * Vor 0.15.36 stand die angefangene Sendung immer hinten dran, weil
+   * es nur den Fall "eine neue dazu" gab. Seit man eine bestehende
+   * bearbeiten kann, gehört sie dorthin zurück, wo sie war - sonst
+   * springt die Tour beim Ändern einer Kleinigkeit um.
+   */
+  function alleSendungen() {
+    const liste = tour.geplant.slice();
+    const offen = aktuelleEtappeAlsPlan();
+    const platz = tour.bearbeitet;
+
+    if (offen && offen.nachName) {
+      if (platz !== null) liste.splice(platz, 0, offen);
+      else liste.push(offen);
+    } else if (platz !== null && tour.urfassung) {
+      // Angefangen umzubauen, aber noch nicht fertig: Bis dahin gilt
+      // die alte Fassung. Genau das macht das Bearbeiten unschädlich.
+      liste.splice(platz, 0, tour.urfassung);
+    }
+    return liste;
+  }
+
+  /** Welcher Platz in `alleSendungen()` gerade bearbeitet wird. */
+  function inArbeitPlatz() {
+    if (tour.bearbeitet !== null) return tour.bearbeitet;
+    return aktuelleEtappeAlsPlan() ? tour.geplant.length : -1;
+  }
+
+  /**
+   * Die angefangene Sendung festschreiben, bevor etwas anderes
+   * angefasst wird. Unvollständig Angefangenes fällt weg; war eine
+   * bestehende Sendung in Bearbeitung, kommt ihre alte Fassung zurück.
+   */
+  function offeneSendungSichern() {
+    const offen = aktuelleEtappeAlsPlan();
+    const platz = tour.bearbeitet;
+
+    if (offen && offen.nachName) {
+      if (platz !== null) tour.geplant.splice(platz, 0, offen);
+      else tour.geplant.push(offen);
+    } else if (platz !== null && tour.urfassung) {
+      tour.geplant.splice(platz, 0, tour.urfassung);
+    }
+    tour.bearbeitet = null;
+    tour.urfassung = null;
   }
 
   /**
@@ -86,7 +154,8 @@ const TourenplanungApp = (function () {
    * Zeittakt die Liste nicht unter seinen Fingern neu aufbauen.
    */
   function inAuswahl() {
-    return tour.schritt !== "fracht" || Boolean(tour.art) || tour.geplant.length > 0;
+    return tour.schritt !== "fracht" || Boolean(tour.art)
+        || tour.geplant.length > 0 || tour.bearbeitet !== null || ladeortWahl;
   }
 
   // Wird eine Ware angetippt, sollen alle Städte aufleuchten, die sie
@@ -916,9 +985,16 @@ const TourenplanungApp = (function () {
                verschiedene Zahlen übereinander: Die Überschrift zählte
                die angefangene Sendung mit, die Zusammenfassung nicht. -->
           <span class="tour-frachtbrief-titel">
-            Frachtbrief${briefZusatz()}
+            ${tour.bearbeitet !== null
+              ? `Sendung ${tour.bearbeitet + 1} ändern`
+              : `Frachtbrief${briefZusatz()}`}
           </span>
-          ${tour.art ? `
+          ${tour.bearbeitet !== null ? `
+            <button class="win98-button bevel-out" id="tour-btn-aenderung-verwerfen"
+                    title="Die Sendung bleibt, wie sie war">
+              ↺ Änderung
+            </button>`
+          : tour.art ? `
             <button class="win98-button bevel-out" id="tour-btn-etappe-verwerfen"
                     title="Nur die angefangene Sendung verwerfen, die übrigen behalten">
               ↺ Sendung
@@ -932,6 +1008,8 @@ const TourenplanungApp = (function () {
                   title="Ganze Planung verwerfen, Stadtauswahl aufheben">✕</button>
         </div>
         ${etappenliste()}
+        ${mengenregler()}
+        ${ladungsbalken()}
         <div class="tour-frachtbrief-felder">
           ${felder.map((f) => {
             const gefuellt = Boolean(f.wert);
@@ -965,69 +1043,106 @@ const TourenplanungApp = (function () {
    * mit lauter Warnhinweisen nie wieder über den Bereich hinauswächst.
    */
   function etappenliste() {
-    if (tour.geplant.length === 0) return "";
-    const plan = tourPlan(tour.geplant);
-    const offen = aktuelleEtappeAlsPlan();
-    const einklappbar = tour.geplant.length >= 2;
+    const sendungen = alleSendungen();
+    const arbeit = inArbeitPlatz();
+    // Eine einzelne Sendung, an der gerade gearbeitet wird, ist der
+    // Frachtbrief selbst - dafür braucht es keine Liste daneben.
+    if (sendungen.length === 0) return "";
+    if (sendungen.length === 1 && arbeit === 0) return "";
+
+    const plan = tourPlan(sendungen);
+    const einklappbar = sendungen.length >= 2;
     const zu = einklappbar && !etappenAufgeklappt;
 
     const warnungen = plan && plan.je
       ? plan.je.filter((x) => x.warnung).length
       : 0;
-    const summe = tour.geplant.reduce((s, e) => s + e.entgelt, 0);
-    const tonnen = tour.geplant.reduce((s, e) => s + e.tonnen, 0);
+    const summe = sendungen.reduce((s, e) => s + e.entgelt, 0);
+    const tonnen = sendungen.reduce((s, e) => s + e.tonnen, 0);
 
     const kopf = einklappbar ? `
       <button class="tour-etappen-schalter ${zu ? "zu" : "auf"}" id="tour-btn-etappen-klappen"
               title="${zu ? "Alle Sendungen zeigen" : "Liste einklappen"}">
         <span class="tour-etappen-pfeil">${zu ? "&#9656;" : "&#9662;"}</span>
         <span class="tour-etappen-summe">
-          ${tour.geplant.length} Sendungen · ${summe.toLocaleString("de-DE")} DM · ${tonnen.toFixed(1)} t
+          ${sendungen.length} Sendungen · ${summe.toLocaleString("de-DE")} DM · ${tonnen.toFixed(1)} t
         </span>
         ${warnungen ? `<span class="tour-etappen-hinweise">${warnungen} Hinweis${warnungen > 1 ? "e" : ""}</span>` : ""}
       </button>` : "";
 
-    // Eingeklappt bleibt die angefangene Sendung sichtbar - sie ist
-    // das, woran man gerade arbeitet, und trägt den Verwerfen-Knopf.
-    const zeigen = zu ? [] : tour.geplant;
+    // Eingeklappt bleibt nur die Sendung stehen, an der gearbeitet
+    // wird - sie ist das, was man gerade in der Hand hat.
+    const sichtbar = sendungen
+      .map((e, i) => ({ e, i }))
+      .filter(({ i }) => !zu || i === arbeit);
 
-    // Eingeklappt und nichts in Arbeit: Dann bleibt vom <ol> nur der
-    // Rahmen übrig. Ein :empty im Stylesheet greift nicht, weil die
-    // Vorlage Leerzeichen enthält - also gar nicht erst ausgeben.
-    if (zeigen.length === 0 && !offen) return `${kopf}${ladungsbalken()}`;
+    if (sichtbar.length === 0) return `${kopf}`;
 
     return `
       ${kopf}
       <ol class="tour-etappenliste ${zu ? "eingeklappt" : "aufgeklappt"}">
-        ${zeigen.map((e, i) => {
-          const w = plan && plan.je ? plan.je[i].warnung : "";
+        ${sichtbar.map(({ e, i }) => {
+          const w = plan && plan.je && plan.je[i] ? plan.je[i].warnung : "";
+          const inArbeit = i === arbeit;
           return `
-            <li class="tour-etappe ${w ? "mit-warnung" : ""}">
+            <li class="tour-etappe ${w ? "mit-warnung" : ""} ${inArbeit ? "in-arbeit" : "aenderbar"}"
+                ${inArbeit ? "" : `data-sendung-bearbeiten="${i}"`}
+                ${inArbeit ? "" : `title="Antippen zum Ändern"`}>
               <span class="tour-etappe-nr">${i + 1}</span>
-              <span class="tour-etappe-weg">${e.vonName} → ${e.nachName}</span>
-              <span class="tour-etappe-geld">${e.entgelt.toLocaleString("de-DE")} DM</span>
-              <span class="tour-etappe-ladung">${e.tonnen.toFixed(1)} t ${e.gutName}</span>
+              <span class="tour-etappe-weg">${e.vonName} → ${e.nachName || "…"}</span>
+              <span class="tour-etappe-geld">${
+                inArbeit && !e.nachName
+                  ? "in Arbeit"
+                  : `${e.entgelt.toLocaleString("de-DE")} DM`}</span>
+              <span class="tour-etappe-ladung">${
+                e.tonnen > 0 ? `${e.tonnen.toFixed(1)} t ` : ""}${e.gutName}</span>
               ${w ? `<span class="tour-warnung">${w}</span>` : ""}
-              <button class="tour-etappe-weg-damit" data-etappe-loeschen="${i}"
-                      title="Sendung streichen">✕</button>
+              <button class="tour-etappe-weg-damit"
+                      ${inArbeit
+                        ? `id="tour-btn-etappe-verwerfen-liste" title="Angefangene Sendung verwerfen"`
+                        : `data-etappe-loeschen="${i}" title="Sendung streichen"`}>✕</button>
             </li>
           `;
         }).join("")}
-        ${offen ? `
-          <li class="tour-etappe in-arbeit">
-            <span class="tour-etappe-nr">${tour.geplant.length + 1}</span>
-            <span class="tour-etappe-weg">
-              ${offen.vonName} → ${offen.nachName || "…"}
-            </span>
-            <span class="tour-etappe-geld">in Arbeit</span>
-            <span class="tour-etappe-ladung">
-              ${offen.tonnen > 0 ? `${offen.tonnen.toFixed(1)} t ` : ""}${offen.gutName}
-            </span>
-            <button class="tour-etappe-weg-damit" id="tour-btn-etappe-verwerfen-liste"
-                    title="Angefangene Sendung verwerfen">✕</button>
-          </li>` : ""}
       </ol>
-      ${ladungsbalken()}
+    `;
+  }
+
+  /**
+   * Wie viel von einer Spotware geladen wird.
+   *
+   * Bei einem Auftrag gibt es nichts einzustellen: 23,4 t Papier des
+   * Kunden sind 23,4 t, und wer teilt, ließe den Rest liegen und
+   * müsste den Termin trotzdem halten. Spotware kauft der Disponent
+   * dagegen selbst ein - dort ist die Menge die eigentliche
+   * Entscheidung, weil sie darüber bestimmt, was für eine Beiladung
+   * noch frei bleibt. Genau das zeigt der Restplatzbalken direkt
+   * darunter, und er wandert beim Schieben mit.
+   */
+  function mengenregler() {
+    if (tour.art !== "spot" || !tour.gut) return "";
+    const f = tour.fahrzeug || referenzFahrzeug();
+    if (!f) return "";
+
+    const max = spotMenge(f, tour.gut);
+    if (max <= 0) return "";
+
+    const wert = Math.min(max, tour.tonnen > 0 ? tour.tonnen : max);
+    const preis = tour.ziel
+      ? Math.round(Ladung.frachtpreis(tour.gut, wert,
+          (Route.berechne(tour.stadt.name, tour.ziel.name) || { km: 0 }).km) * SPOT_FAKTOR)
+      : 0;
+
+    return `
+      <div class="tour-mengenregler">
+        <label class="tour-menge-marke" for="tour-menge">Menge</label>
+        <input class="tour-menge-schieber" type="range" id="tour-menge"
+               min="1" max="${max.toFixed(1)}" step="0.5" value="${wert.toFixed(1)}"
+               aria-label="Ladungsmenge in Tonnen">
+        <output class="tour-menge-wert" id="tour-menge-wert">${wert.toFixed(1)} t</output>
+        <span class="tour-menge-max">von ${max.toFixed(1)} t${
+          preis ? ` · ${preis.toLocaleString("de-DE")} DM` : ""}</span>
+      </div>
     `;
   }
 
@@ -1087,7 +1202,7 @@ const TourenplanungApp = (function () {
     const engVolumen = (1 - freiV / zulV) > (1 - freiT / zulT);
 
     return `
-      <div class="tour-ladungsstand">
+      <div class="tour-ladungsstand" id="tour-ladungsstand">
         <div class="tour-restplatz ${freiT < zulT * 0.1 && freiV < zulV * 0.1 ? "voll" : ""}">
           <span class="tour-restplatz-marke">Ab ${tour.stadt.name} frei</span>
           <span class="tour-restwert ${engVolumen ? "" : "eng"}">${freiT.toFixed(1)} t</span>
@@ -1956,7 +2071,7 @@ const TourenplanungApp = (function () {
    */
   function schrittBereit() {
     // Die offene Sendung zählt mit, ohne schon übernommen zu sein.
-    const alle = [...tour.geplant, aktuelleEtappeAlsPlan()].filter(Boolean);
+    const alle = alleSendungen();
     const summe = tourSumme(alle);
     const plan = summe.plan;
     const f = tour.fahrzeug;
@@ -2012,21 +2127,74 @@ const TourenplanungApp = (function () {
           </div>` : ""}
       </div>
 
+      ${ladeortAuswahl(alle.length)}
+
       <div class="tour-startleiste">
-        ${alle.length < SENDUNGEN_MAX ? `
-          ${tour.stadt.name !== letzteStadt ? `
-            <button class="win98-button bevel-out" id="tour-btn-beiladung">
-              + Beiladung ab ${tour.stadt.name}
-            </button>` : ""}
-          <button class="win98-button bevel-out" id="tour-btn-anschluss">
-            + Sendung ab ${letzteStadt}
-          </button>` : `
+        ${alle.length < SENDUNGEN_MAX && !ladeortWahl ? `
+          <button class="win98-button bevel-out" id="tour-btn-sendung-dazu">
+            + Sendung
+          </button>` : ""}
+        ${alle.length >= SENDUNGEN_MAX ? `
           <span class="tour-anleitung">
             Mehr als ${SENDUNGEN_MAX} Sendungen je Tour sind nicht vorgesehen.
-          </span>`}
+          </span>` : ""}
         <button class="win98-button bevel-out tour-startknopf" id="tour-btn-tour-starten">
           🚚 Losschicken
         </button>
+      </div>
+    `;
+  }
+
+  /**
+   * Wo soll die nächste Sendung geladen werden? Früher entschieden das
+   * zwei Knöpfe mit Fachwörtern - "Beiladung" hieß: an derselben
+   * Stelle dazu, "Anschluss": am Ende der Tour. Jetzt ist es eine
+   * Liste der Halte, und der Unterschied ergibt sich aus der Stelle,
+   * die man antippt. Was dort noch frei ist, steht daneben: Am Anfang
+   * teilt sich die neue Sendung den Auflieger, am Ende findet sie ihn
+   * leer vor.
+   */
+  function ladeortAuswahl(anzahl) {
+    if (!ladeortWahl || anzahl >= SENDUNGEN_MAX) return "";
+
+    const orte = ladeorte();
+    if (orte.length === 0) return "";
+
+    const f = tour.fahrzeug;
+    const sendungen = alleSendungen();
+    const plan = tourPlan(sendungen);
+    const zulT = f ? (f.zuladungKg || 24000) / 1000 : 0;
+
+    return `
+      <div class="tour-ladeortwahl">
+        <div class="tour-ladeort-kopf">
+          <span>Wo soll geladen werden?</span>
+          <button class="win98-button bevel-out" id="tour-btn-ladeort-abbrechen">✕</button>
+        </div>
+        <ul class="tour-auswahlliste tour-liste-voll">
+          ${orte.map((name, i) => {
+            // Was am Halt i noch frei ist: Dort fängt der Abschnitt an,
+            // der hinter diesem Halt liegt.
+            let frei = zulT;
+            if (plan && plan.machbar && plan.belegung && i < plan.belegung.length) {
+              const last = plan.belegung[i].sendungen
+                .reduce((s, k) => s + sendungen[k].tonnen, 0);
+              frei = Math.max(0, zulT - last);
+            }
+            const letzter = i === orte.length - 1;
+            return `
+              <li class="tour-auswahl" data-ladeort="${name}">
+                ${ZEILENPFEIL}
+                <span class="tour-auswahl-name">
+                  <span class="tour-stopp-nr">${i + 1}</span> ${name}
+                </span>
+                <span class="tour-auswahl-zusatz">
+                  ${letzter ? "Ende der Tour · Auflieger leer" : `noch ${frei.toFixed(1)} t frei`}
+                </span>
+              </li>
+            `;
+          }).join("")}
+        </ul>
       </div>
     `;
   }
@@ -2064,7 +2232,8 @@ const TourenplanungApp = (function () {
                   ${plan.je[k].warnungZiel ? `<span class="tour-warnung">${plan.je[k].warnungZiel}</span>` : ""}
                 </div>`).join("")}
               ${stopp.laden.map((k) => `
-                <div class="tour-stopp-zeile auf">
+                <div class="tour-stopp-zeile auf aenderbar"
+                     data-sendung-bearbeiten="${k}" title="Antippen zum Ändern">
                   ▲ auf ${sendungen[k].tonnen.toFixed(1)} t ${sendungen[k].gutName}
                   <span class="tour-stopp-ziel">→ ${sendungen[k].nachName}</span>
                   ${plan.je[k].warnungLaden ? `<span class="tour-warnung">${plan.je[k].warnungLaden}</span>` : ""}
@@ -2111,6 +2280,7 @@ const TourenplanungApp = (function () {
    * die ganze Tour weg.
    */
   function zurTourZurueck() {
+    if (tour.bearbeitet !== null) { bearbeitungAbbrechen(); return; }
     if (tour.geplant.length === 0) return;
     etappeZuruecksetzen();
     tour.schritt = "bereit";
@@ -2126,6 +2296,9 @@ const TourenplanungApp = (function () {
    * also dort, wo die letzte festgelegte endet.
    */
   function etappeVerwerfen() {
+    // Wird eine bestehende Sendung bearbeitet, heißt Verwerfen: Sie
+    // bleibt, wie sie war - und nicht: Sie ist weg.
+    if (tour.bearbeitet !== null) { bearbeitungAbbrechen(); return; }
     etappeZuruecksetzen();
     const letzte = tour.geplant[tour.geplant.length - 1];
     if (letzte) {
@@ -2143,20 +2316,102 @@ const TourenplanungApp = (function () {
   }
 
   /**
-   * Beiladung: noch eine Sendung, aber ab derselben Stadt. Sie fährt
-   * ein Stück mit - wohin sie geht, entscheidet die Stoppfolge.
+   * Eine schon festgelegte Sendung zum Ändern aufmachen.
+   *
+   * Sie wird dafür aus `geplant` herausgenommen und wie eine
+   * angefangene behandelt - dadurch gilt für sie derselbe Ablauf wie
+   * für eine neue, und der ganze Rest des Moduls braucht keine
+   * Sonderbehandlung. Ihr Platz und ihre alte Fassung werden gemerkt:
+   * Wer abbricht, bekommt sie unverändert zurück.
    */
-  function beiladungBeginnen() {
-    naechsteSendung(tour.stadt ? tour.stadt.name : null);
+  function sendungBearbeiten(platz) {
+    // Erst festschreiben, was gerade offen ist - sonst ginge es beim
+    // Umschalten verloren.
+    offeneSendungSichern();
+
+    const s = tour.geplant[platz];
+    if (!s) return;
+
+    tour.geplant.splice(platz, 1);
+    tour.bearbeitet = platz;
+    tour.urfassung = s;
+
+    tour.art = s.art;
+    tour.auftrag = s.art === "auftrag" ? s.auftrag : null;
+    tour.gut = s.gut;
+    tour.tonnen = s.tonnen;
+    tour.ziel = STAEDTE[s.nachName] || null;
+    // Eine bestehende Menge ist immer eine gewollte - sie darf beim
+    // Neuberechnen nicht aufs Maximum zurückspringen.
+    tour.mengeVonHand = s.art === "spot";
+    tour.machbarkeit = s.art === "auftrag" && tour.fahrzeug
+      ? Auftraege.terminMachbar(s.auftrag, tour.fahrzeug.standort)
+      : null;
+
+    const ab = STAEDTE[s.vonName];
+    if (ab) { tour.stadt = ab; gewaehlteStadt = ab; }
+
+    tour.schritt = "fracht";
+    ladeortWahl = false;
+    hervorgehobenesGut = s.art === "spot" ? s.gut : null;
+    aktiveRoute = tour.ziel ? Route.berechne(s.vonName, s.nachName) : null;
+
+    dispositionAktualisieren();
+    markenZeichnen();
+    routeZeichnen();
+    if (ab) aufStadtZentrieren(ab);
+  }
+
+  /** Die Änderung verwerfen: Die Sendung steht wieder wie vorher da. */
+  function bearbeitungAbbrechen() {
+    if (tour.bearbeitet === null || !tour.urfassung) return;
+    tour.geplant.splice(tour.bearbeitet, 0, tour.urfassung);
+    etappeZuruecksetzen();
+    tour.schritt = "bereit";
+    hervorgehobenesGut = null;
+    aktiveRoute = null;
+    dispositionAktualisieren();
+    markenZeichnen();
+    routeZeichnen();
   }
 
   /**
-   * Anschluss: noch eine Sendung, aber erst ab dem letzten Halt. Das
-   * Fahrzeug bleibt - gewählt wird nur noch Fracht und Ziel.
+   * Noch eine Sendung, geladen in der genannten Stadt. Früher waren
+   * das zwei Knöpfe - "Beiladung" ab der Planungsstadt und "Anschluss"
+   * ab dem letzten Halt. Fachlich richtig, aber der Spieler musste den
+   * Unterschied kennen, bevor er ihn brauchte. Jetzt ist es ein Knopf
+   * und danach eine Ortswahl: Der Unterschied ist eine Stelle in der
+   * Tour, kein Fachwort.
    */
-  function anschlussBeginnen() {
-    const offen = aktuelleEtappeAlsPlan();
-    naechsteSendung(offen ? offen.nachName : letzterHalt());
+  function ladeortWaehlen() {
+    ladeortWahl = true;
+    dispositionAktualisieren({ nurListe: true });
+    // Die Frage tritt an die Stelle des Knopfes, und der steht am Ende
+    // einer langen Durchsicht. Ohne das hier stellt das Programm eine
+    // Frage, die man nicht sieht.
+    const feld = fensterElement && fensterElement.querySelector(".tour-ladeortwahl");
+    if (feld && feld.scrollIntoView) {
+      feld.scrollIntoView({ block: "nearest" });
+    }
+  }
+
+  /** Die Orte, an denen die Tour noch etwas aufnehmen kann. */
+  function ladeorte() {
+    const sendungen = alleSendungen();
+    const plan = tourPlan(sendungen);
+    const orte = [];
+    const dazu = (name) => { if (name && !orte.includes(name)) orte.push(name); };
+
+    if (plan && plan.machbar && plan.stopps.length) {
+      // Am letzten Halt kann nichts mehr zugeladen werden, was noch
+      // irgendwo abgeladen würde - er ist das Ende der Tour. Er gehört
+      // trotzdem dazu: Von dort aus geht die Anschlussfracht.
+      plan.stopps.forEach((st) => dazu(st.stadt));
+    } else {
+      dazu(tour.stadt ? tour.stadt.name : null);
+      sendungen.forEach((s) => dazu(s.nachName));
+    }
+    return orte;
   }
 
   /**
@@ -2168,9 +2423,9 @@ const TourenplanungApp = (function () {
    * zu haben. Vorher brach der Anschlussknopf dort wirkungslos ab.
    */
   function naechsteSendung(stadtName) {
-    const fertig = aktuelleEtappeAlsPlan();
-    if (fertig) tour.geplant.push(fertig);
+    offeneSendungSichern();
     etappeZuruecksetzen();
+    ladeortWahl = false;
 
     const stadt = STAEDTE[stadtName];
     if (stadt) {
@@ -2346,6 +2601,11 @@ const TourenplanungApp = (function () {
   function markenZeichnen() {
     const behaelter = fensterElement && fensterElement.querySelector("#tour-karte-marken");
     if (!behaelter) return;
+
+    // Gleich zu Beginn: Die Marke, zu der der Tooltip gehört, gibt es
+    // nach der nächsten Zeile nicht mehr, und ein pointerout kommt für
+    // ein gelöschtes Element nie.
+    tooltipVerbergen();
 
     behaelter.innerHTML = Karte.alleStaedte()
       .map((stadt) => {
@@ -2538,6 +2798,9 @@ const TourenplanungApp = (function () {
   function ansichtAnwenden() {
     const buehne = fensterElement && fensterElement.querySelector("#tour-karte-buehne");
     if (!buehne) return;
+    // Der Tooltip sitzt in Rahmenkoordinaten und wandert nicht mit.
+    // Nach einer Ansichtsänderung zeigt er auf die falsche Stadt.
+    tooltipVerbergen();
     buehne.style.transform =
       `translate(${versatzX}px, ${versatzY}px) scale(${zoom})`;
     markenPositionieren();
@@ -2746,7 +3009,12 @@ const TourenplanungApp = (function () {
       tour.tonnen = tour.auftrag.tonnen;
       tour.machbarkeit = Auftraege.terminMachbar(tour.auftrag, f.standort);
     } else if (tour.art === "spot" && tour.gut) {
-      tour.tonnen = spotMenge(f, tour.gut);
+      const max = spotMenge(f, tour.gut);
+      // Eine von Hand eingestellte Menge bleibt stehen - sie wird nur
+      // gekappt, wenn dieser Wagen weniger fasst als der bisherige.
+      tour.tonnen = tour.mengeVonHand
+        ? Math.min(tour.tonnen, max)
+        : max;
     }
   }
 
@@ -3033,31 +3301,80 @@ const TourenplanungApp = (function () {
       });
     });
 
-    // ---- Schritt 4: Anschlussfracht oder losschicken ----
-    const anschluss = dispo.querySelector("#tour-btn-anschluss");
-    if (anschluss) anschluss.addEventListener("click", anschlussBeginnen);
+    // ---- Schritt 4: noch eine Sendung oder losschicken ----
+    const dazu = dispo.querySelector("#tour-btn-sendung-dazu");
+    if (dazu) dazu.addEventListener("click", ladeortWaehlen);
 
-    const beiladung = dispo.querySelector("#tour-btn-beiladung");
-    if (beiladung) beiladung.addEventListener("click", beiladungBeginnen);
+    const ortWeg = dispo.querySelector("#tour-btn-ladeort-abbrechen");
+    if (ortWeg) ortWeg.addEventListener("click", () => {
+      ladeortWahl = false;
+      dispositionAktualisieren({ nurListe: true });
+    });
+
+    dispo.querySelectorAll("[data-ladeort]").forEach((el) => {
+      el.addEventListener("click", () => naechsteSendung(el.dataset.ladeort));
+    });
+
+    // ---- Eine Sendung ändern ----
+    dispo.querySelectorAll("[data-sendung-bearbeiten]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        sendungBearbeiten(Number(el.dataset.sendungBearbeiten));
+      });
+    });
 
     dispo.querySelectorAll("[data-etappe-loeschen]").forEach((el) => {
       el.addEventListener("click", (e) => {
         e.stopPropagation();
-        tour.geplant.splice(Number(el.dataset.etappeLoeschen), 1);
+        // Die Nummer zählt in alleSendungen(); in `geplant` fehlt die
+        // gerade bearbeitete Sendung, deshalb um eins verschoben.
+        const inAllen = Number(el.dataset.etappeLoeschen);
+        const arbeit = inArbeitPlatz();
+        const platz = (arbeit >= 0 && inAllen > arbeit) ? inAllen - 1 : inAllen;
+        tour.geplant.splice(platz, 1);
         // Die Stadt der offenen Etappe hängt an der vorigen.
         const letzte = tour.geplant[tour.geplant.length - 1];
         if (letzte) tour.stadt = STAEDTE[letzte.nachName] || tour.stadt;
         etappeZuruecksetzen();
-        tour.schritt = "fracht";
+        tour.schritt = tour.geplant.length > 0 ? "bereit" : "fracht";
         dispositionAktualisieren();
+        markenZeichnen();
+        routeZeichnen();
       });
     });
+
+    // ---- Mengenregler ----
+    // Beim Ziehen wird NICHT alles neu gezeichnet: Der Schieber wäre
+    // sonst mitten in der Bewegung weg. Stattdessen wandern nur die
+    // Anzeige und der Restplatzbalken mit, und erst beim Loslassen
+    // rechnet die Liste komplett neu.
+    const schieber = dispo.querySelector("#tour-menge");
+    if (schieber) {
+      const uebernehmen = () => {
+        tour.tonnen = Number(schieber.value);
+        tour.mengeVonHand = true;
+      };
+      schieber.addEventListener("input", () => {
+        uebernehmen();
+        const anzeige = dispo.querySelector("#tour-menge-wert");
+        if (anzeige) anzeige.textContent = `${tour.tonnen.toFixed(1)} t`;
+        const stand = dispo.querySelector("#tour-ladungsstand");
+        if (stand) stand.outerHTML = ladungsbalken();
+      });
+      schieber.addEventListener("change", () => {
+        uebernehmen();
+        dispositionAktualisieren({ nurListe: true });
+      });
+    }
 
     // Nur die angefangene Etappe verwerfen - die schon festgelegten
     // bleiben stehen. Ohne das bliebe nur das Kreuz, das die ganze
     // Planung wegwirft.
     const zurTour = dispo.querySelector("#tour-btn-zurueck-tour");
     if (zurTour) zurTour.addEventListener("click", zurTourZurueck);
+
+    const aenderungWeg = dispo.querySelector("#tour-btn-aenderung-verwerfen");
+    if (aenderungWeg) aenderungWeg.addEventListener("click", bearbeitungAbbrechen);
 
     dispo.querySelectorAll("#tour-btn-etappe-verwerfen, #tour-btn-etappe-verwerfen-liste")
       .forEach((el) => el.addEventListener("click", (e) => {
@@ -3242,7 +3559,7 @@ const TourenplanungApp = (function () {
     if (!f) return;
 
     // Die offene Sendung gehört dazu.
-    const sendungen = [...tour.geplant, aktuelleEtappeAlsPlan()].filter(Boolean);
+    const sendungen = alleSendungen();
     const plan = tourPlan(sendungen);
     if (!plan || !plan.machbar) return;
 
@@ -3517,19 +3834,35 @@ const TourenplanungApp = (function () {
     const touren = Fahrt.alle();
     if (touren.length === 0) { ebene.innerHTML = ""; return; }
 
-    // Punkte statt Symbole: Sie sind auf der kleinteiligen Karte besser
+    // Marken statt Symbole: Sie sind auf der kleinteiligen Karte besser
     // zu erkennen und tragen die Lackierung des Fahrzeugs - so sieht man
     // auf einen Blick, welcher Lkw wo unterwegs ist.
+    //
+    // Ein Wagen, der ROLLT, ist ein Dreieck mit der Spitze in
+    // Fahrtrichtung. Damit steht auf der Karte, wohin er unterwegs
+    // ist, ohne dass man die Route verfolgen muss. Ein Wagen, der an
+    // einer Rampe steht oder Ruhezeit hat, ist ein Quadrat: Er hat in
+    // diesem Augenblick keine Fahrtrichtung, und eine Spitze würde
+    // eine behaupten. Der Unterschied Stehen/Fahren ist damit auf der
+    // Karte ablesbar, nicht nur in der Liste.
     ebene.innerHTML = touren.map((t) => {
       const p = positionAufRoute(t);
       if (!p) return "";
       const ruht = Boolean(t.ruhtBis);
+      const steht = Boolean(t.stehtBis);
+      const rollt = !ruht && !steht && p.winkel !== null;
       const farbe = Lackierung.cssFarbe(t.fahrzeug.lackierung);
       const rand = Lackierung.cssFarbeDunkel(t.fahrzeug.lackierung);
-      return `<span class="tour-fahrzeugpunkt ${ruht ? "ruht" : ""} ${Fahrt.istBeladen(t) ? "beladen" : "leer"}"
+      const lage = rollt ? ` transform:rotate(${p.winkel.toFixed(0)}deg);` : "";
+      const zustand = steht ? "An der Rampe" : ruht ? "Ruhezeit" : "unterwegs";
+      return `<span class="tour-fahrzeugpunkt ${rollt ? "rollt" : "haelt"}
+                           ${ruht ? "ruht" : ""} ${steht ? "steht" : ""}
+                           ${Fahrt.istBeladen(t) ? "beladen" : "leer"}"
+                    data-kennzeichen="${t.fahrzeug.kennzeichen}"
+                    data-winkel="${rollt ? p.winkel.toFixed(0) : ""}"
                     style="left:${Math.round(p.x)}px; top:${Math.round(p.y)}px;
-                           background:${farbe}; border-color:${rand}"
-                    title="${t.fahrzeug.kennzeichen} (${t.fahrzeug.lackierung}): ${t.vonName} → ${t.nachName}"></span>`;
+                           background:${farbe}; border-color:${rand};${lage}"
+                    title="${t.fahrzeug.kennzeichen} (${t.fahrzeug.lackierung}): ${t.vonName} → ${t.nachName} · ${zustand}"></span>`;
     }).join("");
   }
 
@@ -3552,10 +3885,23 @@ const TourenplanungApp = (function () {
 
     const b = Karte.nachBild(hier[0], hier[1]);
     const b2 = gleich ? Karte.nachBild(gleich[0], gleich[1]) : b;
+
+    // Der Winkel wird ABSICHTLICH aus den Bildkoordinaten gerechnet
+    // und nicht aus Länge und Breite: Die Karte ist eine
+    // Plattkarte, in der ein Kurs nach Nordost weiter oben anders
+    // aussieht als weiter unten. Wer geographisch peilt, bekommt eine
+    // Spitze, die neben der Straße zeigt. Zoom und Versatz sind
+    // gleichförmig und ändern am Winkel nichts, deshalb genügen die
+    // Bildkoordinaten vor der Umrechnung.
+    const dx = b2.x - b.x;
+    const dy = b2.y - b.y;
+    const winkel = (dx || dy) ? Math.atan2(dy, dx) * 180 / Math.PI : null;
+
     return {
       x: b.x * zoom + versatzX,
       y: b.y * zoom + versatzY,
-      nachLinks: b2.x < b.x
+      nachLinks: b2.x < b.x,
+      winkel
     };
   }
 
@@ -3715,17 +4061,43 @@ const TourenplanungApp = (function () {
     dispositionAktualisieren();
   }
 
-  function tooltipZeigen(text, x, y) {
-    const t = fensterElement.querySelector("#tour-karte-tooltip");
+  // ---------- Tooltip auf der Karte ----------
+  //
+  // Er hing an mouseover/mouseout, und das reichte an zwei Stellen
+  // nicht:
+  //
+  //   Ein Fingertipp erzeugt ein künstliches mouseover, aber nie ein
+  //   mouseout - der Finger schwebt ja nirgendwohin. Auf dem Telefon
+  //   blieb der Kasten nach jedem Tipp auf eine Stadt für immer stehen.
+  //
+  //   markenZeichnen() ersetzt die ganze Markenebene. Wird die Marke
+  //   unter dem Zeiger dabei weggeworfen, kommt ebenfalls kein
+  //   mouseout. Deshalb überlebte der Kasten Verschieben, Zoomen und
+  //   jeden Uhrentakt und nannte am Ende eine Stadt, die gar nicht
+  //   mehr zu sehen war.
+  //
+  // Die Position ist außerdem in Rahmenkoordinaten gerechnet und
+  // wandert beim Verschieben nicht mit. Beim Ansichtswechsel zu
+  // verbergen ist also nicht nur Reparatur, sondern richtig.
+
+  let tooltipUhr = null;
+
+  function tooltipZeigen(text, x, y, vonSelbstSchliessen) {
+    const t = fensterElement && fensterElement.querySelector("#tour-karte-tooltip");
     if (!t) return;
+    if (tooltipUhr) { clearTimeout(tooltipUhr); tooltipUhr = null; }
     t.textContent = text;
     t.style.left = `${x + 12}px`;
     t.style.top = `${y + 12}px`;
     t.classList.remove("hidden");
+    // Beim Finger gibt es kein Gegenstück zum Zeigen, also schließt er
+    // sich selbst.
+    if (vonSelbstSchliessen) tooltipUhr = setTimeout(tooltipVerbergen, 2000);
   }
 
   function tooltipVerbergen() {
-    const t = fensterElement.querySelector("#tour-karte-tooltip");
+    if (tooltipUhr) { clearTimeout(tooltipUhr); tooltipUhr = null; }
+    const t = fensterElement && fensterElement.querySelector("#tour-karte-tooltip");
     if (t) t.classList.add("hidden");
   }
 
@@ -3761,7 +4133,10 @@ const TourenplanungApp = (function () {
       stadtWaehlen(stadt);
     });
 
-    marken.addEventListener("mouseover", (e) => {
+    // Ein echter Zeiger meldet sich beim Verlassen ab, ein Finger
+    // nicht. Deshalb hier unterschieden: Maus zeigt, solange sie
+    // darüber steht, Finger zeigt kurz und schließt von selbst.
+    const markeBeschriften = (e, vonSelbstSchliessen) => {
       const marke = e.target.closest(".tour-marke");
       if (!marke) return;
       const stadt = STAEDTE[marke.dataset.stadt];
@@ -3773,13 +4148,41 @@ const TourenplanungApp = (function () {
       tooltipZeigen(
         `${stadt.name} (${stadt.land})${zusatz}`,
         e.clientX - r.left,
-        e.clientY - r.top
+        e.clientY - r.top,
+        vonSelbstSchliessen
       );
+    };
+
+    marken.addEventListener("pointerover", (e) => {
+      if (e.pointerType === "touch") return;      // kommt über pointerdown
+      markeBeschriften(e, false);
     });
 
-    marken.addEventListener("mouseout", (e) => {
+    marken.addEventListener("pointerout", (e) => {
       if (e.target.closest(".tour-marke")) tooltipVerbergen();
     });
+
+    // Am Finger hängt der Kasten, solange er aufliegt: aufsetzen zeigt
+    // den Namen, loslassen nimmt ihn weg. Ein Tipp wählt die Stadt
+    // ohnehin, und dann steht ihr Name unten im Bereich - ein Kasten,
+    // der danach noch nachhängt, wäre genau der Geist, der repariert
+    // werden sollte. Die Selbstausblendung bleibt als Netz für den
+    // Fall, dass ein Browser das Loslassen verschluckt.
+    marken.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "touch") return;
+      markeBeschriften(e, true);
+    });
+
+    ["pointerup", "pointercancel", "pointerleave"].forEach((art) => {
+      marken.addEventListener(art, (e) => {
+        if (e.pointerType === "touch") tooltipVerbergen();
+      });
+    });
+
+    // Wer die Karte verlässt, will den Kasten nicht mehr sehen. Fängt
+    // auch den Fall ab, dass die Marke unter dem Zeiger neu gezeichnet
+    // und damit ersetzt wurde.
+    rahmen.addEventListener("mouseleave", tooltipVerbergen);
 
     // Zustand der Fingergeste - wird weiter unten gesetzt, hier bereits
     // deklariert, weil die Maus-Handler ihn abfragen.
