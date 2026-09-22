@@ -772,7 +772,7 @@ const TourenplanungApp = (function () {
                     title="Nur die angefangene Sendung verwerfen, die übrigen behalten">
               ↺ Sendung
             </button>`
-          : tour.geplant.length > 0 ? `
+          : (tour.geplant.length > 0 && tour.schritt !== "bereit") ? `
             <button class="win98-button bevel-out" id="tour-btn-zurueck-tour"
                     title="Ohne weitere Sendung zurück zur Durchsicht">
               &#10094; Zur Tour
@@ -1894,32 +1894,52 @@ const TourenplanungApp = (function () {
    * ein Stück mit - wohin sie geht, entscheidet die Stoppfolge.
    */
   function beiladungBeginnen() {
-    const fertig = aktuelleEtappeAlsPlan();
-    if (fertig) tour.geplant.push(fertig);
-    etappeZuruecksetzen();
-    tour.schritt = "fracht";
-    hervorgehobenesGut = null;
-    dispositionAktualisieren();
-    markenZeichnen();
+    naechsteSendung(tour.stadt ? tour.stadt.name : null);
   }
 
   /**
-   * Anschluss: noch eine Sendung, aber erst ab dem letzten Halt. Stadt
-   * ist das bisherige Ziel, das Fahrzeug bleibt - gewählt wird nur noch
-   * Fracht und Ziel.
+   * Anschluss: noch eine Sendung, aber erst ab dem letzten Halt. Das
+   * Fahrzeug bleibt - gewählt wird nur noch Fracht und Ziel.
    */
   function anschlussBeginnen() {
+    const offen = aktuelleEtappeAlsPlan();
+    naechsteSendung(offen ? offen.nachName : letzterHalt());
+  }
+
+  /**
+   * Die offene Sendung übernehmen, falls es eine gibt, und in der
+   * genannten Stadt die nächste beginnen.
+   *
+   * Der Fall "keine offene Sendung" ist der Normalfall, seit man mit
+   * "Zur Tour" auf die Durchsicht zurückkehren kann, ohne etwas gewählt
+   * zu haben. Vorher brach der Anschlussknopf dort wirkungslos ab.
+   */
+  function naechsteSendung(stadtName) {
     const fertig = aktuelleEtappeAlsPlan();
-    if (!fertig) return;
-    tour.geplant.push(fertig);
+    if (fertig) tour.geplant.push(fertig);
     etappeZuruecksetzen();
-    tour.stadt = STAEDTE[fertig.nachName] || tour.stadt;
-    gewaehlteStadt = tour.stadt;
+
+    const stadt = STAEDTE[stadtName];
+    if (stadt) {
+      tour.stadt = stadt;
+      gewaehlteStadt = stadt;
+    }
+
     tour.schritt = "fracht";
     hervorgehobenesGut = null;
     dispositionAktualisieren();
     markenZeichnen();
-    aufStadtZentrieren(tour.stadt);
+    if (stadt) aufStadtZentrieren(stadt);
+  }
+
+  /** Wo die Tour nach allen festgelegten Sendungen endet. */
+  function letzterHalt() {
+    const plan = tourPlan(tour.geplant);
+    if (plan && plan.machbar && plan.stopps.length) {
+      return plan.stopps[plan.stopps.length - 1].stadt;
+    }
+    const letzte = tour.geplant[tour.geplant.length - 1];
+    return letzte ? letzte.nachName : (tour.stadt ? tour.stadt.name : null);
   }
 
   // Dieselpreis in DM je Liter - belegt und jahresabhängig, siehe

@@ -127,7 +127,19 @@ Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
 Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
 Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
 
-## Aktueller Stand (v0.15.31)
+## Aktueller Stand (v0.15.32)
+
+**Nachtrag zu 0.15.31: Nach „❮ Zur Tour" tat „+ Sendung ab …" nichts.**
+Der Knopf begann damit, die offene Sendung zu übernehmen - und brach
+ab, wenn es keine gab. Genau das ist nach „Zur Tour" aber der Zustand.
+Beide Knöpfe gehen jetzt durch dieselbe Funktion, die eine offene
+Sendung übernimmt, falls es eine gibt, und in der genannten Stadt die
+nächste beginnt.
+
+Dazu: Auf der Durchsicht selbst steht „❮ Zur Tour" nicht mehr - dort
+ist man ja schon.
+
+## Vorheriger Stand (v0.15.31)
 
 **„+ Beiladung" war eine Falle.** Wer sie drückte und es sich anders
 überlegte, stand im Frachtschritt ohne gewählte Fracht - und die
