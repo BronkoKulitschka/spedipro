@@ -16,11 +16,15 @@ const TourenplanungApp = (function () {
   let gewaehlteStadt = null;
 
   // ---------- Ablauf der Tourenplanung ----------
-  // Bewusst erst einmal nur A nach B.
+  // Seit 0.15.26 kann eine Tour mehrere Frachten nacheinander fahren:
+  // `tour.geplant` führt die festgelegten Etappen, die offene wird wie
+  // gehabt zusammengestellt. Der Ablauf bleibt im Kern derselbe, er
+  // wiederholt sich nur.
   //
-  // GEPLANT: Rundtouren mit mehreren Stopps. Dafür müsste `tour` statt
-  // eines einzelnen Ziels eine Liste von Etappen führen, jede mit
-  // eigener Ladung - der Ablauf bliebe im Kern derselbe.
+  // GEPLANT (0.15.27): Beiladung - mehrere Sendungen zugleich an Bord.
+  // Die Stoppliste in fahrt.js trägt dafür schon Listen statt einzelner
+  // Einträge; zu tun bleibt die Kapazität je Teilstrecke und die
+  // Reihenfolge der Stopps.
   //
   // Ablauf ab 0.15.23: ohne Startknopf. Eine Stadt auf der Karte
   // antippen genügt - darunter steht sofort, was von dort ausgeht.
@@ -41,22 +45,37 @@ const TourenplanungApp = (function () {
   //            unter allen Städten mit Bedarf, ohne Frist und ohne
   //            Kundenbindung (Spotmarkt)
   let tour = {
-    schritt: "fracht",  // fracht | fahrzeug | ziel | bereit
+    schritt: "fracht",  // fracht | ziel | fahrzeug | bereit
     stadt: null,
     fahrzeug: null,
+    // Die Etappen, die schon feststehen. Jede ist eine Fracht von A
+    // nach B; die nächste beginnt dort, wo die vorige endete.
+    geplant: [],
+    // Die Etappe, die gerade zusammengestellt wird:
     art: null,         // "auftrag" | "spot"
     auftrag: null,     // bei art === "auftrag"
     gut: null,         // bei art === "spot"
     tonnen: 0,
-    ziel: null,        // bei art === "spot"
+    ziel: null,
     machbarkeit: null
   };
 
   function tourZuruecksetzen() {
     tour = {
-      schritt: "fracht", stadt: null, fahrzeug: null, art: null,
-      auftrag: null, gut: null, tonnen: 0, ziel: null, machbarkeit: null
+      schritt: "fracht", stadt: null, fahrzeug: null, geplant: [],
+      art: null, auftrag: null, gut: null, tonnen: 0, ziel: null,
+      machbarkeit: null
     };
+  }
+
+  /** Die gerade zusammengestellte Etappe zurücksetzen, Rest behalten. */
+  function etappeZuruecksetzen() {
+    tour.art = null;
+    tour.auftrag = null;
+    tour.gut = null;
+    tour.tonnen = 0;
+    tour.ziel = null;
+    tour.machbarkeit = null;
   }
 
   /**
@@ -64,7 +83,7 @@ const TourenplanungApp = (function () {
    * Zeittakt die Liste nicht unter seinen Fingern neu aufbauen.
    */
   function inAuswahl() {
-    return tour.schritt !== "fracht" || Boolean(tour.art);
+    return tour.schritt !== "fracht" || Boolean(tour.art) || tour.geplant.length > 0;
   }
 
   // Wird eine Ware angetippt, sollen alle Städte aufleuchten, die sie
@@ -190,7 +209,13 @@ const TourenplanungApp = (function () {
             const anteil = Math.round(Fahrt.fortschritt(t) * 100);
             const beladen = Fahrt.istBeladen(t);
             const ruht = Boolean(t.ruhtBis);
-            const auftrag = Auftraege.nachNummer(t.auftragNummer);
+            // An Bord können mehrere Sendungen sein; maßgeblich für die
+            // Fristwarnung ist die nächste, die abgeladen wird.
+            const anBord = Fahrt.ladung(t).map((nr) => Auftraege.nachNummer(nr))
+              .filter(Boolean);
+            const auftrag = anBord[0] || Auftraege.nachNummer(t.auftragNummer);
+            const stand = Fahrt.stoppStand(t);
+            const ziel = Fahrt.naechsterStopp(t);
             const frist = auftrag ? new Date(auftrag.lieferFrist) : null;
             const ankunft = Fahrt.ankunft(t);
             const zuSpaet = frist && ankunft > frist;
@@ -201,6 +226,9 @@ const TourenplanungApp = (function () {
                   <span class="tour-laufend-kennzeichen">${t.fahrzeug.kennzeichen}</span>
                   <span class="tour-laufend-strecke">
                     ${auftrag ? auftrag.nummer + " · " : ""}${t.vonName} → ${t.nachName}
+                    ${stand.gesamt > 1
+                      ? `<span class="tour-etappe-marke">Etappe ${stand.nummer}/${stand.gesamt}</span>`
+                      : ""}
                   </span>
                 </div>
                 <div class="tour-laufend-balken">
@@ -212,6 +240,7 @@ const TourenplanungApp = (function () {
                   </span>
                   ${Math.round(t.gesamtGefahreneKm).toLocaleString("de-DE")} von
                   ${Math.round(Fahrt.gesamtKm(t)).toLocaleString("de-DE")} km ·
+                  ${stand.gesamt > 1 && ziel ? `nächster Halt ${ziel.stadt} · ` : ""}
                   Ankunft ${Spielzeit.formatiereMitUhrzeit(ankunft)}
                   ${zuSpaet ? `<span class="tour-warnung">nach Frist</span>` : ""}
                 </div>
@@ -434,6 +463,10 @@ const TourenplanungApp = (function () {
    * Die Kopfzeile, die sich mit jeder Wahl füllt. Sie zeigt den Stand
    * der Planung und ist zugleich der Rückweg: Ein gefülltes Feld
    * antippen heißt, diesen Schritt noch einmal zu machen.
+   *
+   * Sobald die Tour mehrere Etappen hat, steht über den Feldern die
+   * Liste der schon festgelegten - der Frachtbrief wird zum
+   * Ladeverzeichnis.
    */
   function frachtbrief() {
     const s = tour.stadt;
@@ -470,10 +503,13 @@ const TourenplanungApp = (function () {
     return `
       <div class="tour-frachtbrief">
         <div class="tour-frachtbrief-kopf">
-          <span class="tour-frachtbrief-titel">Frachtbrief</span>
+          <span class="tour-frachtbrief-titel">
+            Frachtbrief${tour.geplant.length ? ` · ${tour.geplant.length + 1} Etappen` : ""}
+          </span>
           <button class="win98-button bevel-out" id="tour-btn-uebersicht"
                   title="Planung verwerfen, Stadtauswahl aufheben">✕</button>
         </div>
+        ${etappenliste()}
         <div class="tour-frachtbrief-felder">
           ${felder.map((f) => {
             const gefuellt = Boolean(f.wert);
@@ -491,6 +527,92 @@ const TourenplanungApp = (function () {
         </div>
       </div>
     `;
+  }
+
+  /** Die schon festgelegten Etappen, jede mit ihrem Warnhinweis. */
+  function etappenliste() {
+    if (tour.geplant.length === 0) return "";
+    const plan = etappenPlan();
+    return `
+      <ol class="tour-etappenliste">
+        ${plan.map((e, i) => `
+          <li class="tour-etappe ${e.warnung ? "mit-warnung" : ""}">
+            <span class="tour-etappe-nr">${i + 1}</span>
+            <span class="tour-etappe-weg">${e.vonName} → ${e.nachName}</span>
+            <span class="tour-etappe-geld">${e.entgelt.toLocaleString("de-DE")} DM</span>
+            <span class="tour-etappe-ladung">${e.tonnen.toFixed(1)} t ${e.gutName}</span>
+            ${e.leerKm > 0
+              ? `<span class="tour-etappe-leer">+ ${Math.round(e.leerKm).toLocaleString("de-DE")} km leer</span>`
+              : ""}
+            ${e.warnung ? `<span class="tour-warnung">${e.warnung}</span>` : ""}
+            <button class="tour-etappe-weg-damit" data-etappe-loeschen="${i}"
+                    title="Etappe streichen">✕</button>
+          </li>
+        `).join("")}
+      </ol>
+    `;
+  }
+
+  /**
+   * Rechnet die geplanten Etappen der Reihe nach durch: Wann ist das
+   * Fahrzeug wo, und passt das noch zu Ladefenster und Liefertermin?
+   *
+   * Das ist der Preis der festen Buchung: Wer vorausplant, bindet sich
+   * an Termine, die erst in Tagen fällig werden. Hier steht, ob sie
+   * halten.
+   */
+  function etappenPlan() {
+    let ort = tour.fahrzeug ? tour.fahrzeug.standort : tour.geplant[0]?.vonName;
+    let zeit = Spielzeit.heute();
+
+    return tour.geplant.map((e) => {
+      const leer = ort !== e.vonName ? Route.berechne(ort, e.vonName) : null;
+      const leerKm = leer ? leer.km : 0;
+
+      let warnung = "";
+      let ankunft = null;
+
+      if (e.art === "auftrag") {
+        const m = Auftraege.terminMachbar(e.auftrag, ort, zeit);
+        if (m) {
+          ankunft = m.ankunft;
+          if (m.ladefensterVerpasst) {
+            warnung = `Ladefenster verpasst - ${e.vonName} erst am ` +
+              `${Spielzeit.formatiereMitUhrzeit(m.ladeAnkunft)} erreicht`;
+          } else if (!m.puenktlich) {
+            warnung = "Liefertermin nicht zu halten";
+          } else if (m.wartet && m.wartestunden > 12) {
+            warnung = `${m.wartestunden} Std Standzeit bis zum Ladefenster`;
+          }
+        }
+      } else {
+        // Spotware hat kein Ladefenster - sie liegt, bis sie jemand holt.
+        const stunden = Auftraege.dauerStunden(leerKm + e.km);
+        ankunft = new Date(zeit.getTime());
+        ankunft.setHours(ankunft.getHours() + Math.ceil(stunden));
+      }
+
+      if (ankunft) zeit = ankunft;
+      ort = e.nachName;
+
+      return { ...e, leerKm, ankunft, warnung };
+    });
+  }
+
+  /** Summe über alle geplanten Etappen plus die gerade offene. */
+  function tourSumme() {
+    const plan = etappenPlan();
+    const f = tour.fahrzeug;
+    let erloes = 0;
+    let km = 0;
+    let leerKm = 0;
+    plan.forEach((e) => {
+      erloes += e.entgelt;
+      km += e.km;
+      leerKm += e.leerKm;
+    });
+    const sprit = f ? spritkostenFuer(f, km + leerKm) : 0;
+    return { erloes, km, leerKm, sprit, db: erloes - sprit, etappen: plan };
   }
 
   /** Kurzbezeichnung der gewählten Ladung für den Frachtbrief. */
@@ -1106,54 +1228,82 @@ const TourenplanungApp = (function () {
 
   // ---------- 4. Losschicken ----------
 
+  /**
+   * Die letzte Durchsicht. Ab hier führen zwei Wege weiter: noch eine
+   * Etappe anhängen oder losschicken. Die Anschlussfracht beginnt dort,
+   * wo die eben geplante endet - Stadt und Fahrzeug stehen damit schon
+   * fest, und der Ablauf setzt bei der Fracht wieder ein.
+   */
   function schrittBereit() {
-    const f = tour.fahrzeug;
-    const e = fahrtWerte(f);
+    // Die offene Etappe zählt mit, ohne schon übernommen zu sein.
+    const alle = [...tour.geplant, aktuelleEtappeAlsPlan()];
+    const merker = tour.geplant;
+    tour.geplant = alle;
+    const summe = tourSumme();
+    tour.geplant = merker;
 
-    const zeilen = tour.art === "auftrag"
-      ? [
-          ["Auftrag", `${tour.auftrag.nummer} · ${tour.auftrag.quelle === "kunde"
-            ? tour.auftrag.kundeName : "Frachtbörse"}`],
-          ["Ladung", `${e.tonnen.toFixed(1)} t ${Auftraege.gut(tour.auftrag).name}`],
-          ["Strecke", `${tour.stadt.name} → ${tour.ziel.name}`],
-          ["Fahrzeug", `${f.marke} ${f.modell} (${f.kennzeichen})`],
-          ["Anfahrt leer", `${Math.round(e.anfahrtKm).toLocaleString("de-DE")} km`],
-          ["Hauptlauf", `${e.km.toLocaleString("de-DE")} km`],
-          ["Ankunft", e.machbarkeit
-            ? `${Spielzeit.formatiereMitUhrzeit(e.machbarkeit.ankunft)}${
-                e.puenktlich ? "" : " – verspätet"}`
-            : "—"],
-          ["Entgelt", `${e.entgelt.toLocaleString("de-DE")} DM`],
-          ["Spritkosten", `rund ${e.sprit.toLocaleString("de-DE")} DM`]
-        ]
-      : [
-          ["Auftrag", "freier Markt, keine Bindung"],
-          ["Ladung", `${e.tonnen.toFixed(1)} t ${tour.gut.name}`],
-          ["Strecke", `${tour.stadt.name} → ${tour.ziel.name}`],
-          ["Fahrzeug", `${f.marke} ${f.modell} (${f.kennzeichen})`],
-          ["Anfahrt leer", `${Math.round(e.anfahrtKm).toLocaleString("de-DE")} km`],
-          ["Hauptlauf", `${e.km.toLocaleString("de-DE")} km`],
-          ["Fahrzeit", dauerText(fahrdauerStunden(e.anfahrtKm + e.km))],
-          ["Entgelt", `${e.entgelt.toLocaleString("de-DE")} DM`],
-          ["Spritkosten", `rund ${e.sprit.toLocaleString("de-DE")} DM`]
-        ];
+    const f = tour.fahrzeug;
+    const letzteStadt = alle[alle.length - 1].nachName;
+    const tage = Math.max(1, Math.round(
+      Auftraege.dauerStunden(summe.km + summe.leerKm) / 24));
 
     return `
-      ${schrittTitel("Alles beisammen", "letzte Durchsicht")}
+      ${schrittTitel(
+        alle.length > 1 ? `Tour über ${alle.length} Etappen` : "Alles beisammen",
+        "letzte Durchsicht")}
+
+      <ol class="tour-etappenliste tour-etappenliste-gross">
+        ${summe.etappen.map((e, i) => `
+          <li class="tour-etappe ${e.warnung ? "mit-warnung" : ""}">
+            <span class="tour-etappe-nr">${i + 1}</span>
+            <span class="tour-etappe-weg">${e.vonName} → ${e.nachName}</span>
+            <span class="tour-etappe-geld">${e.entgelt.toLocaleString("de-DE")} DM</span>
+            <span class="tour-etappe-ladung">
+              ${e.tonnen.toFixed(1)} t ${e.gutName} ·
+              ${e.km.toLocaleString("de-DE")} km
+              ${e.leerKm > 0
+                ? ` · ${Math.round(e.leerKm).toLocaleString("de-DE")} km leer davor`
+                : ""}
+            </span>
+            <span class="tour-etappe-zusatz">
+              ${e.art === "auftrag"
+                ? `${e.auftrag.nummer} · ${e.auftrag.quelle === "kunde"
+                    ? e.auftrag.kundeName : "Frachtbörse"}`
+                : "freier Markt, keine Bindung"}
+              ${e.ankunft ? ` · an ${Spielzeit.formatiereMitUhrzeit(e.ankunft)}` : ""}
+            </span>
+            ${e.warnung ? `<span class="tour-warnung">${e.warnung}</span>` : ""}
+          </li>
+        `).join("")}
+      </ol>
+
       <div class="tour-zusammenfassung">
         <dl class="fuhrpark-infoliste">
-          ${zeilen.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}
+          <dt>Fahrzeug</dt><dd>${f.marke} ${f.modell} (${f.kennzeichen})</dd>
+          <dt>Strecke</dt>
+          <dd>${summe.km.toLocaleString("de-DE")} km beladen${
+            summe.leerKm > 0
+              ? ` · ${Math.round(summe.leerKm).toLocaleString("de-DE")} km leer`
+              : ""}</dd>
+          <dt>Unterwegs</dt><dd>rund ${tage} Tag${tage > 1 ? "e" : ""}</dd>
+          <dt>Entgelt</dt><dd>${summe.erloes.toLocaleString("de-DE")} DM</dd>
+          <dt>Spritkosten</dt><dd>rund ${summe.sprit.toLocaleString("de-DE")} DM</dd>
           <dt>Deckungsbeitrag</dt>
-          <dd class="${e.db > 0 ? "tour-positiv" : "tour-negativ"}">
-            ${e.db.toLocaleString("de-DE")} DM</dd>
+          <dd class="${summe.db > 0 ? "tour-positiv" : "tour-negativ"}">
+            ${summe.db.toLocaleString("de-DE")} DM</dd>
         </dl>
-        ${e.machbarkeit && !e.puenktlich ? `
+        ${summe.etappen.some((e) => e.warnung) ? `
           <div class="tour-schadenhinweis">
-            Der Liefertermin ist nicht zu halten. Das belastet die
+            Vorausgebuchte Fracht ist verbindlich. Wird ein Ladefenster
+            oder ein Liefertermin verfehlt, belastet das die
             Kundenbeziehung.
           </div>` : ""}
       </div>
+
       <div class="tour-startleiste">
+        <button class="win98-button bevel-out" id="tour-btn-anschluss">
+          + Anschlussfracht ab ${letzteStadt}
+        </button>
         <button class="win98-button bevel-out tour-startknopf" id="tour-btn-tour-starten">
           🚚 Losschicken
         </button>
@@ -1161,6 +1311,44 @@ const TourenplanungApp = (function () {
     `;
   }
 
+  /** Die gerade zusammengestellte Etappe im Format der geplanten. */
+  function aktuelleEtappeAlsPlan() {
+    if (tour.art === "auftrag") {
+      const a = tour.auftrag;
+      return {
+        art: "auftrag", auftrag: a, gut: Auftraege.gut(a),
+        gutName: Auftraege.gut(a).name,
+        vonName: a.vonName, nachName: a.nachName,
+        tonnen: a.tonnen, km: a.km, entgelt: a.entgelt
+      };
+    }
+    const route = Route.berechne(tour.stadt.name, tour.ziel.name);
+    const km = route ? route.km : 0;
+    return {
+      art: "spot", auftrag: null, gut: tour.gut, gutName: tour.gut.name,
+      vonName: tour.stadt.name, nachName: tour.ziel.name,
+      tonnen: tour.tonnen, km,
+      entgelt: Math.round(Ladung.frachtpreis(tour.gut, tour.tonnen, km) * SPOT_FAKTOR)
+    };
+  }
+
+  /**
+   * Etappe übernehmen und gleich die nächste beginnen. Stadt ist das
+   * bisherige Ziel, das Fahrzeug bleibt - gewählt wird nur noch Fracht
+   * und Ziel.
+   */
+  function anschlussBeginnen() {
+    const fertig = aktuelleEtappeAlsPlan();
+    tour.geplant.push(fertig);
+    etappeZuruecksetzen();
+    tour.stadt = STAEDTE[fertig.nachName] || tour.stadt;
+    gewaehlteStadt = tour.stadt;
+    tour.schritt = "fracht";
+    hervorgehobenesGut = null;
+    dispositionAktualisieren();
+    markenZeichnen();
+    aufStadtZentrieren(tour.stadt);
+  }
 
   // Dieselpreis in DM je Liter - belegt und jahresabhängig, siehe
   // js/data/kostensaetze.js und docs/kosten-1994.md. Für 1994 sind das
@@ -1337,6 +1525,18 @@ const TourenplanungApp = (function () {
         teile.push(`<polyline points="${linie}" class="tour-route-kontur-duenn" />`);
         teile.push(`<polyline points="${linie}" class="${klasse}" />`);
       });
+    });
+
+    // 1b. Schon festgelegte Etappen dieser Tour - blasser als die
+    //     Etappe, an der gerade gearbeitet wird.
+    tour.geplant.forEach((e) => {
+      const r = Route.berechne(e.vonName, e.nachName);
+      if (!r) return;
+      const punkte = verlaufAlsPunkte(r);
+      if (punkte.length < 2) return;
+      const linie = punkte.map((p) => `${p.x},${p.y}`).join(" ");
+      teile.push(`<polyline points="${linie}" class="tour-route-kontur-duenn" />`);
+      teile.push(`<polyline points="${linie}" class="tour-route-geplant" />`);
     });
 
     // 2. Route in Planung - liegt oben und ist kräftiger
@@ -1643,6 +1843,15 @@ const TourenplanungApp = (function () {
     if (schritt === "ziel" && !frachtGewaehlt()) return;
     if (schritt === "fahrzeug" && (!frachtGewaehlt() || !tour.ziel)) return;
     if (schritt === "bereit" && (!frachtGewaehlt() || !tour.ziel || !tour.fahrzeug)) return;
+
+    // Bei einer Anschlussetappe steht das Fahrzeug schon fest - es
+    // gehört zur Tour, nicht zur einzelnen Fracht. Ein Bildschirm, der
+    // nur die eine ohnehin getroffene Wahl noch einmal zeigt, wäre ein
+    // Klick ohne Entscheidung.
+    if (schritt === "fahrzeug" && tour.fahrzeug && tour.geplant.length > 0) {
+      schritt = "bereit";
+    }
+
     tour.schritt = schritt;
     dispositionAktualisieren();
   }
@@ -1748,7 +1957,9 @@ const TourenplanungApp = (function () {
         // Die Machbarkeit hängt am Standort des Fahrzeugs und wird
         // deshalb erst bei dessen Wahl gerechnet.
         tour.machbarkeit = null;
-        tour.fahrzeug = null;
+        // Das Fahrzeug gehört zur Tour, nicht zur einzelnen Fracht -
+        // es bleibt stehen, solange es die neue Ladung nehmen kann.
+        if (tour.fahrzeug && frachtHindernis(tour.fahrzeug)) tour.fahrzeug = null;
         hervorgehobenesGut = null;
         aktiveRoute = Route.berechne(a.vonName, a.nachName);
         weiterZu("ziel");
@@ -1768,9 +1979,9 @@ const TourenplanungApp = (function () {
         tour.auftrag = null;
         tour.ziel = null;
         tour.machbarkeit = null;
-        tour.fahrzeug = null;
+        if (tour.fahrzeug && frachtHindernis(tour.fahrzeug)) tour.fahrzeug = null;
         // Wie viel geht drauf? Das entscheidet erst das Fahrzeug.
-        tour.tonnen = 0;
+        tour.tonnen = tour.fahrzeug ? spotMenge(tour.fahrzeug, g) : 0;
         // Städte mit Bedarf auf der Karte aufleuchten lassen
         hervorgehobenesGut = g;
         aktiveRoute = null;
@@ -1823,7 +2034,23 @@ const TourenplanungApp = (function () {
       });
     });
 
-    // ---- Schritt 4: Losschicken ----
+    // ---- Schritt 4: Anschlussfracht oder losschicken ----
+    const anschluss = dispo.querySelector("#tour-btn-anschluss");
+    if (anschluss) anschluss.addEventListener("click", anschlussBeginnen);
+
+    dispo.querySelectorAll("[data-etappe-loeschen]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        tour.geplant.splice(Number(el.dataset.etappeLoeschen), 1);
+        // Die Stadt der offenen Etappe hängt an der vorigen.
+        const letzte = tour.geplant[tour.geplant.length - 1];
+        if (letzte) tour.stadt = STAEDTE[letzte.nachName] || tour.stadt;
+        etappeZuruecksetzen();
+        tour.schritt = "fracht";
+        dispositionAktualisieren();
+      });
+    });
+
     const starten = dispo.querySelector("#tour-btn-tour-starten");
     if (starten) starten.addEventListener("click", tourAusfuehren);
 
@@ -1941,30 +2168,38 @@ const TourenplanungApp = (function () {
    * Weg wie bei Börsen- und Kundenaufträgen - nur ohne Kundenbindung:
    * kundeId bleibt leer, deshalb wertet zustellen() keine Treue auf.
    */
-  function spotAuftragAnlegen() {
-    const g = tour.gut;
-    const route = Route.berechne(tour.stadt.name, tour.ziel.name);
+  // Laufende Nummer für Spotaufträge. Eine Zeitmarke reichte nicht mehr:
+  // Bei mehreren Spotetappen einer Tour entstehen sie in derselben
+  // Millisekunde und bekämen dieselbe Nummer.
+  let spotZaehler = 1;
+
+  function spotAuftragAnlegen(etappe, vorlaufStunden) {
+    const g = etappe.gut;
+    const route = Route.berechne(etappe.vonName, etappe.nachName);
     if (!route) return null;
 
-    const entgelt = Math.round(Ladung.frachtpreis(g, tour.tonnen, route.km) * SPOT_FAKTOR);
+    const entgelt = etappe.entgelt;
     const jetzt = Spielzeit.heute();
 
     // Frist großzügig: Am Spotmarkt wird ohne festen Termin verkauft.
     // Trotzdem braucht der Auftrag einen Wert, sonst gilt er sofort
-    // als verspätet.
+    // als verspätet. Bei einer Anschlussetappe kommt der Vorlauf dazu -
+    // das Fahrzeug ist ja erst in Tagen dort.
     const frist = new Date(jetzt.getTime());
-    frist.setHours(frist.getHours() + fahrdauerStunden(route.km) * 2 + 48);
+    frist.setHours(frist.getHours()
+      + Math.round(vorlaufStunden || 0)
+      + fahrdauerStunden(route.km) * 2 + 48);
 
     const auftrag = {
-      nummer: `S-${Date.now().toString().slice(-6)}`,
+      nummer: `S-${(spotZaehler++).toString().padStart(6, "0")}`,
       status: Auftraege.STATUS.offen,
       quelle: "spot",
       kundeId: null,
       kundeName: "Freier Markt",
-      vonName: tour.stadt.name,
-      nachName: tour.ziel.name,
+      vonName: etappe.vonName,
+      nachName: etappe.nachName,
       gutId: g.id,
-      tonnen: tour.tonnen,
+      tonnen: etappe.tonnen,
       km: route.km,
       entgelt,
       ladeBeginn: jetzt.toISOString(),
@@ -1980,37 +2215,80 @@ const TourenplanungApp = (function () {
   }
 
   function tourAusfuehren() {
-    if (tour.art === "spot") {
-      const neu = spotAuftragAnlegen();
-      if (!neu) return;
-      tour.auftrag = neu;
-    }
-
-    const auftrag = tour.auftrag;
     const f = tour.fahrzeug;
-    const anfahrt = Route.berechne(f.standort, auftrag.vonName);
-    const hauptlauf = Route.berechne(auftrag.vonName, auftrag.nachName);
-    if (!hauptlauf) return;
+    if (!f) return;
 
+    // Die offene Etappe gehört dazu.
+    const plan = [...tour.geplant, aktuelleEtappeAlsPlan()];
+
+    // Spotware bekommt jetzt ihren Auftrag - vorher gibt es nichts,
+    // worauf sich eine Buchung beziehen könnte.
+    // Vorlauf je Etappe: Wie lange das Fahrzeug bis dorthin braucht.
+    // Eine Spotladung, die erst in drei Tagen geholt wird, darf nicht
+    // mit einer Frist von heute angelegt werden.
+    let vorlaufKm = 0;
+    let vorOrt = f.standort;
+    const auftraege = plan.map((e) => {
+      const leer = vorOrt !== e.vonName ? Route.berechne(vorOrt, e.vonName) : null;
+      const vorlauf = Auftraege.dauerStunden(vorlaufKm + (leer ? leer.km : 0));
+      vorlaufKm += (leer ? leer.km : 0) + e.km;
+      vorOrt = e.nachName;
+      return e.art === "auftrag" ? e.auftrag : spotAuftragAnlegen(e, vorlauf);
+    });
+    if (auftraege.some((a) => !a)) return;
+
+    // Stopps und Etappen: Jede Fracht bringt bis zu zwei Stopps mit -
+    // die Ladestelle (wenn das Fahrzeug nicht schon dort steht) und die
+    // Entladestelle.
+    const stopps = [{ stadt: f.standort, laden: [], abladen: [] }];
     const etappen = [];
-    if (anfahrt && anfahrt.km > 0) etappen.push({ typ: "anfahrt", route: anfahrt });
-    etappen.push({ typ: "hauptlauf", route: hauptlauf });
 
-    Auftraege.disponieren(auftrag, f);
+    // Wie viele Sendungen gerade an Bord sind, entscheidet, ob eine
+    // Etappe Leerfahrt ist oder nicht.
+    let anBord = 0;
+
+    plan.forEach((e, i) => {
+      const a = auftraege[i];
+      const hier = stopps[stopps.length - 1];
+
+      if (hier.stadt !== a.vonName) {
+        const anfahrt = Route.berechne(hier.stadt, a.vonName);
+        if (!anfahrt) return;
+        etappen.push({ typ: anBord > 0 ? "hauptlauf" : "anfahrt", route: anfahrt });
+        stopps.push({ stadt: a.vonName, laden: [], abladen: [] });
+      }
+
+      stopps[stopps.length - 1].laden.push({
+        auftragNummer: a.nummer, gutId: a.gutId, tonnen: a.tonnen
+      });
+
+      anBord += 1;
+
+      const hauptlauf = Route.berechne(a.vonName, a.nachName);
+      if (!hauptlauf) return;
+      etappen.push({ typ: "hauptlauf", route: hauptlauf });
+      stopps.push({
+        stadt: a.nachName,
+        laden: [],
+        abladen: [{ auftragNummer: a.nummer, gutId: a.gutId, tonnen: a.tonnen }]
+      });
+      anBord -= 1;
+    });
+
+    if (etappen.length === 0) return;
+
+    // Feste Buchung: Ab jetzt sind die Aufträge dem Fahrzeug zugeteilt
+    // und stehen niemandem sonst mehr zur Verfügung.
+    auftraege.forEach((a) => Auftraege.disponieren(a, f));
 
     Fahrt.starten({
       fahrzeug: f,
+      stopps,
       etappen,
-      auftragNummer: auftrag.nummer,
-      vonName: auftrag.vonName,
-      nachName: auftrag.nachName,
-      beiEtappenwechsel: (t) => {
-        // Ladestelle erreicht - ab hier fährt das Fahrzeug beladen
-        if (Fahrt.istBeladen(t)) {
-          Auftraege.beginnen(auftrag);
-          f.standort = auftrag.vonName;
-        }
-      },
+      auftragNummer: auftraege[0].nummer,
+      vonName: stopps[0].stadt,
+      nachName: stopps[stopps.length - 1].stadt,
+      beiStopp: stoppErreicht,
       beiAnkunft: tourAbschliessen
     });
 
@@ -2023,47 +2301,80 @@ const TourenplanungApp = (function () {
   }
 
   /**
-   * Zustellung: Auftrag abschließen, Verschleiß buchen, Kunde bewerten.
+   * Ein Stopp ist erreicht: erst abladen und abrechnen, dann neu laden.
+   *
+   * Bewusst ohne jede eingefangene Umgebung - die Funktion liest alles
+   * aus `t.stopps[index]`. Nur so überlebt sie das Laden eines
+   * Spielstands, bei dem es die Umgebung des Tourstarts nicht mehr gibt.
    */
-  function tourAbschliessen(eintrag) {
-    const f = eintrag.fahrzeug;
-    const auftrag = Auftraege.nachNummer(eintrag.auftragNummer);
+  function stoppErreicht(t, index) {
+    const stopp = t.stopps && t.stopps[index];
+    if (!stopp) return;
+    const f = t.fahrzeug;
+
+    f.standort = stopp.stadt;
+
+    (stopp.abladen || []).forEach((x) => {
+      const auftrag = Auftraege.nachNummer(x.auftragNummer);
+      if (auftrag) etappeAbrechnen(t, auftrag, index);
+    });
+
+    (stopp.laden || []).forEach((x) => {
+      const auftrag = Auftraege.nachNummer(x.auftragNummer);
+      if (auftrag) Auftraege.beginnen(auftrag);
+    });
+  }
+
+  /**
+   * Zustellung einer einzelnen Sendung: Verschleiß für die gefahrene
+   * Strecke buchen, Auftrag abschließen, Kunde bewerten.
+   *
+   * Gerechnet wird über die Etappen seit dem Beladen - Leerkilometer
+   * und beladene getrennt, weil die Beladung Verbrauch und Verschleiß
+   * deutlich verändert.
+   */
+  function etappeAbrechnen(t, auftrag, stoppIndex) {
+    const f = t.fahrzeug;
     const g = Auftraege.gut(auftrag);
 
-    const anfahrtKm = eintrag.etappen.find((e) => e.typ === "anfahrt")?.route.km || 0;
-    const hauptlaufKm = eintrag.etappen.find((e) => e.typ === "hauptlauf").route.km;
-    const gesamtKm = anfahrtKm + hauptlaufKm;
-    const beladungProzent = Math.min(100, Math.round((auftrag.tonnen * 1000 / f.zuladungKg) * 100));
-    const tage = Math.max(1, Math.round(gesamtKm / (Fahrt.SCHNITT_STANDARD * Fahrt.LENKZEIT_STUNDEN)));
+    const start = ladeStopp(t, auftrag.nummer);
+    let leerKm = 0;
+    let beladenKm = 0;
+    for (let i = 0; i < stoppIndex; i++) {
+      const km = t.etappen[i] ? t.etappen[i].route.km : 0;
+      if (i < start) leerKm += km;
+      else beladenKm += km;
+    }
+    const gesamtKm = leerKm + beladenKm;
+    const beladungProzent = Math.min(100,
+      Math.round((auftrag.tonnen * 1000 / f.zuladungKg) * 100));
+    const tage = Math.max(1, Math.round(
+      beladenKm / (Fahrt.SCHNITT_STANDARD * Fahrt.LENKZEIT_STUNDEN)));
 
-    // Leerfahrt und beladene Fahrt getrennt abrechnen - die Beladung
-    // wirkt sich deutlich auf Verschleiß und Verbrauch aus.
     let verbrauchL = 0;
-    if (anfahrtKm > 0) {
+    if (leerKm > 0) {
       verbrauchL += Verschleiss.wendeTourAn(f, {
-        km: anfahrtKm, tage: 1,
+        km: leerKm, tage: 1,
         gelaende: "huegelland", strassenqualitaet: "landstrasse",
         jahreszeit: jahreszeitJetzt(), beladungProzent: 0,
         fahrverhaltenFaktor: 1.0
       }).verbrauchL;
     }
-    verbrauchL += Verschleiss.wendeTourAn(f, {
-      km: hauptlaufKm, tage,
-      gelaende: "huegelland", strassenqualitaet: "landstrasse",
-      jahreszeit: jahreszeitJetzt(), beladungProzent,
-      fahrverhaltenFaktor: 1.0
-    }).verbrauchL;
+    if (beladenKm > 0) {
+      verbrauchL += Verschleiss.wendeTourAn(f, {
+        km: beladenKm, tage,
+        gelaende: "huegelland", strassenqualitaet: "landstrasse",
+        jahreszeit: jahreszeitJetzt(), beladungProzent,
+        fahrverhaltenFaktor: 1.0
+      }).verbrauchL;
+    }
 
     Auftraege.zustellen(auftrag);
-
-    // Erlös und Fahrzeugkosten in die Buchhaltung
     Finanzen.tourAbgerechnet({ auftrag, fahrzeug: f, verbrauchL, km: gesamtKm });
 
     const spritkosten = Math.round(verbrauchL * dieselpreis());
     const deckungsbeitrag = auftrag.entgelt - spritkosten;
 
-    // Fürs Abwesenheitsprotokoll: Wer nach einer Pause zurückkommt,
-    // will wissen, welche Tour was gebracht hat - nicht nur wie viele.
     Speicher.melden(
       "ankunft",
       `${f.kennzeichen}: ${auftrag.vonName} → ${auftrag.nachName}, ` +
@@ -2085,7 +2396,7 @@ const TourenplanungApp = (function () {
       daten: {
         auftrag: auftrag.nummer,
         kunde: auftrag.kundeName,
-        anfahrtKm, hauptlaufKm,
+        anfahrtKm: leerKm, hauptlaufKm: beladenKm,
         tonnen: auftrag.tonnen,
         puenktlich: auftrag.puenktlich,
         verbrauchL: Math.round(verbrauchL),
@@ -2093,7 +2404,32 @@ const TourenplanungApp = (function () {
       }
     });
 
-    f.standort = auftrag.nachName;
+    letzteAnkunft = {
+      auftrag, gut: g, anfahrtKm: leerKm, hauptlaufKm: beladenKm, gesamtKm,
+      erloes: auftrag.entgelt, spritkosten, deckungsbeitrag,
+      verbrauchL: Math.round(verbrauchL),
+      puenktlich: auftrag.puenktlich,
+      schaden: null
+    };
+
+    dispositionAktualisieren();
+    if (FuhrparkApp.aktualisieren) FuhrparkApp.aktualisieren();
+  }
+
+  /** An welchem Stopp diese Sendung zugeladen wurde. */
+  function ladeStopp(t, nummer) {
+    for (let i = 0; i < t.stopps.length; i++) {
+      if ((t.stopps[i].laden || []).some((x) => x.auftragNummer === nummer)) return i;
+    }
+    return 0;
+  }
+
+  /**
+   * Die Tour ist zu Ende. Abgeladen und abgerechnet ist an dieser
+   * Stelle schon alles - hier bleibt, was für die ganze Fahrt gilt.
+   */
+  function tourAbschliessen(eintrag) {
+    const f = eintrag.fahrzeug;
 
     const schaden = Ausfall.pruefe(f);
     if (schaden) {
@@ -2109,15 +2445,8 @@ const TourenplanungApp = (function () {
         `${schaden.teil} bei ${schaden.wert.toFixed(0)} %`,
         { fahrzeugId: f.id, teil: schaden.teil }
       );
+      if (letzteAnkunft) letzteAnkunft.schaden = schaden;
     }
-
-    letzteAnkunft = {
-      auftrag, gut: g, anfahrtKm, hauptlaufKm, gesamtKm,
-      erloes: auftrag.entgelt, spritkosten, deckungsbeitrag,
-      verbrauchL: Math.round(verbrauchL),
-      puenktlich: auftrag.puenktlich,
-      schaden
-    };
 
     dispositionAktualisieren();
     if (FuhrparkApp.aktualisieren) FuhrparkApp.aktualisieren();
@@ -2525,7 +2854,7 @@ const TourenplanungApp = (function () {
   function spielstandLaden(nr) {
     const ergebnis = Speicher.laden(
       nr === undefined ? Speicher.aktiver() : nr,
-      tourAbschliessen
+      { beiStopp: stoppErreicht, beiAnkunft: tourAbschliessen }
     );
     if (ergebnis && ergebnis.fehler) return ergebnis;
 
@@ -2639,6 +2968,12 @@ const TourenplanungApp = (function () {
     starten: taktVerbinden,
     /** Ein Fahrzeug auf der Karte zeigen - benutzt der Fuhrpark. */
     fahrzeugZeigen,
+    /**
+     * Rückrufe für wiederhergestellte Touren. Die Spielstandverwaltung
+     * hängt sie an jede geladene Fahrt, damit an den Stopps auch nach
+     * einem Neuladen ab- und aufgeladen wird.
+     */
+    tourRueckrufe: () => ({ beiStopp: stoppErreicht, beiAnkunft: tourAbschliessen }),
     /** Von anderen Modulen aufrufbar, wenn sich die Flotte ändert. */
     aktualisieren: () => {
       if (fensterElement && document.body.contains(fensterElement)) {

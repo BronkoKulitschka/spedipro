@@ -1060,7 +1060,10 @@ const FuhrparkApp = (function () {
     return `
       <div class="fuhrpark-tourhinweis">
         <div class="fuhrpark-tourhinweis-kopf">
-          🚛 Unterwegs: ${t.vonName} → ${t.nachName}
+          🚛 Unterwegs: ${t.vonName} → ${t.nachName}${
+            Fahrt.stoppStand(t).gesamt > 1
+              ? ` (Etappe ${Fahrt.stoppStand(t).nummer} von ${Fahrt.stoppStand(t).gesamt})`
+              : ""}
           <button class="win98-button bevel-out" data-tourkarte="${fahrzeug.id}">
             Tourkarte
           </button>
@@ -1510,7 +1513,9 @@ const FuhrparkApp = (function () {
         fensterElement.querySelectorAll("[data-tourkarte]").forEach((el) => {
           const lauf = Fahrt.fuerFahrzeug(Number(el.dataset.tourkarte));
           if (lauf) {
+            const stand = Fahrt.stoppStand(lauf);
             el.innerHTML = `🚛 Auf Tour: ${lauf.vonName} → ${lauf.nachName} ` +
+              (stand.gesamt > 1 ? `· Etappe ${stand.nummer}/${stand.gesamt} ` : "") +
               `(${Math.round(Fahrt.fortschritt(lauf) * 100)} %)`;
           }
         });

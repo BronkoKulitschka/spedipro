@@ -127,7 +127,53 @@ Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
 Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
 Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
 
-## Aktueller Stand (v0.15.25)
+## Aktueller Stand (v0.15.26)
+
+**Eine Tour kann mehrere Frachten nacheinander fahren.** Auf dem
+Abschlussbildschirm steht neben „Losschicken" jetzt „+ Anschlussfracht
+ab *Ziel*". Sie führt zurück in Schritt 1 - mit der Zielstadt der
+eben geplanten Etappe und dem Fahrzeug, das schon feststeht. Der
+Rhythmus bleibt derselbe, er wiederholt sich nur. Damit endet die
+Leerrückfahrt als Normalfall.
+
+Der Frachtbrief wird dabei zum **Ladeverzeichnis**: über den vier
+Feldern steht die Liste der festgelegten Etappen, jede mit Weg,
+Ladung, Entgelt und - falls die nächste Fracht woanders beginnt - den
+Leerkilometern dahin. Jede Zeile lässt sich einzeln streichen. Auf der
+Karte liegen die festgelegten Etappen gestrichelt, die in Arbeit
+durchgezogen.
+
+**Das Datenmodell: Stopps statt einer Fahrt mit einem Auftrag.** Bis
+Fassung 2 trug eine Tour genau eine Auftragsnummer - sie konnte
+deshalb nur eine einzige Sendung befördern. Jetzt ist eine Tour eine
+Folge von Stopps, zwischen denen die Etappen liegen:
+
+    stopps[0] --etappen[0]--> stopps[1] --etappen[1]--> stopps[2]
+
+An jedem Stopp wird zu- und abgeladen, beides als **Liste**, auch wenn
+0.15.26 je Stopp nur einen Eintrag erzeugt. Die Beiladung mehrerer
+Sendungen zugleich füllt dieselben Listen, ohne dass das Modell noch
+einmal umgebaut werden muss. Abgerechnet wird an jedem Stopp einzeln:
+Verschleiß für die gefahrene Strecke, Erlös in die Buchhaltung, Kunde
+bewertet, Eintrag ins Protokoll.
+
+Die Rückrufe an den Stopps fangen bewusst **keine Umgebung** ein,
+sondern lesen alles aus der Stoppliste. Nur so überleben sie das Laden
+eines Spielstands - vorher ging bei einer wiederhergestellten Tour der
+Rückruf für die Beladung verloren.
+
+**Feste Buchung mit Risiko.** Beim Losschicken werden alle Aufträge
+der Tour reserviert und stehen niemandem sonst mehr zur Verfügung. Dafür
+rechnet die Planung jede Etappe der Reihe nach durch und warnt, bevor
+man sich bindet: verpasstes Ladefenster, nicht zu haltender
+Liefertermin, lange Standzeit bis zur Ladebereitschaft. `terminMachbar`
+nimmt dazu einen Startzeitpunkt entgegen - ohne den ließe sich eine
+Fahrt, die erst in drei Tagen beginnt, nur raten.
+
+Spielstand auf **Fassung 3**. Fuhrpark und Tourenliste zeigen „Etappe
+2 von 3" und den nächsten Halt.
+
+## Vorheriger Stand (v0.15.25)
 
 **Die Tourenplanung ist ein Frachtbrief geworden.** Vier Schritte,
 immer dieselben, immer an derselben Stelle:

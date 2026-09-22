@@ -30,7 +30,10 @@ const Speicher = (function () {
   // durch ein Update verliert.
   const ALT_SCHLUESSEL = "spedipro.spielstand";
 
-  const FASSUNG = 2;
+  // Fassung 3: Touren tragen eine Stoppliste mit Zu- und Abladung je
+  // Stopp. Bis Fassung 2 gehörte die Auftragsnummer der ganzen Fahrt,
+  // eine Tour konnte deshalb nur eine einzige Sendung befördern.
+  const FASSUNG = 3;
 
   // Höchstens so viel Zeit wird nachgeholt. Ohne Grenze würde eine
   // wochenlange Pause hunderte Touren auf einmal abwickeln.
@@ -173,6 +176,13 @@ const Speicher = (function () {
         von: e.route.stationen[0],
         nach: e.route.stationen[e.route.stationen.length - 1]
       })),
+      // Die Stopps tragen, was wo zu- und abgeladen wird. Ohne sie
+      // wüsste eine geladene Tour nicht mehr, was sie geladen hat.
+      stopps: (t.stopps || []).map((st) => ({
+        stadt: st.stadt,
+        laden: (st.laden || []).map((x) => ({ ...x })),
+        abladen: (st.abladen || []).map((x) => ({ ...x }))
+      })),
       etappeIndex: t.etappeIndex,
       gefahreneKm: t.gefahreneKm,
       gesamtGefahreneKm: t.gesamtGefahreneKm,
@@ -219,16 +229,20 @@ const Speicher = (function () {
    * Lädt einen Spielstand und holt die verstrichene Zeit nach.
    * @param {number|function} nr Platznummer, oder der Rückruf, wenn der
    *   aktive Platz gemeint ist (Aufruf wie vor der Platzverwaltung).
-   * @param {function} [beiAnkunft] Rückruf für Touren, die während der
-   *   Nachsimulation ankommen - die Tourenplanung hängt sich hier ein.
-   * @returns {null|object}
+   * @param {object|function} [rueckrufe] Rückrufe für Touren, die
+   *   während der Abwesenheit ankommen: { beiStopp, beiAnkunft }. Eine
+   *   einzelne Funktion gilt als beiAnkunft.
    */
-  function laden(nr, beiAnkunft) {
-    if (typeof nr === "function") {
-      beiAnkunft = nr;
-      nr = aktiverPlatz;
+  function laden(nr, rueckrufe) {
+    if (typeof nr === "function" || (nr && typeof nr === "object")) {
+      rueckrufe = nr;
+      nr = undefined;
     }
+    if (typeof rueckrufe === "function") rueckrufe = { beiAnkunft: rueckrufe };
+    rueckrufe = rueckrufe || {};
+
     const platz = PLAETZE.includes(Number(nr)) ? Number(nr) : aktiverPlatz;
+    aktivSetzen(platz);
 
     const stand = rohLesen(platz);
     if (!stand) return null;
@@ -268,7 +282,7 @@ const Speicher = (function () {
         ...f,
         fahrzeug,
         etappen,
-        beiAnkunft
+        ...rueckrufe
       });
     });
 

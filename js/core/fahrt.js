@@ -34,20 +34,34 @@ const Fahrt = (function () {
   /**
    * Startet eine Tour.
    *
-   * Eine Tour besteht aus Etappen. Üblich sind zwei: die Leerfahrt zur
-   * Ladestelle (Anfahrt) und der beladene Hauptlauf. Getrennt gehalten,
-   * weil sie unterschiedlich zählen - Leerkilometer kosten Geld, bringen
-   * aber keinen Erlös.
+   * Eine Tour ist eine Folge von STOPPS, dazwischen liegen die Etappen:
+   *
+   *     stopps[0] --etappen[0]--> stopps[1] --etappen[1]--> stopps[2]
+   *
+   * An jedem Stopp wird zu- und abgeladen. Beides sind Listen, auch
+   * wenn 0.15.26 je Stopp nur einen Eintrag erzeugt - die Beiladung
+   * mehrerer Sendungen zugleich füllt dieselben Listen, ohne dass das
+   * Modell noch einmal umgebaut werden müsste.
+   *
+   *     stopps: [{ stadt, laden: [{auftragNummer}], abladen: [...] }]
+   *     etappen: [{ typ: "anfahrt"|"hauptlauf", route }]
+   *
+   * `typ` sagt nur noch, ob auf dieser Etappe Ladung an Bord ist -
+   * Leerkilometer kosten Geld, bringen aber keinen Erlös.
    *
    * @param {object} auftrag
-   *   fahrzeug, etappen: [{typ:"anfahrt"|"hauptlauf", route}], ...
+   *   fahrzeug, stopps, etappen, beiStopp(t, index), beiAnkunft(t)
    */
   function starten(auftrag) {
     const etappen = auftrag.etappen || [{ typ: "hauptlauf", route: auftrag.route }];
+    const stopps = auftrag.stopps || stoppsAusEtappen(etappen);
 
     const eintrag = {
       ...auftrag,
       etappen,
+      stopps,
+      vonName: auftrag.vonName || stopps[0].stadt,
+      nachName: auftrag.nachName || stopps[stopps.length - 1].stadt,
       etappeIndex: 0,
       gefahreneKm: 0,          // innerhalb der aktuellen Etappe
       gesamtGefahreneKm: 0,
@@ -57,14 +71,29 @@ const Fahrt = (function () {
       abgeschlossen: false
     };
     laufende.push(eintrag);
+
+    // Am Startpunkt wird geladen, bevor es losgeht.
+    if (typeof eintrag.beiStopp === "function") eintrag.beiStopp(eintrag, 0);
+
     benachrichtigen();
     return eintrag;
+  }
+
+  /**
+   * Notbehelf für Touren ohne Stoppliste - etwa Leerfahrten, bei denen
+   * nichts zu laden ist.
+   */
+  function stoppsAusEtappen(etappen) {
+    const namen = [etappen[0].route.stationen[0]];
+    etappen.forEach((e) => namen.push(e.route.stationen[e.route.stationen.length - 1]));
+    return namen.map((stadt) => ({ stadt, laden: [], abladen: [] }));
   }
 
   /** Stellt eine gespeicherte Tour wieder her (siehe speicher.js). */
   function wiederherstellen(daten) {
     const eintrag = {
       ...daten,
+      stopps: daten.stopps || stoppsAusEtappen(daten.etappen),
       abgeschlossen: false
     };
     laufende.push(eintrag);
@@ -82,9 +111,37 @@ const Fahrt = (function () {
     return t.etappen.reduce((summe, e) => summe + e.route.km, 0);
   }
 
-  /** Ist das Fahrzeug schon beladen unterwegs? */
+  /**
+   * Was gerade an Bord ist: alles, was an einem schon erreichten Stopp
+   * geladen und noch nicht wieder abgeladen wurde. Gibt die Nummern der
+   * Aufträge zurück.
+   */
+  function ladung(t, bisStopp) {
+    const grenze = bisStopp === undefined ? t.etappeIndex : bisStopp;
+    const anBord = [];
+    for (let i = 0; i <= grenze && i < t.stopps.length; i++) {
+      (t.stopps[i].abladen || []).forEach((x) => {
+        const k = anBord.indexOf(x.auftragNummer);
+        if (k >= 0) anBord.splice(k, 1);
+      });
+      (t.stopps[i].laden || []).forEach((x) => anBord.push(x.auftragNummer));
+    }
+    return anBord;
+  }
+
+  /** Ist auf der laufenden Etappe Ladung an Bord? */
   function istBeladen(t) {
-    return aktuelleEtappe(t).typ === "hauptlauf";
+    return ladung(t).length > 0;
+  }
+
+  /** Der nächste Stopp, den das Fahrzeug ansteuert. */
+  function naechsterStopp(t) {
+    return t.stopps[Math.min(t.etappeIndex + 1, t.stopps.length - 1)];
+  }
+
+  /** Wie viele Stopps die Tour hat und der wievielte als Nächstes kommt. */
+  function stoppStand(t) {
+    return { nummer: t.etappeIndex + 1, gesamt: t.etappen.length };
   }
 
   /** Alle Touren um die vergangene Zeit weiterrücken. */
@@ -122,7 +179,7 @@ const Fahrt = (function () {
       while (t.gefahreneKm >= etappe.route.km && t.etappeIndex < t.etappen.length - 1) {
         t.gefahreneKm -= etappe.route.km;
         t.etappeIndex += 1;
-        if (typeof t.beiEtappenwechsel === "function") t.beiEtappenwechsel(t);
+        stoppErreicht(t, t.etappeIndex);
         etappe = aktuelleEtappe(t);
       }
 
@@ -144,11 +201,24 @@ const Fahrt = (function () {
       fertige.forEach((t) => {
         const i = laufende.indexOf(t);
         if (i >= 0) laufende.splice(i, 1);
+        // Am letzten Stopp wird ebenfalls abgeladen, erst danach ist
+        // die Tour zu Ende.
+        stoppErreicht(t, t.etappen.length);
         if (typeof t.beiAnkunft === "function") t.beiAnkunft(t);
       });
     }
 
     benachrichtigen();
+  }
+
+  /**
+   * Ein Stopp ist erreicht. Der Rückruf entscheidet, was dort geschieht -
+   * abladen, abrechnen, neu beladen. Er darf keine Umgebung einfangen,
+   * sondern muss aus `t.stopps[index]` lesen: Nach dem Laden eines
+   * Spielstands gibt es die alte Umgebung nicht mehr.
+   */
+  function stoppErreicht(t, index) {
+    if (typeof t.beiStopp === "function") t.beiStopp(t, index);
   }
 
   /** Geschwindigkeit dieser Tour - später je Streckenabschnitt. */
@@ -170,18 +240,17 @@ const Fahrt = (function () {
 
     Spielzeit.stundenAddieren(restStunden + ruhezeiten);
 
-    // Alle noch offenen Etappenwechsel nachholen (z.B. Beladung)
+    // Alle noch offenen Stopps nachholen (Zu- und Abladung unterwegs)
     while (tourEintrag.etappeIndex < tourEintrag.etappen.length - 1) {
       tourEintrag.etappeIndex += 1;
-      if (typeof tourEintrag.beiEtappenwechsel === "function") {
-        tourEintrag.beiEtappenwechsel(tourEintrag);
-      }
+      stoppErreicht(tourEintrag, tourEintrag.etappeIndex);
     }
     tourEintrag.gesamtGefahreneKm = gesamtKm(tourEintrag);
     tourEintrag.gefahreneKm = aktuelleEtappe(tourEintrag).route.km;
     tourEintrag.abgeschlossen = true;
     const i = laufende.indexOf(tourEintrag);
     if (i >= 0) laufende.splice(i, 1);
+    stoppErreicht(tourEintrag, tourEintrag.etappen.length);
     if (typeof tourEintrag.beiAnkunft === "function") tourEintrag.beiAnkunft(tourEintrag);
     benachrichtigen();
   }
@@ -245,6 +314,9 @@ const Fahrt = (function () {
     abschliessen,
     zuruecksetzen,
     aktuelleEtappe,
+    naechsterStopp,
+    stoppStand,
+    ladung,
     etappenFortschritt,
     gesamtKm,
     istBeladen,

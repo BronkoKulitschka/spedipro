@@ -275,30 +275,60 @@ const Auftraege = (function () {
 
   // ---------- Hilfen für die Disposition ----------
 
-  /** Bleibt genug Zeit, den Auftrag rechtzeitig zuzustellen? */
-  function terminMachbar(auftrag, abStadtName) {
+  /**
+   * Bleibt genug Zeit, den Auftrag rechtzeitig zuzustellen?
+   *
+   * @param {object} auftrag
+   * @param {string} abStadtName  Wo das Fahrzeug losfährt
+   * @param {Date} [abZeit]       Wann es dort losfährt. Voreingestellt
+   *   ist jetzt; bei einer Anschlussfracht ist es der Zeitpunkt, zu dem
+   *   das Fahrzeug den vorigen Stopp verlässt. Nur damit lässt sich
+   *   vorausplanen, ohne zu raten.
+   */
+  function terminMachbar(auftrag, abStadtName, abZeit) {
     const anfahrt = Route.berechne(abStadtName, auftrag.vonName);
     const hauptlauf = Route.berechne(auftrag.vonName, auftrag.nachName);
     if (!anfahrt || !hauptlauf) return null;
 
-    const gesamtKm = anfahrt.km + hauptlauf.km;
-    const fahrStunden = gesamtKm / Fahrt.SCHNITT_STANDARD;
-    const ruheStunden =
-      Math.floor(fahrStunden / Fahrt.LENKZEIT_STUNDEN) * Fahrt.RUHEZEIT_STUNDEN;
+    const start = abZeit ? new Date(abZeit) : Spielzeit.heute();
 
-    const ankunft = Spielzeit.heute();
-    ankunft.setHours(ankunft.getHours() + Math.ceil(fahrStunden + ruheStunden));
+    const ladeAnkunft = new Date(start.getTime());
+    ladeAnkunft.setHours(ladeAnkunft.getHours() + Math.ceil(dauerStunden(anfahrt.km)));
+
+    // Vor dem Ladefenster muss gewartet werden - die Ware steht noch
+    // nicht bereit. Danach ist der Verlader weg.
+    const ladeBeginn = new Date(auftrag.ladeBeginn);
+    const ladeEnde = new Date(auftrag.ladeEnde);
+    const wartet = ladeAnkunft < ladeBeginn;
+    const abfahrt = wartet ? new Date(ladeBeginn.getTime()) : new Date(ladeAnkunft.getTime());
+    const ladefensterVerpasst = ladeAnkunft > ladeEnde;
+
+    const ankunft = new Date(abfahrt.getTime());
+    ankunft.setHours(ankunft.getHours() + Math.ceil(dauerStunden(hauptlauf.km)));
 
     return {
       anfahrtKm: anfahrt.km,
       hauptlaufKm: hauptlauf.km,
-      gesamtKm,
+      gesamtKm: anfahrt.km + hauptlauf.km,
+      ladeAnkunft,
+      wartet,
+      wartestunden: wartet
+        ? Math.round((ladeBeginn - ladeAnkunft) / 3600000)
+        : 0,
+      ladefensterVerpasst,
       ankunft,
-      puenktlich: ankunft <= new Date(auftrag.lieferFrist),
+      puenktlich: !ladefensterVerpasst && ankunft <= new Date(auftrag.lieferFrist),
       stundenPuffer: Math.round(
         (new Date(auftrag.lieferFrist) - ankunft) / 3600000
       )
     };
+  }
+
+  /** Reine Fahrzeit einer Strecke samt vorgeschriebener Ruhezeiten. */
+  function dauerStunden(km) {
+    const fahrStunden = km / Fahrt.SCHNITT_STANDARD;
+    const ruhe = Math.floor(fahrStunden / Fahrt.LENKZEIT_STUNDEN) * Fahrt.RUHEZEIT_STUNDEN;
+    return fahrStunden + ruhe;
   }
 
   function beiAenderung(rueckruf) { beobachter.push(rueckruf); }
@@ -349,6 +379,7 @@ const Auftraege = (function () {
     freigeben,
     terminMachbar,
     verfallAm,
+    dauerStunden,
     restanteil,
     restStunden,
     beiAenderung,
