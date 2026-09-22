@@ -127,7 +127,48 @@ Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
 Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
 Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
 
-## Aktueller Stand (v0.15.32)
+## Aktueller Stand (v0.15.33)
+
+**Die Auftragsübersicht - und aus „Tourenplanung" wird „Disposition".**
+
+Bisher sah man Aufträge nur, wenn man in der Planung eine Stadt
+angetippt hatte. Wer wissen wollte, wo überhaupt etwas zu holen ist,
+musste Stadt für Stadt durchprobieren. Das neue Programm **Aufträge**
+legt alle offenen Aufträge in eine Liste.
+
+Jede Zeile rechnet mit: Zu jedem Auftrag wird das nächste freie,
+passende Fahrzeug gesucht, die Anfahrt dazugerechnet, Sprit und
+Standzeit abgezogen - und daraus **DM je Tag** gebildet. Das ist
+dieselbe Kennzahl wie in der Disposition, damit beide Programme
+dieselbe Sprache sprechen. Aufträge, für die kein passender Wagen
+frei ist, bleiben sichtbar, treten aber grau zurück und haben keinen
+Übernehmen-Knopf: Man soll sehen, was es gäbe, ohne es für eine
+Möglichkeit zu halten. Hinter der Schrift liegt wie in der Disposition
+ein Balken, hier für die verbleibende Frist am Markt.
+
+Dazu drei Filter (alle / ab meinen Standorten / ladbar), eine Suche
+über Städte, Ware und Auftraggeber, und Sortierung nach DM je Tag,
+Entgelt, Frist, Entfernung oder Nähe. **Übernehmen** öffnet die
+Disposition mit gesetzter Ladestadt und Fracht direkt beim Ziel.
+
+Zwei Dinge fielen beim Bauen auf und sind mitrepariert:
+
+- Nach „Neues Spiel" war die Börse leer. Der Auftragstakt hängt an der
+  Uhr, und die läuft nur, solange Fahrzeuge unterwegs sind - beim
+  Neustart also nie. `Speicher.neuBeginnen()` füllt die Börse jetzt
+  selbst.
+- **Tourenplanung heißt jetzt Disposition**, auf dem Schreibtisch, im
+  Fenstertitel und in der Taskleiste. Intern bleibt alles
+  `tourenplanung` bzw. `tour-*`: Der Name steckt in Fenster-Ids,
+  CSS-Klassen und Tests, und eine Umbenennung dort wäre viel Risiko
+  für null Gewinn.
+
+Geprüft mit `browsertest-auftragsuebersicht.js` (Umbenennung, gefüllte
+Börse, vollständige Liste, gesperrte Zeilen, drei Filter, Suche, beide
+Sortierungen, Übernehmen landet bei Schritt 2). Die ganze Suite - 18
+Tests - läuft grün.
+
+## Vorheriger Stand (v0.15.32)
 
 **Nachtrag zu 0.15.31: Nach „❮ Zur Tour" tat „+ Sendung ab …" nichts.**
 Der Knopf begann damit, die offene Sendung zu übernehmen - und brach

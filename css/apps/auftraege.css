@@ -1,0 +1,183 @@
+/* auftraege.css
+   Die Auftragsübersicht. Dieselbe Bildsprache wie die Disposition:
+   Balken hinter der Schrift bedeutet auch hier "lang ist gut", nur
+   misst er die verbleibende Standzeit am Markt. */
+
+.auf-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ---------- Kopfleiste ---------- */
+
+.auf-leiste {
+  flex: none;
+  padding: 4px;
+  background: var(--win-grey-light);
+  border-bottom: 1px solid var(--win-grey-dark);
+}
+
+.auf-reiter {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.auf-reiterknopf {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 3px 9px;
+  color: inherit;
+  background: var(--win-grey);
+  border: 1px solid var(--win-grey-dark);
+  border-top-color: var(--win-white, #ffffff);
+  border-left-color: var(--win-white, #ffffff);
+  cursor: pointer;
+}
+
+.auf-reiterknopf.aktiv {
+  font-weight: bold;
+  background: var(--win-grey-light);
+  border-color: var(--win-grey-darker);
+}
+
+.auf-suchzeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 6px;
+  font-size: 11px;
+}
+
+.auf-feld {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 2px 3px;
+  background: var(--win-white, #ffffff);
+  border: 1px solid var(--win-grey-darker);
+}
+
+#auf-suche { flex: 1 1 140px; min-width: 100px; }
+
+.auf-zaehler {
+  margin-top: 3px;
+  font-size: 10px;
+  color: var(--win-grey-darker);
+}
+
+/* ---------- Liste ---------- */
+
+.auf-liste {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 3px;
+}
+
+.auf-leer {
+  padding: 20px 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--win-grey-darker);
+}
+
+.auf-zeile {
+  position: relative;
+  isolation: isolate;
+  margin-bottom: 3px;
+  padding: 4px 78px 4px 5px;
+  background: var(--win-white, #ffffff);
+  border: 1px solid var(--win-grey-dark);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.auf-zeile:hover { background: #ffffe0; }
+.auf-zeile:active { background: var(--win-grey); }
+
+/* Ohne passenden Wagen bleibt die Zeile lesbar, tritt aber zurück:
+   Man soll sehen, was es gäbe, ohne es für eine Möglichkeit zu halten. */
+.auf-zeile.ohne-wagen { background: var(--win-grey-light); color: var(--win-grey-darker); }
+
+.auf-balken {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.auf-frist-viel  { background: rgba(47, 143, 63, 0.20); }
+.auf-frist-mittel{ background: rgba(217, 165, 32, 0.24); }
+.auf-frist-knapp { background: rgba(176, 48, 48, 0.22); }
+
+.auf-zeile > span:not(.auf-balken) {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+.auf-kopf {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.auf-weg {
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auf-geld { font-size: 13px; font-weight: bold; white-space: nowrap; }
+
+.auf-daten {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--win-grey-darker);
+}
+
+.auf-zeile:not(.ohne-wagen) .auf-daten { color: #303030; }
+
+.auf-nummer { font-family: "Courier New", monospace; font-size: 10px; }
+
+.auf-kunde {
+  padding: 0 3px;
+  background: #10305a;
+  color: #ffffff;
+}
+
+.auf-boerse {
+  padding: 0 3px;
+  background: var(--win-grey);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.auf-jetag {
+  padding: 0 3px;
+  font-weight: bold;
+  background: #10305a;
+  color: #ffffff;
+}
+
+.auf-warnung { color: #8a1414; }
+
+.auf-uebernehmen {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+
+.auf-zeile.ohne-wagen .auf-uebernehmen { display: none; }

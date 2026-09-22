@@ -3312,6 +3312,38 @@ const TourenplanungApp = (function () {
   }
 
   /**
+   * Einen Auftrag aus der Auftragsübersicht übernehmen: Disposition
+   * öffnen, Ladestadt wählen, Fracht setzen und im Ablauf beim Ziel
+   * einsetzen. Alles Weitere - Ziel bestätigen, Wagen wählen - gehört
+   * hierher und nicht in die Liste.
+   */
+  function auftragUebernehmen(nummer) {
+    const a = Auftraege.nachNummer(nummer);
+    if (!a || a.status !== Auftraege.STATUS.offen) return;
+
+    open();
+
+    const stadt = STAEDTE[a.vonName];
+    if (!stadt) return;
+
+    // Eine laufende Planung gehört zu einer anderen Stadt.
+    tourZuruecksetzen();
+    gewaehlteStadt = stadt;
+    tour.stadt = stadt;
+
+    tour.art = "auftrag";
+    tour.auftrag = a;
+    tour.tonnen = a.tonnen;
+    aktiveRoute = Route.berechne(a.vonName, a.nachName);
+    tour.schritt = "ziel";
+
+    dispositionAktualisieren();
+    markenZeichnen();
+    routeZeichnen();
+    aufStadtZentrieren(stadt);
+  }
+
+  /**
    * Ein Fahrzeug auf der Karte zeigen - gerufen aus dem Fuhrpark.
    * Fährt es gerade, wird seine Strecke hervorgehoben und der
    * Ausschnitt darauf gelegt. Steht es, wird sein Standort gewählt,
@@ -3725,7 +3757,7 @@ const TourenplanungApp = (function () {
   function open() {
     const ergebnis = WindowManager.open({
       id: "tourenplanung",
-      title: "Tourenplanung",
+      title: "Disposition",
       content: renderInhalt()
     });
 
@@ -3751,6 +3783,8 @@ const TourenplanungApp = (function () {
     starten: taktVerbinden,
     /** Ein Fahrzeug auf der Karte zeigen - benutzt der Fuhrpark. */
     fahrzeugZeigen,
+    /** Einen Auftrag hier hineinreichen - benutzt die Auftragsübersicht. */
+    auftragUebernehmen,
     /**
      * Rückrufe für wiederhergestellte Touren. Die Spielstandverwaltung
      * hängt sie an jede geladene Fahrt, damit an den Stopps auch nach
@@ -3767,9 +3801,11 @@ const TourenplanungApp = (function () {
   };
 })();
 
+// Die Kennung bleibt "tourenplanung": Sie steckt in Fenster-Kennungen,
+// CSS-Klassen und Tests. Umbenannt wurde, was der Spieler liest.
 AppRegistry.register({
   id: "tourenplanung",
-  name: "Tourenplanung",
+  name: "Disposition",
   open: TourenplanungApp.open
 });
 

@@ -531,6 +531,12 @@ const Speicher = (function () {
     Fahrt.zuruecksetzen();
     protokollLoeschen();
 
+    // Die Börse füllen, sonst beginnt das Spiel ohne einen einzigen
+    // Auftrag: Der Auftragstakt hängt an der Uhr, und die läuft erst,
+    // wenn ein Fahrzeug unterwegs ist. Die Stadtseiten erzeugen sich
+    // ihre Frachten zwar selbst, die Auftragsübersicht aber nicht.
+    Auftraege.auffrischen();
+
     speichern(platz);
     return true;
   }
