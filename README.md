@@ -127,7 +127,60 @@ Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
 Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
 Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
 
-## Aktueller Stand (v0.15.24)
+## Aktueller Stand (v0.15.25)
+
+**Die Tourenplanung ist ein Frachtbrief geworden.** Vier Schritte,
+immer dieselben, immer an derselben Stelle:
+
+    Stadt (Karte) -> 1 Fracht -> 2 Ziel -> 3 Fahrzeug -> 4 Losschicken
+
+Das Fahrzeug steht jetzt am Ende. Erst dort sind alle Randbedingungen
+bekannt - Aufbau, Tonnage, Entfernung, Termin -, und die Liste kann
+sortiert werden statt nur aufgezählt: je Zeile Erlös, Spritkosten und
+Deckungsbeitrag genau für diesen Wagen, der beste oben.
+
+**Die Fahrzeugliste im Dispositionsbereich ist ersatzlos entfallen.**
+Die Flotte steht als Ring auf der Karte, dort, wo sie hingehört. Wer
+Einzelheiten will, öffnet den Fuhrpark.
+
+**Gestaltungsregeln, die jetzt im ganzen Ablauf gelten:**
+
+*Die Zeile ist der Knopf.* Antippen wählt und schaltet weiter. Es gibt
+keinen Weiter-Knopf mehr; der einzige echte Knopf im Ablauf ist
+„Losschicken" - dadurch bekommt er Gewicht. Vier Klicks, vier
+Entscheidungen, kein Beiwerk.
+
+*Der Frachtbrief ersetzt Schrittleiste und Zurück-Knopf.* Vier Felder
+über der Liste, die sich füllen: Ab · Ladung · Nach · Wagen. Jede
+getroffene Wahl bleibt sichtbar stehen, jedes gefüllte Feld ist
+anklickbar und springt zu genau diesem Schritt zurück. Die Felder
+haben feste Höhe, damit beim Füllen nichts springt.
+
+*Ein Balken hinter der Schrift bedeutet überall dasselbe: lang ist
+gut.* Bei der Fracht die Restfrist, beim Ziel der Deckungsbeitrag im
+Verhältnis zum besten Ziel, beim Fahrzeug der Deckungsbeitrag im
+Verhältnis zum besten Wagen - rot, sobald der Liefertermin fällt. Man
+lernt es einmal und liest danach jede Liste, ohne zu lesen.
+
+*Der feste Auftrag bekommt keine Sonderbehandlung.* Sein Ziel steht
+fest, also zeigt Schritt 2 genau eine Zeile: den vorgegebenen Ort mit
+Frist und Entgelt. Derselbe Handgriff an derselben Stelle. Ein Ablauf,
+der je nach Frachtart mal drei und mal vier Schritte hat, lässt sich
+nicht einüben.
+
+*Nie eine Sackgasse.* Kann kein Fahrzeug vor Ort die Fracht nehmen,
+zeigt Schritt 3 die Leerfahrt-Anforderung statt einer Absage.
+
+*Die Karte antwortet auf jeden Schritt.* Stadt gewählt → Ausschnitt
+zoomt hin. Fracht gewählt → Bedarfsstädte pulsieren. Ziel gewählt →
+Route wird gezeichnet.
+
+Bei Spotladung hängt der Erlös an der Menge und damit am Fahrzeug, das
+im Zielschritt noch nicht gewählt ist. Gerechnet wird dort deshalb mit
+dem Kandidaten größter Zuladung; der Schrittkopf sagt, mit welcher
+Menge. Schritt 3 beziffert es dann je Zeile genau.
+
+## Vorheriger Stand (v0.15.24)
 
 **Der Fuhrpark zeigte nur ein Fahrzeug, wenn man ihn zuerst öffnete.**
 Das Laden des Spielstands hing am ersten Öffnen der Tourenplanung. Wer

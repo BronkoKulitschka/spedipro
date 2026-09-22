@@ -583,39 +583,28 @@
 /* Der Inhalt muss über den Balken. Der Balken selbst ist
    ausgenommen - sonst gewinnt diese Regel gegen .tour-fristbalken und
    macht ihn wieder zu einem gewöhnlichen Element im Textfluss. */
-.tour-auswahl > span:not(.tour-fristbalken) {
+.tour-auswahl > span:not(.tour-fristbalken):not(.tour-weiterpfeil) {
   position: relative;
   z-index: 1;
 }
 
-/* Weiter-Pfeil am Zeilenende: auswählen und gleich weiter, ohne bis
-   ans Listenende zu scrollen. */
+/* Der Haken am Zeilenende. Kein eigener Knopf mehr: Die ganze Zeile
+   wählt und schaltet weiter, der Haken zeigt nur, dass sie das tut. */
 .tour-weiterpfeil {
   position: absolute;
-  right: 3px;
-  top: 3px;
-  bottom: 3px;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 2;
-  width: 20px;
-  padding: 0;
-  font-family: inherit;
+  width: 14px;
+  text-align: center;
   font-size: 13px;
   line-height: 1;
   color: var(--win-grey-darker);
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid var(--win-grey-dark);
-  cursor: pointer;
+  pointer-events: none;
 }
 
-.tour-weiterpfeil:active {
-  background: var(--win-grey);
-}
-
-.tour-auswahl.gewaehlt .tour-weiterpfeil {
-  color: var(--win-white);
-  background: rgba(255, 255, 255, 0.22);
-  border-color: var(--win-white);
-}
+.tour-auswahl.gewaehlt .tour-weiterpfeil { color: var(--win-white); }
 
 .tour-auswahl:active { background: var(--win-grey); }
 
@@ -1065,72 +1054,145 @@
 /* Zeigt dauerhaft, wo jedes eigene Fahrzeug steht. Ein Klick auf eine
    Zeile wählt die Stadt aus und rückt sie in die Kartenmitte. */
 
-/* Die eigene Flotte steht in jedem Schritt fest oben. Damit sie bei
-   wachsendem Fuhrpark nicht die halbe Seite frisst, scrollt sie
-   ab etwa vier Zeilen in sich selbst. */
-.tour-flotte {
+/* ---------- Frachtbrief ----------
+   Ersetzt Schrittleiste und Zurück-Knopf: Er füllt sich mit jeder
+   Wahl, und jedes gefüllte Feld ist der Rückweg zu diesem Schritt. */
+.tour-frachtbrief {
   flex: none;
   margin-bottom: 6px;
-  padding: 5px 7px;
+  padding: 4px 6px 6px 6px;
   background: var(--win-grey-light);
   border: 1px solid var(--win-grey-dark);
-  max-height: 124px;
-  overflow-y: auto;
 }
 
-.tour-flotte .tour-warentitel {
-  position: sticky;
-  top: -5px;
-  background: var(--win-grey-light);
-  padding-bottom: 2px;
-}
-
-/* Aus dem Fuhrpark heraus verfolgtes Fahrzeug */
-.tour-flotteneintrag.verfolgt {
-  background: var(--win-blue, #000080);
-  color: var(--win-white, #ffffff);
-}
-
-.tour-stadtleiste {
+.tour-frachtbrief-kopf {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 6px;
-  flex: none;
+  margin-bottom: 4px;
 }
 
-.tour-stadtleiste .tour-stadtkopf { flex: 1; min-width: 0; }
-
-.tour-stadtleiste .win98-button {
-  flex: none;
+.tour-frachtbrief-titel {
   font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--win-grey-darker);
+}
+
+.tour-frachtbrief-kopf .win98-button {
+  font-size: 11px;
+  line-height: 1;
   padding: 2px 6px;
 }
 
-.tour-flottenliste {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  max-height: 132px;
-  overflow-y: auto;
+.tour-frachtbrief-felder {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
 }
 
-.tour-flotteneintrag {
+/* Feste Höhe: Die Felder dürfen beim Füllen nicht wachsen, sonst
+   springt die Liste darunter unter dem Finger weg. */
+.tour-bf-feld {
+  min-width: 0;
+  height: 38px;
+  padding: 2px 4px;
+  background: var(--win-white, #ffffff);
+  border: 1px solid var(--win-grey-dark);
+  overflow: hidden;
+}
+
+.tour-bf-feld.offen {
+  background: var(--win-grey);
+  border-style: dashed;
+}
+
+.tour-bf-feld.wechselbar { cursor: pointer; }
+.tour-bf-feld.wechselbar:hover { background: #ffffcc; }
+
+.tour-bf-marke {
+  display: block;
+  font-size: 9px;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--win-grey-darker);
+}
+
+.tour-bf-wert {
+  display: block;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tour-bf-zusatz {
+  display: block;
+  font-size: 9px;
+  line-height: 1.1;
+  color: var(--win-grey-darker);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Schrittkopf ----------
+   Was ist jetzt zu tun. Steht immer an derselben Stelle. */
+.tour-schrittkopf {
+  flex: none;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 2px;
-  border-bottom: 1px dotted var(--win-grey-dark);
-  cursor: pointer;
+  align-items: baseline;
+  gap: 5px;
+  margin-bottom: 5px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--win-grey-dark);
 }
 
-.tour-flotteneintrag:last-child { border-bottom: none; }
-
-.tour-flotteneintrag:hover {
-  background: var(--win-blue, #000080);
+.tour-schrittkopf-nr {
+  flex: none;
+  min-width: 15px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: bold;
   color: var(--win-white, #ffffff);
+  background: var(--win-blue, #000080);
+  padding: 1px 3px;
 }
 
+.tour-schrittkopf-text {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.tour-schrittkopf-hinweis {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--win-grey-darker);
+  white-space: nowrap;
+}
+
+/* ---------- Losschicken ----------
+   Der einzige echte Knopf im ganzen Ablauf - entsprechend groß. */
+.tour-startleiste {
+  flex: none;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--win-grey-dark);
+  text-align: center;
+}
+
+.tour-startknopf {
+  font-size: 14px;
+  font-weight: bold;
+  padding: 8px 22px;
+}
+
+/* Die Flottenliste in der Tourenplanung ist entfallen - die Fahrzeuge
+   stehen als Marken auf der Karte. Der farbige Punkt bleibt, er kennzeichnet
+   auch in der Fahrzeugliste des Ablaufs die Lackierung. */
 .tour-flottenpunkt {
   flex: 0 0 auto;
   width: 9px;
@@ -1139,34 +1201,6 @@
   border-radius: 50%;
   box-shadow: 0 0 0 1px rgba(255,255,255,0.85);
 }
-
-.tour-flotten-kennzeichen {
-  flex: 0 0 auto;
-  font-weight: bold;
-  font-size: 12px;
-}
-
-.tour-flotten-ort {
-  flex: 1 1 auto;
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tour-flotten-status {
-  flex: 0 0 auto;
-  font-size: 10px;
-  padding: 1px 5px;
-  border: 1px solid var(--win-grey-darker);
-  background: var(--win-grey);
-  color: #10100c;
-}
-
-.tour-flotten-frei      { background: #2f8f3f; color: #ffffff; }
-.tour-flotten-unterwegs { background: #d9a520; color: #10100c; }
-.tour-flotten-ruht      { background: #7f7f9f; color: #ffffff; }
-.tour-flotten-steht     { background: #b03030; color: #ffffff; }
 
 /* Stadt mit eigenem Fahrzeug: Ring auf der Karte */
 .tour-marke-flotte {
