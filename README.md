@@ -127,7 +127,88 @@ Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
 Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
 Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
 
-## Aktueller Stand (v0.15.33)
+## Aktueller Stand (v0.15.34)
+
+**Platz beim Zusammenstellen einer Tour.** Gemeldet wurde: Mit vier
+Etappenzielen bleibt unten von der Auftragsliste nichts mehr übrig.
+Nachgemessen auf einem Telefon (400×880) im Frachtschritt:
+
+| im Frachtbrief | Frachtbrief | Fenster der Liste | Inhalt der Liste |
+|---|---|---|---|
+| leer | 71 px | 294 px | 954 px |
+| 1 Sendung | 128 px | 237 px | 954 px |
+| 2 Sendungen | 160 px | 205 px | 954 px |
+| 3 Sendungen | 192 px | 173 px | 954 px |
+
+Der Dispositionsbereich war mit 391 px fest - weniger als die Hälfte
+des Bildschirms. Bei drei Sendungen rollte man 954 px durch ein
+173-px-Fenster. Warnhinweise machen es schlimmer: Eine Etappenzeile
+misst 32 px, mit Hinweis rund das Doppelte. Drei Gegenmaßnahmen:
+
+**1. Ein Fensterteiler zwischen Karte und Disposition.** Eine Leiste
+mit Griffrillen, wie sie jedes Fenster dieser Zeit hatte. Ziehen teilt
+neu auf, Doppeltippen springt durch drei Rasten (Karte groß ·
+halbe-halbe · Liste groß), die Teilung wird gemerkt. Die Untergrenzen
+stehen in `teilungSetzen()` und rechnen in Pixeln gegen die echte
+Fensterhöhe - ein `min-height` im Stylesheet hätte beim Ziehen
+dagegengearbeitet und den Teiler vom Finger abgekoppelt. Nach jeder
+Höhenänderung werden Marken und Route neu gesetzt, weil sie außerhalb
+der gezoomten Bühne liegen und aus der Rahmengröße berechnet werden.
+
+**2. Die Sendungsliste im Frachtbrief klappt ab zwei Sendungen ein.**
+Stehen bleibt eine Zeile: `▸ 3 Sendungen · 12.000 DM · 15,0 t` und,
+wenn es welche gibt, die Zahl der Hinweise. Die angefangene Sendung
+bleibt immer sichtbar - sie trägt den Verwerfen-Knopf. Aufgeklappt hat
+die Liste einen Deckel von 96 px und rollt darüber hinaus selbst.
+
+Kurz war der Deckel auf dem ganzen Frachtbrief - das war falsch und
+ist im Stylesheet als Warnung vermerkt: Weggerollt wurde dann auch die
+Feldzeile *Ab · Ladung · Nach · Wagen*, und die ist der einzige Rückweg
+in einen früheren Schritt. Gedeckelt wird jetzt nur das eine Stück,
+das wächst; alles andere im Brief hat feste Höhe. `browsertest-platz.js`
+prüft genau das mit.
+
+Nebenbei aufgefallen: Die Überschrift zählte `Frachtbrief · 4
+Sendungen`, die Zusammenfassung darunter `3 Sendungen` - die eine
+zählte die angefangene Sendung mit, die andere nicht. Zwei
+verschiedene Zahlen übereinander sind schlimmer als keine, deshalb
+schweigt die Überschrift jetzt, sobald es die Zusammenfassung gibt.
+
+**3. Der Ladungsbalken sagt, was noch draufpasst.** Bisher stand dort
+der Stand (`15,0 / 24,0 t`), gebraucht wird beim Zusammenstellen aber
+die Gegenfrage. Neu darüber eine Zeile:
+
+> Ab Rostock frei · **10,0 t** · 47 m³
+
+Zwei Dinge daran sind wichtig. Erstens gilt der Rest **am Ladeort**,
+nicht für die Tour: Nach einem Abladestopp ist wieder Platz, auch wenn
+der Auflieger vorher randvoll war. Die Balken zeigen weiterhin den
+vollsten Abschnitt, also die Grenze der Tour als Ganzes - beides zu
+vermengen wäre der häufigste Irrtum. Zweitens wird die Grenze
+hervorgehoben, die **zuerst** greift: Dämmstoff füllt den Laderaum,
+Stahl das Gewicht, und wer nur auf die Tonnen schaut, wundert sich.
+
+Ist es am Ladeort eng und weiter hinten in der Tour wieder frei, kommt
+`ab Hannover 19,0 t` dazu - aber nur dann, sonst wäre es eine Zeile,
+die immer dasteht und nie etwas sagt. Vor dem Fahrzeugschritt gibt es
+noch keinen Wagen; gerechnet wird dann gegen den Wagen, mit dem auch
+der Zielschritt rechnet, und das steht als `gegen F-SP 101` dabei.
+
+In der Frachtliste schließlich sagen die Zeilen, die passen, jetzt
+auch etwas: `5,0 t blieben frei`. Den umgekehrten Fall gab es schon
+(`Neben der bisherigen Ladung nur noch 9,0 t frei`), den positiven
+nicht - man musste jede Zeile einzeln probieren.
+
+Ergebnis derselben Messung nach dem Umbau: Die Liste bleibt bei 223 px,
+gleichgültig ob zwei, drei oder vier Sendungen im Brief stehen, und
+mit dem Teiler auf „Liste groß" sind es rund 380 px.
+
+Geprüft mit `browsertest-platz.js` (Rasten, Ziehen, gemerkte Teilung,
+gleichbleibende Listenhöhe, Ein- und Ausklappen, Höhendeckel,
+erreichbare Feldzeile, Restmenge auf die Nachkommastelle). Die ganze
+Suite - 19 Tests - läuft grün.
+
+## Vorheriger Stand (v0.15.33)
 
 **Die Auftragsübersicht - und aus „Tourenplanung" wird „Disposition".**
 

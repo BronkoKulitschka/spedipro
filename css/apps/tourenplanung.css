@@ -8,19 +8,73 @@
 }
 
 /* ---------- Kartenbereich ----------
-   Feste Höhe über einen Anteil der Fensterhöhe. Bewusst `flex: none`
-   plus `flex-shrink: 0`: der Bereich darf sich unter KEINEN Umständen
-   verkleinern, egal wie viel Inhalt unten in der Disposition steht.
-   Genau das war beim Fuhrpark das Problem, wo die wachsende Historie
-   das Bild zusammengedrückt hat. */
+   Höhe über einen Anteil der Fensterhöhe. Bewusst `flex: none` plus
+   `flex-shrink: 0`: der Bereich darf sich unter KEINEN Umständen von
+   selbst verkleinern, egal wie viel Inhalt unten in der Disposition
+   steht. Genau das war beim Fuhrpark das Problem, wo die wachsende
+   Historie das Bild zusammengedrückt hat.
+
+   Den Anteil setzt seit 0.15.34 der Fensterteiler über
+   --tour-kartenanteil. KEIN min-height hier: Die Untergrenze steckt in
+   teilungSetzen() und rechnet in Pixeln gegen die echte Fensterhöhe -
+   ein min-height würde beim Ziehen dagegen arbeiten und den Teiler
+   vom Finger abkoppeln. */
 .tour-kartenbereich {
   flex: none;
   flex-shrink: 0;
-  height: 50%;
-  min-height: 220px;
+  height: var(--tour-kartenanteil, 50%);
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+/* ---------- Fensterteiler ----------
+   Die Leiste zwischen Karte und Disposition, wie sie jedes Fenster
+   dieser Zeit hatte: schmal, mit Griffrillen in der Mitte, und beim
+   Ziehen ändert sich der Zeiger. Der Treffbereich ist über das
+   Pseudoelement nach oben und unten vergrößert - 10 px sind mit dem
+   Finger sonst nicht zu fassen. */
+.tour-teiler {
+  position: relative;
+  flex: none;
+  height: 10px;
+  margin: -2px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: row-resize;
+  touch-action: none;
+  background: var(--win-grey);
+}
+
+.tour-teiler::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -6px;
+  bottom: -6px;
+}
+
+/* Griffrillen wie an einer Werkzeugleiste: zwei Rillen, damit die
+   Leiste als anfassbar zu erkennen ist. Einfarbig ging sie im Grau
+   des Fensters unter. */
+.tour-teiler-griff {
+  width: 48px;
+  height: 6px;
+  background:
+    linear-gradient(var(--win-grey-darker) 1px, var(--win-white, #ffffff) 1px 2px,
+                    transparent 2px 4px,
+                    var(--win-grey-darker) 4px 5px, var(--win-white, #ffffff) 5px);
+}
+
+.tour-teiler:hover .tour-teiler-griff,
+.tour-teiler:focus-visible .tour-teiler-griff { width: 76px; }
+
+.tour-teiler.zieht { background: var(--win-blue-title); }
+.tour-teiler.zieht .tour-teiler-griff {
+  width: 76px;
+  background: var(--win-white, #ffffff);
 }
 
 .tour-karte-rahmen {
@@ -1057,6 +1111,12 @@
 /* ---------- Frachtbrief ----------
    Ersetzt Schrittleiste und Zurück-Knopf: Er füllt sich mit jeder
    Wahl, und jedes gefüllte Feld ist der Rückweg zu diesem Schritt. */
+/* KEIN max-height mit overflow auf dem Frachtbrief als Ganzem. Das
+   war in 0.15.34 kurz drin und war falsch: Gedeckelt wurde dann auch
+   die Feldzeile (Ab · Ladung · Nach · Wagen), und die ist der einzige
+   Rückweg in einen früheren Schritt - weggerollt war sie unerreichbar.
+   Gedeckelt wird stattdessen genau das eine Stück, das wächst: die
+   Sendungsliste. Alles andere im Brief hat feste Höhe. */
 .tour-frachtbrief {
   flex: none;
   margin-bottom: 6px;
@@ -1277,9 +1337,69 @@
    Zwei Balken, weil zwei Grenzen gelten: Gewicht und Laderaum laufen
    unterschiedlich schnell voll. */
 .tour-ladungsstand {
+  margin-bottom: 5px;
+}
+
+.tour-ladungsbalken-reihe {
   display: flex;
   gap: 5px;
-  margin-bottom: 5px;
+}
+
+/* ---------- Restplatz ----------
+   Die Balken sagen, wie voll der Auflieger auf dem vollsten Abschnitt
+   wird. Was man beim Zusammenstellen einer Tour aber braucht, ist die
+   Gegenfrage: Was geht hier noch drauf? Die Zeile nennt deshalb den
+   Rest am LADEORT, nicht das Maximum der Tour - nach einem
+   Abladestopp ist wieder Platz. */
+.tour-restplatz {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 5px;
+  margin-bottom: 3px;
+  font-size: 11px;
+}
+
+.tour-restplatz-marke { color: var(--win-grey-darker); }
+
+.tour-restwert {
+  padding: 0 3px;
+  font-weight: bold;
+  background: var(--win-grey);
+  border: 1px solid var(--win-grey-dark);
+}
+
+/* Die Grenze, die zuerst greift. Ohne sie wundert man sich, warum bei
+   halbem Gewicht nichts mehr draufgeht. */
+.tour-restwert.eng {
+  color: var(--win-white, #ffffff);
+  background: #8a5a14;
+  border-color: #5c3c0c;
+}
+
+.tour-restplatz.voll .tour-restwert {
+  color: var(--win-white, #ffffff);
+  background: #8a1414;
+  border-color: #5c0c0c;
+}
+
+.tour-restspaeter {
+  padding: 0 3px;
+  color: #1c6b2c;
+  background: #e2f0e2;
+  border: 1px solid #9cc49c;
+}
+
+.tour-restplatz-wagen {
+  font-style: italic;
+  color: var(--win-grey-darker);
+}
+
+/* In der Frachtliste: was nach dieser Sendung noch frei bliebe. */
+.tour-restmarke {
+  padding: 0 3px;
+  color: #1c6b2c;
+  background: #e2f0e2;
 }
 
 .tour-ladungsbalken {
@@ -1368,6 +1488,64 @@
   padding: 0;
   border: 1px solid var(--win-grey-dark);
   background: var(--win-white, #ffffff);
+}
+
+/* Leer bleibt sie, wenn eingeklappt ist und nichts in Arbeit -
+   dann soll auch kein Rahmen dastehen. */
+.tour-etappenliste:empty { display: none; }
+
+/* Höhendeckel. Eine Zeile misst rund 32 px, mit Warnhinweis das
+   Doppelte - vier gewarnte Sendungen wären 230 px und hätten von der
+   Auswahlliste darunter nichts übrig gelassen. Deshalb hier ein
+   fester Deckel mit eigenem Rollbalken statt einer Begrenzung auf
+   eine Zahl von Zeilen. */
+.tour-etappenliste.aufgeklappt {
+  max-height: 96px;
+  overflow-y: auto;
+}
+
+/* ---------- Umschalter über der Sendungsliste ----------
+   Eingeklappt ist er die Zusammenfassung, aufgeklappt die
+   Überschrift. In beiden Fällen dieselbe Zeile an derselben Stelle. */
+.tour-etappen-schalter {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  width: 100%;
+  margin: 0 0 3px 0;
+  padding: 3px 5px;
+  font-family: inherit;
+  font-size: 11px;
+  text-align: left;
+  color: inherit;
+  background: var(--win-grey);
+  border: 1px solid var(--win-grey-dark);
+  border-top-color: var(--win-white, #ffffff);
+  border-left-color: var(--win-white, #ffffff);
+  cursor: pointer;
+}
+
+.tour-etappen-schalter:active { background: var(--win-grey-light); }
+
+.tour-etappen-pfeil {
+  flex: none;
+  width: 10px;
+  font-size: 9px;
+}
+
+.tour-etappen-summe {
+  flex: 1;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tour-etappen-hinweise {
+  flex: none;
+  padding: 0 3px;
+  color: var(--win-white, #ffffff);
+  background: #8a1414;
 }
 
 .tour-etappe {

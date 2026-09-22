@@ -172,11 +172,138 @@ const TourenplanungApp = (function () {
           </div>
         </div>
 
+        <!-- Fensterteiler. Wie im Explorer: ziehen teilt neu auf,
+             Doppeltippen springt zur nächsten Raste. Ohne ihn bekam
+             die Disposition feste 50 % - zu wenig, sobald im
+             Frachtbrief mehrere Sendungen stehen. -->
+        <div class="tour-teiler" id="tour-teiler"
+             role="separator" aria-orientation="horizontal" tabindex="0"
+             title="Ziehen teilt Karte und Liste neu auf · Doppeltippen springt zur nächsten Raste">
+          <span class="tour-teiler-griff"></span>
+        </div>
+
         <div class="tour-disposition" id="tour-disposition">
           ${renderDisposition()}
         </div>
       </div>
     `;
+  }
+
+  // ---------- Fensterteiler ----------
+  //
+  // Karte und Disposition teilen sich die Fensterhöhe. Wieviel jede
+  // bekommt, entscheidet der Spieler und nicht das Programm: Beim
+  // Stadtwählen will man Karte, beim Zusammenstellen einer Tour mit
+  // vier Sendungen will man Liste. Die Teilung überlebt das Schließen
+  // des Fensters.
+
+  const TEILUNG_SCHLUESSEL = "spedipro.kartenanteil";
+  const TEILER_RASTEN = [0.72, 0.5, 0.3];   // Karte groß · halbe-halbe · Liste groß
+  const KARTE_MIN_PX = 150;
+  const DISPO_MIN_PX = 150;
+
+  let kartenAnteil = 0.5;
+
+  function teilungLesen() {
+    try {
+      const roh = window.localStorage.getItem(TEILUNG_SCHLUESSEL);
+      const wert = Number(roh);
+      if (roh !== null && Number.isFinite(wert) && wert > 0.1 && wert < 0.95) {
+        kartenAnteil = wert;
+      }
+    } catch (e) { /* privater Modus: dann eben die Voreinstellung */ }
+  }
+
+  function teilungSchreiben() {
+    try {
+      window.localStorage.setItem(TEILUNG_SCHLUESSEL, kartenAnteil.toFixed(3));
+    } catch (e) { /* nicht schlimm, die Teilung gilt dann nur diese Sitzung */ }
+  }
+
+  /**
+   * Setzt den Anteil und hält dabei beide Seiten benutzbar: Die Karte
+   * darf nie unter KARTE_MIN_PX rutschen, die Disposition nie unter
+   * DISPO_MIN_PX - sonst zieht man sich selbst in eine Sackgasse.
+   */
+  function teilungSetzen(anteil, speichern) {
+    const layout = fensterElement && fensterElement.querySelector(".tour-layout");
+    if (!layout) return;
+
+    const hoehe = layout.clientHeight;
+    let a = anteil;
+    if (hoehe > KARTE_MIN_PX + DISPO_MIN_PX) {
+      a = Math.max(KARTE_MIN_PX / hoehe, Math.min(1 - DISPO_MIN_PX / hoehe, a));
+    }
+    kartenAnteil = a;
+    layout.style.setProperty("--tour-kartenanteil", (a * 100).toFixed(2) + "%");
+
+    // Die Marken liegen außerhalb der gezoomten Bühne und werden aus
+    // der Rahmengröße berechnet - nach jeder Höhenänderung also neu.
+    versatzBegrenzen();
+    ansichtAnwenden();
+    if (speichern) teilungSchreiben();
+  }
+
+  /** Doppeltippen: zur nächsten Raste, der Reihe nach im Kreis. */
+  function naechsteRaste() {
+    let i = 0;
+    let beste = Infinity;
+    TEILER_RASTEN.forEach((r, k) => {
+      const d = Math.abs(r - kartenAnteil);
+      if (d < beste) { beste = d; i = k; }
+    });
+    teilungSetzen(TEILER_RASTEN[(i + 1) % TEILER_RASTEN.length], true);
+  }
+
+  function teilerEreignisse() {
+    const teiler = fensterElement && fensterElement.querySelector("#tour-teiler");
+    const layout = fensterElement && fensterElement.querySelector(".tour-layout");
+    if (!teiler || !layout) return;
+
+    let zieht = false;
+
+    teiler.addEventListener("pointerdown", (e) => {
+      zieht = true;
+      teiler.setPointerCapture(e.pointerId);
+      teiler.classList.add("zieht");
+      e.preventDefault();
+    });
+
+    teiler.addEventListener("pointermove", (e) => {
+      if (!zieht) return;
+      const kasten = layout.getBoundingClientRect();
+      if (kasten.height <= 0) return;
+      teilungSetzen((e.clientY - kasten.top) / kasten.height, false);
+    });
+
+    const loslassen = (e) => {
+      if (!zieht) return;
+      zieht = false;
+      teiler.classList.remove("zieht");
+      try { teiler.releasePointerCapture(e.pointerId); } catch (x) { /* egal */ }
+      teilungSchreiben();
+    };
+    teiler.addEventListener("pointerup", loslassen);
+    teiler.addEventListener("pointercancel", loslassen);
+
+    teiler.addEventListener("dblclick", naechsteRaste);
+
+    // Auf dem Telefon kommt kein dblclick, wenn dazwischen gezogen
+    // wurde - deshalb zusätzlich zwei kurze Tipps von Hand zählen.
+    let letzterTipp = 0;
+    teiler.addEventListener("pointerup", (e) => {
+      if (e.pointerType === "mouse") return;
+      const jetzt = Date.now();
+      if (jetzt - letzterTipp < 400) { naechsteRaste(); letzterTipp = 0; }
+      else letzterTipp = jetzt;
+    });
+
+    // Mit der Tastatur: Pfeile verschieben, Eingabe rastet weiter.
+    teiler.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp") { teilungSetzen(kartenAnteil - 0.04, true); e.preventDefault(); }
+      else if (e.key === "ArrowDown") { teilungSetzen(kartenAnteil + 0.04, true); e.preventDefault(); }
+      else if (e.key === "Enter" || e.key === " ") { naechsteRaste(); e.preventDefault(); }
+    });
   }
 
   function renderDisposition() {
@@ -721,6 +848,26 @@ const TourenplanungApp = (function () {
   // ---------- Der Frachtbrief ----------
 
   /**
+   * Ob die Sendungsliste im Frachtbrief aufgeklappt ist. Absichtlich
+   * NICHT im Spielstand: eine Ansichtssache, die beim nächsten Öffnen
+   * wieder auf "zu" stehen darf.
+   */
+  let etappenAufgeklappt = false;
+
+  /**
+   * Der Zusatz hinter "Frachtbrief". Ab zwei festgelegten Sendungen
+   * bleibt er leer, weil direkt darunter die Zusammenfassungszeile
+   * steht - und die zählt anders: Sie meint die festgelegten
+   * Sendungen, die Überschrift meinte auch die angefangene mit. Zwei
+   * verschiedene Zahlen übereinander sind schlimmer als keine.
+   */
+  function briefZusatz() {
+    if (tour.geplant.length >= 2) return "";
+    const zahl = tour.geplant.length + (aktuelleEtappeAlsPlan() ? 1 : 0);
+    return zahl >= 2 ? ` · ${zahl} Sendungen` : "";
+  }
+
+  /**
    * Die Kopfzeile, die sich mit jeder Wahl füllt. Sie zeigt den Stand
    * der Planung und ist zugleich der Rückweg: Ein gefülltes Feld
    * antippen heißt, diesen Schritt noch einmal zu machen.
@@ -764,8 +911,12 @@ const TourenplanungApp = (function () {
     return `
       <div class="tour-frachtbrief">
         <div class="tour-frachtbrief-kopf">
+          <!-- Die Zahl steht nur dann hier, wenn es keine
+               Zusammenfassungszeile gibt. Sonst stünden zwei
+               verschiedene Zahlen übereinander: Die Überschrift zählte
+               die angefangene Sendung mit, die Zusammenfassung nicht. -->
           <span class="tour-frachtbrief-titel">
-            Frachtbrief${tour.geplant.length ? ` · ${tour.geplant.length + 1} Sendungen` : ""}
+            Frachtbrief${briefZusatz()}
           </span>
           ${tour.art ? `
             <button class="win98-button bevel-out" id="tour-btn-etappe-verwerfen"
@@ -800,15 +951,55 @@ const TourenplanungApp = (function () {
     `;
   }
 
-  /** Die schon festgelegten Sendungen, jede mit ihrem Warnhinweis. */
+  /**
+   * Die schon festgelegten Sendungen, jede mit ihrem Warnhinweis.
+   *
+   * Ab zwei Sendungen ist die Liste eingeklappt. Grund: Der
+   * Frachtbrief steht fest über der Auswahlliste, und jede Zeile hier
+   * nimmt der Liste darunter Platz weg - eine Zeile mit Warnhinweis
+   * sogar doppelt so viel. Bei vier Sendungen blieb von der Liste
+   * nichts mehr übrig. Eingeklappt bleibt stehen, was man beim Planen
+   * wirklich braucht: die Summe, die Zahl der Hinweise und die
+   * Sendung, an der gerade gearbeitet wird. Aufgeklappt bekommt die
+   * Liste einen Höhendeckel mit eigenem Rollbalken, damit sie auch
+   * mit lauter Warnhinweisen nie wieder über den Bereich hinauswächst.
+   */
   function etappenliste() {
     if (tour.geplant.length === 0) return "";
     const plan = tourPlan(tour.geplant);
     const offen = aktuelleEtappeAlsPlan();
+    const einklappbar = tour.geplant.length >= 2;
+    const zu = einklappbar && !etappenAufgeklappt;
+
+    const warnungen = plan && plan.je
+      ? plan.je.filter((x) => x.warnung).length
+      : 0;
+    const summe = tour.geplant.reduce((s, e) => s + e.entgelt, 0);
+    const tonnen = tour.geplant.reduce((s, e) => s + e.tonnen, 0);
+
+    const kopf = einklappbar ? `
+      <button class="tour-etappen-schalter ${zu ? "zu" : "auf"}" id="tour-btn-etappen-klappen"
+              title="${zu ? "Alle Sendungen zeigen" : "Liste einklappen"}">
+        <span class="tour-etappen-pfeil">${zu ? "&#9656;" : "&#9662;"}</span>
+        <span class="tour-etappen-summe">
+          ${tour.geplant.length} Sendungen · ${summe.toLocaleString("de-DE")} DM · ${tonnen.toFixed(1)} t
+        </span>
+        ${warnungen ? `<span class="tour-etappen-hinweise">${warnungen} Hinweis${warnungen > 1 ? "e" : ""}</span>` : ""}
+      </button>` : "";
+
+    // Eingeklappt bleibt die angefangene Sendung sichtbar - sie ist
+    // das, woran man gerade arbeitet, und trägt den Verwerfen-Knopf.
+    const zeigen = zu ? [] : tour.geplant;
+
+    // Eingeklappt und nichts in Arbeit: Dann bleibt vom <ol> nur der
+    // Rahmen übrig. Ein :empty im Stylesheet greift nicht, weil die
+    // Vorlage Leerzeichen enthält - also gar nicht erst ausgeben.
+    if (zeigen.length === 0 && !offen) return `${kopf}${ladungsbalken()}`;
 
     return `
-      <ol class="tour-etappenliste">
-        ${tour.geplant.map((e, i) => {
+      ${kopf}
+      <ol class="tour-etappenliste ${zu ? "eingeklappt" : "aufgeklappt"}">
+        ${zeigen.map((e, i) => {
           const w = plan && plan.je ? plan.je[i].warnung : "";
           return `
             <li class="tour-etappe ${w ? "mit-warnung" : ""}">
@@ -847,8 +1038,12 @@ const TourenplanungApp = (function () {
    * ihn, fünf Tonnen Stahl liegen in einer Ecke.
    */
   function ladungsbalken() {
-    const f = tour.fahrzeug;
+    // Vor dem Fahrzeugschritt gibt es noch keinen Wagen. Statt gar
+    // nichts zu zeigen, wird gegen den Wagen gerechnet, mit dem auch
+    // der Zielschritt rechnet - und das wird dazugesagt.
+    const f = tour.fahrzeug || referenzFahrzeug();
     if (!f) return "";
+    const geschaetzt = !tour.fahrzeug;
 
     const alle = tour.geplant.slice();
     const offen = aktuelleEtappeAlsPlan();
@@ -858,33 +1053,81 @@ const TourenplanungApp = (function () {
     const plan = tourPlan(alle);
     if (!plan || !plan.machbar || !plan.belegung) return "";
 
-    // Der vollste Abschnitt ist der, der zählt.
+    const zulT = (f.zuladungKg || 24000) / 1000;
+    const zulV = Ladung.LADEVOLUMEN_M3;
+
+    const lastT = (b) => b.sendungen.reduce((s, k) => s + alle[k].tonnen, 0);
+    const lastV = (b) => b.sendungen.reduce((s, k) =>
+      s + Ladung.volumenM3(alle[k].gut, alle[k].tonnen), 0);
+
+    // Die Balken zeigen den vollsten Abschnitt - das ist die Grenze
+    // der Tour als Ganzes.
     let maxT = 0;
     let maxV = 0;
     plan.belegung.forEach((b) => {
-      const t = b.sendungen.reduce((sum, k) => sum + alle[k].tonnen, 0);
-      const v = b.sendungen.reduce((sum, k) =>
-        sum + Ladung.volumenM3(alle[k].gut, alle[k].tonnen), 0);
-      if (t > maxT) maxT = t;
-      if (v > maxV) maxV = v;
+      maxT = Math.max(maxT, lastT(b));
+      maxV = Math.max(maxV, lastV(b));
     });
 
-    const zulT = (f.zuladungKg || 24000) / 1000;
     const antT = Math.min(1, maxT / zulT);
-    const antV = Math.min(1, maxV / Ladung.LADEVOLUMEN_M3);
+    const antV = Math.min(1, maxV / zulV);
+
+    // Der Rest gilt dagegen NICHT für die Tour, sondern für den Ort,
+    // an dem gerade geladen wird. Beides zu vermengen wäre der
+    // häufigste Irrtum: Nach einem Abladestopp ist wieder Platz, auch
+    // wenn der Auflieger vorher randvoll war.
+    const i = plan.stopps.map((st) => st.stadt).lastIndexOf(tour.stadt.name);
+    const hier = i >= 0 && i < plan.belegung.length ? plan.belegung[i] : null;
+    const freiT = Math.max(0, zulT - (hier ? lastT(hier) : 0));
+    const freiV = Math.max(0, zulV - (hier ? lastV(hier) : 0));
+
+    // Welche der beiden Grenzen zuerst greift. Ohne diesen Hinweis
+    // wundert man sich, warum bei halb vollem Gewicht nichts mehr
+    // draufpasst: Dämmstoff füllt den Laderaum, Stahl das Gewicht.
+    const engVolumen = (1 - freiV / zulV) > (1 - freiT / zulT);
 
     return `
       <div class="tour-ladungsstand">
-        <span class="tour-ladungsbalken" title="${maxT.toFixed(1)} von ${zulT.toFixed(1)} t">
-          <span class="tour-ladungsfuellung" style="width:${Math.round(antT * 100)}%"></span>
-          <span class="tour-ladungswert">${maxT.toFixed(1)} / ${zulT.toFixed(1)} t</span>
-        </span>
-        <span class="tour-ladungsbalken" title="${maxV.toFixed(0)} von ${Ladung.LADEVOLUMEN_M3} m³">
-          <span class="tour-ladungsfuellung" style="width:${Math.round(antV * 100)}%"></span>
-          <span class="tour-ladungswert">${maxV.toFixed(0)} / ${Ladung.LADEVOLUMEN_M3} m³</span>
-        </span>
+        <div class="tour-restplatz ${freiT < zulT * 0.1 && freiV < zulV * 0.1 ? "voll" : ""}">
+          <span class="tour-restplatz-marke">Ab ${tour.stadt.name} frei</span>
+          <span class="tour-restwert ${engVolumen ? "" : "eng"}">${freiT.toFixed(1)} t</span>
+          <span class="tour-restwert ${engVolumen ? "eng" : ""}">${freiV.toFixed(0)} m³</span>
+          ${spaeterFrei(plan, alle, i, zulT, freiT)}
+          ${geschaetzt ? `<span class="tour-restplatz-wagen">gegen ${f.kennzeichen}</span>` : ""}
+        </div>
+        <div class="tour-ladungsbalken-reihe">
+          <span class="tour-ladungsbalken" title="Vollster Abschnitt: ${maxT.toFixed(1)} von ${zulT.toFixed(1)} t">
+            <span class="tour-ladungsfuellung" style="width:${Math.round(antT * 100)}%"></span>
+            <span class="tour-ladungswert">${maxT.toFixed(1)} / ${zulT.toFixed(1)} t</span>
+          </span>
+          <span class="tour-ladungsbalken" title="Vollster Abschnitt: ${maxV.toFixed(0)} von ${zulV} m³">
+            <span class="tour-ladungsfuellung" style="width:${Math.round(antV * 100)}%"></span>
+            <span class="tour-ladungswert">${maxV.toFixed(0)} / ${zulV} m³</span>
+          </span>
+        </div>
       </div>
     `;
+  }
+
+  /**
+   * "ab Hannover 19,0 t" - der Hinweis, dass weiter hinten in der Tour
+   * wieder Platz ist. Er erscheint nur, wenn er etwas ändert: Hier ist
+   * es eng, dort deutlich weniger. Sonst bliebe es eine Zeile, die
+   * immer dasteht und nie etwas sagt.
+   */
+  function spaeterFrei(plan, alle, abIndex, zulT, freiT) {
+    if (abIndex < 0) return "";
+    if (freiT > zulT * 0.35) return "";   // hier ist genug Platz
+
+    let besterT = freiT;
+    let besteStadt = "";
+    for (let k = abIndex + 1; k < plan.belegung.length; k++) {
+      const t = plan.belegung[k].sendungen.reduce((s, j) => s + alle[j].tonnen, 0);
+      const frei = Math.max(0, zulT - t);
+      if (frei > besterT + 2) { besterT = frei; besteStadt = plan.stopps[k].stadt; }
+    }
+    if (!besteStadt) return "";
+    return `<span class="tour-restspaeter">ab ${besteStadt} ${besterT.toFixed(1)} t</span>`;
   }
 
   /** Summe über alle Sendungen der Tour. */
@@ -1163,6 +1406,15 @@ const TourenplanungApp = (function () {
         : `Zuladung reicht nicht (höchstens ${maxT.toFixed(1)} t)`;
     }
 
+    // Umgekehrt bei den Zeilen, die passen: Wieviel bliebe danach noch
+    // übrig? Nur beim Beiladen von Belang - beim leeren Auflieger wäre
+    // es eine Zahl, die an jeder Zeile steht und nichts unterscheidet.
+    let rest = "";
+    if (!gesperrt && belegt.length) {
+      const frei = Math.max(...passend.map((f) => Ladung.restMengeTonnen(f, belegt, g)));
+      rest = `${(frei - a.tonnen).toFixed(1)} t blieben frei`;
+    }
+
     // Rot, wenn kein einziges passendes Fahrzeug den Termin noch
     // halten könnte - die Leeranfahrt eingerechnet.
     const verspaetet = gesperrt || !passend.some((f) => {
@@ -1196,6 +1448,7 @@ const TourenplanungApp = (function () {
             ? `<span class="tour-kundenmarke">${a.kundeName}</span>`
             : `<span class="tour-boersenmarke">Frachtbörse</span>`}
           Liefern bis ${Spielzeit.formatiereMitUhrzeit(new Date(a.lieferFrist))}
+          ${rest ? `<span class="tour-restmarke">${rest}</span>` : ""}
           ${grund ? `<span class="tour-warnung">${grund}</span>` : ""}
         </span>
       </li>
@@ -2812,6 +3065,15 @@ const TourenplanungApp = (function () {
         etappeVerwerfen();
       }));
 
+    // Sendungsliste auf- und zuklappen. Nur die Liste neu zeichnen,
+    // die Karte bleibt, wie sie ist.
+    const klappen = dispo.querySelector("#tour-btn-etappen-klappen");
+    if (klappen) klappen.addEventListener("click", (e) => {
+      e.stopPropagation();
+      etappenAufgeklappt = !etappenAufgeklappt;
+      dispositionAktualisieren({ nurListe: true });
+    });
+
     const starten = dispo.querySelector("#tour-btn-tour-starten");
     if (starten) starten.addEventListener("click", tourAusfuehren);
 
@@ -3642,8 +3904,9 @@ const TourenplanungApp = (function () {
     // Bei Fenstergrößenänderung Begrenzung neu anwenden
     window.addEventListener("resize", () => {
       if (fensterElement && document.body.contains(fensterElement)) {
-        versatzBegrenzen();
-        ansichtAnwenden();
+        // Die Teilung neu anwenden: Beim Drehen des Telefons kann der
+        // gespeicherte Anteil unter die Pixel-Untergrenze rutschen.
+        teilungSetzen(kartenAnteil, false);
       }
     });
   }
@@ -3765,13 +4028,20 @@ const TourenplanungApp = (function () {
 
     if (ergebnis.wurdeNeuErstellt) {
       ereignisseBinden();
+      teilerEreignisse();
+      teilungLesen();
       markenZeichnen();
       // Erst die Uhr anbinden (dabei wird der Spielstand geladen),
       // dann zeichnen - sonst fehlt der Hinweis auf die Pause.
       taktVerbinden();
       dispositionAktualisieren();
-      // Erst nach dem Einhängen ins Dokument steht die Fenstergröße fest.
-      setTimeout(ansichtZuruecksetzen, 0);
+      // Erst nach dem Einhängen ins Dokument steht die Fenstergröße
+      // fest - vorher lässt sich weder die Ansicht noch die Teilung
+      // in Pixeln begrenzen.
+      setTimeout(() => {
+        teilungSetzen(kartenAnteil, false);
+        ansichtZuruecksetzen();
+      }, 0);
     }
   }
 
