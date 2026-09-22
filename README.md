@@ -127,7 +127,90 @@ Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
 Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
 Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
 
-## Aktueller Stand (v0.15.26)
+## Aktueller Stand (v0.15.28)
+
+**Beiladung: mehrere Sendungen zugleich an Bord.** Auf dem
+Abschlussbildschirm stehen jetzt zwei Wege weiter - „+ Beiladung ab
+*Stadt*" nimmt noch eine Sendung ab demselben Ort mit, „+ Anschluss ab
+*Ziel*" hängt eine hinter der letzten an. Bis zu vier Sendungen je
+Tour; darüber wird der Frachtbrief unübersichtlich.
+
+Damit ist eine Tour keine Kette von Etappen mehr, sondern eine **Liste
+von Sendungen**, aus der die Stoppfolge berechnet wird:
+
+    Hamburg  ▲ 8,0 t → Frankfurt am Main
+             ▲ 8,0 t → Hannover        16,0 t an Bord
+    Hannover ▼ 8,0 t                    8,0 t an Bord
+    Frankfurt am Main ▼ 8,0 t
+
+Zwei Regeln begrenzen die Reihenfolge: Abgeladen werden kann nur, was
+vorher geladen wurde, und geladen nur, was noch hineinpasst. Gesucht
+wird nicht das Optimum, sondern der jeweils nächstgelegene zulässige
+Schritt - die Nächster-Nachbar-Heuristik, wie ein Disponent sie im
+Kopf auch anwendet: Was auf dem Weg liegt, kommt zuerst. Hannover vor
+Frankfurt, ohne dass man es sagen muss.
+
+**Zwei Grenzen, zwei Balken.** Gewicht und Laderaum laufen
+unterschiedlich schnell voll - fünf Tonnen Dämmstoff füllen den
+Auflieger, fünf Tonnen Stahl liegen in einer Ecke. Der Frachtbrief
+zeigt beides für den vollsten Abschnitt der Tour. Die Frachtliste
+rechnet mit dem, was noch frei ist, und begründet die Sperre
+entsprechend („Neben der bisherigen Ladung nur noch 4,2 t frei").
+
+Was dabei an Bord ist, hängt vom Ort ab: Wer in derselben Stadt
+dazulädt, teilt sich den Auflieger; wer am Ziel der letzten Sendung
+weiterlädt, findet ihn leer vor. Genau darin unterscheiden sich
+Beiladung und Anschluss.
+
+**Der Sprit wird je Teilstrecke einmal gebucht**, nicht je Sendung -
+sonst zahlte eine Tour mit drei Sendungen ihn dreimal. Beim Abladen
+teilt sich jede Sendung die Kosten der Strecken, auf denen sie
+mitgefahren ist, nach Tonnage. Leerfahrten gehen zulasten dessen,
+wofür sie gefahren wurden: der Sendung, die am Ende der Leerstrecke
+zusteigt. Der Verbrauch je Etappe steht im Spielstand, sonst stünde
+eine Sendung nach dem Neuladen ohne ihre Vorgeschichte da.
+
+**Spicken auf dem Telefon.** Die Kartenvorschau hing bisher am Zeiger
+und fiel ohne Maus aus. Jetzt hält man eine Zeile kurz gedrückt: Nach
+250 ms leuchtet die Karte auf, und der Klick, der die Zeile sonst
+auswählen würde, wird verschluckt. Wer scrollt, spickt nicht - eine
+Fingerbewegung über zehn Bildpunkte bricht ab.
+
+## Vorheriger Stand (v0.15.27)
+
+**Die Karte nimmt vorweg, wohin eine Fracht ginge.** Fährt der Zeiger
+über eine Zeile der Frachtliste, zeigt die Karte sofort, wer sie
+annimmt - ohne dass man sich festlegt:
+
+- **Fester Auftrag** (Frachtbörse oder Kunde): Genau die eine
+  vorgegebene Stadt bekommt einen roten Ring, dazu die Strecke als
+  gestrichelte Vorschau. Der Auftraggeber bestimmt das Ziel, also gibt
+  es auch nur eines zu zeigen.
+- **Spotware**: Alle Städte mit Bedarf leuchten auf. Hier sucht man
+  sich den Abnehmer selbst, und wie viele infrage kommen, entscheidet
+  über den Wert der Ladung.
+
+Die Spotzeile nennt die Zahl der Abnehmerstädte gleich mit, und Ware,
+die niemand nachfragt, ist gesperrt statt erst im nächsten Schritt in
+eine leere Zielliste zu führen.
+
+Dazu eine **Legende** unter der Karte: Depot, eigenes Fahrzeug, Ziel,
+Abnehmer. Ringe ohne Erklärung sind nur hübsch. Ihre Farben sind
+dieselben wie auf der Karte.
+
+Die Vorschau baut die Karte nicht neu auf, sondern schaltet nur die
+Klassen der vorhandenen Marken um. 165 Marken bei jeder Zeigerbewegung
+neu zu erzeugen kostete auf Telefon-Niveau ein Vielfaches und ließe
+die Liste ruckeln.
+
+**Eine angefangene Etappe lässt sich einzeln verwerfen.** Bisher gab es
+nur das Kreuz, das die ganze Planung wegwarf. Jetzt steht die Etappe in
+Arbeit als eigene, gelb gestrichelte Zeile in der Etappenliste, und im
+Kopf des Frachtbriefs sitzt „↺ Etappe". Beides verwirft nur die offene
+Etappe; die festgelegten bleiben stehen, und die Planung steht danach
+wieder dort, wo die letzte festgelegte endet.
+
+## Vorheriger Stand (v0.15.26)
 
 **Eine Tour kann mehrere Frachten nacheinander fahren.** Auf dem
 Abschlussbildschirm steht neben „Losschicken" jetzt „+ Anschlussfracht

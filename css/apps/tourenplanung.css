@@ -1139,6 +1139,148 @@
   text-overflow: ellipsis;
 }
 
+/* ---------- Kartenlegende ----------
+   Die Ringe auf der Karte sind nur dann eine Hilfe, wenn man weiß,
+   wofür sie stehen. */
+.tour-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  padding: 2px 4px 3px 4px;
+  font-size: 10px;
+  color: var(--win-grey-darker);
+}
+
+.tour-legende span { display: inline-flex; align-items: center; gap: 3px; }
+
+.tour-legende-punkt {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--win-grey-darker);
+  background: var(--win-grey-light);
+}
+
+/* Die Farben sind dieselben wie die der Marken auf der Karte - eine
+   Legende, die anders aussieht als das Erklärte, verwirrt mehr als
+   sie hilft. */
+.tour-legende-punkt.leg-depot     { box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #10305a; }
+.tour-legende-punkt.leg-flotte    { box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #2f8f3f; }
+.tour-legende-punkt.leg-ziel      { box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #b03030; }
+.tour-legende-punkt.leg-empfaenger{ box-shadow: 0 0 0 2px rgba(178, 60, 224, 0.9); }
+
+/* Zielstadt der betrachteten Fracht: sticht aus den Abnehmern heraus,
+   weil sie die einzige ist, die tatsächlich angefahren wird. */
+.tour-marke-ziel {
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #b03030;
+  z-index: 5;
+}
+
+/* Vorschaustrecke: dünn und blass, sie ist nur eine Ansicht. */
+.tour-route-vorschau {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+  stroke-dasharray: 4 3;
+}
+
+.tour-abnehmer {
+  padding: 0 3px;
+  background: rgba(178, 60, 224, 0.85);
+  color: #ffffff;
+}
+
+/* Zeile, die gerade gespickt wird (gedrückt gehalten auf dem Telefon) */
+.tour-auswahl.spickt { outline: 2px solid #b23ce0; outline-offset: -2px; }
+
+/* ---------- Ladungsstand ----------
+   Zwei Balken, weil zwei Grenzen gelten: Gewicht und Laderaum laufen
+   unterschiedlich schnell voll. */
+.tour-ladungsstand {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+
+.tour-ladungsbalken {
+  position: relative;
+  flex: 1;
+  height: 14px;
+  background: var(--win-white, #ffffff);
+  border: 1px solid var(--win-grey-dark);
+  overflow: hidden;
+}
+
+.tour-ladungsfuellung {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: #7a9ec8;
+}
+
+.tour-ladungswert {
+  position: relative;
+  display: block;
+  text-align: center;
+  font-size: 10px;
+  line-height: 14px;
+}
+
+/* ---------- Stoppfolge ----------
+   Die Tour so, wie sie gefahren wird: Halt für Halt. */
+.tour-stoppfolge {
+  list-style: none;
+  margin: 0 0 6px 0;
+  padding: 0;
+}
+
+.tour-stopp { font-size: 11px; }
+
+.tour-stopp-fahrt {
+  margin: 0 0 2px 8px;
+  padding-left: 8px;
+  border-left: 2px dotted var(--win-grey-darker);
+  font-size: 10px;
+  color: var(--win-grey-darker);
+}
+
+.tour-stopp-kopf {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 3px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.tour-stopp-nr {
+  min-width: 15px;
+  text-align: center;
+  font-weight: bold;
+  color: var(--win-white, #ffffff);
+  background: var(--win-grey-darker);
+}
+
+.tour-stopp-stadt { font-weight: bold; flex: 1; }
+
+.tour-stopp-last {
+  font-size: 10px;
+  color: var(--win-grey-darker);
+}
+
+.tour-stopp-zeile {
+  padding: 1px 3px 1px 24px;
+  font-size: 10px;
+}
+
+.tour-stopp-zeile.ab { color: #1c6b2c; }
+.tour-stopp-zeile.auf { color: #10305a; }
+.tour-stopp-geld { font-weight: bold; }
+.tour-stopp-ziel { color: var(--win-grey-darker); }
+
 /* ---------- Etappenliste ----------
    Sobald eine Tour mehrere Frachten hat, wird der Frachtbrief zum
    Ladeverzeichnis: eine Zeile je Etappe, in der Reihenfolge der Fahrt. */
@@ -1162,6 +1304,16 @@
 
 .tour-etappe:last-child { border-bottom: none; }
 .tour-etappe.mit-warnung { background: #f7e3e3; }
+
+/* Die Etappe, an der gerade gearbeitet wird - noch nicht Teil der
+   Tour, aber schon sichtbar, damit man sie einzeln verwerfen kann. */
+.tour-etappe.in-arbeit {
+  background: #ffffd8;
+  border-style: dashed;
+}
+
+.tour-etappe.in-arbeit .tour-etappe-nr { background: #d9a520; color: #10100c; }
+.tour-etappe.in-arbeit .tour-etappe-geld { font-style: italic; }
 
 .tour-etappe-nr {
   grid-row: span 2;
@@ -1206,6 +1358,10 @@
 
 .tour-etappenliste-gross .tour-etappe { font-size: 12px; padding-right: 4px; }
 .tour-etappenliste-gross .tour-etappe-weg-damit { display: none; }
+
+/* Im Kopf des Frachtbriefs stehen jetzt bis zu zwei Knöpfe. */
+.tour-frachtbrief-kopf { gap: 4px; }
+.tour-frachtbrief-titel { flex: 1; }
 
 .tour-etappe-marke {
   margin-left: 4px;

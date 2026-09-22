@@ -174,7 +174,12 @@ const Speicher = (function () {
       etappen: t.etappen.map((e) => ({
         typ: e.typ,
         von: e.route.stationen[0],
-        nach: e.route.stationen[e.route.stationen.length - 1]
+        nach: e.route.stationen[e.route.stationen.length - 1],
+        // Der Verbrauch der schon gefahrenen Teilstrecken. Ohne ihn
+        // stünde eine Sendung, die nach dem Laden zugestellt wird, ohne
+        // Kosten da - die Etappen davor wären vergessen.
+        verbrauchL: e.verbrauchL,
+        tonnenAnBord: e.tonnenAnBord
       })),
       // Die Stopps tragen, was wo zu- und abgeladen wird. Ohne sie
       // wüsste eine geladene Tour nicht mehr, was sie geladen hat.
@@ -274,7 +279,12 @@ const Speicher = (function () {
       if (!fahrzeug) return;
 
       const etappen = f.etappen
-        .map((e) => ({ typ: e.typ, route: Route.berechne(e.von, e.nach) }))
+        .map((e) => ({
+          typ: e.typ,
+          route: Route.berechne(e.von, e.nach),
+          verbrauchL: e.verbrauchL,
+          tonnenAnBord: e.tonnenAnBord
+        }))
         .filter((e) => e.route);
       if (etappen.length === 0) return;
 
