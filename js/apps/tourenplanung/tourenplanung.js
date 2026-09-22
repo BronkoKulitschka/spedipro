@@ -1303,52 +1303,81 @@ const TourenplanungApp = (function () {
       .map((z) => zielBewerten(z, g, menge, f))
       .filter(Boolean);
 
-    // Zwei Abschnitte statt einer gekappten Liste.
+    if (ziele.length === 0) {
+      return `
+        ${schrittTitel(`Wohin mit ${g.name}?`, "")}
+        <div class="tour-ware-leer">Niemand fragt diese Ware nach.</div>
+      `;
+    }
+
+    // Zwei Reiter statt zweier Listen untereinander.
     //
     // Nach Deckungsbeitrag je Tour sortiert, standen früher 25 Ziele
-    // auf der iberischen Halbinsel ganz oben und alles Nahe fiel hinten
+    // auf der iberischen Halbinsel ganz oben und alles Nahe fiel
     // heraus - Leipzig-Berlin war Platz 83 von 83 und damit unsichtbar,
-    // obwohl es je Tag das bessere Geschäft ist. Jetzt bekommt jede
-    // Entfernungsklasse ihre eigene Rangliste.
+    // obwohl es je Tag das bessere Geschäft ist. Jede
+    // Entfernungsklasse bekommt deshalb ihre eigene Rangliste, und weil
+    // immer nur eine davon sichtbar ist, passen mehr Zeilen hinein,
+    // ohne dass man an der anderen vorbeiscrollen muss.
     const nah = ziele.filter((e) => e.route.km <= NAHBEREICH_KM)
-      .sort((a, b) => b.dbTag - a.dbTag).slice(0, ZIELE_JE_ABSCHNITT);
+      .sort((a, b) => b.dbTag - a.dbTag);
     const fern = ziele.filter((e) => e.route.km > NAHBEREICH_KM)
-      .sort((a, b) => b.dbTag - a.dbTag).slice(0, ZIELE_JE_ABSCHNITT);
+      .sort((a, b) => b.dbTag - a.dbTag);
 
+    // Ein leerer Reiter wäre eine Sackgasse: Dann zeigt der andere.
+    if (zielReiter === "nah" && nah.length === 0) zielReiter = "fern";
+    if (zielReiter === "fern" && fern.length === 0) zielReiter = "nah";
+
+    const gezeigt = (zielReiter === "nah" ? nah : fern).slice(0, ZIELE_JE_REITER);
     const bester = Math.max(1, ...ziele.map((e) => e.dbTag));
 
     return `
       ${schrittTitel(`Wohin mit ${g.name}?`,
         f ? `gerechnet mit ${menge.toFixed(1)} t` : "kein passendes Fahrzeug")}
-      ${ziele.length === 0
-        ? `<div class="tour-ware-leer">Niemand fragt diese Ware nach.</div>`
-        : `
-          <div class="tour-ausgang-teil">
-            In der Nähe, bis ${NAHBEREICH_KM} km (${ziele.filter((e) => e.route.km <= NAHBEREICH_KM).length})
-          </div>
-          <ul class="tour-auswahlliste">
-            ${nah.length === 0
-              ? `<li class="tour-ware-leer">Kein Abnehmer in der Nähe.</li>`
-              : nah.map((e) => zielZeile(e, bester, s)).join("")}
-          </ul>
-          <div class="tour-ausgang-teil">
-            Fernverkehr (${ziele.filter((e) => e.route.km > NAHBEREICH_KM).length})
-          </div>
-          <ul class="tour-auswahlliste">
-            ${fern.length === 0
-              ? `<li class="tour-ware-leer">Kein Abnehmer in der Ferne.</li>`
-              : fern.map((e) => zielZeile(e, bester, s)).join("")}
-          </ul>`}
+
+      <div class="tour-reiterleiste">
+        <button class="tour-reiter ${zielReiter === "nah" ? "aktiv" : ""}"
+                data-zielreiter="nah" ${nah.length === 0 ? "disabled" : ""}>
+          In der Nähe <span class="tour-reiter-zahl">${nah.length}</span>
+        </button>
+        <button class="tour-reiter ${zielReiter === "fern" ? "aktiv" : ""}"
+                data-zielreiter="fern" ${fern.length === 0 ? "disabled" : ""}>
+          Fernverkehr <span class="tour-reiter-zahl">${fern.length}</span>
+        </button>
+      </div>
+
+      <div class="tour-reiterblatt">
+        <div class="tour-reiter-hinweis">
+          ${zielReiter === "nah"
+            ? `bis ${NAHBEREICH_KM} km · abends wieder greifbar`
+            : `über ${NAHBEREICH_KM} km · bindet den Wagen mehrere Tage`}
+          · nach Deckungsbeitrag je Tag
+        </div>
+        <ul class="tour-auswahlliste">
+          ${gezeigt.map((e) => zielZeile(e, bester, s)).join("")}
+        </ul>
+        ${(zielReiter === "nah" ? nah : fern).length > ZIELE_JE_REITER
+          ? `<div class="tour-ware-leer">
+               Die besten ${ZIELE_JE_REITER} von
+               ${(zielReiter === "nah" ? nah : fern).length}.
+             </div>`
+          : ""}
+      </div>
     `;
   }
+
+  // Welcher Reiter im Zielschritt offen ist. Bleibt über den Schritt
+  // hinaus stehen: Wer im Fernverkehr sucht, sucht meist weiter dort.
+  let zielReiter = "nah";
 
   // Bis hierher gilt eine Fahrt als Nahverkehr. 400 km sind gut ein
   // Lenktag hin - man ist abends wieder am Ausgangsort oder kommt am
   // nächsten Morgen an.
   const NAHBEREICH_KM = 400;
 
-  // Wie viele Ziele je Abschnitt angeboten werden.
-  const ZIELE_JE_ABSCHNITT = 10;
+  // Wie viele Ziele je Reiter angeboten werden. Mehr als früher je
+  // Abschnitt: Es ist ja immer nur eine Liste sichtbar.
+  const ZIELE_JE_REITER = 15;
 
   /**
    * Ein Ziel durchrechnen: Erlös, Sprit, Dauer - und daraus der
@@ -2650,6 +2679,14 @@ const TourenplanungApp = (function () {
     });
 
     // ---- Schritt 2: Ziel ----
+    dispo.querySelectorAll("[data-zielreiter]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        zielReiter = el.dataset.zielreiter;
+        dispositionAktualisieren();
+      });
+    });
+
     dispo.querySelectorAll("[data-ziel]").forEach((el) => {
       el.addEventListener("click", () => {
         tour.ziel = STAEDTE[el.dataset.ziel] || null;

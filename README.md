@@ -127,7 +127,27 @@ Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
 Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
 Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
 
-## Aktueller Stand (v0.15.29)
+## Aktueller Stand (v0.15.30)
+
+**Die Zielliste hat Reiter statt zweier Listen untereinander.** „In der
+Nähe" und „Fernverkehr" als Registerkarten, wie Windows 98 sie hatte -
+immer nur eine Liste sichtbar, die andere einen Klick entfernt. Der
+aktive Reiter steht etwas höher und geht unten offen in das Blatt
+über.
+
+Zwei Vorteile gegenüber den Abschnitten: Man scrollt nicht mehr an der
+einen Liste vorbei, um zur anderen zu kommen, und weil nur eine
+sichtbar ist, passen 15 statt 10 Ziele hinein. Die Zahl neben dem
+Reiternamen sagt, wie viele Möglichkeiten dahinterliegen; ist ein
+Reiter leer, ist er abgeblendet und der andere öffnet sich von selbst.
+Welcher Reiter offen ist, bleibt über den Schritt hinaus stehen - wer
+im Fernverkehr sucht, sucht meist weiter dort.
+
+Unter der Reiterleiste steht, was der Reiter bedeutet: „bis 400 km ·
+abends wieder greifbar" gegen „über 400 km · bindet den Wagen mehrere
+Tage".
+
+## Vorheriger Stand (v0.15.29)
 
 **Anlass: „Warum kann ich kein Stückgut von Leipzig nach Berlin
 fahren?"** Man konnte - die Liste zeigte es nur nie. Von Leipzig aus

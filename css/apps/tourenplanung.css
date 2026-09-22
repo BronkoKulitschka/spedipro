@@ -1195,6 +1195,68 @@
 /* Zeile, die gerade gespickt wird (gedrückt gehalten auf dem Telefon) */
 .tour-auswahl.spickt { outline: 2px solid #b23ce0; outline-offset: -2px; }
 
+/* ---------- Reiter ----------
+   Windows 98 hatte Registerkarten, und genau darum geht es hier: zwei
+   Listen, von denen immer nur eine sichtbar ist. Der aktive Reiter
+   steht etwas höher und ist unten offen - er geht in das Blatt über. */
+.tour-reiterleiste {
+  display: flex;
+  gap: 2px;
+  margin: 0 0 -1px 2px;
+  position: relative;
+  z-index: 2;
+}
+
+.tour-reiter {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 3px 10px 4px 10px;
+  background: var(--win-grey);
+  border: 1px solid var(--win-grey-dark);
+  border-bottom: none;
+  border-top-color: var(--win-white, #ffffff);
+  border-left-color: var(--win-white, #ffffff);
+  cursor: pointer;
+  color: inherit;
+}
+
+.tour-reiter.aktiv {
+  padding: 5px 12px 5px 12px;
+  margin-top: -2px;
+  background: var(--win-grey-light);
+  font-weight: bold;
+}
+
+.tour-reiter[disabled] {
+  color: var(--win-grey-darker);
+  cursor: default;
+}
+
+.tour-reiter-zahl {
+  margin-left: 4px;
+  padding: 0 3px;
+  font-size: 10px;
+  font-weight: normal;
+  background: var(--win-grey-darker);
+  color: var(--win-white, #ffffff);
+}
+
+.tour-reiter[disabled] .tour-reiter-zahl { background: var(--win-grey-dark); }
+
+.tour-reiterblatt {
+  flex: 1;
+  min-height: 0;
+  padding: 5px 4px 4px 4px;
+  background: var(--win-grey-light);
+  border: 1px solid var(--win-grey-dark);
+}
+
+.tour-reiter-hinweis {
+  margin-bottom: 4px;
+  font-size: 10px;
+  color: var(--win-grey-darker);
+}
+
 /* Deckungsbeitrag je Tag - die Kennzahl, nach der sortiert wird. */
 .tour-jetag {
   padding: 0 3px;
