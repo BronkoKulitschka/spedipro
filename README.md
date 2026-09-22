@@ -127,7 +127,31 @@ Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
 Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
 Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
 
-## Aktueller Stand (v0.15.30)
+## Aktueller Stand (v0.15.31)
+
+**„+ Beiladung" war eine Falle.** Wer sie drückte und es sich anders
+überlegte, stand im Frachtschritt ohne gewählte Fracht - und die
+einzige Schaltfläche, die dort hinausführte, war das Kreuz, das die
+ganze Tour wegwarf. Der Knopf „↺ Sendung" erschien erst, wenn schon
+etwas gewählt war, also genau dann nicht, wenn man ihn brauchte.
+
+Jetzt steht im Kopf des Frachtbriefs immer einer von beiden:
+
+- **„↺ Sendung"**, solange an einer Sendung gearbeitet wird - verwirft
+  nur diese.
+- **„❮ Zur Tour"**, solange noch nichts gewählt ist - führt ohne
+  weitere Sendung zurück zur Durchsicht.
+
+Beide landen auf der Durchsicht, nicht in einer leeren Frachtliste:
+Nach dem Verwerfen will man sehen, was die Tour jetzt ist. Das Kreuz
+rechts wirft weiterhin alles weg.
+
+Nebenbei: Nach einer Anschlusssendung zeigte die Startleiste zwei
+Knöpfe, die dasselbe taten - „Beiladung ab München" und „Anschluss ab
+München". Der Unterschied besteht nur, solange die Ladestadt eine
+andere ist als der letzte Halt; sonst steht dort jetzt ein Knopf.
+
+## Vorheriger Stand (v0.15.30)
 
 **Die Zielliste hat Reiter statt zweier Listen untereinander.** „In der
 Nähe" und „Fernverkehr" als Registerkarten, wie Windows 98 sie hatte -

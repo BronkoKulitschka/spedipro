@@ -769,8 +769,13 @@ const TourenplanungApp = (function () {
           </span>
           ${tour.art ? `
             <button class="win98-button bevel-out" id="tour-btn-etappe-verwerfen"
-                    title="Nur die angefangene Etappe verwerfen">
-              ↺ Etappe
+                    title="Nur die angefangene Sendung verwerfen, die übrigen behalten">
+              ↺ Sendung
+            </button>`
+          : tour.geplant.length > 0 ? `
+            <button class="win98-button bevel-out" id="tour-btn-zurueck-tour"
+                    title="Ohne weitere Sendung zurück zur Durchsicht">
+              &#10094; Zur Tour
             </button>` : ""}
           <button class="win98-button bevel-out" id="tour-btn-uebersicht"
                   title="Ganze Planung verwerfen, Stadtauswahl aufheben">✕</button>
@@ -799,7 +804,7 @@ const TourenplanungApp = (function () {
   function etappenliste() {
     if (tour.geplant.length === 0) return "";
     const plan = tourPlan(tour.geplant);
-    const offen = tour.art ? aktuelleEtappeAlsPlan() : null;
+    const offen = aktuelleEtappeAlsPlan();
 
     return `
       <ol class="tour-etappenliste">
@@ -846,10 +851,8 @@ const TourenplanungApp = (function () {
     if (!f) return "";
 
     const alle = tour.geplant.slice();
-    if (tour.art) {
-      const offen = aktuelleEtappeAlsPlan();
-      if (offen.tonnen > 0 && offen.nachName) alle.push(offen);
-    }
+    const offen = aktuelleEtappeAlsPlan();
+    if (offen && offen.tonnen > 0 && offen.nachName) alle.push(offen);
     if (alle.length === 0) return "";
 
     const plan = tourPlan(alle);
@@ -1700,7 +1703,7 @@ const TourenplanungApp = (function () {
    */
   function schrittBereit() {
     // Die offene Sendung zählt mit, ohne schon übernommen zu sein.
-    const alle = [...tour.geplant, aktuelleEtappeAlsPlan()];
+    const alle = [...tour.geplant, aktuelleEtappeAlsPlan()].filter(Boolean);
     const summe = tourSumme(alle);
     const plan = summe.plan;
     const f = tour.fahrzeug;
@@ -1758,11 +1761,12 @@ const TourenplanungApp = (function () {
 
       <div class="tour-startleiste">
         ${alle.length < SENDUNGEN_MAX ? `
-          <button class="win98-button bevel-out" id="tour-btn-beiladung">
-            + Beiladung ab ${tour.stadt.name}
-          </button>
+          ${tour.stadt.name !== letzteStadt ? `
+            <button class="win98-button bevel-out" id="tour-btn-beiladung">
+              + Beiladung ab ${tour.stadt.name}
+            </button>` : ""}
           <button class="win98-button bevel-out" id="tour-btn-anschluss">
-            + Anschluss ab ${letzteStadt}
+            + Sendung ab ${letzteStadt}
           </button>` : `
           <span class="tour-anleitung">
             Mehr als ${SENDUNGEN_MAX} Sendungen je Tour sind nicht vorgesehen.
@@ -1819,8 +1823,13 @@ const TourenplanungApp = (function () {
     `;
   }
 
-  /** Die gerade zusammengestellte Etappe im Format der geplanten. */
+  /**
+   * Die gerade zusammengestellte Sendung im Format der festgelegten.
+   * Gibt null zurück, solange keine Fracht gewählt ist - nach einem
+   * "+ Beiladung" ist das der Normalfall.
+   */
   function aktuelleEtappeAlsPlan() {
+    if (!tour.art) return null;
     if (tour.art === "auftrag") {
       const a = tour.auftrag;
       return {
@@ -1841,6 +1850,24 @@ const TourenplanungApp = (function () {
   }
 
   /**
+   * Zurück zur Durchsicht, ohne noch etwas dazuzuladen.
+   *
+   * Ohne diesen Weg war "+ Beiladung" eine Falle: Wer ihn drückte und
+   * es sich anders überlegte, stand im Frachtschritt ohne gewählte
+   * Fracht - und die einzige Schaltfläche, die dort hinausführte, warf
+   * die ganze Tour weg.
+   */
+  function zurTourZurueck() {
+    if (tour.geplant.length === 0) return;
+    etappeZuruecksetzen();
+    tour.schritt = "bereit";
+    hervorgehobenesGut = null;
+    dispositionAktualisieren();
+    markenZeichnen();
+    routeZeichnen();
+  }
+
+  /**
    * Die angefangene Etappe verwerfen, die festgelegten behalten. Die
    * Planung steht danach wieder am Ausgangsort der verworfenen Etappe -
    * also dort, wo die letzte festgelegte endet.
@@ -1852,7 +1879,9 @@ const TourenplanungApp = (function () {
       tour.stadt = STAEDTE[letzte.nachName] || tour.stadt;
       gewaehlteStadt = tour.stadt;
     }
-    tour.schritt = "fracht";
+    // Steht schon etwas fest, gehört der Blick zurück auf die Tour -
+    // eine leere Frachtliste wäre nach dem Verwerfen keine Auskunft.
+    tour.schritt = tour.geplant.length > 0 ? "bereit" : "fracht";
     hervorgehobenesGut = null;
     aktiveRoute = null;
     dispositionAktualisieren();
@@ -1865,7 +1894,8 @@ const TourenplanungApp = (function () {
    * ein Stück mit - wohin sie geht, entscheidet die Stoppfolge.
    */
   function beiladungBeginnen() {
-    tour.geplant.push(aktuelleEtappeAlsPlan());
+    const fertig = aktuelleEtappeAlsPlan();
+    if (fertig) tour.geplant.push(fertig);
     etappeZuruecksetzen();
     tour.schritt = "fracht";
     hervorgehobenesGut = null;
@@ -1880,6 +1910,7 @@ const TourenplanungApp = (function () {
    */
   function anschlussBeginnen() {
     const fertig = aktuelleEtappeAlsPlan();
+    if (!fertig) return;
     tour.geplant.push(fertig);
     etappeZuruecksetzen();
     tour.stadt = STAEDTE[fertig.nachName] || tour.stadt;
@@ -2752,6 +2783,9 @@ const TourenplanungApp = (function () {
     // Nur die angefangene Etappe verwerfen - die schon festgelegten
     // bleiben stehen. Ohne das bliebe nur das Kreuz, das die ganze
     // Planung wegwirft.
+    const zurTour = dispo.querySelector("#tour-btn-zurueck-tour");
+    if (zurTour) zurTour.addEventListener("click", zurTourZurueck);
+
     dispo.querySelectorAll("#tour-btn-etappe-verwerfen, #tour-btn-etappe-verwerfen-liste")
       .forEach((el) => el.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -2926,7 +2960,7 @@ const TourenplanungApp = (function () {
     if (!f) return;
 
     // Die offene Sendung gehört dazu.
-    const sendungen = [...tour.geplant, aktuelleEtappeAlsPlan()];
+    const sendungen = [...tour.geplant, aktuelleEtappeAlsPlan()].filter(Boolean);
     const plan = tourPlan(sendungen);
     if (!plan || !plan.machbar) return;
 
