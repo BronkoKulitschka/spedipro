@@ -69,22 +69,21 @@ const TourenplanungApp = (function () {
     // her, das Bearbeiten ist also nicht zerstörend.
     bearbeitet: null,
     urfassung: null,
+    // Von Hand gelegte Reihenfolge der Halte. null heißt: die
+    // berechnete gilt.
+    reihenfolge: null,
     // Sobald der Spieler die Menge selbst einstellt, darf sie nicht
     // mehr automatisch auf das Maximum zurückspringen.
     mengeVonHand: false
   };
-
-  /** Steht die Frage "wo soll geladen werden?" gerade im Bereich? */
-  let ladeortWahl = false;
 
   function tourZuruecksetzen() {
     tour = {
       schritt: "fracht", stadt: null, fahrzeug: null, geplant: [],
       art: null, auftrag: null, gut: null, tonnen: 0, ziel: null,
       machbarkeit: null, bearbeitet: null, urfassung: null,
-      mengeVonHand: false
+      reihenfolge: null, mengeVonHand: false
     };
-    ladeortWahl = false;
   }
 
   /** Die gerade zusammengestellte Etappe zurücksetzen, Rest behalten. */
@@ -155,7 +154,7 @@ const TourenplanungApp = (function () {
    */
   function inAuswahl() {
     return tour.schritt !== "fracht" || Boolean(tour.art)
-        || tour.geplant.length > 0 || tour.bearbeitet !== null || ladeortWahl;
+        || tour.geplant.length > 0 || tour.bearbeitet !== null;
   }
 
   // Wird eine Ware angetippt, sollen alle Städte aufleuchten, die sie
@@ -712,14 +711,151 @@ const TourenplanungApp = (function () {
   function stoppfolge(sendungen, fahrzeug, startOrt) {
     if (sendungen.length === 0) return null;
 
-    const offen = sendungen.map((s, i) => ({ i, s }));
+    // Hat der Disponent die Reihenfolge selbst gelegt und passt sie
+    // noch zu den vorhandenen Sendungen, dann gilt seine - auch wenn
+    // sie länger ist als die berechnete. Das ist der Sinn der Sache.
+    const eigene = handStationen(sendungen);
+    if (eigene) return stationenAuswerten(eigene, sendungen, fahrzeug, startOrt);
+
+    return stationenAuswerten(
+      stationenFinden(sendungen, fahrzeug, startOrt),
+      sendungen, fahrzeug, startOrt);
+  }
+
+  // ---------- Reihenfolge von Hand ----------
+  //
+  // Gespeichert wird sie NICHT als Liste von Städtenamen: Eine Stadt
+  // kann zweimal in einer Tour vorkommen, und dann wäre nicht mehr
+  // klar, welcher Halt gemeint ist. Stattdessen als Stationen mit
+  // einem Schlüssel je Sendung - der überlebt auch das Umsortieren
+  // der Sendungsliste.
+
+  /** Woran eine Sendung wiederzuerkennen ist. */
+  function sendungSchluessel(s) {
+    if (!s) return "";
+    return s.art === "auftrag" && s.auftrag
+      ? `A:${s.auftrag.nummer}`
+      : `S:${s.gut ? s.gut.id : "?"}:${s.vonName}:${s.nachName}`;
+  }
+
+  /**
+   * Die gemerkte Reihenfolge auf die aktuellen Sendungen übersetzen.
+   *
+   * Gibt null zurück, sobald sie nicht mehr passt - dann rechnet
+   * wieder die Heuristik. "Passt nicht mehr" heißt: Eine Sendung aus
+   * der gemerkten Folge gibt es nicht mehr. Eine NEU dazugekommene ist
+   * dagegen kein Grund aufzugeben; sie wird von der Heuristik an ihrer
+   * besten Stelle eingefügt, und der Rest bleibt, wie er gelegt wurde.
+   */
+  function handStationen(sendungen) {
+    if (!tour.reihenfolge || tour.reihenfolge.length === 0) return null;
+
+    const nachSchluessel = new Map();
+    sendungen.forEach((s, i) => nachSchluessel.set(sendungSchluessel(s), i));
+
+    const stationen = [];
+    for (const st of tour.reihenfolge) {
+      const i = nachSchluessel.get(st.schluessel);
+      if (i === undefined) return null;      // Sendung ist weg
+      stationen.push({ stadt: st.stadt, art: st.art, sendung: i });
+    }
+
+    // Neue Sendungen, die noch nicht in der Handfolge stehen, hinten
+    // anhängen: erst laden, dann abladen. Das ist bewusst schlicht -
+    // wer eine Reihenfolge von Hand legt, sortiert die Neue ohnehin
+    // gleich dorthin, wo er sie haben will.
+    const bekannt = new Set(stationen.map((x) => x.sendung));
+    sendungen.forEach((s, i) => {
+      if (bekannt.has(i)) return;
+      stationen.push({ stadt: s.vonName, art: "laden", sendung: i });
+      stationen.push({ stadt: s.nachName, art: "abladen", sendung: i });
+    });
+
+    return stationen;
+  }
+
+  /** Die aktuelle Folge als Handreihenfolge festhalten. */
+  function reihenfolgeMerken(stationen, sendungen) {
+    tour.reihenfolge = stationen.map((st) => ({
+      stadt: st.stadt,
+      art: st.art,
+      schluessel: sendungSchluessel(sendungen[st.sendung])
+    }));
+  }
+
+  /**
+   * Einen Halt verschieben. Umsortiert werden HALTE, nicht einzelne
+   * Stationen: Ein Halt, an dem zwei Sendungen wechseln, ist ein Halt,
+   * und den verschiebt man als Ganzes. Das ist auch das, was ein
+   * Disponent meint, wenn er sagt "Hannover vor Bremen".
+   */
+  /**
+   * Stationen nach Halten gruppieren: Aufeinanderfolgende Stationen in
+   * derselben Stadt sind EIN Halt.
+   */
+  function stationenGruppieren(stationen) {
+    const gruppen = [];
+    stationen.forEach((st) => {
+      const letzte = gruppen[gruppen.length - 1];
+      if (letzte && letzte.stadt === st.stadt) letzte.stationen.push(st);
+      else gruppen.push({ stadt: st.stadt, stationen: [st] });
+    });
+    return gruppen;
+  }
+
+  /**
+   * `index` ist die Nummer der GRUPPE, nicht des Halts in der
+   * Stoppfolge. Die beiden fallen nur dann zusammen, wenn im Startort
+   * auch geladen wird - sonst steht dort ein Halt ohne Station davor.
+   * Genau daran ging der erste Versuch schief: Ein Klick auf den
+   * letzten Halt verschob den vorletzten.
+   */
+  function haltVerschieben(index, richtung) {
+    const sendungen = alleSendungen();
+    const f = tour.fahrzeug;
+    if (!f || sendungen.length === 0) return;
+
+    const plan = tourPlan(sendungen);
+    if (!plan || !plan.folge) return;
+
+    const gruppen = stationenGruppieren(plan.folge);
+
+    const von = index;
+    const nach = von + richtung;
+    if (von < 0 || nach < 0 || von >= gruppen.length || nach >= gruppen.length) return;
+
+    const [weg] = gruppen.splice(von, 1);
+    gruppen.splice(nach, 0, weg);
+
+    reihenfolgeMerken(
+      gruppen.reduce((alle, g) => alle.concat(g.stationen), []),
+      sendungen);
+
+    dispositionAktualisieren();
+    markenZeichnen();
+    routeZeichnen();
+  }
+
+  /** Zurück zur berechneten Reihenfolge. */
+  function reihenfolgeZuruecksetzen() {
+    tour.reihenfolge = null;
+    dispositionAktualisieren();
+    markenZeichnen();
+    routeZeichnen();
+  }
+
+  /**
+   * Die Heuristik: Was am nächsten liegt, kommt zuerst. Sie liefert
+   * die Stationen in gefahrener Reihenfolge, bewertet aber nichts -
+   * das macht stationenAuswerten(), und zwar für JEDE Reihenfolge,
+   * auch eine von Hand gelegte.
+   */
+  function stationenFinden(sendungen, fahrzeug, startOrt) {
     const anBord = [];
     const stationen = [];
     let ort = startOrt;
-    let km = 0;
-    let leerKm = 0;
 
-    const nochZuHolen = new Set(offen.map((x) => x.i));
+    const nochZuHolen = new Set(sendungen.map((s, i) => i));
     const nochZuBringen = new Set();
 
     while (nochZuHolen.size > 0 || nochZuBringen.size > 0) {
@@ -744,21 +880,15 @@ const TourenplanungApp = (function () {
         if (r) moeglich.push({ art: "laden", i, km: ort === s.vonName ? 0 : r.km });
       });
 
-      if (moeglich.length === 0) {
-        return { machbar: false, grund: "Reihenfolge nicht fahrbar", stopps: [], folge: [] };
-      }
+      // Nichts mehr möglich: Die Heuristik gibt auf und liefert, was
+      // sie hat - die Bewertung nennt dann den Grund.
+      if (moeglich.length === 0) return stationen;
 
       // Was am nächsten liegt, kommt zuerst. Bei gleicher Entfernung
       // hat das Abladen Vorrang: Es schafft Platz für das Übrige.
       moeglich.sort((a, b) => a.km - b.km || (a.art === "abladen" ? -1 : 1));
       const naechst = moeglich[0];
       const s = sendungen[naechst.i];
-      const zielOrt = naechst.art === "laden" ? s.vonName : s.nachName;
-
-      if (naechst.km > 0) {
-        if (anBord.length === 0) leerKm += naechst.km;
-        km += naechst.km;
-      }
 
       if (naechst.art === "laden") {
         anBord.push(naechst.i);
@@ -769,8 +899,84 @@ const TourenplanungApp = (function () {
         nochZuBringen.delete(naechst.i);
       }
 
+      const zielOrt = naechst.art === "laden" ? s.vonName : s.nachName;
       stationen.push({ stadt: zielOrt, art: naechst.art, sendung: naechst.i });
       ort = zielOrt;
+    }
+
+    return stationen;
+  }
+
+  /**
+   * Eine gegebene Stationsfolge durchrechnen UND prüfen.
+   *
+   * Hier liegt der Unterschied zu vorher: Die Prüfung galt bis 0.15.38
+   * implizit, weil die Heuristik nie etwas Unmögliches erzeugte. Eine
+   * von Hand gelegte Reihenfolge kann sehr wohl unmöglich sein - eine
+   * Sendung abladen, die noch nicht an Bord ist, oder mehr laden, als
+   * hineinpasst. Genau das muss hier auffallen und benannt werden,
+   * statt stillschweigend falsch zu rechnen.
+   */
+  function stationenAuswerten(stationen, sendungen, fahrzeug, startOrt) {
+    const anBord = [];
+    let ort = startOrt;
+    let km = 0;
+    let leerKm = 0;
+    let fehler = "";
+
+    stationen.forEach((st) => {
+      if (fehler) return;
+      const s = sendungen[st.sendung];
+      if (!s) { fehler = "Sendung gibt es nicht mehr"; return; }
+
+      const zielOrt = st.art === "laden" ? s.vonName : s.nachName;
+
+      if (st.art === "laden") {
+        const pruefung = Ladung.passtDazu(
+          fahrzeug,
+          anBord.map((k) => ({ gut: sendungen[k].gut, tonnen: sendungen[k].tonnen })),
+          s.gut, s.tonnen
+        );
+        if (!pruefung.passt) {
+          fehler = `In ${zielOrt} passt die Sendung ${st.sendung + 1} nicht mehr dazu`;
+          return;
+        }
+        anBord.push(st.sendung);
+      } else {
+        const stelle = anBord.indexOf(st.sendung);
+        if (stelle < 0) {
+          fehler = `Sendung ${st.sendung + 1} ist in ${zielOrt} noch nicht geladen`;
+          return;
+        }
+        anBord.splice(stelle, 1);
+      }
+
+      if (ort !== zielOrt) {
+        const r = Route.berechne(ort, zielOrt);
+        if (!r) { fehler = `Keine Strecke ${ort} → ${zielOrt}`; return; }
+        // anBord enthält beim Laden die neue Sendung schon; für die
+        // Frage, ob die Anfahrt leer war, zählt der Stand VORHER.
+        const vorher = st.art === "laden" ? anBord.length - 1 : anBord.length + 1;
+        if (vorher === 0) leerKm += r.km;
+        km += r.km;
+      }
+      ort = zielOrt;
+    });
+
+    // Ist am Ende noch etwas an Bord oder gar nicht erst geladen, ist
+    // die Reihenfolge unvollständig - auch das ist ein Zustand, den man
+    // sehen und reparieren können muss.
+    if (!fehler && anBord.length > 0) {
+      fehler = `Sendung ${anBord[0] + 1} wird nirgends abgeladen`;
+    }
+    if (!fehler) {
+      const geladen = new Set(stationen.filter((x) => x.art === "laden").map((x) => x.sendung));
+      const fehlt = sendungen.findIndex((s, i) => !geladen.has(i));
+      if (fehlt >= 0) fehler = `Sendung ${fehlt + 1} kommt in der Reihenfolge nicht vor`;
+    }
+
+    if (fehler) {
+      return { machbar: false, grund: fehler, stopps: [], folge: stationen };
     }
 
     // Aufeinanderfolgende Stationen in derselben Stadt zu einem Stopp
@@ -792,7 +998,7 @@ const TourenplanungApp = (function () {
     const etappen = [];
     for (let i = 0; i < stopps.length - 1; i++) {
       const r = Route.berechne(stopps[i].stadt, stopps[i + 1].stadt);
-      if (!r) return { machbar: false, grund: "Keine Strecke", stopps: [], folge: [] };
+      if (!r) return { machbar: false, grund: "Keine Strecke", stopps: [], folge: stationen };
       etappen.push({
         typ: belegung[i].tonnen > 0 ? "hauptlauf" : "anfahrt",
         route: r
@@ -1030,27 +1236,34 @@ const TourenplanungApp = (function () {
   }
 
   /**
-   * Die schon festgelegten Sendungen, jede mit ihrem Warnhinweis.
+   * Die Tour im Frachtbrief - seit 0.15.38 als HALTE, nicht als
+   * Sendungen.
+   *
+   * Vorher stand dieselbe Tour an zwei Stellen in zwei Modellen: hier
+   * als Liste von Sendungen, auf der Durchsicht als Stoppfolge. Der
+   * Spieler musste beide im Kopf haben. Jetzt ist es dasselbe Modell,
+   * nur in zwei Auflösungen: hier eine Zeile je Halt, auf der
+   * Durchsicht derselbe Halt mit allem, was dort wechselt.
    *
    * Ab zwei Sendungen ist die Liste eingeklappt. Grund: Der
    * Frachtbrief steht fest über der Auswahlliste, und jede Zeile hier
-   * nimmt der Liste darunter Platz weg - eine Zeile mit Warnhinweis
-   * sogar doppelt so viel. Bei vier Sendungen blieb von der Liste
-   * nichts mehr übrig. Eingeklappt bleibt stehen, was man beim Planen
-   * wirklich braucht: die Summe, die Zahl der Hinweise und die
-   * Sendung, an der gerade gearbeitet wird. Aufgeklappt bekommt die
-   * Liste einen Höhendeckel mit eigenem Rollbalken, damit sie auch
-   * mit lauter Warnhinweisen nie wieder über den Bereich hinauswächst.
+   * nimmt der Liste darunter Platz weg. Bei vier Sendungen blieb von
+   * der Liste nichts mehr übrig. Aufgeklappt hat sie einen
+   * Höhendeckel mit eigenem Rollbalken.
    */
   function etappenliste() {
     const sendungen = alleSendungen();
     const arbeit = inArbeitPlatz();
-    // Eine einzelne Sendung, an der gerade gearbeitet wird, ist der
-    // Frachtbrief selbst - dafür braucht es keine Liste daneben.
-    if (sendungen.length === 0) return "";
-    if (sendungen.length === 1 && arbeit === 0) return "";
+    const offen = aktuelleEtappeAlsPlan();
+    // Eine unvollständige Sendung steht in keiner Stoppfolge - sie hat
+    // ja noch kein Ziel. Sie bekommt trotzdem eine Zeile, denn sie
+    // trägt den Verwerfen-Knopf.
+    const unfertig = offen && !offen.nachName ? offen : null;
 
-    const plan = tourPlan(sendungen);
+    if (sendungen.length === 0 && !unfertig) return "";
+    if (sendungen.length === 1 && arbeit === 0 && !unfertig) return "";
+
+    const plan = sendungen.length ? tourPlan(sendungen) : null;
     const einklappbar = sendungen.length >= 2;
     const zu = einklappbar && !etappenAufgeklappt;
 
@@ -1062,7 +1275,7 @@ const TourenplanungApp = (function () {
 
     const kopf = einklappbar ? `
       <button class="tour-etappen-schalter ${zu ? "zu" : "auf"}" id="tour-btn-etappen-klappen"
-              title="${zu ? "Alle Sendungen zeigen" : "Liste einklappen"}">
+              title="${zu ? "Alle Halte zeigen" : "Liste einklappen"}">
         <span class="tour-etappen-pfeil">${zu ? "&#9656;" : "&#9662;"}</span>
         <span class="tour-etappen-summe">
           ${sendungen.length} Sendungen · ${summe.toLocaleString("de-DE")} DM · ${tonnen.toFixed(1)} t
@@ -1070,40 +1283,65 @@ const TourenplanungApp = (function () {
         ${warnungen ? `<span class="tour-etappen-hinweise">${warnungen} Hinweis${warnungen > 1 ? "e" : ""}</span>` : ""}
       </button>` : "";
 
-    // Eingeklappt bleibt nur die Sendung stehen, an der gearbeitet
-    // wird - sie ist das, was man gerade in der Hand hat.
-    const sichtbar = sendungen
-      .map((e, i) => ({ e, i }))
-      .filter(({ i }) => !zu || i === arbeit);
+    const unfertigZeile = unfertig ? `
+      <li class="tour-etappe in-arbeit">
+        <span class="tour-etappe-nr">…</span>
+        <span class="tour-etappe-weg">${unfertig.vonName} → …</span>
+        <span class="tour-etappe-geld">in Arbeit</span>
+        <span class="tour-etappe-ladung">${
+          unfertig.tonnen > 0 ? `${unfertig.tonnen.toFixed(1)} t ` : ""}${unfertig.gutName}</span>
+        <button class="tour-etappe-weg-damit" id="tour-btn-etappe-verwerfen-liste"
+                title="Angefangene Sendung verwerfen">✕</button>
+      </li>` : "";
 
-    if (sichtbar.length === 0) return `${kopf}`;
+    if (!plan || !plan.machbar) {
+      return `
+        ${kopf}
+        <div class="tour-unfahrbar">${plan ? plan.grund : "So nicht fahrbar"}</div>
+        ${unfertigZeile ? `<ol class="tour-etappenliste aufgeklappt">${unfertigZeile}</ol>` : ""}
+      `;
+    }
+
+    const versatz = gruppenVersatz(plan);
+
+    const zeilen = plan.stopps.map((stopp, i) => {
+      const wechsel = stopp.laden.length + stopp.abladen.length;
+      const beteiligt = stopp.abladen.concat(stopp.laden);
+      const w = beteiligt.some((k) => plan.je[k] && plan.je[k].warnung);
+      // Welcher Halt gehört zu der Sendung, an der gerade gearbeitet
+      // wird? Ohne diese Markierung verlöre man beim Umstieg von der
+      // Sendungs- auf die Halteansicht die Auskunft "das hier habe ich
+      // gerade in der Hand" - und eingeklappt bliebe gar nichts übrig.
+      const imGriff = arbeit >= 0 && beteiligt.includes(arbeit);
+      const last = i < plan.belegung.length ? plan.belegung[i].tonnen : 0;
+      return {
+        imGriff,
+        html: `
+          <li class="tour-etappe tour-halt-kurz ${w ? "mit-warnung" : ""} ${imGriff ? "in-arbeit" : ""}">
+            <span class="tour-etappe-nr">${i + 1}</span>
+            <span class="tour-etappe-weg">${stopp.stadt}</span>
+            <span class="tour-etappe-geld">${
+              i < plan.stopps.length - 1 ? `${last.toFixed(1)} t` : "Ende"}</span>
+            <span class="tour-etappe-ladung">${
+              stopp.abladen.length ? `▼ ${stopp.abladen.length} ` : ""}${
+              stopp.laden.length ? `▲ ${stopp.laden.length}` : ""}${
+              wechsel === 0 ? "nur durchfahren" : ""}</span>
+            ${haltPfeile(i - versatz, plan.stopps.length - versatz)}
+          </li>`
+      };
+    });
+
+    // Eingeklappt bleiben die Halte stehen, an denen die Sendung
+    // wechselt, an der gerade gearbeitet wird - das ist das, was man
+    // in der Hand hat. Der Rest der Tour steht in der Zusammenfassung.
+    const sichtbar = zu ? zeilen.filter((z) => z.imGriff) : zeilen;
+    if (sichtbar.length === 0 && !unfertigZeile) return kopf;
 
     return `
       ${kopf}
       <ol class="tour-etappenliste ${zu ? "eingeklappt" : "aufgeklappt"}">
-        ${sichtbar.map(({ e, i }) => {
-          const w = plan && plan.je && plan.je[i] ? plan.je[i].warnung : "";
-          const inArbeit = i === arbeit;
-          return `
-            <li class="tour-etappe ${w ? "mit-warnung" : ""} ${inArbeit ? "in-arbeit" : "aenderbar"}"
-                ${inArbeit ? "" : `data-sendung-bearbeiten="${i}"`}
-                ${inArbeit ? "" : `title="Antippen zum Ändern"`}>
-              <span class="tour-etappe-nr">${i + 1}</span>
-              <span class="tour-etappe-weg">${e.vonName} → ${e.nachName || "…"}</span>
-              <span class="tour-etappe-geld">${
-                inArbeit && !e.nachName
-                  ? "in Arbeit"
-                  : `${e.entgelt.toLocaleString("de-DE")} DM`}</span>
-              <span class="tour-etappe-ladung">${
-                e.tonnen > 0 ? `${e.tonnen.toFixed(1)} t ` : ""}${e.gutName}</span>
-              ${w ? `<span class="tour-warnung">${w}</span>` : ""}
-              <button class="tour-etappe-weg-damit"
-                      ${inArbeit
-                        ? `id="tour-btn-etappe-verwerfen-liste" title="Angefangene Sendung verwerfen"`
-                        : `data-etappe-loeschen="${i}" title="Sendung streichen"`}>✕</button>
-            </li>
-          `;
-        }).join("")}
+        ${sichtbar.map((z) => z.html).join("")}
+        ${unfertigZeile}
       </ol>
     `;
   }
@@ -2076,12 +2314,31 @@ const TourenplanungApp = (function () {
     const plan = summe.plan;
     const f = tour.fahrzeug;
 
+    // Eine nicht fahrbare Reihenfolge wird SICHTBAR gelassen, nicht
+    // versteckt. Bis 0.15.37 stand hier nur "nicht fahrbar, eine
+    // Sendung streichen" - solange die Reihenfolge ein Algorithmus
+    // bestimmte, war das in Ordnung. Wer sie von Hand legt, muss den
+    // kaputten Zustand sehen können, um ihn zu reparieren.
     if (!plan || !plan.machbar) {
       return `
-        ${schrittTitel("Diese Zusammenstellung ist nicht fahrbar", plan ? plan.grund : "")}
-        <p class="tour-anleitung">
-          Eine Sendung streichen und es noch einmal versuchen.
-        </p>
+        ${schrittTitel("So ist die Tour nicht fahrbar", plan ? plan.grund : "")}
+        <div class="tour-unfahrbar">
+          ${plan && plan.grund ? plan.grund : "Die Sendungen passen nicht zusammen."}
+        </div>
+        ${tour.reihenfolge ? `
+          <p class="tour-anleitung">
+            Die Reihenfolge stammt von Hand. Halte umsortieren oder
+            zurück auf die berechnete.
+          </p>
+          <div class="tour-startleiste">
+            <button class="win98-button bevel-out" id="tour-btn-reihenfolge-zurueck">
+              ↺ Berechnete Reihenfolge
+            </button>
+          </div>
+          ${handStoppliste(alle)}` : `
+          <p class="tour-anleitung">
+            Eine Sendung streichen und es noch einmal versuchen.
+          </p>`}
       `;
     }
 
@@ -2096,6 +2353,14 @@ const TourenplanungApp = (function () {
       ${schrittTitel(
         mehrere ? `Tour mit ${alle.length} Sendungen` : "Alles beisammen",
         "letzte Durchsicht")}
+
+      ${tour.reihenfolge ? `
+        <div class="tour-handfolge">
+          Reihenfolge von Hand
+          <button class="win98-button bevel-out" id="tour-btn-reihenfolge-zurueck">
+            ↺ berechnete
+          </button>
+        </div>` : ""}
 
       ${stoppfolgeAnsicht(plan, alle)}
 
@@ -2127,13 +2392,7 @@ const TourenplanungApp = (function () {
           </div>` : ""}
       </div>
 
-      ${ladeortAuswahl(alle.length)}
-
       <div class="tour-startleiste">
-        ${alle.length < SENDUNGEN_MAX && !ladeortWahl ? `
-          <button class="win98-button bevel-out" id="tour-btn-sendung-dazu">
-            + Sendung
-          </button>` : ""}
         ${alle.length >= SENDUNGEN_MAX ? `
           <span class="tour-anleitung">
             Mehr als ${SENDUNGEN_MAX} Sendungen je Tour sind nicht vorgesehen.
@@ -2146,66 +2405,73 @@ const TourenplanungApp = (function () {
   }
 
   /**
-   * Wo soll die nächste Sendung geladen werden? Früher entschieden das
-   * zwei Knöpfe mit Fachwörtern - "Beiladung" hieß: an derselben
-   * Stelle dazu, "Anschluss": am Ende der Tour. Jetzt ist es eine
-   * Liste der Halte, und der Unterschied ergibt sich aus der Stelle,
-   * die man antippt. Was dort noch frei ist, steht daneben: Am Anfang
-   * teilt sich die neue Sendung den Auflieger, am Ende findet sie ihn
-   * leer vor.
+   * Die Halte einer NICHT fahrbaren Handreihenfolge - zum Reparieren.
+   * plan.stopps ist dann leer, deshalb wird hier direkt aus der
+   * gemerkten Folge gruppiert.
    */
-  function ladeortAuswahl(anzahl) {
-    if (!ladeortWahl || anzahl >= SENDUNGEN_MAX) return "";
-
-    const orte = ladeorte();
-    if (orte.length === 0) return "";
-
-    const f = tour.fahrzeug;
-    const sendungen = alleSendungen();
-    const plan = tourPlan(sendungen);
-    const zulT = f ? (f.zuladungKg || 24000) / 1000 : 0;
+  function handStoppliste() {
+    if (!tour.reihenfolge) return "";
+    const gruppen = [];
+    tour.reihenfolge.forEach((st) => {
+      const letzte = gruppen[gruppen.length - 1];
+      if (letzte && letzte.stadt === st.stadt) letzte.anzahl++;
+      else gruppen.push({ stadt: st.stadt, anzahl: 1 });
+    });
 
     return `
-      <div class="tour-ladeortwahl">
-        <div class="tour-ladeort-kopf">
-          <span>Wo soll geladen werden?</span>
-          <button class="win98-button bevel-out" id="tour-btn-ladeort-abbrechen">✕</button>
-        </div>
-        <ul class="tour-auswahlliste tour-liste-voll">
-          ${orte.map((name, i) => {
-            // Was am Halt i noch frei ist: Dort fängt der Abschnitt an,
-            // der hinter diesem Halt liegt.
-            let frei = zulT;
-            if (plan && plan.machbar && plan.belegung && i < plan.belegung.length) {
-              const last = plan.belegung[i].sendungen
-                .reduce((s, k) => s + sendungen[k].tonnen, 0);
-              frei = Math.max(0, zulT - last);
-            }
-            const letzter = i === orte.length - 1;
-            return `
-              <li class="tour-auswahl" data-ladeort="${name}">
-                ${ZEILENPFEIL}
-                <span class="tour-auswahl-name">
-                  <span class="tour-stopp-nr">${i + 1}</span> ${name}
-                </span>
-                <span class="tour-auswahl-zusatz">
-                  ${letzter ? "Ende der Tour · Auflieger leer" : `noch ${frei.toFixed(1)} t frei`}
-                </span>
-              </li>
-            `;
-          }).join("")}
-        </ul>
-      </div>
+      <ol class="tour-stoppfolge">
+        ${gruppen.map((g, i) => `
+          <li class="tour-stopp">
+            <div class="tour-stopp-kopf">
+              <span class="tour-stopp-nr">${i + 1}</span>
+              <span class="tour-stopp-stadt">${g.stadt}</span>
+              ${haltPfeile(i, gruppen.length)}
+            </div>
+          </li>`).join("")}
+      </ol>
     `;
   }
 
   /**
+   * Die beiden Pfeile an einem Halt. `gruppe` ist die Nummer in der
+   * Stationsgruppierung - siehe haltVerschieben().
+   */
+  function haltPfeile(gruppe, anzahl) {
+    if (gruppe < 0 || anzahl < 2) return "";
+    const rauf = gruppe > 0;
+    const runter = gruppe < anzahl - 1;
+    if (!rauf && !runter) return "";
+    return `
+      <span class="tour-halt-pfeile">
+        <button class="tour-halt-pfeil" data-halt-hoch="${gruppe}"
+                ${rauf ? "" : "disabled"} title="Früher anfahren">▲</button>
+        <button class="tour-halt-pfeil" data-halt-runter="${gruppe}"
+                ${runter ? "" : "disabled"} title="Später anfahren">▼</button>
+      </span>
+    `;
+  }
+
+  /**
+   * Um wie viel die Halt-Nummer der Stoppfolge von der Gruppennummer
+   * abweicht: Wird im Startort nicht geladen, steht dort ein Halt ohne
+   * Station, und alles verschiebt sich um eins.
+   */
+  function gruppenVersatz(plan) {
+    if (!plan || !plan.stopps || plan.stopps.length === 0) return 0;
+    const start = plan.stopps[0];
+    return (start.laden.length + start.abladen.length) > 0 ? 0 : 1;
+  }
+
+  /**
    * Die Tour so, wie sie gefahren wird: Halt für Halt, mit dem, was
-   * dort auf- und abgeht. Bei Beiladung ist das die eigentliche
-   * Auskunft - aus der Liste der Sendungen allein ließe sich die
-   * Reihenfolge nicht ablesen.
+   * dort auf- und abgeht. Seit 0.15.38 ist das die einzige Darstellung
+   * einer Tour - der Frachtbrief zeigt dieselben Halte, nur knapper.
+   * An jedem Halt hängt, was man dort tun kann: umsortieren, eine
+   * Sendung ändern, streichen oder eine weitere aufnehmen.
    */
   function stoppfolgeAnsicht(plan, sendungen) {
+    const versatz = gruppenVersatz(plan);
+    const gruppenZahl = plan.stopps.length - versatz;
     return `
       <ol class="tour-stoppfolge">
         ${plan.stopps.map((stopp, i) => {
@@ -2224,12 +2490,19 @@ const TourenplanungApp = (function () {
                 ${i < plan.stopps.length - 1
                   ? `<span class="tour-stopp-last">${anBord.toFixed(1)} t an Bord</span>`
                   : ""}
+                ${haltPfeile(i - versatz, gruppenZahl)}
               </div>
               ${stopp.abladen.map((k) => `
                 <div class="tour-stopp-zeile ab">
                   ▼ ab ${sendungen[k].tonnen.toFixed(1)} t ${sendungen[k].gutName}
                   <span class="tour-stopp-geld">${sendungen[k].entgelt.toLocaleString("de-DE")} DM</span>
-                  ${plan.je[k].warnungZiel ? `<span class="tour-warnung">${plan.je[k].warnungZiel}</span>` : ""}
+                  ${plan.je[k].warnungZiel ? `
+                    <span class="tour-warnung">
+                      ${plan.je[k].warnungZiel}
+                      ${(i - versatz) > 0 ? `
+                        <button class="tour-halt-frueher" data-halt-hoch="${i - versatz}"
+                                title="Diesen Halt vorziehen">▲ früher anfahren</button>` : ""}
+                    </span>` : ""}
                 </div>`).join("")}
               ${stopp.laden.map((k) => `
                 <div class="tour-stopp-zeile auf aenderbar"
@@ -2237,7 +2510,13 @@ const TourenplanungApp = (function () {
                   ▲ auf ${sendungen[k].tonnen.toFixed(1)} t ${sendungen[k].gutName}
                   <span class="tour-stopp-ziel">→ ${sendungen[k].nachName}</span>
                   ${plan.je[k].warnungLaden ? `<span class="tour-warnung">${plan.je[k].warnungLaden}</span>` : ""}
+                  <button class="tour-stopp-weg" data-etappe-loeschen="${k}"
+                          title="Sendung streichen">✕</button>
                 </div>`).join("")}
+              ${sendungen.length < SENDUNGEN_MAX ? `
+                <button class="tour-stopp-dazu" data-ladeort="${stopp.stadt}">
+                  + Sendung ab ${stopp.stadt}
+                </button>` : ""}
             </li>
           `;
         }).join("")}
@@ -2248,7 +2527,7 @@ const TourenplanungApp = (function () {
   /**
    * Die gerade zusammengestellte Sendung im Format der festgelegten.
    * Gibt null zurück, solange keine Fracht gewählt ist - nach einem
-   * "+ Beiladung" ist das der Normalfall.
+   * "+ Sendung" ist das der Normalfall.
    */
   function aktuelleEtappeAlsPlan() {
     if (!tour.art) return null;
@@ -2352,7 +2631,6 @@ const TourenplanungApp = (function () {
     if (ab) { tour.stadt = ab; gewaehlteStadt = ab; }
 
     tour.schritt = "fracht";
-    ladeortWahl = false;
     hervorgehobenesGut = s.art === "spot" ? s.gut : null;
     aktiveRoute = tour.ziel ? Route.berechne(s.vonName, s.nachName) : null;
 
@@ -2383,49 +2661,23 @@ const TourenplanungApp = (function () {
    * und danach eine Ortswahl: Der Unterschied ist eine Stelle in der
    * Tour, kein Fachwort.
    */
-  function ladeortWaehlen() {
-    ladeortWahl = true;
-    dispositionAktualisieren({ nurListe: true });
-    // Die Frage tritt an die Stelle des Knopfes, und der steht am Ende
-    // einer langen Durchsicht. Ohne das hier stellt das Programm eine
-    // Frage, die man nicht sieht.
-    const feld = fensterElement && fensterElement.querySelector(".tour-ladeortwahl");
-    if (feld && feld.scrollIntoView) {
-      feld.scrollIntoView({ block: "nearest" });
-    }
-  }
-
-  /** Die Orte, an denen die Tour noch etwas aufnehmen kann. */
-  function ladeorte() {
-    const sendungen = alleSendungen();
-    const plan = tourPlan(sendungen);
-    const orte = [];
-    const dazu = (name) => { if (name && !orte.includes(name)) orte.push(name); };
-
-    if (plan && plan.machbar && plan.stopps.length) {
-      // Am letzten Halt kann nichts mehr zugeladen werden, was noch
-      // irgendwo abgeladen würde - er ist das Ende der Tour. Er gehört
-      // trotzdem dazu: Von dort aus geht die Anschlussfracht.
-      plan.stopps.forEach((st) => dazu(st.stadt));
-    } else {
-      dazu(tour.stadt ? tour.stadt.name : null);
-      sendungen.forEach((s) => dazu(s.nachName));
-    }
-    return orte;
-  }
-
   /**
-   * Die offene Sendung übernehmen, falls es eine gibt, und in der
-   * genannten Stadt die nächste beginnen.
+   * Noch eine Sendung, geladen in der genannten Stadt.
+   *
+   * Bis 0.15.35 waren das zwei Knöpfe - "Beiladung" ab der
+   * Planungsstadt und "Anschluss" ab dem letzten Halt. Fachlich
+   * richtig, aber der Spieler musste den Unterschied kennen, bevor er
+   * ihn brauchte. Seit 0.15.38 hängt der Knopf an jedem Halt der
+   * Stoppfolge: Der Unterschied ist damit eine Stelle in der Tour und
+   * kein Fachwort mehr.
    *
    * Der Fall "keine offene Sendung" ist der Normalfall, seit man mit
-   * "Zur Tour" auf die Durchsicht zurückkehren kann, ohne etwas gewählt
-   * zu haben. Vorher brach der Anschlussknopf dort wirkungslos ab.
+   * "Zur Tour" auf die Durchsicht zurückkehren kann, ohne etwas
+   * gewählt zu haben.
    */
   function naechsteSendung(stadtName) {
     offeneSendungSichern();
     etappeZuruecksetzen();
-    ladeortWahl = false;
 
     const stadt = STAEDTE[stadtName];
     if (stadt) {
@@ -3302,18 +3554,27 @@ const TourenplanungApp = (function () {
     });
 
     // ---- Schritt 4: noch eine Sendung oder losschicken ----
-    const dazu = dispo.querySelector("#tour-btn-sendung-dazu");
-    if (dazu) dazu.addEventListener("click", ladeortWaehlen);
-
-    const ortWeg = dispo.querySelector("#tour-btn-ladeort-abbrechen");
-    if (ortWeg) ortWeg.addEventListener("click", () => {
-      ladeortWahl = false;
-      dispositionAktualisieren({ nurListe: true });
-    });
-
     dispo.querySelectorAll("[data-ladeort]").forEach((el) => {
       el.addEventListener("click", () => naechsteSendung(el.dataset.ladeort));
     });
+
+    // ---- Reihenfolge von Hand ----
+    dispo.querySelectorAll("[data-halt-hoch]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        haltVerschieben(Number(el.dataset.haltHoch), -1);
+      });
+    });
+
+    dispo.querySelectorAll("[data-halt-runter]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        haltVerschieben(Number(el.dataset.haltRunter), 1);
+      });
+    });
+
+    const reiheZurueck = dispo.querySelector("#tour-btn-reihenfolge-zurueck");
+    if (reiheZurueck) reiheZurueck.addEventListener("click", reihenfolgeZuruecksetzen);
 
     // ---- Eine Sendung ändern ----
     dispo.querySelectorAll("[data-sendung-bearbeiten]").forEach((el) => {
@@ -4464,6 +4725,20 @@ const TourenplanungApp = (function () {
      * einem Neuladen ab- und aufgeladen wird.
      */
     tourRueckrufe: () => ({ beiStopp: stoppErreicht, beiAnkunft: tourAbschliessen }),
+    /**
+     * Nur für den Test: die Handreihenfolge lesen und setzen. Eine
+     * unfahrbare Reihenfolge lässt sich über die Oberfläche nicht
+     * herstellen - die Pfeile erzeugen immer gültige Folgen. Geprüft
+     * werden muss der kaputte Zustand trotzdem, denn er ist der Grund,
+     * warum die Tour ihn überhaupt anzeigt.
+     */
+    __reihenfolge: () => (tour.reihenfolge ? tour.reihenfolge.slice() : null),
+    __reihenfolgeSetzen: (folge) => {
+      tour.reihenfolge = folge;
+      dispositionAktualisieren();
+      markenZeichnen();
+      routeZeichnen();
+    },
     /** Von anderen Modulen aufrufbar, wenn sich die Flotte ändert. */
     aktualisieren: () => {
       if (fensterElement && document.body.contains(fensterElement)) {

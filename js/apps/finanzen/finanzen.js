@@ -3,10 +3,17 @@
 // gehabt hätte: Kontostand oben, darunter das, was ihn dorthin
 // gebracht hat.
 //
-// Fünf Ansichten: Übersicht, Journal, BWA, Kosten je Fahrzeug, Bank.
-// Dazu eine sechste, die es in echter Software nicht gibt: Kostensätze
-// mit Quellenangabe. Sie macht sichtbar, welche Zahl im Spiel belegt
-// ist und welche noch vorläufig - siehe docs/kosten-1994.md.
+// Seit 0.15.37 vier Ansichten: Kasse, Monat, Verlauf, Je Fahrzeug.
+// Gezeigt werden VORGÄNGE, nicht Buchungen - ein Fahrzeugkauf ist eine
+// Zeile und nicht zwei, eine gefahrene Tour eine und nicht drei.
+//
+// Die ausführlichen Ansichten (Journal mit Kontonummern, BWA, Bank als
+// eigener Reiter, Kostensätze mit Quellenangabe) stehen weiterhin im
+// Code. Sie sind nur nicht erreichbar, bis es ein Einstellungen-
+// Programm mit dem Schalter "ausführliche Buchhaltung" gibt. Die
+// Kostensätze mit Quellen gehören dort hinein - sie machen sichtbar,
+// welche Zahl belegt ist und welche vorläufig, siehe
+// docs/kosten-1994.md.
 
 const FinanzenApp = (function () {
   let fensterElement = null;
@@ -15,12 +22,19 @@ const FinanzenApp = (function () {
   let journalKonto = null;
 
   const ANSICHTEN = [
-    { id: "uebersicht", titel: "Übersicht" },
-    { id: "journal", titel: "Journal" },
-    { id: "bwa", titel: "BWA" },
-    { id: "fahrzeuge", titel: "Je Fahrzeug" },
-    { id: "bank", titel: "Bank" },
-    { id: "saetze", titel: "Sätze" }
+    // Vier Reiter statt sechs. Ein Gelegenheitsspieler braucht vier
+    // Auskünfte: Habe ich Geld, verdiene ich Geld, womit verdiene ich
+    // es, und was ist zuletzt passiert. Kontonummern, Belegnummern und
+    // das Wort BWA beantworten keine davon.
+    //
+    // Die ausführlichen Ansichten (Journal mit Konten, BWA, Sätze)
+    // stehen weiterhin im Code und sind nur nicht erreichbar - sie
+    // kommen zurück, sobald es ein Einstellungen-Programm mit dem
+    // Schalter "ausführliche Buchhaltung" gibt.
+    { id: "uebersicht", titel: "Kasse" },
+    { id: "monat", titel: "Monat" },
+    { id: "verlauf", titel: "Verlauf" },
+    { id: "fahrzeuge", titel: "Je Fahrzeug" }
   ];
 
   // ---------- Hilfen ----------
@@ -58,9 +72,12 @@ const FinanzenApp = (function () {
 
   function ansichtInhalt() {
     switch (ansicht) {
+      case "verlauf": return renderVerlauf();
+      case "monat": return renderMonat();
+      case "fahrzeuge": return renderFahrzeuge();
+      // Nur über den späteren Schalter erreichbar:
       case "journal": return renderJournal();
       case "bwa": return renderBwa();
-      case "fahrzeuge": return renderFahrzeuge();
       case "bank": return renderBank();
       case "saetze": return renderSaetze();
       default: return renderUebersicht();
@@ -118,8 +135,174 @@ const FinanzenApp = (function () {
         <dl class="fin-kennzahlen">
           <dt>Darlehen</dt><dd>${Finanzen.offeneKredite().length}</dd>
           <dt>Restschuld</dt><dd>${dm(restschuld)}</dd>
+          <dt>Nächste Rate</dt><dd>${dm(naechsteRate())}</dd>
         </dl>
       </div>
+
+      <!-- Die Bank steckt seit 0.15.37 mit in der Kasse. Ein eigener
+           Reiter dafür lohnte nicht: Zwei Zahlen und ein Formular, das
+           man selten braucht - aber brauchen können muss. -->
+      ${renderBank()}
+    `;
+  }
+
+  /** Was im kommenden Monat an Zins und Tilgung fällig wird. */
+  function naechsteRate() {
+    return Finanzen.offeneKredite().reduce((s, k) =>
+      s + k.tilgungJeMonat + (k.restschuld * (k.zinssatz / 100) / 12), 0);
+  }
+
+  /**
+   * Der Verlauf: eine Zeile je VORGANG, nicht je Buchung.
+   *
+   * Ein Fahrzeugkauf war bisher zwei Zeilen mit demselben Betrag - das
+   * las sich wie zwei Abbuchungen und wurde auch so gemeldet. Eine
+   * gefahrene Tour war drei Zeilen, und wer wissen wollte, ob sie sich
+   * gelohnt hat, musste sie selbst verrechnen. Hier steht sie mit dem,
+   * was blieb, und darunter klein, woraus es sich zusammensetzt.
+   */
+  function renderVerlauf() {
+    const monate = Finanzen.monate();
+    const monat = gewaehlterMonat || monate[0] || null;
+    const liste = monat ? Finanzen.vorgaenge(monat) : [];
+
+    return `
+      <div class="fin-filterleiste">
+        <select class="fin-auswahl" id="fin-monat">
+          ${monate.length === 0
+            ? `<option>—</option>`
+            : monate.map((m) => `
+                <option value="${m}" ${m === monat ? "selected" : ""}>
+                  ${Finanzen.monatsName(m)}
+                </option>`).join("")}
+        </select>
+      </div>
+
+      ${liste.length === 0
+        ? `<div class="fin-leer">In diesem Monat ist nichts passiert.</div>`
+        : `<ul class="fin-verlauf">
+            ${liste.map((v) => `
+              <li class="fin-vorgang fin-art-${v.art}">
+                <span class="fin-vorgang-kopf">
+                  <span class="fin-datum">${datumKurz(v.datum)}</span>
+                  <span class="fin-text">${v.text}</span>
+                  <span class="fin-betrag ${vorzeichenKlasse(v.betrag)}">${dm(v.betrag)}</span>
+                </span>
+                ${v.posten.length > 1
+                  ? `<span class="fin-posten">${postenText(v)}</span>`
+                  : ""}
+              </li>
+            `).join("")}
+          </ul>`}
+    `;
+  }
+
+  /**
+   * Kontennamen in der Sprache des Spielers. "Laufende
+   * Kfz-Betriebskosten" ist korrekt nach SKR03 und sagt einem
+   * Gelegenheitsspieler nichts; "Reifen und Verschleiß" schon. Die
+   * echten Namen stehen weiterhin in finanzen.js und in der
+   * ausführlichen Ansicht.
+   */
+  const KLARTEXT = {
+    8400: "Frachten", 8200: "Sonstige Erlöse",
+    4500: "Sprit", 4530: "Reifen und Verschleiß",
+    4510: "Kfz-Steuer", 4520: "Versicherung", 4540: "Maut und Fähren",
+    4210: "Depotmiete", 4970: "Verwaltung",
+    4830: "Wertverlust der Fahrzeuge", 2110: "Zinsen"
+  };
+
+  const POSTENNAME = {
+    8400: "Fracht", 8200: "Erlös",
+    4500: "Sprit", 4530: "Verschleiß", 4510: "Steuer",
+    4520: "Versicherung", 4540: "Maut", 4830: "Wertverlust",
+    4210: "Miete", 4970: "Verwaltung", 2110: "Zinsen",
+    1200: "vom Konto", 320: "Fuhrpark", 630: "Darlehen"
+  };
+
+  /**
+   * Die Einzelposten eines Vorgangs in einer Zeile: "6.787 Fracht ·
+   * 699 Sprit · 109 Verschleiß". Bewusst ohne Kontonummern und ohne
+   * Vorzeichen - was Kosten sind, sagt das Wort.
+   */
+  function postenText(v) {
+    return v.posten
+      // Die Gegenbuchung im Anlagevermögen ist keine Zahlung und würde
+      // den Betrag doppelt zeigen.
+      .filter((p) => p.konto !== 320 || v.art === "abschreibung")
+      // Erst was hereinkam, dann was abging, das Größte zuerst. Das
+      // Journal liefert die Buchungen in umgekehrter Reihenfolge -
+      // ungeordnet stünde bei einer Tour der Verschleiß vor der Fracht.
+      .slice()
+      .sort((a, b) => (b.betrag > 0) - (a.betrag > 0) || Math.abs(b.betrag) - Math.abs(a.betrag))
+      .map((p) => `${Math.abs(p.betrag).toLocaleString("de-DE")} ${
+        POSTENNAME[p.konto] || p.kontoName}`)
+      .join(" · ");
+  }
+
+  /**
+   * Der Monat in Klartext. Dieselben Zahlen wie in der BWA, aber nach
+   * dem geordnet, was der Spieler beeinflussen kann, und ohne
+   * Kontonummern.
+   */
+  function renderMonat() {
+    const monate = Finanzen.monate();
+    if (monate.length === 0) {
+      return `<div class="fin-leer">Noch ist nichts passiert.</div>`;
+    }
+    const monat = gewaehlterMonat || monate[0];
+    const a = Finanzen.bwa(monat);
+    const stelle = monate.indexOf(monat);
+    const vormonat = stelle >= 0 && monate[stelle + 1]
+      ? Finanzen.bwa(monate[stelle + 1])
+      : null;
+
+    const zeile = (z, klasse) => `
+      <tr>
+        <td>${KLARTEXT[z.konto] || z.name}</td>
+        <td class="fin-zahl ${klasse}">${dm(z.betrag)}</td>
+      </tr>`;
+
+    return `
+      <div class="fin-filterleiste">
+        <select class="fin-auswahl" id="fin-monat">
+          ${monate.map((m) => `
+            <option value="${m}" ${m === monat ? "selected" : ""}>
+              ${Finanzen.monatsName(m)}
+            </option>`).join("")}
+        </select>
+      </div>
+
+      <table class="fin-tabelle">
+        <tbody>
+          <tr class="fin-zeile-gruppe"><td colspan="2">Eingenommen</td></tr>
+          ${a.erloese.length === 0
+            ? `<tr><td class="fin-zeile-leer" colspan="2">nichts</td></tr>`
+            : a.erloese.map((z) => zeile(z, "fin-positiv")).join("")}
+
+          <tr class="fin-zeile-gruppe"><td colspan="2">Ausgegeben</td></tr>
+          ${a.aufwand.length === 0
+            ? `<tr><td class="fin-zeile-leer" colspan="2">nichts</td></tr>`
+            : a.aufwand.map((z) => zeile(z, "fin-negativ")).join("")}
+
+          <tr class="fin-zeile-ergebnis">
+            <td>Verdient</td>
+            <td class="fin-zahl ${vorzeichenKlasse(a.ergebnis)}">${dm(a.ergebnis)}</td>
+          </tr>
+          ${vormonat ? `
+            <tr class="fin-zeile-vergleich">
+              <td>${vormonat.name}</td>
+              <td class="fin-zahl ${vorzeichenKlasse(vormonat.ergebnis)}">
+                ${dm(vormonat.ergebnis)}</td>
+            </tr>` : ""}
+        </tbody>
+      </table>
+
+      <p class="fin-fussnote">
+        „Wertverlust" ist die Abschreibung: Was die Fahrzeuge in diesem
+        Monat an Wert verloren haben. Es fließt kein Geld ab, das
+        Ergebnis belastet es trotzdem.
+      </p>
     `;
   }
 

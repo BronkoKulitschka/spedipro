@@ -351,3 +351,59 @@
 
 .fin-satz.belegt .fin-satz-marke     { background: #2f8f3f; color: var(--win-white); }
 .fin-satz.vorlaeufig .fin-satz-marke { background: #d9a520; color: #10100c; }
+
+/* ---------- Verlauf ----------
+   Eine Zeile je Vorgang statt je Buchung. Die Einzelposten stehen
+   klein darunter: Man sieht, was blieb, und kann nachsehen, woraus es
+   sich zusammensetzt - ohne selbst zu rechnen. */
+.fin-verlauf {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fin-vorgang {
+  padding: 4px 3px;
+  border-bottom: 1px dotted var(--win-grey-dark);
+}
+
+.fin-vorgang:last-child { border-bottom: none; }
+
+.fin-vorgang-kopf {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.fin-vorgang-kopf .fin-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fin-vorgang-kopf .fin-betrag { white-space: nowrap; font-weight: bold; }
+
+.fin-posten {
+  display: block;
+  margin-left: 34px;
+  font-size: 10px;
+  color: var(--win-grey-darker);
+}
+
+/* Ein Kauf ist ein Einschnitt - der darf auffallen. */
+.fin-vorgang.fin-art-kauf,
+.fin-vorgang.fin-art-verkauf { background: var(--win-grey-light); }
+
+.fin-zeile-vergleich td {
+  font-size: 11px;
+  color: var(--win-grey-darker);
+}
+
+.fin-fussnote {
+  margin: 8px 3px 0 3px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--win-grey-darker);
+}

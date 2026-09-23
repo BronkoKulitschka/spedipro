@@ -127,7 +127,139 @@ Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
 Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
 Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
 
-## Aktueller Stand (v0.15.36)
+## Aktueller Stand (v0.15.38)
+
+**Stufe 2: die Stoppfolge ist die Tour.**
+
+Bis hierher stand dieselbe Tour an zwei Stellen in zwei Modellen - im
+Frachtbrief als Liste von Sendungen, auf der Durchsicht als Stoppfolge.
+Der Spieler musste beide im Kopf haben. Jetzt ist es ein Modell in zwei
+Auflösungen: im Frachtbrief eine Zeile je Halt, auf der Durchsicht
+derselbe Halt mit allem, was dort wechselt.
+
+**Die Reihenfolge lässt sich von Hand legen.** An jedem Halt stehen ▲
+und ▼. Dafür musste `stoppfolge()` auseinander: Sie fand und bewertete
+eine Reihenfolge in einem Zug. Jetzt findet `stationenFinden()` eine
+(die Heuristik wie bisher), und `stationenAuswerten()` rechnet **jede**
+durch - auch eine von Hand gelegte. Die Prüfung, die vorher implizit
+galt, weil die Heuristik nie etwas Unmögliches erzeugte, steht jetzt
+ausdrücklich da: laden vor abladen, Kapazität an jedem Punkt, Strecke
+vorhanden.
+
+Umsortiert werden **Halte, nicht Stationen**: Ein Halt, an dem zwei
+Sendungen wechseln, ist ein Halt, und den verschiebt man als Ganzes.
+Das ist auch das, was ein Disponent meint, wenn er sagt „Hannover vor
+Bremen". Gemerkt wird die Reihenfolge nicht als Liste von Städtenamen -
+eine Stadt kann zweimal vorkommen - sondern als Stationen mit einem
+Schlüssel je Sendung.
+
+Zwei Entscheidungen dazu:
+
+- **Kommt eine Sendung dazu, bleibt die Handreihenfolge bestehen.** Die
+  neue wird eingefügt, die bestehende Ordnung nicht weggeworfen. Alles
+  neu zu rechnen wäre einfacher gewesen, hätte aber die Arbeit des
+  Spielers zunichte gemacht, sobald er eine vierte Sendung dazunimmt.
+- **Eine unfahrbare Reihenfolge bleibt sichtbar.** Der Grund steht
+  dabei („Sendung 2 ist in Bremen noch nicht geladen"), Losschicken ist
+  gesperrt, und daneben steht der Weg zurück zur berechneten. Vorher
+  verschwand so ein Zustand hinter „nicht fahrbar, eine Sendung
+  streichen" - solange ein Algorithmus die Reihenfolge bestimmte, war
+  das in Ordnung. Wer sie von Hand legt, muss den kaputten Zustand
+  sehen können, um ihn zu reparieren.
+
+Der Hebel sitzt dort, wo das Problem auffällt: Neben „Liefertermin
+nicht zu halten" steht ein `▲ früher anfahren`, das genau diesen Halt
+vorzieht.
+
+**`+ Sendung` hängt jetzt an jedem Halt.** Damit entfällt die
+Ortsfrage aus 0.15.36 wieder - sie war die Brücke hierher. Der
+Unterschied Beiladung/Anschluss ist endgültig keine Vokabel mehr,
+sondern eine Stelle in der Tour. Löschen und Ändern hängen an den
+Ladezeilen.
+
+Zwei Fehler beim Bauen, beide im Stylesheet bzw. hier vermerkt:
+
+- Die Pfeilnummer zeigte auf den falschen Halt. Die Stoppfolge zählt
+  ab dem Standort des Fahrzeugs, die Stationsgruppen erst ab der ersten
+  Station - beide fallen nur zusammen, wenn im Startort auch geladen
+  wird. Ein Klick auf den letzten Halt verschob den vorletzten. Jetzt
+  rechnet `gruppenVersatz()` das um.
+- Beim Entfernen der Ortsfrage habe ich zu viel gelöscht:
+  `stoppfolgeAnsicht`, `haltPfeile`, `gruppenVersatz` und
+  `naechsteSendung` lagen zwischen den entfernten Funktionen. Die
+  Syntaxprüfung ging durch, der Fehler fiel erst im Browser auf
+  („naechsteSendung is not defined"). Lehre: Nach einer Löschung über
+  Zeilenbereiche die Funktionsliste gegenprüfen, nicht nur die Syntax.
+
+Geprüft mit `browsertest-reihenfolge.js` (umsortieren, Handreihenfolge
+übersteht eine neue Sendung, unfahrbare Reihenfolge sichtbar und
+erklärt, Losschicken gesperrt, Rückweg zur berechneten). Sechs
+bestehende Tests lasen die Sendungen aus dem Frachtbrief und sind auf
+die Stoppfolge umgestellt - die Verhaltensänderung ist gewollt.
+
+## Vorheriger Stand (v0.15.37)
+
+**Die Buchhaltung für Gelegenheitsspieler: Vorgänge statt Buchungen.**
+
+Gemeldet wurde „zwei Abrechnungen für einen Kauf": ein Fahrzeugkauf
+über 165.000 DM stand zweimal mit demselben Betrag im Journal.
+Nachgemessen:
+
+```
+Kontostand vorher:  250.000 DM
+Kontostand nachher:  85.000 DM
+Abgegangen:         165.000 DM   (Kaufpreis: 165.000 DM)
+```
+
+Das Geld ging **einmal** ab - die zweite Zeile ist die Gegenbuchung im
+Anlagevermögen und trägt `ohneBank`. Dahinter steckte aber ein echter
+Fehler, ein anderer: Konto 320 „Fuhrpark" ist ein Bestandskonto, und
+ein gekaufter Lkw **mehrt** das Anlagevermögen. Gebucht wurde `-preis`:
+
+```
+Konto 320 (Fuhrpark) aufsummiert: −144.115 DM
+Summe der Restbuchwerte:           185.885 DM
+```
+
+Die Firma besaß zwei Lkw, und das Fuhrparkkonto stand bei minus
+144.000. Im selben Modul widersprach sich das: Die Startflotte wurde
+als Sacheinlage positiv gebucht - dasselbe Ereignis mit umgekehrtem
+Vorzeichen -, und der Abgang beim Verkauf ebenfalls positiv. Jetzt
+stimmen die Vorzeichen, und die Abschreibung bucht zusätzlich gegen
+320 („4830 an 320"). Damit gilt eine prüfbare Zusage: **Konto 320 ist
+immer genau die Summe der Restbuchwerte.** Der Test rechnet sie nach,
+auch nach einem Monatswechsel.
+
+**Die Anzeige war der zweite Teil des Problems.** Das Journal zeigt
+Buchungen, der Spieler denkt in Vorgängen. Jede Buchung trägt jetzt
+eine Vorgangskennung, und `Finanzen.vorgaenge()` fasst sie zusammen:
+
+```
+vorher                              jetzt
+34 1200  −165.000  Zahlung F-SP 102
+33  320  −165.000  Anschaffung …     18.03. Meridian 1830 S gekauft  −165.000 DM
+32 4530     −109  Reifen …
+31 4500     −699  613 l …            13.03. A-1278 · Praha → Rīga      +5.979 DM
+30 8400   +6.787  A-1278 …                  6.787 Fracht · 699 Sprit · 109 Verschleiß
+```
+
+Der Betrag eines Vorgangs ist die Summe seiner **zahlungswirksamen**
+Buchungen - sonst stünde bei einem Kauf eine Null, weil sich Zugang
+und Zahlung aufheben: richtig gebucht, aber keine Auskunft.
+
+**Vier Reiter statt sechs:** Kasse (mit der Bank darin, samt Formular
+für ein Darlehen), Monat, Verlauf, Je Fahrzeug. Weg sind Kontonummern,
+Belegnummern und das Wort BWA; die Posten heißen „Sprit", „Reifen und
+Verschleiß", „Wertverlust der Fahrzeuge".
+
+Die ausführlichen Ansichten - Journal mit Konten, BWA, Bank als
+eigener Reiter und die Kostensätze mit Quellenangabe - stehen
+weiterhin im Code und sind nur nicht erreichbar. Sie kommen zurück,
+sobald es ein Einstellungen-Programm mit dem Schalter „ausführliche
+Buchhaltung" gibt. Die Daten dahinter bleiben intakt; der Test prüft
+das ausdrücklich mit.
+
+## Vorheriger Stand (v0.15.36)
 
 **Ladungen bearbeiten - Stufe 1 der Überarbeitung der Disposition.**
 

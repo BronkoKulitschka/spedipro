@@ -1947,3 +1947,108 @@
   flex: 0 0 auto;
   overflow: visible;
 }
+
+/* ---------- Reihenfolge von Hand ----------
+   Die Pfeile verschieben einen HALT, nicht eine einzelne Sendung: Ein
+   Halt, an dem zwei Sendungen wechseln, ist ein Halt. */
+.tour-halt-pfeile {
+  display: inline-flex;
+  gap: 1px;
+  margin-left: auto;
+}
+
+.tour-halt-pfeil {
+  font-family: inherit;
+  font-size: 9px;
+  line-height: 1;
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  color: inherit;
+  background: var(--win-grey);
+  border: 1px solid var(--win-grey-dark);
+  border-top-color: var(--win-white, #ffffff);
+  border-left-color: var(--win-white, #ffffff);
+  cursor: pointer;
+}
+
+.tour-halt-pfeil:active {
+  border-color: var(--win-grey-dark);
+  border-top-color: var(--win-grey-darker);
+  border-left-color: var(--win-grey-darker);
+}
+
+.tour-halt-pfeil[disabled] {
+  color: var(--win-grey-dark);
+  cursor: default;
+}
+
+/* Der Hebel sitzt neben der Warnung, die ihn nötig macht. */
+.tour-halt-frueher {
+  font-family: inherit;
+  font-size: 10px;
+  margin-left: 4px;
+  padding: 0 4px;
+  color: var(--win-white, #ffffff);
+  background: #8a1414;
+  border: 1px solid #5c0c0c;
+  cursor: pointer;
+}
+
+.tour-handfolge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 5px 0;
+  padding: 3px 5px;
+  font-size: 11px;
+  background: #e2eaf4;
+  border: 1px solid #8fa8c4;
+}
+
+.tour-handfolge .win98-button { margin-left: auto; font-size: 11px; }
+
+/* Eine nicht fahrbare Reihenfolge wird gezeigt, nicht versteckt -
+   sonst kann man sie nicht reparieren. */
+.tour-unfahrbar {
+  margin: 5px 0;
+  padding: 5px 6px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #8a1414;
+  background: #f7e3e3;
+  border: 1px solid #c49c9c;
+}
+
+/* "+ Sendung" hängt seit 0.15.38 an jedem Halt statt an einem Knopf
+   mit nachgeschalteter Ortsfrage. Der Unterschied Beiladung/Anschluss
+   ist damit eine Stelle in der Tour und kein Fachwort mehr. */
+.tour-stopp-dazu {
+  display: block;
+  margin: 2px 0 0 24px;
+  padding: 2px 6px;
+  font-family: inherit;
+  font-size: 10px;
+  color: var(--win-grey-darker);
+  background: var(--win-grey);
+  border: 1px dashed var(--win-grey-dark);
+  cursor: pointer;
+}
+
+.tour-stopp-dazu:active { background: var(--win-grey-light); }
+
+.tour-stopp-weg {
+  float: right;
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1;
+  padding: 2px 4px;
+  color: inherit;
+  background: var(--win-grey);
+  border: 1px solid var(--win-grey-dark);
+  cursor: pointer;
+}
+
+/* Ein Halt im Frachtbrief: dieselbe Zeile wie eine Sendung vorher,
+   aber mit der Stadt als Hauptsache. */
+.tour-halt-kurz .tour-etappe-weg { font-weight: bold; }

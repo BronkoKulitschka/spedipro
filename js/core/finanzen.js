@@ -58,6 +58,93 @@ const Finanzen = (function () {
   function beiAenderung(rueckruf) { beobachter.push(rueckruf); }
   function benachrichtigen() { beobachter.forEach((r) => r()); }
 
+  // ---------- Vorgänge ----------
+  //
+  // Der Spieler denkt in Vorgängen, die Buchhaltung bucht in Konten.
+  // Ein Fahrzeugkauf sind zwei bis drei Buchungen, eine gefahrene Tour
+  // drei - und wer wissen will, ob sich die Tour gelohnt hat, musste
+  // sie bisher im Kopf zusammenzählen. Ein gemeldeter Fehler
+  // ("zwei Abrechnungen für einen Kauf") war in Wahrheit genau das:
+  // zwei richtige Buchungen, die wie zwei Abbuchungen aussahen.
+  //
+  // Deshalb bekommt jede Buchung eine Vorgangskennung, und
+  // vorgaenge() fasst sie wieder zusammen. Die Buchungen selbst
+  // bleiben unangetastet - die ausführliche Ansicht rechnet weiter
+  // mit ihnen.
+
+  /**
+   * Die Kennung hängt an der nächsten Belegnummer. Die ist eindeutig,
+   * läuft monoton und wird im Spielstand mitgeführt - ein eigener
+   * Zähler würde nach dem Laden bei 1 wieder anfangen und mit den
+   * wiederhergestellten Vorgängen kollidieren.
+   */
+  function vorgangBeginnen(art, text, zusatz = {}) {
+    return {
+      id: `V${naechsteBelegNr}`,
+      art,
+      text,
+      fahrzeugId: zusatz.fahrzeugId || null,
+      auftrag: zusatz.auftrag || null
+    };
+  }
+
+  /**
+   * Die Buchungen eines Monats zu Vorgängen zusammengefasst.
+   *
+   * Der Betrag eines Vorgangs ist bewusst die Summe seiner
+   * ZAHLUNGSWIRKSAMEN Buchungen: Beim Kauf steht dort, was vom Konto
+   * ging, nicht zusätzlich der Zugang im Anlagevermögen. Sonst stünde
+   * bei einem Kauf über 165.000 DM eine Null, weil sich Zugang und
+   * Zahlung aufheben - richtig gebucht, aber keine Auskunft.
+   *
+   * Buchungen ohne Vorgang (Einzelposten wie Kfz-Steuer) bleiben je
+   * eine eigene Zeile. Das ist richtig so: Sie SIND je ein Vorgang.
+   */
+  function vorgaenge(monat) {
+    const liste = buchungen({ monat });
+    const nachId = new Map();
+    const ergebnis = [];
+
+    liste.forEach((b) => {
+      if (!b.vorgang) {
+        ergebnis.push({
+          id: `B${b.beleg}`,
+          art: "einzeln",
+          datum: b.datum,
+          text: b.text,
+          betrag: b.betrag,
+          fahrzeugId: b.fahrzeugId,
+          auftrag: b.auftrag,
+          posten: []
+        });
+        return;
+      }
+
+      let v = nachId.get(b.vorgang);
+      if (!v) {
+        v = {
+          id: b.vorgang,
+          art: b.vorgangArt,
+          datum: b.datum,
+          text: b.vorgangText,
+          betrag: 0,
+          fahrzeugId: b.fahrzeugId,
+          auftrag: b.auftrag,
+          posten: []
+        };
+        nachId.set(b.vorgang, v);
+        ergebnis.push(v);
+      }
+      // Nur zahlungswirksame Buchungen bestimmen den Betrag; die
+      // Gegenbuchung im Anlagevermögen ist keine zweite Zahlung.
+      if (!b.ohneBank) v.betrag += b.betrag;
+      v.posten.push({ konto: b.konto, kontoName: b.kontoName,
+                      text: b.text, betrag: b.betrag });
+    });
+
+    return ergebnis;
+  }
+
   // ---------- Buchen ----------
 
   /**
@@ -79,7 +166,16 @@ const Finanzen = (function () {
       betrag: gerundet,
       fahrzeugId: zusatz.fahrzeugId || null,
       auftrag: zusatz.auftrag || null,
-      km: zusatz.km || 0
+      km: zusatz.km || 0,
+      // Zahlungswirksam? Die Gegenbuchung im Anlagevermögen ist keine
+      // zweite Zahlung, und der Verlauf muss das unterscheiden können.
+      ohneBank: Boolean(zusatz.ohneBank),
+      // Zu welchem VORGANG die Buchung gehört. Ein Fahrzeugkauf sind
+      // zwei bis drei Buchungen, eine gefahrene Tour drei - im
+      // Verlauf soll daraus je eine Zeile werden.
+      vorgang: zusatz.vorgang ? zusatz.vorgang.id : null,
+      vorgangArt: zusatz.vorgang ? zusatz.vorgang.art : null,
+      vorgangText: zusatz.vorgang ? zusatz.vorgang.text : null
     };
 
     journal.push(eintrag);
@@ -97,34 +193,43 @@ const Finanzen = (function () {
 
   /** Eine zugestellte Sendung: Erlös rein, Sprit raus. */
   function tourAbgerechnet({ auftrag, fahrzeug, verbrauchL, km }) {
-    buchen(8400, auftrag.entgelt,
-      `${auftrag.nummer}: ${auftrag.vonName} → ${auftrag.nachName}`,
+    // Erlös und die Kosten derselben Fahrt gehören zusammen: Im
+    // Verlauf steht dann eine Zeile mit dem, was unterm Strich blieb,
+    // statt dreier Zeilen, die man selbst verrechnen muss.
+    const vorgang = vorgangBeginnen("tour",
+      `${auftrag.nummer} · ${auftrag.vonName} → ${auftrag.nachName}`,
       { fahrzeugId: fahrzeug.id, auftrag: auftrag.nummer });
 
-    spritBuchen(fahrzeug, verbrauchL, `Tour ${auftrag.nummer}`);
-    reifenBuchen(fahrzeug, km, `Tour ${auftrag.nummer}`);
+    buchen(8400, auftrag.entgelt,
+      `${auftrag.nummer}: ${auftrag.vonName} → ${auftrag.nachName}`,
+      { fahrzeugId: fahrzeug.id, auftrag: auftrag.nummer, vorgang });
+
+    spritBuchen(fahrzeug, verbrauchL, `Tour ${auftrag.nummer}`, vorgang);
+    reifenBuchen(fahrzeug, km, `Tour ${auftrag.nummer}`, vorgang);
   }
 
   /** Leerfahrt: nur Kosten, kein Erlös. */
   function leerfahrtAbgerechnet({ fahrzeug, verbrauchL, km, von, nach }) {
-    spritBuchen(fahrzeug, verbrauchL, `Leerfahrt ${von} → ${nach}`);
-    reifenBuchen(fahrzeug, km, `Leerfahrt ${von} → ${nach}`);
+    const vorgang = vorgangBeginnen("leerfahrt",
+      `Leerfahrt ${von} → ${nach}`, { fahrzeugId: fahrzeug.id });
+    spritBuchen(fahrzeug, verbrauchL, `Leerfahrt ${von} → ${nach}`, vorgang);
+    reifenBuchen(fahrzeug, km, `Leerfahrt ${von} → ${nach}`, vorgang);
   }
 
-  function spritBuchen(fahrzeug, verbrauchL, anlass) {
+  function spritBuchen(fahrzeug, verbrauchL, anlass, vorgang) {
     const preis = Kostensaetze.dieselpreis();
     buchen(4500, -(verbrauchL * preis),
       `${fahrzeug.kennzeichen}: ${Math.round(verbrauchL).toLocaleString("de-DE")} l ` +
       `zu ${preis.toFixed(2)} DM (${anlass})`,
-      { fahrzeugId: fahrzeug.id });
+      { fahrzeugId: fahrzeug.id, vorgang });
   }
 
-  function reifenBuchen(fahrzeug, km, anlass) {
+  function reifenBuchen(fahrzeug, km, anlass, vorgang) {
     if (!km) return;
     buchen(4530, -(km * Kostensaetze.REIFEN_JE_KM_DM),
       `${fahrzeug.kennzeichen}: Reifen und Schmierstoffe, ` +
       `${Math.round(km).toLocaleString("de-DE")} km (${anlass})`,
-      { fahrzeugId: fahrzeug.id, km });
+      { fahrzeugId: fahrzeug.id, km, vorgang });
   }
 
   /** Werkstatt, Bergung, Ersatzteile. */
@@ -139,22 +244,32 @@ const Finanzen = (function () {
    */
   function fahrzeugGekauft({ fahrzeug, preis, anzahlung, laufzeitJahre }) {
     const kredithoehe = Math.max(0, Math.round(preis - (anzahlung || preis)));
+    const vorgang = vorgangBeginnen("kauf",
+      `${fahrzeug.marke} ${fahrzeug.modell} gekauft`, { fahrzeugId: fahrzeug.id });
 
-    buchen(320, -preis,
+    // POSITIV: Ein gekaufter Lkw MEHRT das Anlagevermögen. Bis 0.15.36
+    // stand hier -preis, und das Konto "Fuhrpark" rutschte mit jedem
+    // Kauf tiefer ins Minus - nach einem Kauf zeigte es -144.115 DM,
+    // obwohl die Firma zwei Lkw im Wert von 185.885 DM besaß. Das war
+    // auch in sich widersprüchlich: Die Startflotte wurde als
+    // Sacheinlage schon immer positiv gebucht, dasselbe Ereignis also
+    // mit umgekehrtem Vorzeichen.
+    buchen(320, preis,
       `Anschaffung ${fahrzeug.marke} ${fahrzeug.modell} (${fahrzeug.kennzeichen})`,
-      { fahrzeugId: fahrzeug.id, ohneBank: true });
+      { fahrzeugId: fahrzeug.id, ohneBank: true, vorgang });
 
     // Der Teil, der bar bezahlt wird, geht vom Konto.
     buchen(1200, -(preis - kredithoehe),
       `Zahlung ${fahrzeug.kennzeichen}`,
-      { fahrzeugId: fahrzeug.id });
+      { fahrzeugId: fahrzeug.id, vorgang });
 
     if (kredithoehe > 0) {
       kreditAufnehmen({
         betrag: kredithoehe,
         laufzeitJahre: laufzeitJahre || Kostensaetze.nutzungsdauer("zugmaschine"),
         zweck: `Fahrzeug ${fahrzeug.kennzeichen}`,
-        ohneAuszahlung: true
+        ohneAuszahlung: true,
+        vorgang
       });
     }
 
@@ -166,12 +281,16 @@ const Finanzen = (function () {
   }
 
   function fahrzeugVerkauft({ fahrzeug, erloes }) {
+    const vorgang = vorgangBeginnen("verkauf",
+      `${fahrzeug.marke} ${fahrzeug.modell} verkauft`, { fahrzeugId: fahrzeug.id });
     buchen(8200, erloes,
       `Verkauf ${fahrzeug.marke} ${fahrzeug.modell} (${fahrzeug.kennzeichen})`,
-      { fahrzeugId: fahrzeug.id });
-    buchen(320, (fahrzeug.restbuchwertDM || 0),
+      { fahrzeugId: fahrzeug.id, vorgang });
+    // NEGATIV: Der Wagen geht aus dem Anlagevermögen ab. Auch das stand
+    // bis 0.15.36 falsch herum.
+    buchen(320, -(fahrzeug.restbuchwertDM || 0),
       `Abgang ${fahrzeug.kennzeichen}`,
-      { fahrzeugId: fahrzeug.id, ohneBank: true });
+      { fahrzeugId: fahrzeug.id, ohneBank: true, vorgang });
     fahrzeug.restbuchwertDM = 0;
   }
 
@@ -182,7 +301,7 @@ const Finanzen = (function () {
    * mit gleichbleibender Tilgung ist nachvollziehbarer und war für
    * Fahrzeugfinanzierungen durchaus üblich.
    */
-  function kreditAufnehmen({ betrag, laufzeitJahre, zweck, ohneAuszahlung }) {
+  function kreditAufnehmen({ betrag, laufzeitJahre, zweck, ohneAuszahlung, vorgang }) {
     const zins = Kostensaetze.kreditzins();
     const kredit = {
       nr: naechsteKreditNr++,
@@ -196,13 +315,16 @@ const Finanzen = (function () {
     };
     kredite.push(kredit);
 
+    const eigen = vorgang || vorgangBeginnen("darlehen",
+      `Darlehen ${kredit.nr} über ${Math.round(betrag).toLocaleString("de-DE")} DM`);
+
     buchen(630, betrag,
       `Darlehen ${kredit.nr} über ${Math.round(betrag).toLocaleString("de-DE")} DM ` +
       `zu ${zins.toFixed(2)} %`,
-      { ohneBank: true });
+      { ohneBank: true, vorgang: eigen });
 
     if (!ohneAuszahlung) {
-      buchen(1200, betrag, `Auszahlung Darlehen ${kredit.nr}`);
+      buchen(1200, betrag, `Auszahlung Darlehen ${kredit.nr}`, { vorgang: eigen });
     }
 
     benachrichtigen();
@@ -277,8 +399,17 @@ const Finanzen = (function () {
     const betrag = Math.min(jeMonat, f.restbuchwertDM);
 
     f.restbuchwertDM = Math.max(0, f.restbuchwertDM - betrag);
+
+    // Abschreibung ist "4830 an 320": Der Aufwand belastet das
+    // Ergebnis, und derselbe Betrag geht vom Anlagevermögen ab. Ohne
+    // die zweite Zeile trüge Konto 320 die Anschaffungswerte und
+    // driftete mit jedem Monat weiter von den Restbuchwerten weg.
+    const vorgang = vorgangBeginnen("abschreibung",
+      `${f.kennzeichen}: Wertverlust`, { fahrzeugId: f.id });
     buchen(4830, -betrag, `${f.kennzeichen}: Abschreibung`,
-      { fahrzeugId: f.id, ohneBank: true });
+      { fahrzeugId: f.id, ohneBank: true, vorgang });
+    buchen(320, -betrag, `${f.kennzeichen}: Wertminderung`,
+      { fahrzeugId: f.id, ohneBank: true, vorgang });
   }
 
   function kreditRatenBuchen() {
@@ -495,6 +626,8 @@ const Finanzen = (function () {
     buchungen,
     monate,
     monatsName,
+    /** Buchungen eines Monats zu Vorgängen zusammengefasst. */
+    vorgaenge,
     bwa,
     fahrzeugRechnung,
     daten,
