@@ -75,6 +75,12 @@ const Betrieb = (function () {
       // einlegen, ab da laufen Miete und Verwaltung.
       if (typeof Finanzen !== "undefined") Finanzen.gruenden();
     }
+    // Die Börse steht zu diesem Zeitpunkt schon voll - gefüllt wurde
+    // sie, bevor der Spieler wusste, wo er sitzt. Erst jetzt lässt
+    // sich sagen, was "vor der eigenen Tür" heißt, also noch einmal
+    // auffrischen. Ohne das beginnt jedes Spiel mit einer Börse, in
+    // der das eigene Depot nicht vorkommt (0.15.39).
+    if (typeof Auftraege !== "undefined") Auftraege.auffrischen();
     benachrichtigen();
     // Auch den übrigen Spielstand sichern, damit Depot und Flotte
     // zusammenpassen.

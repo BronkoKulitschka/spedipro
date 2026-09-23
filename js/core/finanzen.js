@@ -367,15 +367,18 @@ const Finanzen = (function () {
     const fahrzeuge = FuhrparkApp.alleFahrzeuge();
 
     fahrzeuge.forEach((f) => {
-      buchen(4510, -(Kostensaetze.KFZ_STEUER_JAHR_DM / 12),
+      // Beide Sätze hängen seit 0.15.39 am zulässigen Gesamtgewicht
+      // des einzelnen Wagens. Vorher zahlte der 3,5-Tonner dasselbe
+      // wie ein 40-t-Sattelzug.
+      buchen(4510, -(Kostensaetze.kfzSteuerJahr(f) / 12),
         `${f.kennzeichen}: Kfz-Steuer`, { fahrzeugId: f.id });
-      buchen(4520, -(Kostensaetze.VERSICHERUNG_JAHR_DM / 12),
+      buchen(4520, -(Kostensaetze.versicherungJahr(f) / 12),
         `${f.kennzeichen}: Versicherung`, { fahrzeugId: f.id });
       abschreibungBuchen(f);
     });
 
     if (Betrieb.hatDepot()) {
-      buchen(4210, -Kostensaetze.DEPOTMIETE_MONAT_DM,
+      buchen(4210, -Kostensaetze.depotmieteMonat(fahrzeuge),
         `Miete Depot ${Betrieb.depotName()}`);
     }
     buchen(4970, -Kostensaetze.VERWALTUNG_MONAT_DM, "Verwaltung");

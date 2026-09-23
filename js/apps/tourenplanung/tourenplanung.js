@@ -387,7 +387,14 @@ const TourenplanungApp = (function () {
       .filter((s) => Wirtschaft.angebot(s).some((g) => g.id === gut.id));
     const bedarfsstaedte = Karte.alleStaedte()
       .filter((s) => Wirtschaft.bedarf(s).some((g) => g.id === gut.id));
-    const jeAuflieger = Math.min(25, (Ladung.LADEVOLUMEN_M3 * gut.dichteKgProM3) / 1000);
+    // Was von dieser Ware auf EINEN Wagen geht. Bis 0.15.38 stand hier
+    // fest "90 m³, max. 25 t" - das galt für den Sattelzug und für
+    // sonst nichts. Ein 3,5-Tonner mit 12 m³ hätte dieselbe Zahl
+    // angezeigt und damit gelogen.
+    const bezug = referenzFahrzeug();
+    const jeWagen = bezug
+      ? Ladung.maxMengeTonnen(bezug, gut)
+      : Math.min(25, (Ladung.LADEVOLUMEN_M3 * gut.dichteKgProM3) / 1000);
 
     return `
       <div class="tour-detailkopf">
@@ -405,7 +412,12 @@ const TourenplanungApp = (function () {
             [gut.verderblich ? "kühlpflichtig" : null, gut.gefahrgut ? "Gefahrgut (ADR)" : null]
               .filter(Boolean).join(", ") || "keine"
           }</dd>
-          <dt>Ladung je Auflieger</dt><dd>${jeAuflieger.toFixed(1)} t (90 m³, max. 25 t)</dd>
+          <dt>Ladung je Wagen</dt><dd>${
+            bezug
+              ? `${jeWagen.toFixed(1)} t · ${bezug.marke} ${bezug.modell}
+                 (${Ladung.ladevolumen(bezug)} m³, ${((bezug.zuladungKg || 24000) / 1000).toFixed(1)} t)`
+              : `${jeWagen.toFixed(1)} t je Sattelauflieger`
+          }</dd>
         </dl>
         <div class="tour-warentitel">Wird angeboten in ${lieferstaedte.length} Städten</div>
         <div class="gut-staedte">${lieferstaedte.map((s) => s.name).join(", ")}</div>
@@ -1365,7 +1377,15 @@ const TourenplanungApp = (function () {
     const max = spotMenge(f, tour.gut);
     if (max <= 0) return "";
 
-    const wert = Math.min(max, tour.tonnen > 0 ? tour.tonnen : max);
+    // Die Schrittweite muss zum Fahrzeug passen. Bis 0.15.38 war sie
+    // fest 0,5 t bei Mindestmenge 1 t - beim 3,5-Tonner mit 1,4 t
+    // Zuladung konnte der Regler damit nur den Wert 1,0 annehmen und
+    // sein eigenes Maximum nicht erreichen.
+    const schritt = max >= 10 ? 0.5 : max >= 3 ? 0.2 : 0.1;
+    // Das Maximum auf ein Vielfaches der Schrittweite legen, sonst ist
+    // der letzte Schritt nicht anfahrbar.
+    const obergrenze = Math.max(schritt, Math.floor(max / schritt + 1e-9) * schritt);
+    const wert = Math.min(obergrenze, tour.tonnen > 0 ? tour.tonnen : obergrenze);
     const preis = tour.ziel
       ? Math.round(Ladung.frachtpreis(tour.gut, wert,
           (Route.berechne(tour.stadt.name, tour.ziel.name) || { km: 0 }).km) * SPOT_FAKTOR)
@@ -1375,10 +1395,11 @@ const TourenplanungApp = (function () {
       <div class="tour-mengenregler">
         <label class="tour-menge-marke" for="tour-menge">Menge</label>
         <input class="tour-menge-schieber" type="range" id="tour-menge"
-               min="1" max="${max.toFixed(1)}" step="0.5" value="${wert.toFixed(1)}"
+               min="${schritt.toFixed(1)}" max="${obergrenze.toFixed(1)}"
+               step="${schritt.toFixed(1)}" value="${wert.toFixed(1)}"
                aria-label="Ladungsmenge in Tonnen">
         <output class="tour-menge-wert" id="tour-menge-wert">${wert.toFixed(1)} t</output>
-        <span class="tour-menge-max">von ${max.toFixed(1)} t${
+        <span class="tour-menge-max">von ${obergrenze.toFixed(1)} t${
           preis ? ` · ${preis.toLocaleString("de-DE")} DM` : ""}</span>
       </div>
     `;
@@ -1407,7 +1428,7 @@ const TourenplanungApp = (function () {
     if (!plan || !plan.machbar || !plan.belegung) return "";
 
     const zulT = (f.zuladungKg || 24000) / 1000;
-    const zulV = Ladung.LADEVOLUMEN_M3;
+    const zulV = Ladung.ladevolumen(f);
 
     const lastT = (b) => b.sendungen.reduce((s, k) => s + alle[k].tonnen, 0);
     const lastV = (b) => b.sendungen.reduce((s, k) =>

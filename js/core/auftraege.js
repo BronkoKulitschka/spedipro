@@ -36,6 +36,13 @@ const Auftraege = (function () {
   // nimmt (in Spieltagen ab Ladefenster-Ende).
   const VERFALL_TAGE = 2;
 
+  // So viele offene Aufträge liegen mindestens an einem Ort, an dem
+  // der Spieler steht (Depot oder Standplatz eines Wagens), und so
+  // groß ist darüber hinaus der Ortsanteil beim Nachfüllen. Beides
+  // gemessen eingestellt - siehe README zu 0.15.39.
+  const ORTS_MINDEST = 8;
+  const ORTSANTEIL = 0.4;
+
   let naechsteNummer = 1000;
   const auftraege = [];
   const beobachter = [];
@@ -49,6 +56,36 @@ const Auftraege = (function () {
    * angeboten und gebraucht wird.
    * @param {object} [vorgabe] erzwingt Absender/Kunde (für Stammkunden)
    */
+  /**
+   * Die Städte, in denen der Spieler steht: sein Depot und jeder Ort,
+   * an dem gerade ein Wagen parkt. Unterwegs befindliche Fahrzeuge
+   * zählen nicht - dort kann niemand aufladen.
+   */
+  /**
+   * Der kleinste Wagen der Flotte - das Maß, auf das eine Sendung
+   * passen muss, damit der Spieler sie überhaupt annehmen kann.
+   */
+  function kleinsterWagen() {
+    if (typeof FuhrparkApp === "undefined" || !FuhrparkApp.alleFahrzeuge) return null;
+    const flotte = FuhrparkApp.alleFahrzeuge();
+    if (!flotte.length) return null;
+    return flotte.reduce((a, b) =>
+      (a.zuladungKg || 24000) <= (b.zuladungKg || 24000) ? a : b);
+  }
+
+  function eigeneOrte() {
+    const namen = new Set();
+    if (typeof Betrieb !== "undefined" && Betrieb.hatDepot()) {
+      namen.add(Betrieb.depotName());
+    }
+    if (typeof FuhrparkApp !== "undefined" && FuhrparkApp.alleFahrzeuge) {
+      FuhrparkApp.alleFahrzeuge().forEach((f) => {
+        if (f.standort) namen.add(f.standort);
+      });
+    }
+    return [...namen].map((n) => STAEDTE[n]).filter(Boolean);
+  }
+
   function erzeugen(vorgabe = {}) {
     const staedte = Karte.alleStaedte();
 
@@ -56,10 +93,68 @@ const Auftraege = (function () {
     const angebot = Wirtschaft.angebot(von);
     if (angebot.length === 0) return null;
 
-    const gut = vorgabe.gut || zufaelligAus(angebot);
+    // Auf ein bestimmtes Fahrzeug zugeschnitten? Dann kommt nur Ware
+    // in Frage, die sein Aufbau überhaupt aufnimmt. Ohne diese Zeile
+    // bekam der Kastenwagen Aufträge über Heizöl und Schüttgut - vom
+    // Gewicht passend zugeschnitten und trotzdem unladbar.
+    const wahl = vorgabe.fuer && typeof Ladung !== "undefined"
+      ? angebot.filter((g) => Ladung.kannLaden(vorgabe.fuer, g))
+      : angebot;
+    if (wahl.length === 0) return null;
+
+    const gut = vorgabe.gut || zufaelligAus(wahl);
+
+    // Menge zuerst, denn sie entscheidet über die Entfernung.
+    //
+    // Bis 0.15.38 war jede Sendung eine Teil- oder Komplettladung
+    // zwischen 3 und 25 t - das passte zu einem Markt, in dem nur
+    // Sattelzüge fahren. Nach ANZAHL überwiegen in Wirklichkeit die
+    // kleinen Sendungen deutlich: Eine Komplettladung ist ein Auftrag,
+    // Stückgut sind hunderte. Nach TONNAGE ist es umgekehrt.
+    //
+    // Gewürfelt wird das RAUMMASS, nicht das Gewicht. Eine Sendung ist
+    // in der Praxis eine Zahl von Palettenplätzen; was darauf steht,
+    // entscheidet erst danach über die Tonnage. Über das Gewicht zu
+    // würfeln ging schief: 1,4 t Dämmstoff sind 28 m³ und passen in
+    // keinen 3,5-Tonner - der Auftrag sah klein aus und war es nicht.
+    // Eine Europalette misst rund 1,5 m³ bei üblicher Stapelhöhe.
+    const PALETTE_M3 = 1.5;
+    // Eine Palette wird nicht schwerer beladen, als Rampe, Hubwagen
+    // und Palette selbst vertragen - rund eine Tonne. Ohne diesen
+    // Deckel wog eine Palette Stahlblech 3,75 t, und "fünf Paletten
+    // Stückgut" wären 19 t gewesen.
+    const PALETTE_MAX_KG = 1000;
+    const wurf = Math.random();
+    let plaetze;
+    if (wurf < 0.55) {
+      // Stückgut: ein bis fünf Paletten. Sache des Transporters.
+      plaetze = 1 + Math.floor(Math.random() * 5);
+    } else if (wurf < 0.85) {
+      // Teilladung: ein knappes Drittel bis halber Auflieger
+      plaetze = 6 + Math.floor(Math.random() * 20);
+    } else {
+      // Komplettladung
+      plaetze = 30 + Math.floor(Math.random() * 30);
+    }
+    const maxTonnen = Math.min(25, (90 * gut.dichteKgProM3) / 1000);
+    const jePalette = Math.min(PALETTE_M3 * gut.dichteKgProM3, PALETTE_MAX_KG);
+    let tonnen = (plaetze * jePalette) / 1000;
+    tonnen = Math.round(Math.min(tonnen, maxTonnen) * 10) / 10;
+    if (tonnen < 0.1) tonnen = 0.1;
+
+    // Auf ein bestimmtes Fahrzeug zugeschnitten? Dann die Sendung
+    // darauf zurechtschneiden - in Raum UND Gewicht. Damit lässt
+    // sich eine Börse bestellen, in der für die eigene Flotte
+    // etwas dabei ist.
+    if (vorgabe.fuer && typeof Ladung !== "undefined") {
+      const deckelT = Ladung.maxMengeTonnen(vorgabe.fuer, gut);
+      if (deckelT > 0) {
+        tonnen = Math.round(Math.min(tonnen, deckelT) * 10) / 10;
+        if (tonnen < 0.1) tonnen = 0.1;
+      }
+    }
 
     // Empfänger: eine Stadt, die diese Ware braucht und erreichbar ist.
-    // Nähere Ziele sind häufiger - lange Läufe bleiben die Ausnahme.
     const moegliche = staedte.filter(
       (s) => s.name !== von.name && Wirtschaft.bedarf(s).some((g) => g.id === gut.id)
     );
@@ -68,16 +163,39 @@ const Auftraege = (function () {
     const nahe = moegliche
       .map((s) => ({ s, km: Karte.luftlinie(von, s) }))
       .sort((a, b) => a.km - b.km);
-    // Aus den nächstgelegenen zwei Dritteln wählen
-    const auswahl = nahe.slice(0, Math.max(3, Math.floor(nahe.length * 0.66)));
+
+    // Die Entfernung hängt an der Sendungsgröße. Ein Karton
+    // Ersatzteile geht in den Nachbarkreis, nicht nach Neapel; eine
+    // Komplettladung rechtfertigt den langen Lauf. Bis 0.15.39 wurde
+    // für jede Sendung aus denselben nächstgelegenen zwei Dritteln
+    // gewürfelt - deshalb bekam der 1,4-Tonner einen Auftrag über
+    // 3.780 km angeboten.
+    //
+    // Gewählt wird über einen RADIUS, nicht über einen Anteil der
+    // Liste. Ein Anteil hilft nicht, wenn nur fünf Städte in ganz
+    // Europa diese Ware brauchen: Die nächstgelegenen zwölf Prozent
+    // davon können immer noch achthundert Kilometer entfernt liegen.
+    // Liegt im Radius nichts, wird er verdoppelt, bis etwas darin
+    // liegt - die Sendung geht dann eben doch weit, aber als Ausnahme.
+    //
+    // Das ist zugleich die Vorstufe zur 50-km-Nahverkehrsgrenze aus
+    // dem Lizenzkapitel: Sie verbietet noch nichts, aber sie sorgt
+    // dafür, dass in Reichweite überhaupt etwas liegt.
+    // Die Werte sind an der Dichte des Städtenetzes gemessen, nicht
+    // geraten: Im Umkreis von Hamburg liegen 4 Städte bis 250 km,
+    // 12 bis 400 km, 27 bis 600 km, 45 bis 800 km. Mit 250 km ging
+    // jede Transportersendung nach Hannover und sonst nirgendwohin.
+    let radius = tonnen <= 1.5 ? 400 : tonnen <= 8 ? 900 : 2000;
+    let auswahl = [];
+    while (auswahl.length === 0 && radius < 6000) {
+      auswahl = nahe.filter((x) => x.km <= radius);
+      radius *= 2;
+    }
+    if (auswahl.length === 0) auswahl = nahe.slice(0, 3);
     const nach = (vorgabe.nach ? { s: vorgabe.nach } : zufaelligAus(auswahl)).s;
 
     const route = Route.berechne(von.name, nach.name);
     if (!route) return null;
-
-    // Menge: Teil- oder Komplettladung
-    const maxTonnen = Math.min(25, (90 * gut.dichteKgProM3) / 1000);
-    const tonnen = Math.round(Math.max(3, maxTonnen * (0.45 + Math.random() * 0.55)) * 10) / 10;
 
     const kunde = vorgabe.kunde || Kunden.fuer(von, gut.kategorie);
     const grundpreis = Ladung.frachtpreis(gut, tonnen, route.km);
@@ -150,10 +268,54 @@ const Auftraege = (function () {
       }
     });
 
-    // Rest über die Börse
+    // Ein Teil der Börse liegt vor der eigenen Haustür.
+    //
+    // Bis 0.15.39 würfelte erzeugen() den Versandort gleichverteilt
+    // über rund neunzig Städte. Bei 24 offenen Aufträgen lag im
+    // eigenen Depot im Schnitt 0,3 davon - gemessen über zwölf
+    // Neustarts in Hamburg: sechs Aufträge an der Marke, davon 5,8 für
+    // den 3,5-Tonner gesperrt. In neun von zwölf Spielen konnte der
+    // Wagen am ersten Tag nichts laden, was in seinem Depot lag. Mit
+    // dem 24-Tonner fiel das nicht auf, der konnte alles nehmen.
+    //
+    // Der Grund ist kein Spielbalance-Argument: Ein Spediteur ist in
+    // seiner Stadt bekannt. Die Verlader dort rufen ihn an, bevor sie
+    // eine Börse bemühen. Dass in Palermo ebenso viel für ihn bereit
+    // liegt wie vor seinem Tor, war die unrealistische Annahme.
+    // Zwei Regeln statt einer Quote. Eine Quote allein hätte am ersten
+    // Spieltag nichts genützt: Da steht die Börse schon voll, bevor der
+    // Spieler sein Depot überhaupt gewählt hat, und nachgefüllt wird
+    // erst, wenn etwas verfällt.
+    const eigene = eigeneOrte();
     let versuche = 0;
+
+    // Erstens: Vor der eigenen Tür liegt IMMER etwas, unabhängig
+    // davon, wie voll die Börse sonst ist.
+    if (eigene.length > 0) {
+      const namen = new Set(eigene.map((s) => s.name));
+      let vorOrt = offene().filter((a) => namen.has(a.vonName)).length;
+      const klein = kleinsterWagen();
+      while (vorOrt < ORTS_MINDEST && versuche < ORTS_MINDEST * 6) {
+        versuche++;
+        // Jede zweite dieser Sendungen ist auf den kleinsten Wagen der
+        // Flotte zugeschnitten. Das ist kein Entgegenkommen, sondern
+        // die Umkehrung dessen, was vorher galt: Ein Verlader, der den
+        // Spediteur vor Ort kennt, weiß auch, was bei ihm auf dem Hof
+        // steht, und fragt ihn nach passender Ware. Die andere Hälfte
+        // bleibt ungeschnitten - sonst verschwände die Versuchung,
+        // für den großen Auftrag den größeren Wagen anzuschaffen.
+        const vorgabe = { von: zufaelligAus(eigene) };
+        if (klein && vorOrt % 2 === 0) vorgabe.fuer = klein;
+        if (erzeugen(vorgabe)) vorOrt++;
+      }
+    }
+
+    // Zweitens: Der Rest füllt auf, mit einem Übergewicht auf die
+    // eigenen Orte - der Spediteur ist in seiner Stadt bekannt.
+    versuche = 0;
     while (offene().length < BOERSE_ZIEL && versuche < BOERSE_ZIEL * 4) {
-      erzeugen();
+      const ortsnah = eigene.length > 0 && Math.random() < ORTSANTEIL;
+      erzeugen(ortsnah ? { von: zufaelligAus(eigene) } : {});
       versuche++;
     }
 

@@ -8,6 +8,12 @@ const Ladung = (function () {
   // katalog in Kennungen ("plane"). Diese Tabelle verbindet beides.
   const AUFBAU_ZUORDNUNG = {
     "Plane": "plane",
+    // Ein Kastenwagen nimmt dieselbe Warengruppe wie ein Planenwagen -
+    // Stückgut, Kartonware, Teile. Nur eben eine Tonne statt
+    // fünfundzwanzig. Ohne diese Zeile konnte der Transporter aus
+    // 0.15.39 buchstäblich nichts laden, weil sein Aufbau in keiner
+    // Tabelle stand.
+    "Kastenwagen": "plane",
     "Kühlkoffer": "kuehl",
     "Tank": "tank",
     "Silo": "silo",
@@ -19,7 +25,18 @@ const Ladung = (function () {
 
   // Nutzbares Ladevolumen eines Sattelaufliegers in m³. Ein
   // Standard-Planenauflieger der 90er fasst rund 90 m³.
+  //
+  // Bis 0.15.38 galt diese Zahl für JEDES Fahrzeug. Mit dem
+  // 3,5-t-Transporter ging das nicht mehr: Der fasst rund 12 m³, also
+  // ein Siebtel. Mit 90 m³ hätte er Dämmstoff in Mengen geladen, die
+  // physisch nicht hineinpassen. Der Wert ist jetzt der Rückfall für
+  // Fahrzeuge ohne eigene Angabe.
   const LADEVOLUMEN_M3 = 90;
+
+  /** Laderaum dieses Fahrzeugs in m³. */
+  function ladevolumen(fahrzeug) {
+    return (fahrzeug && fahrzeug.ladevolumenM3) || LADEVOLUMEN_M3;
+  }
 
   /**
    * Manche Aufbauten können mehr als ihre eigene Warengruppe:
@@ -50,7 +67,7 @@ const Ladung = (function () {
    */
   function maxMengeTonnen(fahrzeug, gut) {
     const nachGewicht = (fahrzeug.zuladungKg || 24000) / 1000;
-    const nachVolumen = (LADEVOLUMEN_M3 * gut.dichteKgProM3) / 1000;
+    const nachVolumen = (ladevolumen(fahrzeug) * gut.dichteKgProM3) / 1000;
     return Math.round(Math.min(nachGewicht, nachVolumen) * 10) / 10;
   }
 
@@ -81,7 +98,7 @@ const Ladung = (function () {
     const belegtT = anBord.reduce((s, x) => s + x.tonnen, 0);
     const belegtV = anBord.reduce((s, x) => s + volumenM3(x.gut, x.tonnen), 0);
     const freiTonnen = Math.round(((fahrzeug.zuladungKg || 24000) / 1000 - belegtT) * 10) / 10;
-    const freiM3 = Math.round((LADEVOLUMEN_M3 - belegtV) * 10) / 10;
+    const freiM3 = Math.round((ladevolumen(fahrzeug) - belegtV) * 10) / 10;
 
     if (tonnen > freiTonnen) {
       return { passt: false, grund: `nur noch ${Math.max(0, freiTonnen).toFixed(1)} t frei`,
@@ -100,39 +117,79 @@ const Ladung = (function () {
     const belegtT = anBord.reduce((s, x) => s + x.tonnen, 0);
     const belegtV = anBord.reduce((s, x) => s + volumenM3(x.gut, x.tonnen), 0);
     const nachGewicht = (fahrzeug.zuladungKg || 24000) / 1000 - belegtT;
-    const nachVolumen = ((LADEVOLUMEN_M3 - belegtV) * gut.dichteKgProM3) / 1000;
+    const nachVolumen = ((ladevolumen(fahrzeug) - belegtV) * gut.dichteKgProM3) / 1000;
     return Math.max(0, Math.round(Math.min(nachGewicht, nachVolumen) * 10) / 10);
   }
 
   /** Woran die Ladung scheitert - für die Anzeige. */
   function begrenztDurch(fahrzeug, gut) {
     const nachGewicht = (fahrzeug.zuladungKg || 24000) / 1000;
-    const nachVolumen = (LADEVOLUMEN_M3 * gut.dichteKgProM3) / 1000;
+    const nachVolumen = (ladevolumen(fahrzeug) * gut.dichteKgProM3) / 1000;
     return nachVolumen < nachGewicht ? "Volumen" : "Gewicht";
   }
 
+  // Referenzsatz: was eine KOMPLETTLADUNG auf 24 t je Kilometer
+  // einbringt, vor Warenzuschlägen und vor dem Börsenabschlag.
+  //
+  // belegt als Obergrenze: Ein Transport München–Hannover (rund 610 km)
+  // kostete unter dem Tarif 2.500 DM, also 4,10 DM je km - für die hohe
+  // Tarifklasse AB und für die Zeit VOR der Freigabe zum 01.01.1994.
+  // Das Spiel beginnt am 01.03.1994, zwei Monate nach der Freigabe, in
+  // der einsetzenden Preiserosion. Der Ansatz liegt deshalb darunter.
+  // Siehe docs/kosten-1994.md, Abschnitt 9.
+  const SATZ_KOMPLETT_DM_KM = 3.4;
+  const REFERENZ_TONNEN = 24;
+
+  // Degression: Eine kleine Sendung kostet je Tonne ein Vielfaches
+  // einer großen. Bis 0.15.39 rechnete das Spiel rein je Tonnen-
+  // kilometer - eine 1-t-Sendung brachte ein Vierundzwanzigstel einer
+  // 24-t-Sendung. Das machte den 3,5-Tonner zum Zuschussgeschäft und
+  // nahm der Beiladung ihren Sinn.
+  //
+  // belegt: BME-Preisspiegel Stückgut und Teilladungen, Erhebung 2014,
+  // rund 70 Unternehmen und über 106.000 Datensätze. Mittelwerte je
+  // Sendung bis 400 km:
+  //
+  //     550 kg    91,87 EUR   =  167 EUR/t
+  //   1.050 kg   141,38 EUR   =  135 EUR/t
+  //   2.125 kg   225,02 EUR   =  106 EUR/t
+  //   5.500 kg   379,48 EUR   =   69 EUR/t
+  //  13.750 kg   570,34 EUR   =   41 EUR/t
+  //
+  // hergeleitet: Das ist eine Potenzkurve. Aus den Randpunkten
+  // 0,55 t und 13,75 t folgt
+  //   ln(570,34/91,87) / ln(13,75/0,55) = 1,826 / 3,219 = 0,567
+  // also Preis ~ Tonnen^0,57. Die Zwischenwerte treffen damit auf
+  // wenige Prozent (1,05 t: 133 statt 141; 5,5 t: 339 statt 379).
+  //
+  // Die Erhebung ist von 2014, nicht von 1994. Übernommen wird nur die
+  // FORM der Staffel, nicht ihr Niveau - das Niveau setzt der
+  // Referenzsatz oben, der aus einer Quelle von 1994 stammt. Dass die
+  // Staffel selbst über zwanzig Jahre stabil ist, ist eine Annahme:
+  // belegt: false. Das GFT-Tarifwerk mit der Gewichtsstaffel von 1994
+  // ist online nicht greifbar (siehe docs/kosten-1994.md, Abschnitt 13).
+  const DEGRESSION = 0.57;
+
   /**
-   * Frachtpreis in DM. Grundlage ist ein Satz je Tonnenkilometer, der
-   * mit Warenwert, Kühlpflicht und Gefahrgut steigt. Kurze Strecken
-   * bekommen einen Zuschlag, da An- und Abfahrt immer anfallen.
+   * Frachtpreis in DM für eine Sendung.
    *
-   * ACHTUNG: plausible Größenordnung, keine belegten Tarife von 1994.
-   * Der damals geltende Tarifzwang im deutschen Güterkraftverkehr
-   * (GüKG, Tarife bis Mitte der 90er) wäre für eine ernsthafte
-   * Wirtschaftsbilanz zu prüfen.
+   * Zwei Teile: eine Streckenvergütung und eine Abfertigungspauschale
+   * für Be- und Entladen, Papiere, Rampenzeit. Beide folgen der
+   * Gewichtsstaffel oben, die Pauschale flacher - ein Palettenplatz
+   * abzufertigen kostet fast dasselbe, egal was darauf steht.
    */
   function frachtpreis(gut, tonnen, km) {
-    const grundsatzProTkm = 0.22; // DM je Tonnenkilometer
+    const anteil = Math.pow(Math.max(0.1, tonnen) / REFERENZ_TONNEN, DEGRESSION);
 
     let faktor = 1;
     if (gut.verderblich) faktor *= 1.35;   // Kühlung, Zeitdruck
     if (gut.gefahrgut) faktor *= 1.4;      // Ausrüstung, Qualifikation
     if (gut.wertProTonne > 10000) faktor *= 1.2; // Haftungsrisiko
 
-    const strecke = grundsatzProTkm * tonnen * km * faktor;
-    const grundgebuehr = 120 + tonnen * 8; // Be- und Entladung
+    const strecke = SATZ_KOMPLETT_DM_KM * anteil * km * faktor;
+    const abfertigung = 60 + 260 * Math.pow(anteil, 0.6);
 
-    return Math.round(strecke + grundgebuehr);
+    return Math.round(strecke + abfertigung);
   }
 
   /** Fahrzeuge, die diese Ware befördern können. */
@@ -147,6 +204,7 @@ const Ladung = (function () {
 
   return {
     LADEVOLUMEN_M3,
+    ladevolumen,
     aufbauVon,
     kannLaden,
     maxMengeTonnen,

@@ -77,7 +77,64 @@
 //    gültigen Klassengrenzen prüfen.
 // ----------------------------------------------------------------------
 
+// Felder, die seit 0.15.39 dazugekommen sind und nur gesetzt werden
+// müssen, wenn ein Typ vom Sattelzug abweicht:
+//
+//   klasse            "sattelzug" | "transporter" - steuert Texte und
+//                     spätere Regeln (SP-Pflicht, Lenkzeit, Klasse 2)
+//   zulGesamtgewichtKg  zulässiges Gesamtgewicht. Kfz-Steuer und
+//                     Versicherung hängen daran (kostensaetze.js).
+//                     Ohne Angabe wird vom Sattelzug ausgegangen.
+//   ladevolumenM3     Laderaum. Vorher war das eine feste Zahl für alle
+//                     (90 m³ in ladung.js) - beim 3,5-Tonner grob
+//                     falsch, dort sind es rund 12 m³.
+//   sprite            eigenes Bild. Ohne Angabe das Standardsprite.
+//   miniaturAusschnitt  welcher Bildausschnitt in Listen gezeigt wird
+//   calloutAnker      Ankerpunkte der Verschleiß-Sprechblasen, in
+//                     Prozent der Bildbreite und -höhe. Sie waren bis
+//                     0.15.38 zentral im Fuhrpark auf genau ein Sprite
+//                     ausgemessen - mit einem zweiten Fahrzeug geht das
+//                     nicht mehr, deshalb stehen sie jetzt am Typ.
+
 const FAHRZEUGTYPEN = [
+  {
+    // Der Einstieg. Kein Sattelzug, kein Fernverkehr: ein Kastenwagen
+    // bis 3,5 t, wie ihn eine junge Spedition 1994 als erstes Fahrzeug
+    // gefahren hätte. Klasse 3 genügt, keine SP-Pflicht, keine
+    // EU-Lenkzeitpflicht.
+    typId: "kastor-t35",
+    marke: "Kastor",
+    modell: "T35",
+    vorbild: "Mercedes-Benz T1 / VW LT 35",
+    klasse: "transporter",
+    baujahrVon: 1989,
+    baujahrBis: 1995,
+    aufbautyp: "Kastenwagen",
+    motorleistungPS: 95,
+    zuladungKg: 1400,
+    zulGesamtgewichtKg: 3500,
+    ladevolumenM3: 12,
+    verbrauchBasisL100km: 12,
+    neupreisDM: 38000,
+    sprite: "assets/sprites/transporter-generisch.png",
+    // Der ganze Wagen passt ins Listenbild - anders als beim Sattelzug,
+    // wo nur die Zugmaschine gezeigt wird. Der Ausschnitt ist am
+    // Bildinhalt gemessen (x 131-428, y 102-333) plus etwas Luft.
+    miniaturAusschnitt: { x: 120, y: 92, breite: 320, hoehe: 252 },
+    // Im Browser ausgemessen, nicht geschätzt: Das Bild füllt den
+    // Rahmen bis auf 1 px, die Prozentwerte sind also die Bildpunkte
+    // geteilt durch die Bildgröße. Räder über ihre dunklen Flächen
+    // gefunden, nicht nach Augenmaß gesetzt. Der Antrieb zeigt bewusst
+    // ZWISCHEN die Achsen - zeigte er aufs Rad, träfen sich zwei
+    // Linien im selben Punkt.
+    calloutAnker: {
+      motor:      { anker: [31.5, 61.5], label: [8, 40] },
+      bremsen:    { anker: [43.0, 70.7], label: [16, 88] },
+      reifen:     { anker: [68.6, 58.9], label: [86, 82] },
+      karosserie: { anker: [58.9, 45.9], label: [54, 12] },
+      antrieb:    { anker: [52.0, 66.0], label: [88, 50] }
+    }
+  },
   {
     typId: "meridian-1830s",
     marke: "Meridian",
@@ -88,6 +145,7 @@ const FAHRZEUGTYPEN = [
     aufbautyp: "Plane",
     motorleistungPS: 300,
     zuladungKg: 25000,
+    zulGesamtgewichtKg: 40000,
     verbrauchBasisL100km: 32,
     neupreisDM: 165000
   },
@@ -101,6 +159,7 @@ const FAHRZEUGTYPEN = [
     aufbautyp: "Plane",
     motorleistungPS: 420,
     zuladungKg: 25500,
+    zulGesamtgewichtKg: 40000,
     verbrauchBasisL100km: 35,
     neupreisDM: 210000
   },
@@ -114,6 +173,7 @@ const FAHRZEUGTYPEN = [
     aufbautyp: "Kühlkoffer",
     motorleistungPS: 380,
     zuladungKg: 24000,
+    zulGesamtgewichtKg: 40000,
     verbrauchBasisL100km: 34,
     neupreisDM: 195000
   },
@@ -127,6 +187,7 @@ const FAHRZEUGTYPEN = [
     aufbautyp: "Plane",
     motorleistungPS: 350,
     zuladungKg: 25000,
+    zulGesamtgewichtKg: 40000,
     verbrauchBasisL100km: 33,
     neupreisDM: 180000
   },
@@ -140,6 +201,7 @@ const FAHRZEUGTYPEN = [
     aufbautyp: "Plane",
     motorleistungPS: 260,
     zuladungKg: 23000,
+    zulGesamtgewichtKg: 40000,
     verbrauchBasisL100km: 36,
     neupreisDM: 150000
   },
@@ -153,6 +215,7 @@ const FAHRZEUGTYPEN = [
     aufbautyp: "Kühlkoffer",
     motorleistungPS: 350,
     zuladungKg: 24500,
+    zulGesamtgewichtKg: 40000,
     verbrauchBasisL100km: 33,
     neupreisDM: 185000
   }

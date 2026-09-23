@@ -127,7 +127,339 @@ Mindest-Eigenkapitalsätze je Fahrzeug und die Führerscheinkosten der
 Zeit. Verfahren wie beim Kostenmodul: erst Quellen sammeln, dann
 Zahlen setzen, Platzhalter ausdrücklich kennzeichnen.
 
-## Aktueller Stand (v0.15.38)
+## Geplant: Freischaltung — die Werkzeuge sind Menschen
+
+*Entwurf, noch nichts davon gebaut. Verzahnt sich mit dem
+Lizenzkapitel darüber: Das regelt, wohin man fahren und was man laden
+darf, dieses hier, wer die Tour zusammenstellt.*
+
+### Der Befund
+
+Gemeldet wurde nach einem Test am Schreibtisch: die Tourenplanung ist
+zu umfangreich und zu schwerfällig; das Planen soll spannend sein und
+nicht durch zu viele Möglichkeiten unverständlich werden.
+
+Nachgezählt, was in jedem Schritt gleichzeitig auf dem Bildschirm
+steht (bedienbare Elemente, Zahlen mit Einheit, Wörter):
+
+| Schritt | bedienbar | Zahlen | Wörter |
+|---|---|---|---|
+| Übersicht, keine Stadt gewählt | 0 | 0 | 13 |
+| **1 Fracht wählen** | **17** | **24** | **300** |
+| 2 Ziel wählen | 4 | 6 | 58 |
+| 3 Fahrzeug wählen | 5 | 6 | 52 |
+| 4 Durchsicht, 1 Sendung | 14 | 18 | 137 |
+| **4 Durchsicht, 3 Sendungen** | **29** | **31** | 223 |
+
+Die Auskunft ist eindeutig: **Schritt 2 und 3 sind in Ordnung** - vier
+bis fünf Dinge, sechs Zahlen. Das Problem sitzt in Schritt 1 und 4.
+
+Schritt 1 überfällt mit 300 Wörtern, bevor irgendetwas entschieden
+ist: Jede Frachtzeile trägt Aufbaukürzel, Ziel, Nummer, Tonnage, Ware,
+Kilometer, Entgelt, Auftraggeber, Frist, Fristbalken und Restmenge.
+Zum Wählen braucht man drei Angaben - wohin, wieviel Geld, wie eilig.
+
+Schritt 4 hat 29 Werkzeuge, fast alle zum Reparieren: Pfeile zum
+Umsortieren, Löschen und Ändern je Sendung, „+ Sendung" je Halt,
+Einklappen, vier Frachtbrieffelder, zweimal Verwerfen. Jedes einzelne
+war für sich begründet (0.15.34 bis 0.15.38). Zusammen sind sie ein
+Cockpit und kein Spiel.
+
+### Die Lösung: nicht ausdünnen, sondern verdienen
+
+Die Werkzeuge verschwinden nicht - sie kommen später. Und der Grund
+dafür ist keine Bedienungsregel, sondern eine Tatsache über den
+Betrieb: **Eine Ein-Mann-Spedition macht keine
+Beiladungsoptimierung.** Der Unternehmer fährt selbst, nimmt einen
+Auftrag und fährt ihn. Beiladung, Stoppfolgen und Mengenkalkulation
+sind der Beruf eines Disponenten, und den stellt man ein, wenn der
+Betrieb ihn trägt.
+
+Damit ist das Ausdünnen keine Notlösung, sondern die Wahrheit über den
+Betrieb, den man gerade führt - und die Fahrer und der Disponent
+bekommen einen Grund zu existieren, der über ein Gehalt hinausgeht.
+
+### Die Treppe
+
+**Stufe 1 - Du fährst selbst.** Ein 3,5-t-Transporter, Nahverkehr,
+50 km ums Depot. Der Ablauf: Stadt antippen → Fracht wählen →
+losfahren. Kein Fahrzeugschritt, weil es nur ein Fahrzeug gibt. Keine
+Beiladung, kein Umsortieren, keine Mengenwahl. **Zwei Entscheidungen
+statt siebzehn.**
+
+Die 50-km-Grenze aus dem Lizenzkapitel kürzt die Frachtliste dabei von
+selbst: Die 300 Wörter schrumpfen nicht, weil etwas versteckt wird,
+sondern weil es weniger zu holen gibt. Die Entscheidung bleibt echt -
+von den erreichbaren Aufträgen ist einer der beste, und welcher, sagt
+**DM je Tag**.
+
+**Stufe 2 - Der zweite Wagen.** Jetzt erscheint der Fahrzeugschritt,
+weil er jetzt eine Wahl ist. Vorher wäre er ein Klick ohne
+Entscheidung gewesen.
+
+**Stufe 3 - Der erste angestellte Fahrer.** Aus „welcher Wagen" wird
+„wer fährt". Derselbe Schritt, aber jetzt steht ein Mensch darin, der
+seine Eigenheiten hat.
+
+**Stufe 4 - Der Disponent.** Mit ihm kommen **Beiladung und
+Mengenwahl**. Er füllt die Wagen - das ist sein Beruf, und deshalb
+kann man es ab jetzt.
+
+**Stufe 5 - Das Büro.** Stoppfolgen von Hand umsortieren, mehr als
+zwei Sendungen je Tour. Feinwerkzeug für den, der es will.
+
+### Zwei Regeln, ohne die es nicht funktioniert
+
+**Was gesperrt ist, muss sichtbar sein.** Sonst ist es kein
+Versprechen, sondern Abwesenheit, und der Spieler erfährt nie, dass es
+mehr gibt. Eine graue Zeile genügt: `+ Beiladung — ab dem ersten
+Disponenten`. Einmal, nicht als Dauerwerbung.
+
+**Was gesperrt ist, darf nie nötig werden.** Solange Umsortieren
+gesperrt ist, darf keine Lage entstehen, die es verlangt. Deshalb
+hängt die Sendungsgrenze an der Stufe: eine, dann zwei, dann vier. Bei
+einer Sendung gibt es nichts zu sortieren.
+
+### Anschluss an das, was schon steht
+
+- `SENDUNGEN_MAX` in der Disposition ist heute ein Festwert (4) und
+  wird zur Stufengröße.
+- Die Werkzeuge sind alle vorhanden und geprüft - Beiladung (0.15.28),
+  Mengenregler (0.15.36), Handreihenfolge (0.15.38). Es kommt je eine
+  Bedingung davor, kein neuer Code dahinter.
+- `kunden.js` führt Bindungsstufen; ein Personalmodul gibt es noch
+  nicht. Fahrer müssen Entitäten mit Kennung werden, so wie die Kunden
+  es schon sind.
+- Die Bilder (Pixelgrafik, 256 Farben) brauchen dieselbe eine Stelle,
+  die aus einer Kennung ein Bild macht - für Waren, Städte, Fahrzeuge,
+  **Fahrer und Kunden**.
+
+### Was damit noch nicht gelöst ist
+
+Die Treppe macht den Anfang einfach. Sie macht ihn nicht spannend.
+Spannung entsteht aus **Knappheit**, nicht aus Möglichkeiten: ein
+Wagen und drei gute Aufträge, eine Frist, die wirklich knapp ist,
+Geld, das für den zweiten Wagen gerade nicht reicht. Die Bausteine
+sind da - Frist, Kontostand, Kreditlinie -, sie werden nur nicht
+inszeniert. Das ist das nächste Thema nach diesem.
+
+## Aktueller Stand (v0.15.39)
+
+**Der Transporter ist das erste Fahrzeug.**
+
+Bisher begann jedes Spiel mit einem 24-Tonner. Das nahm die ganze
+Treppe aus dem Freischaltungskapitel vorweg: Wer oben anfängt, kann
+nicht mehr aufsteigen. Der neue Spielstand beginnt mit einem
+**Kastor T35**, 3,5 t zulässig, 1,4 t Zuladung, 12 m³, Vorbild
+Mercedes-Benz T1 / VW LT 35, Baujahr 1989 mit 186.000 km auf der Uhr.
+
+**Das Pixelbild dazu.** `assets/sprites/transporter-generisch.png`,
+560x436, 39 Farben. Der erste Entwurf war von Hand in Python
+konstruiert - Projektionsachsen aus dem Sattelzug-Sprite gemessen,
+Flächen als Polygone berechnet. Er saß geometrisch richtig und sah aus
+wie ein Karton mit Rädern. Das jetzige Bild ist von einem Bildmodell
+gezeichnet und hier nachbearbeitet, und das ist der interessantere
+Teil, weil ein Bildmodell nichts liefert, was ein Sprite sein könnte:
+1422x1106 Pixel, 58.065 Farben, weichgezeichnete Kanten, ein
+Hintergrund, der fast weiß ist.
+
+Die Nachbearbeitung ist deshalb kein Verkleinern, sondern ein
+Zurückrechnen auf das Raster, das das Modell nachgeahmt hat. Die
+Blockgröße lässt sich messen: Man summiert die Farbunterschiede
+spaltenweise, sucht die Ausschläge und schaut, welcher Abstand am
+häufigsten vorkommt - hier rund 5 Pixel. Also erst mit einem
+Flächenmittel auf das logische Raster herunter (damit verschwindet die
+Weichzeichnung in der Mittelung, statt später als Farbsaum
+übrigzubleiben), dann auf 46 Farben quantisieren, **ohne Dithering** -
+Dithering würde genau die Rasterpunkte erzeugen, die hier wegsollen -,
+dann alles fast Weiße auf reines Weiß setzen und schließlich
+ganzzahlig mit Nearest Neighbour vergrößern. Ganzzahlig, weil ein
+Faktor von 1,4 manche Pixel verdoppelt und andere nicht; das sieht man.
+
+Die Größe ist am Sattelzug ausgerichtet, nicht am Rahmen: 298x232
+gegen dessen 477x304. Ein erster Versuch füllte das Bild besser aus
+und war dann 428x332 groß - der 3,5-Tonner wäre in der Liste höher
+gewesen als der 40-Tonner.
+
+**Die Umfärbbarkeit war die eigentliche Vorgabe an das Bild.**
+`lackierung.js` erkennt Lack daran, dass ein Pixel gesättigt (> 0,25)
+und rötlich ist (Farbton unter 25 oder über 340 Grad). Ein Reifen mit
+Rotstich würde mitgefärbt. Der Prompt an das Bildmodell schreibt
+deshalb ausdrücklich vor, dass alles Unlackierte neutral grau oder
+blaugrau zu sein hat. Nachgemessen: Die 30.784 Lackpixel liegen
+sämtlich bei Farbton 355 Grad und Sättigung über 0,86, die 12.212
+übrigen Fahrzeugpixel bei Farbton 203 bis 225 Grad - also im Blauen,
+weit außerhalb des Fensters. Alle sechs Lackierungen sind geprüft.
+
+**Lackierung kann mehrere Sprites.** `lackierung.js` hatte eine feste
+Quelle; jetzt führt es einen Bildspeicher je URL und einen Cache je
+`quelle|farbton|gross-oder-klein`. Jedes Fahrzeug bringt sein Bild
+(`sprite`) und seinen Miniaturausschnitt (`miniaturAusschnitt`) im
+Fahrzeugtyp mit.
+
+**Das Ganze steht als Werkzeug im Baum**, weil noch viele Bilder
+kommen: `werkzeug/sprite-aufbereiten.py`. Es misst das Raster, rechnet
+zurück, quantisiert, prüft die Umfärbbarkeit und schlägt den
+Miniaturausschnitt vor. Aus dem Originalbild erzeugt es das
+eingebaute Sprite Byte für Byte.
+
+**Die Callouts hängen am Typ, nicht am Modul.** Ein Transporter hat
+den Motor nicht dort, wo ihn ein Sattelzug hat. `calloutAnker` steht
+jetzt im Fahrzeugtyp, `CALLOUT_LAYOUT` im Fuhrpark ist nur noch der
+Rückfall. Die fünf Ankerpunkte des Transporters sind **gemessen, nicht
+gesetzt**: Die beiden Räder über ihre dunklen Flächen (zusammenhängende
+Bereiche unter Helligkeit 70 suchen, Schwerpunkt nehmen), die übrigen
+drei im Browser nachgezogen, bis die Linie dort endet, wo das Bauteil
+sitzt. Das Bild füllt seinen Rahmen auf ein Pixel genau, also sind
+Bildprozent gleich Rahmenprozent. Zwei Anker saßen im ersten Anlauf
+falsch - der Motor zeigte auf die A-Säule statt auf die Haube, der
+Antrieb aufs Hinterrad statt zwischen die Achsen - beides erst im
+gerenderten Bild zu sehen, nicht in den Zahlen.
+
+Was der kleine Wagen sonst noch nach sich zog, jedes Stück ein
+eigener Fehler:
+
+- **Er konnte gar nichts laden.** `aufbautyp: "Kastenwagen"` stand in
+  keiner Zuordnungstabelle. `"Kastenwagen": "plane"` in `ladung.js`.
+- **Das Ladevolumen war global.** 90 m³ standen als Konstante im Code
+  und im Erklärtext der Ware. Jetzt liefert `ladevolumen(fahrzeug)`
+  den Wert des Fahrzeugs, und die Warenansicht rechnet mit dem
+  Bezugsfahrzeug statt mit einer festen Zahl.
+- **Er bekam eine Sicherheitsprüfung.** §29 StVZO gilt ab 7,5 t.
+  `fristen.js` entscheidet das jetzt nach Klasse und Zuladung.
+- **Der Mengenregler erreichte sein eigenes Maximum nicht.** Bei
+  `min="1" step="0.5"` und 1,4 t Zuladung war 1,0 t der einzige
+  erreichbare Wert. Schrittweite skaliert jetzt mit dem Fahrzeug
+  (0,1 / 0,2 / 0,5 t), und die Obergrenze wird auf ein Vielfaches der
+  Schrittweite gerundet. Den Fehler gab es vorher auch - mit 25-t-Zügen
+  fiel er nur nicht auf.
+- **Alle Aufträge waren zu groß.** Die Börse warf 3 bis 25 t aus.
+  Nach *Anzahl* überwiegen in Wirklichkeit die kleinen Sendungen
+  deutlich, nach *Tonnage* ist es umgekehrt. Die Verteilung ist jetzt
+  55 % Kleingut (0,2-1,5 t), 30 % Teilladung (2-8 t), 15 %
+  Komplettladung. Gemessen: 52 % aller Sendungen sind jetzt <= 1,4 t.
+
+Die Testsuite läuft dreimal hintereinander vollständig durch (23
+Tests). Acht mussten angefasst werden, und fast alle aus demselben
+Grund: Sie legten sich ihren Auftrag selbst an und ließen `erzeugen()`
+die Menge würfeln. Für einen 24-Tonner war jede Menge recht; für 1,4 t
+Zuladung war die Zeile meist gesperrt, und der Test fiel je nach
+Würfel aus. Jetzt drücken sie die Menge auf das, was der Wagen trägt.
+
+Drei weitere hingen an Annahmen, die mit der neuen Wirtschaft nicht
+mehr galten:
+
+- Die Auftragsübersicht las den Deckungsbeitrag mit
+  `/([\d.]+) DM je Tag/`. Bei kleinen Sendungen stehen dort
+  Kommastellen und Minuszeichen, und aus „−10" wurde „10". Die Liste
+  war richtig sortiert, der Test hielt sie für falsch.
+- Die Finanzen prüften auf ein Startkapital von genau 250.000 DM.
+  Jetzt lesen sie den Kostensatz - die Zahl ist eine Stellschraube, die
+  Buchung ist die Sache.
+- Der Starttest nahm den ersten Auftrag der Liste und sah ihm beim
+  Fahren zu. Seit die Börse acht Aufträge im eigenen Depot hat und
+  Kleingut kurze Wege fährt, war die Tour vorbei, ehe er hinsah. Jetzt
+  legt er sich selbst einen weiten Lauf an und klickt genau den.
+
+**Damit der Transporter benutzbar ist, musste die Wirtschaft nach.**
+Drei Dinge fielen beim Bauen auf, jedes davon gemessen, und alle drei
+machten den kleinen Wagen zur Dekoration: Im eigenen Depot lag im
+Schnitt **0,2 Aufträge** (in neun von zwölf Spielen konnte er am ersten
+Tag nichts laden), ihm wurde ein Lauf über **3.780 km** angeboten, und
+eine volle Transporterladung brachte **0,42 DM je km** - unter den
+recherchierten Vollkosten. Mit dem 24-Tonner fiel nichts davon auf.
+Deshalb stehen sie in derselben Version.
+
+**Erstens: der Frachtpreis hat eine Gewichtsstaffel.** Bisher war er
+ein fester Satz je Tonnenkilometer - eine 1-t-Sendung brachte ein
+Vierundzwanzigstel einer 24-t-Sendung. In den wirklichen Tarifen ist
+das nie so gewesen. Gesetzt ist jetzt ein Referenzsatz von 3,40 DM je
+km für eine Komplettladung auf 24 t, darunter eine Degression mit dem
+Exponenten 0,57. Der Exponent ist nicht geraten: Er folgt aus dem
+BME-Preisspiegel für Stückgut und Teilladungen, und die Probe gegen die
+einzige belegte Preisangabe von 1994 stimmt - München-Hannover mit 24 t
+kostet im Spiel jetzt **2.394 DM**, unter dem Tarif vor der Freigabe
+waren es 2.500 DM. Das Spiel liegt also knapp darunter, was für den
+01.03.1994 richtig ist: zwei Monate nach der Freigabe, in der
+Preiserosion. Der Transporter bekommt damit 1,07 DM je km auf 400 km
+statt 0,42 - und ein Sattelzug, der eine einzelne Kleinsendung fährt,
+bekommt sie auch. Das ist die Stelle, an der die Beiladung ihren Sinn
+bekommt: Zwei Sendungen auf einem Wagen bringen das Doppelte, gebremst
+nur von der Standzeit an jeder Rampe.
+
+**Zweitens: vor der eigenen Tür liegt immer Arbeit.** Die Börse würfelt
+den Versandort nicht mehr gleichverteilt über 165 Städte. Mindestens
+acht offene Aufträge liegen an einem Ort, an dem der Spieler steht, und
+jeder zweite davon ist auf den kleinsten Wagen seiner Flotte
+zugeschnitten - in Ware, Gewicht und Raum. Das ist kein Entgegenkommen,
+sondern die Umkehrung einer unrealistischen Annahme: Ein Verlader, der
+den Spediteur vor Ort kennt, weiß auch, was bei ihm auf dem Hof steht.
+Die andere Hälfte bleibt ungeschnitten, sonst verschwände die
+Versuchung, für den großen Auftrag den größeren Wagen anzuschaffen.
+
+Dazu ein Aufruf an der richtigen Stelle: Die Börse steht voll, bevor
+der Spieler sein Depot gewählt hat. `depotSetzen()` frischt sie
+deshalb noch einmal auf - vorher begann jedes Spiel mit einer Börse,
+in der das eigene Depot nicht vorkam.
+
+**Drittens: die Entfernung hängt an der Sendungsgröße.** Ein Karton
+Ersatzteile geht in den Nachbarkreis, eine Komplettladung rechtfertigt
+den langen Lauf. Gewählt wird über einen Radius (400 / 900 / 2.000 km),
+nicht über einen Anteil der Trefferliste. Der erste Versuch mit einem
+Anteil ging schief, und die Messung sagte auch warum: Wenn nur fünf
+Städte in Europa eine Ware brauchen, sind die nächstgelegenen zwölf
+Prozent davon immer noch achthundert Kilometer weit weg. Auch der
+Radius selbst ist an der Netzdichte gemessen - um Hamburg liegen 4
+Städte bis 250 km, 12 bis 400 km, 27 bis 600 km. Mit 250 km ging jede
+Transportersendung nach Hannover und sonst nirgendwohin.
+
+**Und die Sendung wird als Raummaß gewürfelt, nicht als Gewicht.**
+Eine Sendung ist in der Praxis eine Zahl von Palettenplätzen; was
+darauf steht, entscheidet erst danach über die Tonnage. Über das
+Gewicht zu würfeln ging schief: 1,4 t Dämmstoff sind 28 m³ und passen
+in keinen 3,5-Tonner - der Auftrag sah klein aus und war es nicht.
+Dazu ein Deckel von einer Tonne je Palette, sonst wog eine Palette
+Stahlblech 3,75 t.
+
+**Die Fixkosten hingen an keinem Fahrzeug.** Jeder Wagen zahlte 3.600
+DM Kfz-Steuer und 9.000 DM Versicherung im Jahr - der Kastenwagen
+ebenso wie der 40-Tonner. Die Steuer ist jetzt linear zum zulässigen
+Gesamtgewicht (3,5 t: 315 DM), die Prämie degressiv über die Wurzel
+(2.662 DM), und die Depotmiete hängt an der Flotte statt an einer
+Konstanten: 350 DM Grundbetrag plus Fläche je Fahrzeug. Eine Spedition
+mit einem Transporter zahlt 397 DM statt 2.500. Belegt ist daran die
+Gewichtsstaffel des KraftStG, nicht das DM-Niveau.
+
+**Das Startkapital ist von 250.000 auf 45.000 DM gesetzt**, die
+Dispolinie von 50.000 auf 15.000. Das ist die eine Zahl in dieser
+Version, die reine Einstellung ist und keine Herleitung hat - die
+DM-Beträge des Eigenkapitalnachweises nach GüKG sind nicht greifbar.
+Der Grund ist trotzdem zwingend: Ein Sattelzug kostet 165.000 DM und
+war am ersten Spieltag bezahlbar. Der Transporter wäre Dekoration
+gewesen, die man in der ersten Minute wegkauft.
+
+Was am Ende gemessen herauskommt, jeweils gegen den Stand von 0.15.38:
+
+| | vorher | jetzt |
+|---|---|---|
+| Spiele ohne ladbaren Auftrag im Depot | 9 von 12 | **0 von 30** |
+| ladbare Aufträge im Depot | 0,2 | **4,2** |
+| Erlös des Transporters je km | 0,42 DM | **0,99 DM** |
+| längster Lauf, der ihm angeboten wird | 3.780 km | **623 km** |
+| Fixkosten je Monat | 5.350 DM | **2.445 DM** |
+| Nichtstun bis zur Pleite | 53 Monate | **18 Monate** |
+| Sattelzug bezahlbar | am ersten Tag | **nach ~7 Monaten** |
+
+**Was weiter offen bleibt.** Der Verschleißsatz steht unverändert bei
+0,08 DM je km statt der hergeleiteten 0,30, und Fahrerkosten gibt es
+nach wie vor nicht. Beide gehören zusammen und kommen mit dem
+Personalmodul - solange der Fahrer fehlt, sieht jedes Fahrzeug zu
+profitabel aus, und achtzehn Monate Ruhestand sind noch immer zu
+viele. Ebenso fehlt weiterhin die 50-km-Nahverkehrsgrenze aus dem
+Lizenzkapitel; der Radius oben tut so, als gäbe es sie, verbietet aber
+nichts.
+
+## Vorheriger Stand (v0.15.38)
 
 **Stufe 2: die Stoppfolge ist die Tour.**
 

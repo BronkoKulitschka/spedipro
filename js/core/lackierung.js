@@ -40,6 +40,10 @@
 // ----------------------------------------------------------------------
 
 const Lackierung = (function () {
+  // Das Standardsprite. Seit 0.15.39 gibt es mehrere - jeder
+  // Fahrzeugtyp bringt seines mit (siehe `sprite` in
+  // js/data/fahrzeugtypen.js). QUELLE bleibt die Rückfallebene für
+  // Aufrufer ohne Angabe und für Typen ohne eigenes Bild.
   const QUELLE = "assets/sprites/lkw-generisch.png";
 
   // Erkennungsbereich für die zu ersetzenden Kabinen-Pixel.
@@ -58,22 +62,23 @@ const Lackierung = (function () {
     violett: 280
   };
 
-  let quellBild = null;
-  let quellBildGeladen = false;
-  const cache = {}; // hue -> DataURL, damit nicht bei jedem Rendern neu gerechnet wird
+  // Je Sprite ein geladenes Bild und ein eigener Cache. Vorher gab es
+  // genau eines von beidem, und ein zweites Fahrzeugsprite hätte das
+  // erste überschrieben.
+  const bilder = {};   // URL -> HTMLImageElement
+  const cache = {};    // "URL|hue|mini" -> DataURL
 
-  function bildLaden() {
-    if (quellBild) return Promise.resolve(quellBild);
+  function bildLaden(quelle = QUELLE) {
+    if (bilder[quelle]) return Promise.resolve(bilder[quelle]);
 
     return new Promise((erfuellen, ablehnen) => {
       const bild = new Image();
       bild.onload = () => {
-        quellBild = bild;
-        quellBildGeladen = true;
+        bilder[quelle] = bild;
         erfuellen(bild);
       };
-      bild.onerror = () => ablehnen(new Error(`Sprite nicht ladbar: ${QUELLE}`));
-      bild.src = QUELLE;
+      bild.onerror = () => ablehnen(new Error(`Sprite nicht ladbar: ${quelle}`));
+      bild.src = quelle;
     });
   }
 
@@ -118,27 +123,42 @@ const Lackierung = (function () {
   // größten Teil des Aufliegers.
   const MINIATUR_AUSSCHNITT = { x: 25, y: 175, breite: 240, hoehe: 240 };
 
+  /** Der Ausschnitt eines Sprites, falls es einen eigenen hat. */
+  function ausschnittVon(quelle) {
+    if (typeof FAHRZEUGTYPEN === "undefined") return MINIATUR_AUSSCHNITT;
+    const typ = FAHRZEUGTYPEN.find((t) => t.sprite === quelle);
+    return (typ && typ.miniaturAusschnitt) || MINIATUR_AUSSCHNITT;
+  }
+
   /**
    * Erzeugt eine umgefärbte Fassung des Sprites.
    * @param {number} zielHue Farbton in Grad (0-360)
+   * @param {string} [quelle] Sprite-URL; ohne Angabe das Standardsprite
    * @returns {string} DataURL des umgefärbten Bildes
    */
-  function umfaerben(zielHue) {
-    return erzeugen(zielHue, false);
+  function umfaerben(zielHue, quelle = QUELLE) {
+    return erzeugen(zielHue, false, quelle);
   }
 
   /**
-   * Wie umfaerben(), liefert aber nur den Zugmaschinen-Ausschnitt für
-   * Listen-Miniaturen.
+   * Wie umfaerben(), liefert aber nur den Ausschnitt für
+   * Listen-Miniaturen - beim Sattelzug die Zugmaschine, beim
+   * Transporter der ganze Wagen.
    */
-  function miniatur(zielHue) {
-    return erzeugen(zielHue, true);
+  function miniatur(zielHue, quelle = QUELLE) {
+    return erzeugen(zielHue, true, quelle);
   }
 
-  function erzeugen(zielHue, alsMiniatur) {
-    if (!quellBildGeladen) return QUELLE; // solange nicht geladen: Original
+  function erzeugen(zielHue, alsMiniatur, quelle = QUELLE) {
+    const quellBild = bilder[quelle];
+    if (!quellBild) {
+      // Noch nicht geladen: das Original zeigen und nachladen, damit
+      // der nächste Aufruf die Farbe hat. Nie blockieren.
+      bildLaden(quelle).catch(() => {});
+      return quelle;
+    }
 
-    const cacheSchluessel = `${zielHue}${alsMiniatur ? "-mini" : ""}`;
+    const cacheSchluessel = `${quelle}|${zielHue}${alsMiniatur ? "|mini" : ""}`;
     if (cache[cacheSchluessel]) return cache[cacheSchluessel];
 
     const leinwand = document.createElement("canvas");
@@ -171,7 +191,7 @@ const Lackierung = (function () {
     let ergebnisLeinwand = leinwand;
 
     if (alsMiniatur) {
-      const a = MINIATUR_AUSSCHNITT;
+      const a = ausschnittVon(quelle);
       const ausschnitt = document.createElement("canvas");
       ausschnitt.width = a.breite;
       ausschnitt.height = a.hoehe;

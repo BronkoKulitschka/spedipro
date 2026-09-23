@@ -64,11 +64,70 @@ const Kostensaetze = (function () {
   // des KraftStG sind es nicht.
   const KFZ_STEUER_JAHR_DM = 3600;
 
+  // Das zulässige Gesamtgewicht, auf das sich KFZ_STEUER_JAHR_DM und
+  // VERSICHERUNG_JAHR_DM beziehen: ein 40-t-Sattelzug. Bis 0.15.39 zahlte
+  // JEDES Fahrzeug diese Beträge - auch ein 3,5-t-Kastenwagen, der damit
+  // 3.600 DM Steuer im Jahr getragen hätte. Die Mechanik des KraftStG
+  // ist gewichtsgestaffelt (200-kg-Stufen des zGG), also staffelt das
+  // Spiel jetzt ebenfalls. Nur die Struktur ist belegt, nicht das
+  // DM-Niveau - siehe die Vorbemerkung oben.
+  const BEZUGSGEWICHT_KG = 40000;
+
+  /** Zulässiges Gesamtgewicht eines Fahrzeugs in kg. */
+  function gesamtgewichtKg(fahrzeug) {
+    if (!fahrzeug) return BEZUGSGEWICHT_KG;
+    if (fahrzeug.zulGesamtgewichtKg) return fahrzeug.zulGesamtgewichtKg;
+    // Rückfall für Altstände ohne das Feld: Zuladung plus Leergewicht
+    // in der Größenordnung des Sattelzugs.
+    return (fahrzeug.zuladungKg || 24000) + 16000;
+  }
+
+  /**
+   * Kfz-Steuer je Jahr für DIESES Fahrzeug, DM. Linear zum zGG - die
+   * fünf progressiven Sätze des KraftStG bildet das nicht ab, die
+   * Richtung aber schon.
+   */
+  function kfzSteuerJahr(fahrzeug) {
+    return Math.round(
+      KFZ_STEUER_JAHR_DM * (gesamtgewichtKg(fahrzeug) / BEZUGSGEWICHT_KG));
+  }
+
+  /**
+   * Versicherung je Jahr für DIESES Fahrzeug, DM. Nicht linear: Ein
+   * Kastenwagen kostet nicht ein Elftel eines Sattelzugs, weil
+   * Grundbeitrag und Haftungsrisiko nicht mit dem Gewicht schrumpfen.
+   * Deshalb die Wurzel - ein einfacher Degressionsansatz, nicht belegt.
+   */
+  function versicherungJahr(fahrzeug) {
+    return Math.round(
+      VERSICHERUNG_JAHR_DM * Math.sqrt(gesamtgewichtKg(fahrzeug) / BEZUGSGEWICHT_KG));
+  }
+
   // Kfz-Versicherung je Jahr und Fahrzeug, DM (Haftpflicht und Kasko).
   const VERSICHERUNG_JAHR_DM = 9000;
 
   // Depotmiete je Monat, DM. Hängt in Wirklichkeit an Ort und Größe.
   const DEPOTMIETE_MONAT_DM = 2500;
+
+  /**
+   * Depotmiete je Monat für eine Flotte dieser Größe, DM.
+   *
+   * DEPOTMIETE_MONAT_DM ist der Hof, den eine Spedition mit vier
+   * Sattelzügen braucht. Wer einen Kastenwagen fährt, mietet keinen
+   * solchen Hof - er stellt ihn auf einen Stellplatz und sitzt in
+   * einem Büro. Gerechnet wird deshalb ein Grundbetrag plus Fläche je
+   * Fahrzeug, die Fläche nach Gewicht gestaffelt.
+   *
+   * Nicht belegt. Hallen- und Stellplatzmieten von 1994 stehen in
+   * docs/kosten-1994.md unter "noch nicht recherchiert".
+   */
+  function depotmieteMonat(fahrzeuge) {
+    const grund = 350;
+    const jeSattelzug = (DEPOTMIETE_MONAT_DM - grund) / 4;
+    const flaeche = (fahrzeuge || []).reduce(
+      (s, f) => s + jeSattelzug * (gesamtgewichtKg(f) / BEZUGSGEWICHT_KG), 0);
+    return Math.round(grund + flaeche);
+  }
 
   // Verwaltung je Monat, DM: Büro, Telefon, Telefax, Steuerberater.
   // Noch ohne Personal - das kommt mit dem Personalmodul.
@@ -83,10 +142,27 @@ const Kostensaetze = (function () {
   const DISPO_AUFSCHLAG_PROZENTPUNKTE = 8.0;
 
   // Startkapital der Spedition, DM.
-  const STARTKAPITAL_DM = 250000;
+  //
+  // Bis 0.15.38 waren es 250.000 DM. Mit dem Transporter als
+  // Startfahrzeug (0.15.39) ging das nicht mehr zusammen: Ein
+  // Sattelzug kostet 165.000 DM, war also am ersten Spieltag
+  // bezahlbar - der kleine Wagen wäre reine Dekoration gewesen, die
+  // man in der ersten Minute wegkauft.
+  //
+  // hergeleitet aus dem Eigenkapitalnachweis: Die EU-Verordnung
+  // 1071/2009 verlangt heute 9.000 EUR für das erste und 5.000 EUR
+  // für jedes weitere Fahrzeug; für Fahrzeuge zwischen 2,5 und 3,5 t
+  // sind es 1.800 EUR und 900 EUR (siehe docs/kosten-1994.md,
+  // Abschnitt 11). Die DM-Beträge nach GüKG der 1990er sind nicht
+  // greifbar - belegt: false. Gesetzt ist deshalb eine Größenordnung,
+  // die zur Sache passt: genug für einen zweiten Transporter, zu
+  // wenig für einen Sattelzug, und damit ist der Sattelzug ein Ziel.
+  const STARTKAPITAL_DM = 45000;
 
-  // Kontokorrentlinie, DM - so weit darf das Konto ins Minus.
-  const DISPOLINIE_DM = 50000;
+  // Kontokorrentlinie, DM - so weit darf das Konto ins Minus. Mit dem
+  // kleineren Startkapital muss auch sie kleiner sein, sonst wäre sie
+  // das Startkapital durch die Hintertür.
+  const DISPOLINIE_DM = 15000;
 
   // Reifen und Schmierstoffe je Kilometer, DM. Reparaturen laufen über
   // das Werkstattmodul, sobald es steht.
@@ -196,21 +272,32 @@ const Kostensaetze = (function () {
       },
       {
         name: "Kfz-Steuer je Fahrzeug",
-        wert: KFZ_STEUER_JAHR_DM.toLocaleString("de-DE") + " DM/Jahr",
+        wert: `${KFZ_STEUER_JAHR_DM.toLocaleString("de-DE")} DM/Jahr bei 40 t, `
+          + `anteilig nach zGG (3,5 t: ${kfzSteuerJahr({ zulGesamtgewichtKg: 3500 })} DM)`,
         belegt: false,
-        quelle: "Mechanik bekannt, DM-Beträge der Fassung 1994 nicht belegt"
+        quelle: "Gewichtsstaffel des KraftStG bekannt, DM-Beträge der Fassung 1994 nicht belegt"
       },
       {
         name: "Versicherung je Fahrzeug",
-        wert: VERSICHERUNG_JAHR_DM.toLocaleString("de-DE") + " DM/Jahr",
+        wert: `${VERSICHERUNG_JAHR_DM.toLocaleString("de-DE")} DM/Jahr bei 40 t, `
+          + `degressiv nach zGG (3,5 t: ${versicherungJahr({ zulGesamtgewichtKg: 3500 })} DM)`,
         belegt: false,
         quelle: "Prämien im Güterkraftverkehr 1994 nicht belegt"
       },
       {
         name: "Depotmiete",
-        wert: DEPOTMIETE_MONAT_DM.toLocaleString("de-DE") + " DM/Monat",
+        wert: `${depotmieteMonat([{ zulGesamtgewichtKg: 3500 }]).toLocaleString("de-DE")} `
+          + `DM/Monat bei einem Transporter, `
+          + `${DEPOTMIETE_MONAT_DM.toLocaleString("de-DE")} DM bei vier Sattelzügen`,
         belegt: false,
         quelle: "Gewerbemieten 1994 nicht belegt"
+      },
+      {
+        name: "Startkapital",
+        wert: STARTKAPITAL_DM.toLocaleString("de-DE") + " DM",
+        belegt: false,
+        quelle: "Eigenkapitalnachweis nach GüKG in DM nicht belegt; "
+          + "Größenordnung aus der heutigen EU-Verordnung 1071/2009 abgeleitet"
       },
       {
         name: "Verwaltung",
@@ -256,6 +343,11 @@ const Kostensaetze = (function () {
     KFZ_STEUER_JAHR_DM,
     VERSICHERUNG_JAHR_DM,
     DEPOTMIETE_MONAT_DM,
+    BEZUGSGEWICHT_KG,
+    gesamtgewichtKg,
+    kfzSteuerJahr,
+    versicherungJahr,
+    depotmieteMonat,
     VERWALTUNG_MONAT_DM,
     STARTKAPITAL_DM,
     DISPOLINIE_DM,

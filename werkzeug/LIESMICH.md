@@ -43,3 +43,18 @@ gut, im Einzelfall aber deutlich daneben.
 
 **Einschränkung:** Natural Earth bildet das Netz von heute ab, nicht
 das von 1994.
+
+## sprite-aufbereiten.py
+
+Macht aus einem generierten Bild ein Sprite: misst das nachgeahmte
+Pixelraster, rechnet darauf zurück, quantisiert ohne Dithering, setzt
+den Hintergrund auf reines Weiß und vergrößert ganzzahlig auf die
+Leinwand von 560x436. Prüft zum Schluss, welche Pixel `lackierung.js`
+umfärben würde, und schlägt den `miniaturAusschnitt` für
+`fahrzeugtypen.js` vor.
+
+    python3 werkzeug/sprite-aufbereiten.py quelle.png \
+        assets/sprites/transporter-generisch.png --breite 160 --faktor 2
+
+Die `calloutAnker` bleiben Handarbeit - sie gelten immer nur für genau
+ein Bild.

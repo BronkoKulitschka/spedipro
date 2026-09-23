@@ -32,6 +32,12 @@ const FuhrparkApp = (function () {
   // beziehen sich auf dasselbe 0-100-Koordinatensystem, damit Bild,
   // Verbindungslinie (SVG) und Beschriftungs-Box exakt zusammenpassen.
   // Ermittelt am tatsächlichen Sprite assets/sprites/lkw-generisch.png.
+  // Ankerpunkte der Verschleiß-Sprechblasen für den Sattelzug, in
+  // Prozent der Bildfläche am Sprite ausgemessen. Seit 0.15.39 ist das
+  // nur noch der Rückfall: Jeder Fahrzeugtyp kann eigene mitbringen
+  // (Feld `calloutAnker`), denn die Punkte gelten immer nur für genau
+  // ein Sprite. Ein Transporter hat den Motor woanders als ein
+  // Sattelzug.
   const CALLOUT_LAYOUT = {
     motor: { anker: [19.6, 52.8], label: [9, 36] },
     bremsen: { anker: [27.7, 81.4], label: [12, 93] },
@@ -39,6 +45,18 @@ const FuhrparkApp = (function () {
     karosserie: { anker: [30.4, 61.9], label: [30, 18] },
     antrieb: { anker: [48.2, 75.7], label: [50, 92] }
   };
+
+  /** Die Ankerpunkte, die zum Sprite dieses Fahrzeugs gehören. */
+  function calloutLayoutVon(fahrzeug) {
+    const typ = fahrzeug && typZuFinden(fahrzeug.typId);
+    return (typ && typ.calloutAnker) || CALLOUT_LAYOUT;
+  }
+
+  /** Das Sprite eines Fahrzeugs. */
+  function spriteVon(fahrzeug) {
+    const typ = fahrzeug && typZuFinden(fahrzeug.typId);
+    return (typ && typ.sprite) || Lackierung.QUELLE;
+  }
 
   function typZuFinden(typId) {
     return FAHRZEUGTYPEN.find((t) => t.typId === typId);
@@ -55,6 +73,9 @@ const FuhrparkApp = (function () {
       modell: typ.modell,
       aufbautyp: typ.aufbautyp,
       zuladungKg: typ.zuladungKg,
+      zulGesamtgewichtKg: typ.zulGesamtgewichtKg,
+      ladevolumenM3: typ.ladevolumenM3,
+      klasse: typ.klasse || "sattelzug",
       verbrauchBasisL100km: typ.verbrauchBasisL100km,
       neupreisDM: typ.neupreisDM,
       baujahr: typ.baujahrVon,
@@ -79,11 +100,15 @@ const FuhrparkApp = (function () {
   function seedFlotte() {
     // Die Spedition startet mit einem einzigen Fahrzeug. Alles Weitere
     // muss erwirtschaftet werden - das ist der Reiz des Aufbaus.
+    // Seit 0.15.39 beginnt die Spedition mit einem Transporter, nicht
+    // mit einem Sattelzug. Das ist der historisch richtige Einstieg -
+    // bis 3,5 t brauchte es 1994 keine Genehmigung - und es macht den
+    // ersten schweren Zug zu einem Ziel statt zur Startausstattung.
     fahrzeuge = [
-      neuesFahrzeugAusTyp("meridian-1830s", {
-        baujahr: 1988,
+      neuesFahrzeugAusTyp("kastor-t35", {
+        baujahr: 1989,
         kennzeichen: "F-SP 101",
-        kmStand: 412000,
+        kmStand: 186000,
         standort: (typeof Betrieb !== "undefined" && Betrieb.hatDepot())
           ? Betrieb.depotName()
           : "Frankfurt am Main",
@@ -205,9 +230,10 @@ const FuhrparkApp = (function () {
 
     svg.innerHTML = "";
 
+    const anker = calloutLayoutVon(fahrzeug);
     Verschleiss.TEILE.forEach((teil) => {
       const box = container.querySelector(`.fuhrpark-callout[data-teil="${teil}"]`);
-      const layout = CALLOUT_LAYOUT[teil];
+      const layout = anker[teil];
       if (!box || !layout) return;
 
       const boxRect = box.getBoundingClientRect();
@@ -242,9 +268,11 @@ const FuhrparkApp = (function () {
 
   function callouts(fahrzeug) {
     const boxen = [];
+    const anker = calloutLayoutVon(fahrzeug);
 
     Verschleiss.TEILE.forEach((teil) => {
-      const layout = CALLOUT_LAYOUT[teil];
+      const layout = anker[teil];
+      if (!layout) return;
       const [lx, ly] = layout.label;
       const wert = fahrzeug.verschleiss[teil];
 
@@ -472,8 +500,9 @@ const FuhrparkApp = (function () {
   }
 
   function miniaturQuelle(fahrzeug) {
+    const quelle = spriteVon(fahrzeug);
     const hue = Lackierung.hueVonName(fahrzeug.lackierung);
-    return hue === undefined ? Lackierung.QUELLE : Lackierung.miniatur(hue);
+    return hue === undefined ? quelle : Lackierung.miniatur(hue, quelle);
   }
 
   function uebersichtZeile(fahrzeug, index) {
@@ -602,10 +631,11 @@ const FuhrparkApp = (function () {
   }
 
   function bildQuelle(fahrzeug) {
+    const quelle = spriteVon(fahrzeug);
     const hue = Lackierung.hueVonName(fahrzeug.lackierung);
     // Ohne bekannte Farbe oder solange das Sprite noch nicht geladen ist,
     // liefert umfaerben() automatisch das Originalbild zurück.
-    return hue === undefined ? Lackierung.QUELLE : Lackierung.umfaerben(hue);
+    return hue === undefined ? quelle : Lackierung.umfaerben(hue, quelle);
   }
 
   function fristenBlock(fahrzeug) {
@@ -1550,15 +1580,20 @@ const FuhrparkApp = (function () {
     if (ergebnis.wurdeNeuErstellt) {
       ereignisseBinden();
 
-      // Das Umfärben braucht das geladene Sprite. Bis dahin zeigt
-      // bildQuelle() das Original; sobald es da ist, einmal neu zeichnen.
-      Lackierung.bildLaden()
-        .then(() => {
+      // Das Umfärben braucht die geladenen Sprites. Bis dahin zeigt
+      // bildQuelle() das Original; sobald sie da sind, einmal neu
+      // zeichnen. Geladen wird, was die Flotte tatsächlich braucht -
+      // nicht der ganze Katalog.
+      const quellen = [...new Set(fahrzeuge.map(spriteVon))];
+      Promise.allSettled(quellen.map((q) => Lackierung.bildLaden(q)))
+        .then((ergebnisse) => {
+          ergebnisse
+            .filter((e) => e.status === "rejected")
+            .forEach((e) => console.warn("Lackierung nicht verfügbar:", e.reason && e.reason.message));
           if (fensterElement && document.body.contains(fensterElement)) {
             neuZeichnen();
           }
-        })
-        .catch((fehler) => console.warn("Lackierung nicht verfügbar:", fehler.message));
+        });
     }
   }
 

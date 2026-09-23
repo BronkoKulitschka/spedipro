@@ -67,6 +67,32 @@ const Fristen = (function () {
     }
   };
 
+  /**
+   * Welche Prüfungen für dieses Fahrzeug überhaupt gelten.
+   *
+   * Die Sicherheitsprüfung nach §29 StVZO greift erst bei
+   * Nutzfahrzeugen über 7,5 t zulässigem Gesamtgewicht. Ein
+   * 3,5-t-Transporter hat keine - bis 0.15.38 bekam er trotzdem eine,
+   * weil ARTEN für alle Fahrzeuge galt. Sobald es Fahrzeuge unter
+   * 7,5 t gibt, ist das sichtbar falsch.
+   *
+   * Maßgeblich ist das zulässige Gesamtgewicht, nicht die Zuladung.
+   * Solange das nicht am Typ steht, wird es aus der Zuladung
+   * abgeschätzt: Ein Fahrzeug mit 1,4 t Zuladung wiegt zulässig rund
+   * 3,5 t, eines mit 25 t Zuladung gehört zum 40-Tonner.
+   */
+  function gilt(fahrzeug, art) {
+    if (art !== "sp") return true;
+    if (fahrzeug && fahrzeug.klasse === "transporter") return false;
+    const zuladungT = (fahrzeug && fahrzeug.zuladungKg ? fahrzeug.zuladungKg : 24000) / 1000;
+    return zuladungT >= 4;
+  }
+
+  /** Die Fristen, die für dieses Fahrzeug gelten. */
+  function artenFuer(fahrzeug) {
+    return Object.keys(ARTEN).filter((art) => gilt(fahrzeug, art));
+  }
+
   // Ab wann gilt eine Frist als "bald fällig"?
   const VORWARNUNG_TAGE = 30;
   const VORWARNUNG_KM = 5000;
@@ -152,7 +178,7 @@ const Fristen = (function () {
 
   /** Alle Fristen eines Fahrzeugs, bewertet. */
   function alle(fahrzeug) {
-    return Object.keys(ARTEN).map((art) => bewerte(fahrzeug, art));
+    return artenFuer(fahrzeug).map((art) => bewerte(fahrzeug, art));
   }
 
   /**
@@ -189,7 +215,8 @@ const Fristen = (function () {
   function initialisiere(fahrzeug, { neuwagen = false } = {}) {
     fahrzeug.fristen = {};
 
-    Object.entries(ARTEN).forEach(([art, definition]) => {
+    artenFuer(fahrzeug).forEach((art) => {
+      const definition = ARTEN[art];
       if (definition.typ === "datum") {
         const monateZurueck = neuwagen
           ? 0
@@ -209,6 +236,8 @@ const Fristen = (function () {
 
   return {
     ARTEN,
+    gilt,
+    artenFuer,
     bewerte,
     alle,
     schlimmsterStatus,
