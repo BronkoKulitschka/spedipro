@@ -121,12 +121,28 @@ const Kostensaetze = (function () {
    * Nicht belegt. Hallen- und Stellplatzmieten von 1994 stehen in
    * docs/kosten-1994.md unter "noch nicht recherchiert".
    */
+  const DEPOT_GRUNDBETRAG_DM = 350;
+
   function depotmieteMonat(fahrzeuge) {
-    const grund = 350;
-    const jeSattelzug = (DEPOTMIETE_MONAT_DM - grund) / 4;
+    const jeSattelzug = (DEPOTMIETE_MONAT_DM - DEPOT_GRUNDBETRAG_DM) / 4;
     const flaeche = (fahrzeuge || []).reduce(
       (s, f) => s + jeSattelzug * (gesamtgewichtKg(f) / BEZUGSGEWICHT_KG), 0);
-    return Math.round(grund + flaeche);
+    return Math.round(DEPOT_GRUNDBETRAG_DM + flaeche);
+  }
+
+  /**
+   * Der Teil der Depotmiete, der auf EIN Fahrzeug entfällt.
+   *
+   * Der Grundbetrag wird nach Köpfen geteilt (das Tor, die Zufahrt und
+   * das Büro braucht man einmal), die Fläche nach Gewicht - genauso,
+   * wie depotmieteMonat() sie aufsummiert. Über die ganze Flotte
+   * summieren sich die Anteile deshalb wieder auf die Gesamtmiete.
+   */
+  function depotmieteAnteil(fahrzeug, flotte) {
+    const anzahl = Math.max(1, (flotte || []).length);
+    const jeSattelzug = (DEPOTMIETE_MONAT_DM - DEPOT_GRUNDBETRAG_DM) / 4;
+    return DEPOT_GRUNDBETRAG_DM / anzahl
+      + jeSattelzug * (gesamtgewichtKg(fahrzeug) / BEZUGSGEWICHT_KG);
   }
 
   // Verwaltung je Monat, DM: Büro, Telefon, Telefax, Steuerberater.
@@ -180,10 +196,17 @@ const Kostensaetze = (function () {
    * Die Zahlen sind NICHT belegt. Sie liegen in der Größenordnung, die
    * für Stückgut an einer Rampe üblich ist; Silo und Tank brauchen zum
    * Ab- und Aufpumpen länger, ein Kipper ist in Minuten leer.
+   *
+   * Seit 0.15.40 auf die Hälfte gesetzt: eine Stunde je Vorgang statt
+   * zwei. Vier Stunden Rampe für eine Palette Stückgut waren zu viel -
+   * bei einem 150-km-Lauf machten sie 63 % der ganzen Tour aus. Die
+   * Verhältnisse zwischen den Aufbauten bleiben dieselben, alle Werte
+   * sind mit demselben Faktor geteilt: Ein Tankzug steht weiterhin
+   * anderthalbmal so lange wie eine Plane, ein Kipper den Bruchteil.
    */
   const STANDZEIT_STUNDEN = {
-    laden:   { standard: 2.0, silo: 3.0, tank: 3.0, kipper: 0.75, container: 1.0 },
-    abladen: { standard: 2.0, silo: 3.0, tank: 3.0, kipper: 0.5,  container: 1.0 }
+    laden:   { standard: 1.0, silo: 1.5, tank: 1.5, kipper: 0.4,  container: 0.5 },
+    abladen: { standard: 1.0, silo: 1.5, tank: 1.5, kipper: 0.25, container: 0.5 }
   };
 
   // ---------- Zugriff ----------
@@ -348,6 +371,7 @@ const Kostensaetze = (function () {
     kfzSteuerJahr,
     versicherungJahr,
     depotmieteMonat,
+    depotmieteAnteil,
     VERWALTUNG_MONAT_DM,
     STARTKAPITAL_DM,
     DISPOLINIE_DM,

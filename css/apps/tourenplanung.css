@@ -1007,6 +1007,84 @@
 .tour-positiv { color: #1a5c1a; font-weight: bold; }
 .tour-negativ { color: #8a1414; font-weight: bold; }
 
+/* Die Zusammenfassung der Tour liest sich seit 0.15.40 wie eine
+   Rechnung: Entgelt, darunter die Abzüge, dann der Deckungsbeitrag,
+   dann der Fixkostenanteil und unter einem Strich der Reingewinn.
+   Der Strich trennt, was nur diese Fahrt kostet, von dem, was ohnehin
+   läuft - ohne ihn stünden fünf gleich aussehende Zeilen da. */
+.tour-strichoben {
+  border-top: 1px solid #808080;
+  padding-top: 3px;
+  margin-top: 2px;
+}
+
+/* ---------- Woraus sich das Entgelt zusammensetzt (0.15.40) ---------- */
+
+/* Der Knopf sitzt IN der Beschriftungsspalte, nicht daneben: Die
+   Zusammenfassung ist eine Definitionsliste, und ein eigener Block
+   dazwischen risse die Rechnung auseinander. */
+.tour-preis-knopf {
+  font-size: 10px;
+  padding: 0 4px;
+  margin-left: 6px;
+  line-height: 14px;
+}
+
+/* Die Aufschlüsselung läuft über beide Spalten der Liste. */
+.tour-preis-spalte {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.tour-preis-block {
+  border: 1px solid var(--win-grey-dark, #808080);
+  background: #fff;
+  padding: 4px 6px;
+  margin: 4px 0;
+  /* Die Zusammenfassung setzt ihre Werte fett; hier wäre das die
+     ganze Rechnung, und dann hebt sich die Summe nicht mehr ab. */
+  font-weight: normal;
+}
+
+.tour-preis-kopf {
+  font-weight: bold;
+  border-bottom: 1px solid var(--win-grey-dark, #808080);
+  padding-bottom: 2px;
+  margin-bottom: 3px;
+}
+
+.tour-preis-zeile {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+  padding: 1px 0;
+}
+
+.tour-preis-name { min-width: 0; }
+
+.tour-preis-wert {
+  flex-shrink: 0;
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+/* Die letzte Zeile ist die Summe - abgesetzt wie in der
+   Zusammenfassung darüber. */
+.tour-preis-zeile:last-child {
+  border-top: 1px solid #808080;
+  margin-top: 2px;
+  padding-top: 3px;
+}
+
+/* Womit der Fixkostenanteil zustande kommt - klein daneben, damit die
+   Zahl nicht wie vom Himmel gefallen wirkt. */
+.tour-nebensatz {
+  color: #555;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
 /* ---------- Status laufender Fahrten ---------- */
 
 .tour-status {
@@ -1020,6 +1098,27 @@
 .tour-status-anfahrt { background: #e0e0e8; }
 .tour-status-beladen { background: #f5e0b8; }
 .tour-status-ruht    { background: #d8d8d8; color: var(--win-grey-darker); }
+/* Warten auf die Ladung ist die einzige Standzeit, die der
+   Disponent hätte vermeiden können - deshalb ein Warnton und
+   nicht das Grau der Ruhezeit (0.15.41). */
+.tour-status-wartet  { background: #f3d9a4; color: #6b4a00; }
+
+/* Der Abbruch steht am Fuß der laufenden Tour, rechts und klein:
+   Er ist möglich, aber nichts, was man versehentlich trifft. */
+.tour-laufend-aktion {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 3px;
+}
+.tour-abbruch {
+  font-size: 10px;
+  padding: 1px 6px;
+}
+.tour-wartehinweis {
+  color: #6b4a00;
+  font-size: 0.9em;
+  margin-left: 4px;
+}
 
 
 

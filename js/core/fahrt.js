@@ -68,6 +68,7 @@ const Fahrt = (function () {
       gefahreneStundenHeute: 0,
       ruhtBis: null,
       stehtBis: null,
+      wartetBis: null,
       startZeit: Spielzeit.heute().toISOString(),
       abgeschlossen: false
     };
@@ -165,8 +166,12 @@ const Fahrt = (function () {
 
       // Steht es an der Rampe? Anders als die Ruhezeit zählt das auf
       // die Lenkzeit nicht an - gearbeitet wird trotzdem.
-      if (t.stehtBis && jetzt < new Date(t.stehtBis)) return;
-      if (t.stehtBis) t.stehtBis = null;
+      if (t.stehtBis && jetzt < new Date(t.stehtBis)) {
+        // Die Wartezeit endet vor der Standzeit - ab da wird geladen.
+        if (t.wartetBis && jetzt >= new Date(t.wartetBis)) t.wartetBis = null;
+        return;
+      }
+      if (t.stehtBis) { t.stehtBis = null; t.wartetBis = null; }
 
       let stunden = vergangeneMinuten / 60;
 
@@ -230,10 +235,48 @@ const Fahrt = (function () {
   function standzeitSetzen(t, index) {
     const stopp = t.stopps && t.stopps[index];
     if (!stopp || index >= t.etappen.length) return;
+
+    // Erst warten, bis die Ware überhaupt bereitsteht, dann laden.
+    //
+    // Bis 0.15.40 kannte die Fahrt das Ladefenster nicht: Die Planung
+    // rechnete damit, dass der Wagen wartet, und warnte bei über zwölf
+    // Stunden - gefahren wurde trotzdem sofort. Die Warnung beschrieb
+    // etwas, das nie eintrat. Jetzt gilt sie.
+    const bereit = ladefensterBeginn(t, index);
+    const jetzt = Spielzeit.heute();
+    const start = bereit && bereit > jetzt ? bereit : jetzt;
+    const wartezeit = (start - jetzt) / 3600000;
+
     const stunden = standzeitAn(t, index);
-    if (stunden <= 0) return;
-    const ende = new Date(Spielzeit.heute().getTime() + stunden * 3600000);
-    t.stehtBis = ende.toISOString();
+    if (stunden <= 0 && wartezeit <= 0) return;
+
+    t.stehtBis = new Date(start.getTime() + stunden * 3600000).toISOString();
+    // Für die Anzeige unterscheidbar: Warten ist etwas anderes als
+    // Laden. Der Wagen steht in beiden Fällen, aber nur im zweiten
+    // arbeitet jemand.
+    t.wartetBis = wartezeit > 0 ? start.toISOString() : null;
+  }
+
+  /**
+   * Wann an diesem Stopp die letzte Ladung bereitsteht.
+   *
+   * Maßgeblich ist der SPÄTESTE Ladebeginn aller Sendungen, die hier
+   * zusteigen - der Wagen fährt erst weiter, wenn er alles hat. Nur
+   * für Aufträge; Spotladung liegt immer bereit.
+   */
+  function ladefensterBeginn(t, index) {
+    const stopp = t.stopps && t.stopps[index];
+    if (!stopp || !stopp.laden || stopp.laden.length === 0) return null;
+    if (typeof Auftraege === "undefined") return null;
+
+    let spaetester = null;
+    stopp.laden.forEach((e) => {
+      const a = e.auftragNummer && Auftraege.nachNummer(e.auftragNummer);
+      if (!a || !a.ladeBeginn) return;
+      const d = new Date(a.ladeBeginn);
+      if (!spaetester || d > spaetester) spaetester = d;
+    });
+    return spaetester;
   }
 
   /** Wie lange an diesem Stopp gestanden wird, in Stunden. */
@@ -280,6 +323,52 @@ const Fahrt = (function () {
   }
 
   /** Sofort ans Ziel - für "Fahrt überspringen". */
+  /**
+   * Eine laufende Tour abbrechen.
+   *
+   * Der Wagen verschwindet nicht - er fährt den NÄCHSTEN Halt noch an
+   * und bleibt dort stehen. Alles andere wäre geschummelt: Ein Zug auf
+   * der Autobahn kann nicht an Ort und Stelle abgestellt werden, und
+   * die Zeit bis zur nächsten Stadt vergeht ebenso wie der Sprit dafür.
+   *
+   * Was mit den Sendungen geschieht, entscheidet der Aufrufer über
+   * `beiAbbruch` - das Fahrzeugmodul weiß nichts von Aufträgen und
+   * Kundenbeziehungen.
+   *
+   * @returns {{stadt, restKm, stunden}} wo er steht und was es kostete
+   */
+  function abbrechen(tourEintrag) {
+    const t = tourEintrag;
+    if (!t || t.abgeschlossen) return null;
+
+    // Bis zum nächsten Halt: der Rest der laufenden Etappe.
+    const etappe = aktuelleEtappe(t);
+    const restKm = Math.max(0, etappe.route.km - t.gefahreneKm);
+    const fahrStunden = restKm / geschwindigkeit(t);
+    const ruhe = Math.floor(
+      (t.gefahreneStundenHeute + fahrStunden) / LENKZEIT_STUNDEN) * RUHEZEIT_STUNDEN;
+
+    // Steht er gerade an der Rampe oder wartet auf Ladung, ist diese
+    // Zeit hinfällig - er fährt ja nicht mehr dorthin, wofür er wartet.
+    const stunden = fahrStunden + ruhe;
+    Spielzeit.stundenAddieren(stunden);
+
+    const stadt = naechsterStopp(t).stadt;
+    t.gesamtGefahreneKm += restKm;
+    t.gefahreneKm = etappe.route.km;
+    t.stehtBis = null;
+    t.wartetBis = null;
+    t.abgebrochen = true;
+    t.abgeschlossen = true;
+
+    const i = laufende.indexOf(t);
+    if (i >= 0) laufende.splice(i, 1);
+
+    if (typeof t.beiAbbruch === "function") t.beiAbbruch(t, { stadt, restKm, stunden });
+    benachrichtigen();
+    return { stadt, restKm, stunden };
+  }
+
   function abschliessen(tourEintrag) {
     // Die verbleibende Fahrzeit muss trotzdem vergehen, sonst wäre
     // Überspringen ein Weg, Zeit zu sparen.
@@ -367,11 +456,13 @@ const Fahrt = (function () {
     wiederherstellen,
     takt,
     abschliessen,
+    abbrechen,
     zuruecksetzen,
     aktuelleEtappe,
     naechsterStopp,
     stoppStand,
     standzeitAn,
+    ladefensterBeginn,
     restStandzeit,
     ladung,
     etappenFortschritt,

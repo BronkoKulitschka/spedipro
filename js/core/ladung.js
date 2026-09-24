@@ -179,17 +179,59 @@ const Ladung = (function () {
    * abzufertigen kostet fast dasselbe, egal was darauf steht.
    */
   function frachtpreis(gut, tonnen, km) {
+    return aufschluesselung(gut, tonnen, km).summe;
+  }
+
+  /**
+   * Derselbe Preis, aber mit seinen Bestandteilen.
+   *
+   * Die Zahl allein sagt dem Spieler nichts darüber, warum eine
+   * halbe Tonne Chemie über 200 km mehr bringt als zwei Tonnen Kies
+   * über 300. Wer die Posten sieht, versteht auch, warum sich
+   * Beiladung lohnt und warum ein Stammkunde mehr wert ist als die
+   * Börse.
+   *
+   * @returns {{
+   *   summe, strecke, abfertigung, anteil, satzJeKm,
+   *   zuschlaege: Array<{name, faktor, grund}>, zuschlagGesamt
+   * }}
+   */
+  function aufschluesselung(gut, tonnen, km) {
+    // Die Gewichtsstaffel: eine kleine Sendung kostet je Tonne ein
+    // Vielfaches einer großen. Der Anteil sagt, wie viel vom Satz
+    // einer vollen Komplettladung diese Sendung trägt.
     const anteil = Math.pow(Math.max(0.1, tonnen) / REFERENZ_TONNEN, DEGRESSION);
 
-    let faktor = 1;
-    if (gut.verderblich) faktor *= 1.35;   // Kühlung, Zeitdruck
-    if (gut.gefahrgut) faktor *= 1.4;      // Ausrüstung, Qualifikation
-    if (gut.wertProTonne > 10000) faktor *= 1.2; // Haftungsrisiko
+    const zuschlaege = [];
+    if (gut.verderblich) {
+      zuschlaege.push({ name: "Kühlung", faktor: 1.35,
+        grund: "verderbliche Ware, durchgehende Kühlkette und Zeitdruck" });
+    }
+    if (gut.gefahrgut) {
+      zuschlaege.push({ name: "Gefahrgut", faktor: 1.4,
+        grund: "Ausrüstung, Kennzeichnung und Qualifikation des Fahrers" });
+    }
+    if (gut.wertProTonne > 10000) {
+      zuschlaege.push({ name: "Wertgut", faktor: 1.2,
+        grund: "Haftungsrisiko bei über 10.000 DM je Tonne" });
+    }
+    const zuschlagGesamt = zuschlaege.reduce((f, z) => f * z.faktor, 1);
 
-    const strecke = SATZ_KOMPLETT_DM_KM * anteil * km * faktor;
+    const strecke = SATZ_KOMPLETT_DM_KM * anteil * km * zuschlagGesamt;
+    // Be- und Entladen, Papiere, Rampenzeit. Flacher gestaffelt als
+    // die Strecke: Einen Palettenplatz abzufertigen kostet fast
+    // dasselbe, egal was darauf steht.
     const abfertigung = 60 + 260 * Math.pow(anteil, 0.6);
 
-    return Math.round(strecke + abfertigung);
+    return {
+      summe: Math.round(strecke + abfertigung),
+      strecke: Math.round(strecke),
+      abfertigung: Math.round(abfertigung),
+      anteil,
+      satzJeKm: SATZ_KOMPLETT_DM_KM * anteil * zuschlagGesamt,
+      zuschlaege,
+      zuschlagGesamt
+    };
   }
 
   /** Fahrzeuge, die diese Ware befördern können. */
@@ -213,6 +255,10 @@ const Ladung = (function () {
     passtDazu,
     begrenztDurch,
     frachtpreis,
+    aufschluesselung,
+    SATZ_KOMPLETT_DM_KM,
+    REFERENZ_TONNEN,
+    DEGRESSION,
     passendeFahrzeuge,
     passendeWaren
   };

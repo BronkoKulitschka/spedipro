@@ -25,7 +25,10 @@ const Auftraege = (function () {
     unterwegs: "unterwegs",
     zugestellt: "zugestellt",
     abgerechnet: "abgerechnet",
-    verfallen: "verfallen"
+    verfallen: "verfallen",
+    // Angenommen und dann nicht gefahren. Anders als "verfallen", was
+    // einen Auftrag trifft, den nie jemand genommen hat.
+    geplatzt: "geplatzt"
   };
 
   // So viele Aufträge sollen in der Börse liegen. Darunter wird
@@ -209,7 +212,23 @@ const Auftraege = (function () {
     // Lieferfrist berücksichtigt die reine Fahrzeit plus Puffer.
     const jetzt = Spielzeit.heute();
     const ladeBeginn = new Date(jetzt.getTime());
-    ladeBeginn.setHours(ladeBeginn.getHours() + Math.round(Math.random() * 36));
+    // Ein guter Teil der Börse ist SOFORT abholbereit, der Rest steht
+    // in den nächsten anderthalb Tagen bereit.
+    //
+    // Bis 0.15.40 lag jedes Ladefenster in der Zukunft (0 bis 36
+    // Stunden). Solange die Fahrt das Fenster ignorierte, fiel das
+    // nicht auf. Seit sie wartet, schon: Gemessen am ersten Spieltag
+    // war kein einziger der acht Aufträge im Depot sofort ladbar, der
+    // Wagen stand im Schnitt 19 Stunden herum, ehe er losfuhr. Nach
+    // einem Tag Spielzeit war das Problem von selbst weg, weil die
+    // Börse altert - aber die erste Tour eines neuen Spiels stand
+    // still, und das ist der schlechtestmögliche Augenblick dafür.
+    //
+    // Eine Börse, auf der nichts sofort verfügbar ist, ist ohnehin
+    // unrealistisch: Ein Teil der Ware steht schon an der Rampe.
+    if (Math.random() >= 0.4) {
+      ladeBeginn.setHours(ladeBeginn.getHours() + 1 + Math.round(Math.random() * 35));
+    }
     const ladeEnde = new Date(ladeBeginn.getTime());
     ladeEnde.setHours(ladeEnde.getHours() + 24 + Math.round(Math.random() * 24));
 
@@ -232,6 +251,15 @@ const Auftraege = (function () {
       tonnen,
       km: route.km,
       entgelt: Math.round(grundpreis * faktor),
+      // Woraus der Preis entstanden ist. Der Listenpreis kommt aus
+      // der Gewichts- und Entfernungsstaffel (Ladung.aufschluesselung),
+      // der Faktor ist das, was der Markt daraus macht: Die Börse
+      // drückt, ein Stammkunde zahlt mehr. Beides wird mitgeführt,
+      // damit die Anzeige den Preis nachrechnen kann, statt ihn zu
+      // schätzen - der Faktor ist gewürfelt und ließe sich nachher
+      // nicht mehr rekonstruieren.
+      listenpreis: grundpreis,
+      preisfaktor: faktor,
       ladeBeginn: ladeBeginn.toISOString(),
       ladeEnde: ladeEnde.toISOString(),
       lieferFrist: lieferFrist.toISOString(),
@@ -407,6 +435,27 @@ const Auftraege = (function () {
   }
 
   /**
+   * Ein angenommener Auftrag wird nicht gefahren.
+   *
+   * Das ist etwas anderes als eine verspätete Zustellung: Der Verlader
+   * hat die Ware bereitgestellt und steht jetzt da. Die Beziehung
+   * trägt den Schaden wie bei einer Verspätung - nur dass es keinen
+   * Erlös gibt, der ihn aufwiegt.
+   */
+  function platzenLassen(auftrag) {
+    auftrag.status = STATUS.geplatzt;
+    auftrag.fahrzeugId = null;
+    auftrag.puenktlich = false;
+
+    const kunde = Kunden.alle().find((k) => k.id === auftrag.kundeId);
+    if (kunde) {
+      Kunden.auftragErledigt(kunde, { puenktlich: false, entgelt: 0 });
+    }
+    benachrichtigen();
+    return auftrag;
+  }
+
+  /**
    * Wann dieser Auftrag vom Markt verschwindet. Nach dem Ladefenster
    * bleibt er noch VERFALL_TAGE liegen, dann nimmt ihn jemand anders.
    */
@@ -546,6 +595,7 @@ const Auftraege = (function () {
     beginnen,
     zustellen,
     freigeben,
+    platzenLassen,
     terminMachbar,
     verfallAm,
     dauerStunden,

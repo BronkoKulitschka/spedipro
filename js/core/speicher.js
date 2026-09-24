@@ -537,6 +537,13 @@ const Speicher = (function () {
     // ihre Frachten zwar selbst, die Auftragsübersicht aber nicht.
     Auftraege.auffrischen();
 
+    // Die Anzeige hängt Meldungen an den Spielstand, nicht an die Uhr:
+    // Ohne diesen Aufruf stand die Ankunftsmeldung des alten Spiels im
+    // neuen.
+    if (typeof TourenplanungApp !== "undefined" && TourenplanungApp.neuBegonnen) {
+      TourenplanungApp.neuBegonnen();
+    }
+
     speichern(platz);
     return true;
   }

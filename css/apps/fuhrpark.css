@@ -446,6 +446,21 @@
   min-width: 0;
 }
 
+/* Was die Tour wirklich eingebracht hat - rechtsbündig, damit die
+   Beträge einer Liste untereinander vergleichbar stehen. Der
+   Tooltip zeigt die ganze Rechnung (0.15.40). */
+.fuhrpark-historie-geld {
+  flex-shrink: 0;
+  width: 92px;
+  text-align: right;
+  font-family: monospace;
+}
+
+/* Eigene Klassen statt der tour-* aus der Disposition: Der Fuhrpark
+   soll nicht vom Stylesheet einer anderen App abhängen. */
+.geld-positiv { color: #1a5c1a; font-weight: bold; }
+.geld-negativ { color: #8a1414; font-weight: bold; }
+
 .fuhrpark-historie-leer {
   font-size: 11px;
   color: var(--win-grey-darker);

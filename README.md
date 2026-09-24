@@ -243,7 +243,285 @@ Geld, das für den zweiten Wagen gerade nicht reicht. Die Bausteine
 sind da - Frist, Kontostand, Kreditlinie -, sie werden nur nicht
 inszeniert. Das ist das nächste Thema nach diesem.
 
-## Aktueller Stand (v0.15.39)
+## Aktueller Stand (v0.15.41)
+
+**Zwei Dinge im Dispositionsmodul, die zusammengehören: Der Wagen
+wartet jetzt auf die Ladung, und eine laufende Tour lässt sich
+abbrechen.**
+
+### Das Ladefenster gilt
+
+`tourPlan()` rechnete seit jeher damit, dass der Wagen wartet, bis die
+Ware bereitsteht, und warnte bei über zwölf Stunden. `fahrt.js` kannte
+`ladeBeginn` überhaupt nicht und fuhr sofort los. Die Warnung
+beschrieb etwas, das nie eintrat.
+
+Jetzt setzt `standzeitSetzen()` die Standzeit **nach** dem Ladefenster
+an: erst warten, dann laden. Das Warten ist dabei sichtbar von der
+Rampenzeit getrennt (`wartetBis` neben `stehtBis`) - in der Liste der
+laufenden Touren steht „wartet auf Ladung" statt „an der Rampe", in
+einem Warnton statt im Grau der Ruhezeit. Der Unterschied ist keine
+Spitzfindigkeit: Rampenzeit ist Arbeit, Wartezeit ist der einzige
+Stillstand, den der Disponent hätte vermeiden können.
+
+**Damit ist die Unterscheidung aus 0.15.40 wieder hinfällig.** Dort
+hatte ich `dauerStunden` (Termin) und `bindungStunden` (Kosten)
+getrennt, weil ein voller Tag Fixkosten für eine Wartezeit, die nie
+eintrat, falsch gewesen wäre. Seit die Fahrt wartet, ist wer an der
+Rampe steht genauso gebunden wie wer fährt. Die Trennung hat genau
+eine Version gehalten - und das ist richtig so: Sie war die Antwort auf
+einen Fehler, nicht auf die Sache.
+
+**Der erste Spieltag stand still.** Gemessen, nachdem das Warten
+gebaut war: Von den acht Aufträgen im eigenen Depot war **kein
+einziger** sofort ladbar, der Wagen stand im Schnitt **19 Stunden**
+herum, ehe er losfuhr. Der Grund lag in `erzeugen()`: Jedes
+Ladefenster wurde auf 0 bis 36 Stunden **in der Zukunft** gesetzt.
+Nach einem Spieltag war das Problem von selbst weg, weil die Börse
+altert (nach 24 Stunden waren 70 % abholbereit, nach 72 Stunden alle) -
+aber die erste Tour eines neuen Spiels stand, und das ist der
+schlechtestmögliche Augenblick dafür. Eine Börse, auf der nichts
+sofort verfügbar ist, ist ohnehin unrealistisch: Ein Teil der Ware
+steht schon an der Rampe. Jetzt sind **vier von zehn Aufträgen sofort
+abholbereit**, der Rest in den nächsten anderthalb Tagen.
+
+| | vorher | jetzt |
+|---|---|---|
+| sofort ladbar am ersten Tag | 2 % | **42 %** |
+| Ø Wartezeit am ersten Tag | 19,4 Std | **12,6 Std** |
+| Ø Wartezeit nach einem Tag | 1,9 Std | **0,9 Std** |
+
+Das Warten ist damit kein Zoll mehr, sondern eine Entscheidung: Nimm
+die Fracht, die bereitsteht, oder die bessere, die erst morgen
+aufgeht.
+
+### Eine laufende Tour lässt sich abbrechen
+
+Einmal losgeschickt, lief eine Tour bisher durch - kein Abbrechen,
+kein Umdisponieren. Ein Disponent macht genau das den ganzen Tag.
+
+`Fahrt.abbrechen()` beendet sie, aber ohne zu schummeln: Der Wagen
+fährt den **nächsten Halt noch an** und bleibt dort stehen. Ein Zug auf
+der Autobahn lässt sich nicht an Ort und Stelle abstellen, und die Zeit
+bis zur nächsten Stadt vergeht ebenso wie der Sprit dafür - beides
+wird gerechnet und als Leerfahrt gebucht.
+
+Drei verschiedene Schicksale, und sie unterscheiden sich:
+
+- Was **an Bord** ist, ist angenommen und wird nicht geliefert. Der
+  Verlader steht da. Das platzt (neuer Auftragsstatus `geplatzt`) und
+  belastet die Kundenbeziehung wie eine Verspätung - nur ohne den
+  Erlös, der sie sonst aufwöge.
+- Was **noch nicht geladen** wurde, kann ein anderer fahren und geht
+  ohne Schaden zurück an die Börse.
+- Die **Leerfahrt** zum nächsten Halt kostet Sprit und Verschleiß.
+
+Der Knopf sitzt an der laufenden Tour, klein und rechts, mit Rückfrage:
+Was an Bord ist, platzt, und das lässt sich nicht zurücknehmen.
+
+**Nebenbei ist dabei aufgefallen, dass man die laufenden Touren
+überhaupt nicht sah**, sobald eine Stadt gewählt war -
+`laufendeFahrten()` stand nur im leeren Zustand. Nach dem Losschicken
+springt die Disposition aber genau dorthin zurück. Jetzt steht die
+Liste unter beiden Ansichten.
+
+**Und ein zweiter Fund aus dem eigenen Test:** Die Ankunftsmeldung des
+alten Spielstands stand im neuen. `Speicher.neuBeginnen()` räumte alles
+auf außer den Meldungen der Anzeige - die hängen an der App, nicht am
+Spielstand. Dafür gibt es jetzt `TourenplanungApp.neuBegonnen()`.
+
+Geprüft mit `browsertest-abbruch.js`: Anteil sofort abholbereiter
+Fracht, Warten bis genau zum Ladefenster, Status „wartet auf Ladung",
+Losrollen danach - und für den Abbruch: Tour beendet, Sendung an Bord
+geplatzt, Wagen steht am nächsten Halt statt im Nichts, Zeit und Geld
+für die Restfahrt, Meldung erklärt es, Kundenbeziehung trägt den
+Ausfall ohne Umsatz.
+
+**Siebzehn bestehende Tests mussten nachziehen**, und zwar alle aus
+demselben Grund: Sie legen sich ihre Fracht selbst an und spulen dann
+eine feste Stundenzahl vor. Mit einem gewürfelten Ladefenster stand der
+Wagen je nach Wurf noch, wenn der Test längst weitergefahren war -
+`browsertest-buchhaltung.js` und `browsertest-start.js` fielen genau so
+sporadisch aus. Sie überschreiben `Auftraege.erzeugen` jetzt so, dass
+selbst angelegte Fracht sofort bereitsteht. Das Warten selbst prüft
+`browsertest-abbruch.js`.
+
+## Vorheriger Stand (v0.15.40)
+
+**Was bleibt von einer Tour wirklich übrig?**
+
+Gemeldet wurde, dass man den Reingewinn je Tour nicht sieht. Beim
+Nachmessen stellte sich heraus, dass die angezeigte Zahl nicht nur
+unvollständig war, sondern nicht einmal mit dem übereinstimmte, was
+das Spiel danach buchte.
+
+**Zwei Fehler, die derselbe Fehler waren.** `Entgelt − Sprit` stand an
+vier Stellen im Code: Zielliste der Disposition, Frachtbrief-Durchsicht,
+Auftragsübersicht und Ankunftsmeldung. Vier Kopien einer Formel, und
+keine von ihnen hatte sie ganz. Beim Abrechnen bucht
+`Finanzen.tourAbgerechnet()` nämlich zusätzlich Reifen und Verschleiß.
+Dazu schätzte die Planung den Sprit mit dem blanken Basisverbrauch,
+während die gefahrene Tour Beladung und Gelände einrechnet - bei
+vollem Wagen ein Unterschied von 39 %.
+
+Gemessen an einer Tour Hamburg-Hannover mit 1,4 t:
+
+| | vorher | jetzt |
+|---|---|---|
+| Durchsicht versprach | 207 DM | **187 DM** |
+| gebucht wurde | 187 DM | **187 DM** |
+
+Beides läuft jetzt über ein neues Modul, `js/core/kalkulation.js`. Wer
+die Zahlen ändert, ändert sie dort, und alle Ansichten folgen. Die
+Verbrauchsschätzung benutzt dasselbe Modell wie die Fahrt
+(`Verschleiss.verbrauchSchaetzen()`, neu und ohne Nebenwirkung auf das
+Fahrzeug). Eine Schätzung darf danebenliegen, aber nicht systematisch
+in eine Richtung.
+
+**Deckungsbeitrag und Reingewinn sind zwei Zahlen, und beide stehen
+jetzt da.** Der Deckungsbeitrag ist das Entgelt abzüglich der Kosten,
+die nur wegen dieser Fahrt anfallen - er beantwortet „lohnt sich die
+Fahrt gegenüber Stehenbleiben?". Der Reingewinn zieht zusätzlich den
+Anteil an den Kosten ab, die ohnehin laufen, und beantwortet „lebt die
+Firma davon?". Die Durchsicht liest sich seitdem wie eine Rechnung:
+
+    Entgelt                  298 DM
+    Sprit                   − 54 DM
+    Reifen und Verschleiß   − 22 DM
+    Deckungsbeitrag          222 DM
+    Fixkosten anteilig      − 29 DM   0,3 Tage à 85 DM
+    ─────────────────────────────────
+    Reingewinn               193 DM
+
+**Der Schlüssel für die Fixkosten ist die Zeit, nicht der Kilometer.**
+Fixkosten laufen nach Kalender. Ein Wagen, der zehn Tage für eine Tour
+braucht, trägt zehn Tage Miete, Steuer und Abschreibung - ob er fährt,
+an der Rampe steht oder Ruhezeit hat. So rechnet auch ein Spediteur:
+Er kennt seinen Tagessatz je Fahrzeug und hält die Tour dagegen.
+
+Der Tagessatz entsteht aus dem, was diesem einen Wagen zuzurechnen
+ist: Steuer, Versicherung und Abschreibung gehören ihm allein, die
+Depotmiete wird nach Grundbetrag und Fläche geteilt, die Verwaltung
+nach Köpfen - ein Büro führt man für den Betrieb, nicht für einen
+bestimmten Wagen. Für den Start-Transporter sind das 2.576 DM im Monat
+oder **85 DM am Tag**. Gerechnet wird mit 30,44 Tagen je Monat; mit
+glatten 30 wären alle Tagessätze um 1,5 % zu hoch.
+
+**Eine Zeit, die zwei Dinge hieß.** Der erste Versuch belastete eine
+150-km-Tour mit 86 DM Fixkosten, abgerechnet wurden 14 DM. Der Grund
+war, dass `plan.dauerStunden` beides zugleich sein sollte: der
+Zustelltermin und die Bindungsdauer. Es enthält das Warten auf ein
+Ladefenster, das erst morgen aufgeht - für den Termin richtig, für die
+Kostenumlage falsch, denn in dieser Zeit ist der Wagen in der
+Simulation längst wieder unterwegs. Der Plan führt jetzt beide Zahlen:
+`dauerStunden` für den Termin, `bindungStunden` für die Kosten. „Bindet
+den Wagen" zeigt seitdem die zweite - was das Feld immer schon
+behauptet hat.
+
+**Nach der Ankunft steht dieselbe Rechnung noch einmal da**, jetzt mit
+dem gemessenen Verbrauch und der wirklich vergangenen Zeit statt einer
+Schätzung. Die Fahrzeughistorie führt den Reingewinn je Tour mit; der
+Tooltip zeigt die ganze Rechnung. Fährt eine Tour mehrere Sendungen,
+trägt jede nur ihren Teil der Zeit, geteilt nach Kilometern - sonst
+zahlte jede von drei Sendungen die Fixkosten der ganzen Tour.
+
+**Ein Unterschied bleibt, und er hat einen Namen.** Die Planung rechnet
+die Standzeit am letzten Stopp mit, die Fahrt setzt sie dort nicht
+(`fahrt.js`, `standzeitSetzen`: „danach ist die Tour ohnehin zu Ende").
+Die Planung liegt dadurch um die Abladezeit zu hoch - im Beispiel 165
+DM versprochen, 173 DM abgerechnet. Die Richtung stimmt (es wird nie
+weniger als versprochen), und `browsertest-reingewinn.js` prüft genau
+das statt Gleichheit. Wer den Unterschied ganz beseitigen will, muss
+die Fahrt am letzten Stopp abladen lassen - das verlängert jede Tour um
+rund zwei Stunden und ist deshalb eine eigene Entscheidung.
+
+**Und dieselbe Frage nach oben gestellt: woraus besteht das Entgelt?**
+Die Kosten waren jetzt aufgeschlüsselt, der Erlös stand weiter als
+blanke Zahl da - dabei steckt darin alles, was der Spieler beeinflussen
+kann. Ein Knopf „Woraus?" neben dem Entgelt klappt je Sendung eine
+zweite kleine Rechnung auf:
+
+    A-1048 · 0,5 t Stückgut
+    Strecke        623 km à 0,37 DM      233 DM
+    Be- und Entladen  Papiere, Rampenzeit 129 DM
+    Börsenabschlag ×0,89                 − 40 DM
+    ───────────────────────────────────────────
+    Entgelt                              322 DM
+
+Damit wird sichtbar, was die Wirtschaft aus 0.15.39 eigentlich tut:
+Der Streckensatz von 0,37 DM je km für eine halbe Tonne gegen 3,40 DM
+für eine volle Ladung ist die Gewichtsstaffel, und sie ist der Grund,
+warum sich Beiladung lohnt. Zuschläge für Kühlung, Gefahrgut und
+Wertgut bekommen eigene Zeilen samt Begründung. Die letzte Zeile vor
+der Summe sagt, was der Markt daraus gemacht hat - Börsenabschlag oder
+Stammkundenaufschlag, mit Namen des Kunden.
+
+`Ladung.frachtpreis()` ist dafür auf `Ladung.aufschluesselung()`
+aufgesetzt, die dieselbe Rechnung mit ihren Bestandteilen liefert. Der
+Auftrag führt seither `listenpreis` und `preisfaktor` mit: Der
+Börsenabschlag ist gewürfelt und ließe sich nachher nicht mehr
+rekonstruieren.
+
+Zwei Dinge, die beim Bauen schiefgingen und beide dasselbe Prinzip
+betreffen - **eine Rechnung, deren Posten nicht aufgehen, ist
+schlimmer als gar keine**:
+
+- Zuschläge wurden zunächst jeder auf den Grundwert bezogen. Bei
+  Kühlung und Gefahrgut zusammen waren das 7 % zu viel. Sie wirken
+  nacheinander, der zweite auf das Ergebnis des ersten.
+- Die Marktzeile rechnete aus dem gespeicherten Faktor. Sobald ein
+  Entgelt woanders gesetzt wird, gehen die Posten dann nicht mehr auf -
+  der Test hat genau das getroffen. Jetzt ist sie der **Rest**:
+  Entgelt minus Listenpreis. Damit summiert sich die Rechnung immer auf
+  die Zahl, die danebensteht.
+
+Der Block ist standardmäßig zu. Die Zusammenfassung soll auf einen
+Blick lesbar bleiben; die Herleitung ist für den, der sie sucht.
+
+**Die Standzeit an der Rampe ist halbiert**, von zwei Stunden je
+Vorgang auf eine. Vier Stunden Rampe für eine Palette Stückgut waren
+zu viel: Bei einem 150-km-Lauf machten sie 63 % der ganzen Tour aus.
+Geteilt wurden alle Werte mit demselben Faktor, damit die Verhältnisse
+zwischen den Aufbauten bleiben - ein Tankzug steht weiterhin
+anderthalbmal so lange wie eine Plane, ein Kipper den Bruchteil.
+
+Was das misst, gegen den Stand davor:
+
+| Strecke | DB je Tag vorher | jetzt |
+|---|---|---|
+| 60 km | 770 DM | **1.297 DM** |
+| 150 km | 712 DM | **1.042 DM** |
+| 300 km | 652 DM | **849 DM** |
+| 600 km | 327 DM | **356 DM** |
+| 1.200 km | 280 DM | **293 DM** |
+
+**Der Vorsprung des Kurzlaufs wächst damit von 2,8- auf 4,4-fach.**
+Das ist die Kehrseite: Die Rampe war genau das Gegengewicht, das
+0.15.28 eingeführt hatte, weil ohne sie jeder Kurzlauf rechnerisch
+dreimal so gut aussah wie eine Ferntour. Begrenzt wird es im Spiel vom
+Angebot - im eigenen Depot liegen im Schnitt vier ladbare Aufträge,
+nicht acht Kurzläufe am Tag. Falls sich beim Spielen doch „immer den
+kürzesten nehmen" einstellt, ist die nächste Stellschraube nicht die
+Rampe, sondern der Frachtpreis: Die Abfertigungspauschale (60 + 260 ×
+Staffel) macht kurze Läufe je Kilometer besonders einträglich.
+
+Nebenbei repariert: „1 Tage 16 Std" stand bis hierher in jeder
+Durchsicht einer eintägigen Tour.
+
+Geprüft mit `browsertest-reingewinn.js`, 35 Proben: Tagessatz ist die
+Summe seiner Posten, Durchsicht rechnet wie eine Rechnung, „Woraus?"
+klappt auf und wieder zu und seine Posten ergeben das Entgelt,
+versprochen ist gebucht, Ankunft und Historie führen den Reingewinn,
+die Staffel gibt der kleinen Sendung je Tonne mehr und der großen
+insgesamt mehr, nichts rechnet mehr ohne Verschleiß. Die Suite läuft zweimal vollständig durch, 23 Tests.
+`browsertest-standzeit.js` prüfte auf die Beschriftung „Je Tag", die
+jetzt „Deckungsbeitrag je Tag" heißt - seit mehrere Zahlen je Tour
+dastehen, muss dabeistehen, welche gemeint ist. Und er prüfte die
+Standzeit gegen die feste Zahl 2; jetzt liest er die Tabelle und
+prüft die Verhältnisse - dass ein Tank länger steht als eine Plane
+und ein Kipper kürzer, war der Sinn der Tabelle, nicht der Wert.
+
+## Vorheriger Stand (v0.15.39)
 
 **Der Transporter ist das erste Fahrzeug.**
 

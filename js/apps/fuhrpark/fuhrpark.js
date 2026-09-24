@@ -680,6 +680,7 @@ const FuhrparkApp = (function () {
                   <span class="fuhrpark-historie-kmstand">${(t.km || 0).toLocaleString("de-DE")} km</span>
                   <span class="fuhrpark-historie-kmstand">${t.tage || 0} Tage</span>
                   <span class="fuhrpark-historie-text">${t.text}</span>
+                  ${geldSpalte(t)}
                 </li>
               `
             )
@@ -1020,6 +1021,24 @@ const FuhrparkApp = (function () {
     }
   }
 
+  /**
+   * Was eine gefahrene Tour eingebracht hat, als eigene Spalte.
+   *
+   * Nur für Einträge, die den Reingewinn führen - Käufe, Reparaturen
+   * und Prüftermine haben keinen. Der Tooltip zeigt die ganze
+   * Rechnung, damit die Zahl nicht wie vom Himmel gefallen wirkt.
+   */
+  function geldSpalte(e) {
+    const d = e && e.daten;
+    if (!d || d.reingewinn === undefined || d.reingewinn === null) return "";
+    const dm = (x) => (x || 0).toLocaleString("de-DE");
+    return `<span class="fuhrpark-historie-geld ${
+      d.reingewinn > 0 ? "geld-positiv" : "geld-negativ"}"
+        title="Entgelt ${dm(e.erloes)} DM − Sprit ${dm(d.spritkosten)} − Verschleiß ${
+          dm(d.verschleiss)} − Fixkosten ${dm(d.fixkosten)} = ${dm(d.reingewinn)} DM"
+      >${dm(d.reingewinn)} DM rein</span>`;
+  }
+
   /** Vollständige Chronik in einem eigenen Fenster. */
   function historieFensterOeffnen(fahrzeug) {
     const eintraege = Historie.alle(fahrzeug);
@@ -1035,6 +1054,7 @@ const FuhrparkApp = (function () {
                   <span class="fuhrpark-historie-datum">${Spielzeit.formatiere(new Date(e.datum))}</span>
                   <span class="fuhrpark-historie-kmstand">${(e.kmStand || 0).toLocaleString("de-DE")} km</span>
                   <span class="fuhrpark-historie-text">${e.text}</span>
+                  ${geldSpalte(e)}
                 </li>
               `
             )

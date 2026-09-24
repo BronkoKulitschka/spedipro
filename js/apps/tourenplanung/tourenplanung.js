@@ -441,6 +441,11 @@ const TourenplanungApp = (function () {
             const beladen = Fahrt.istBeladen(t);
             const ruht = Boolean(t.ruhtBis);
             const steht = Boolean(t.stehtBis);
+            // Warten auf die Ladung ist kein Laden. Der Wagen steht in
+            // beiden Fällen, aber nur im zweiten arbeitet jemand - und
+            // nur im ersten hat der Disponent etwas falsch gemacht.
+            const wartet = Boolean(t.wartetBis)
+              && Spielzeit.heute() < new Date(t.wartetBis);
             // An Bord können mehrere Sendungen sein; maßgeblich für die
             // Fristwarnung ist die nächste, die abgeladen wird.
             const anBord = Fahrt.ladung(t).map((nr) => Auftraege.nachNummer(nr))
@@ -468,16 +473,27 @@ const TourenplanungApp = (function () {
                 </div>
                 <div class="tour-laufend-info">
                   <span class="tour-status tour-status-${
-                    steht ? "ruht" : ruht ? "ruht" : beladen ? "beladen" : "anfahrt"}">
-                    ${steht ? "an der Rampe"
+                    wartet ? "wartet" : steht ? "ruht" : ruht ? "ruht"
+                    : beladen ? "beladen" : "anfahrt"}">
+                    ${wartet ? "wartet auf Ladung"
+                      : steht ? "an der Rampe"
                       : ruht ? "Ruhezeit"
                       : beladen ? "beladen unterwegs" : "Anfahrt leer"}
                   </span>
+                  ${wartet ? `<span class="tour-wartehinweis">bis ${
+                    Spielzeit.formatiereMitUhrzeit(new Date(t.wartetBis))}</span>` : ""}
                   ${Math.round(t.gesamtGefahreneKm).toLocaleString("de-DE")} von
                   ${Math.round(Fahrt.gesamtKm(t)).toLocaleString("de-DE")} km ·
                   ${stand.gesamt > 1 && ziel ? `nächster Halt ${ziel.stadt} · ` : ""}
                   Ankunft ${Spielzeit.formatiereMitUhrzeit(ankunft)}
                   ${zuSpaet ? `<span class="tour-warnung">nach Frist</span>` : ""}
+                </div>
+                <div class="tour-laufend-aktion">
+                  <button class="win98-button bevel-out tour-abbruch"
+                          data-tour-abbrechen="${t.fahrzeug.id}"
+                          title="Der Wagen fährt den nächsten Halt noch an und bleibt dort">
+                    ⨯ Tour abbrechen
+                  </button>
                 </div>
               </li>
             `;
@@ -529,17 +545,52 @@ const TourenplanungApp = (function () {
         </div>
         <div class="tour-laufend-info">
           Entgelt ${a.erloes.toLocaleString("de-DE")} DM −
-          Sprit ${a.spritkosten.toLocaleString("de-DE")} DM =
+          Sprit ${a.spritkosten.toLocaleString("de-DE")} −
+          Verschleiß ${a.verschleiss.toLocaleString("de-DE")} =
           <strong class="${a.deckungsbeitrag > 0 ? "tour-positiv" : "tour-negativ"}">
             ${a.deckungsbeitrag.toLocaleString("de-DE")} DM
-          </strong>
+          </strong> Deckungsbeitrag
           ${a.puenktlich
             ? `<span class="tour-puenktlich">pünktlich</span>`
             : `<span class="tour-warnung">verspätet</span>`}
         </div>
+        ${a.reingewinn === null || a.reingewinn === undefined ? "" : `
+          <div class="tour-laufend-info tour-ankunft-rein">
+            abzüglich ${a.fixkosten.toLocaleString("de-DE")} DM Fixkosten für
+            ${a.tage.toFixed(1).replace(".", ",")} Tage bleiben
+            <strong class="${a.reingewinn > 0 ? "tour-positiv" : "tour-negativ"}">
+              ${a.reingewinn.toLocaleString("de-DE")} DM
+            </strong> Reingewinn
+          </div>`}
         ${a.schaden ? `<div class="tour-schadenhinweis">
           ⛔ Liegengeblieben: ${a.schaden.teil} bei ${a.schaden.wert.toFixed(0)}%
         </div>` : ""}
+      </div>
+    `;
+  }
+
+  /** Was der Abbruch gekostet hat. */
+  function abbruchmeldung() {
+    if (!letzteAbbruchmeldung) return "";
+    const a = letzteAbbruchmeldung;
+    return `
+      <div class="tour-ankunft tour-mit-schaden tour-abbruch-meldung">
+        <div class="tour-warentitel">
+          Tour abgebrochen: ${a.kennzeichen} steht in ${a.stadt}
+          <button class="win98-button bevel-out tour-ankunft-weg"
+                  id="tour-btn-abbruch-weg">✕</button>
+        </div>
+        ${a.geplatzt.length ? `
+          <div class="tour-laufend-info">
+            <span class="tour-warnung">Geplatzt:</span>
+            ${a.geplatzt.map((x) => `${x.nummer} (${x.kundeName})`).join(", ")} -
+            die Ware stand bereit und wurde nicht geholt.
+          </div>` : ""}
+        ${a.zurueck.length ? `
+          <div class="tour-laufend-info">
+            Zurück an die Börse: ${a.zurueck.map((x) => x.nummer).join(", ")} -
+            noch nicht geladen, also ohne Schaden.
+          </div>` : ""}
       </div>
     `;
   }
@@ -649,7 +700,7 @@ const TourenplanungApp = (function () {
     if (!s) {
       return `
         <div class="tour-ablauf">
-          ${nachholhinweis()}${ankunftsmeldung()}
+          ${nachholhinweis()}${ankunftsmeldung()}${abbruchmeldung()}
           <div class="tour-schrittinhalt">
             ${laufendeFahrten()}
             <div class="tour-dispo-leer">
@@ -663,9 +714,10 @@ const TourenplanungApp = (function () {
 
     return `
       <div class="tour-ablauf">
-        ${nachholhinweis()}${ankunftsmeldung()}
+        ${nachholhinweis()}${ankunftsmeldung()}${abbruchmeldung()}
         ${frachtbrief()}
         <div class="tour-schrittinhalt">${schrittInhalt()}</div>
+        ${laufendeFahrten()}
       </div>
     `;
   }
@@ -1040,6 +1092,7 @@ const TourenplanungApp = (function () {
       zustellung: null, abholung: null
     }));
     let standGesamt = 0;
+    let wartenGesamt = 0;
     let zeit = new Date(Spielzeit.heute().getTime());
 
     const aufbau = f.aufbautyp ? String(f.aufbautyp).toLowerCase() : "standard";
@@ -1077,7 +1130,9 @@ const TourenplanungApp = (function () {
         } else if (zeit < ladeBeginn) {
           const stunden = Math.round((ladeBeginn - zeit) / 3600000);
           // Das Fahrzeug steht, bis die Ware bereitsteht - diese Zeit
-          // fehlt allen folgenden Sendungen.
+          // fehlt allen folgenden Sendungen. Seit 0.15.41 wartet es
+          // auch wirklich, statt nur in der Planung zu warten.
+          wartenGesamt += (ladeBeginn - zeit) / 3600000;
           zeit = new Date(ladeBeginn.getTime());
           if (stunden > 12) je[k].warnungLaden = `${stunden} Std Standzeit in ${s.vonName}`;
         }
@@ -1087,12 +1142,21 @@ const TourenplanungApp = (function () {
     // Für die Listen, die nur eine Warnung je Sendung zeigen können.
     je.forEach((x) => { x.warnung = x.warnungZiel || x.warnungLaden; });
 
-    // Gesamtdauer der Tour: fahren, ruhen, stehen. Das ist die Zeit,
-    // für die das Fahrzeug gebunden ist - bei kleinem Fuhrpark die
-    // härteste Währung.
+    // Die Zeit, für die das Fahrzeug gebunden ist: fahren, ruhen, an
+    // der Rampe stehen - und warten, bis die Ware bereitsteht.
+    //
+    // In 0.15.40 standen hier zwei verschiedene Zeiten, weil die Fahrt
+    // das Ladefenster nicht kannte: Der Plan wartete, der Wagen fuhr
+    // sofort los, und ein voller Tag Fixkosten für eine Wartezeit, die
+    // nie eintrat, wäre falsch gewesen. Seit die Fahrt wartet, ist die
+    // Unterscheidung hinfällig - wer an der Rampe steht und auf Ware
+    // wartet, ist gebunden wie einer, der fährt. Die Trennung hat
+    // genau eine Version gehalten, und das ist richtig so: Sie war die
+    // Antwort auf einen Fehler, nicht auf die Sache.
     const dauer = (zeit - Spielzeit.heute()) / 3600000;
 
-    return { ...folge, je, dauerStunden: dauer, standStunden: standGesamt };
+    return { ...folge, je, dauerStunden: dauer, bindungStunden: dauer,
+             standStunden: standGesamt, wartezeitStunden: wartenGesamt };
   }
 
   /**
@@ -1140,6 +1204,14 @@ const TourenplanungApp = (function () {
    * wieder auf "zu" stehen darf.
    */
   let etappenAufgeklappt = false;
+
+  /**
+   * Ob die Preisaufschlüsselung in der Durchsicht offensteht.
+   * Ebenfalls Ansichtssache, ebenfalls nicht im Spielstand.
+   * Standardmäßig zu: Die Zusammenfassung soll auf einen Blick
+   * lesbar bleiben, die Herleitung ist für den, der sie sucht.
+   */
+  let preisAufgeklappt = false;
 
   /**
    * Der Zusatz hinter "Frachtbrief". Ab zwei festgelegten Sendungen
@@ -1504,17 +1576,117 @@ const TourenplanungApp = (function () {
     return `<span class="tour-restspaeter">ab ${besteStadt} ${besterT.toFixed(1)} t</span>`;
   }
 
-  /** Summe über alle Sendungen der Tour. */
+  /**
+   * Woraus ein Entgelt entstanden ist - als kleine Rechnung.
+   *
+   * Der Preis war bis 0.15.40 eine Zahl ohne Herkunft. Dabei steckt
+   * einiges darin, das der Spieler beeinflussen kann: die
+   * Gewichtsstaffel (eine große Sendung bringt je Tonne weniger, was
+   * die Beiladung erklärt), die Zuschläge für Kühlung, Gefahrgut und
+   * Wertgut, und der Unterschied zwischen Börse und Stammkunde.
+   *
+   * Gerechnet wird mit dem gespeicherten Listenpreis und Faktor, wo es
+   * einen gibt: Der Börsenabschlag ist gewürfelt und ließe sich sonst
+   * nicht mehr rekonstruieren. Bei Spotladung ist er fest.
+   */
+  function preisRechnung(sendung) {
+    const gut = sendung.art === "auftrag"
+      ? Auftraege.gut(sendung.auftrag) : sendung.gut;
+    if (!gut) return "";
+    const km = sendung.art === "auftrag" ? sendung.auftrag.km : sendung.km;
+    const tonnen = sendung.tonnen;
+    const a = Ladung.aufschluesselung(gut, tonnen, km);
+
+    const dm = (x) => Math.round(x).toLocaleString("de-DE");
+    const zeile = (name, wert, zusatz) => `
+      <div class="tour-preis-zeile">
+        <span class="tour-preis-name">${name}${
+          zusatz ? ` <span class="tour-nebensatz">${zusatz}</span>` : ""}</span>
+        <span class="tour-preis-wert">${wert}</span>
+      </div>`;
+
+    // Ohne Zuschläge ist die Strecke schon der Endwert; mit ihnen
+    // steht darunter, wie viel sie ausmachen.
+    const ohneZuschlag = a.strecke / (a.zuschlagGesamt || 1);
+    const zeilen = [
+      zeile("Strecke", `${dm(ohneZuschlag)} DM`,
+        `${km.toLocaleString("de-DE")} km à ${
+          (a.satzJeKm / (a.zuschlagGesamt || 1)).toFixed(2).replace(".", ",")} DM`),
+      zeile("Be- und Entladen", `${dm(a.abfertigung)} DM`,
+        `Papiere, Rampenzeit`)
+    ];
+    // Zuschläge werden NACHEINANDER angewandt, nicht nebeneinander:
+    // Der zweite greift auf das Ergebnis des ersten. Nur so ergibt die
+    // Summe der Zeilen wieder die Strecke. Beim ersten Versuch stand
+    // hier eine Formel, die jeden Zuschlag auf den Grundwert bezog -
+    // bei Kühlung und Gefahrgut zusammen waren das 7 % zu viel.
+    let laufend = ohneZuschlag;
+    a.zuschlaege.forEach((z) => {
+      const mehr = laufend * (z.faktor - 1);
+      laufend += mehr;
+      zeilen.push(zeile(`${z.name}`, `+ ${dm(mehr)} DM`,
+        `×${z.faktor.toFixed(2).replace(".", ",")} · ${z.grund}`));
+    });
+
+    // Was der Markt aus dem Listenpreis macht, wird als REST gerechnet:
+    // Entgelt minus Listenpreis. Nicht aus dem gespeicherten Faktor -
+    // dann summieren sich die Zeilen immer auf genau das Entgelt, das
+    // danebensteht, auch wenn der Preis irgendwo sonst gesetzt wurde.
+    // Eine Rechnung, deren Posten nicht aufgehen, ist schlimmer als
+    // gar keine.
+    const markt = sendung.entgelt - a.summe;
+    if (Math.round(markt) !== 0 && a.summe > 0) {
+      const faktor = sendung.entgelt / a.summe;
+      const name = sendung.art !== "auftrag" ? "Spotmarkt"
+        : markt > 0 ? "Stammkundenaufschlag"
+        : "Börsenabschlag";
+      const grund = sendung.art !== "auftrag"
+        ? "ohne Vertrag verkauft"
+        : markt > 0
+          ? `${sendung.auftrag.kundeName} zahlt über Listenpreis`
+          : "am freien Markt gedrückt";
+      zeilen.push(zeile(name, `${markt < 0 ? "−" : "+"} ${dm(Math.abs(markt))} DM`,
+        `×${faktor.toFixed(2).replace(".", ",")} · ${grund}`));
+    }
+
+    return `
+      <div class="tour-preis-block">
+        <div class="tour-preis-kopf">
+          ${sendung.art === "auftrag" ? sendung.auftrag.nummer + " · " : "Spotladung · "}
+          ${tonnen.toFixed(1).replace(".", ",")} t ${gut.name}
+        </div>
+        ${zeilen.join("")}
+        ${zeile("<strong>Entgelt</strong>",
+          `<strong>${dm(sendung.entgelt)} DM</strong>`)}
+      </div>`;
+  }
+
+  /**
+   * Summe über alle Sendungen der Tour.
+   *
+   * Gerechnet wird in `Kalkulation`, nicht hier: Bis 0.15.39 stand
+   * `Entgelt - Sprit` an vier Stellen im Code, und keine davon zog den
+   * Verschleiß ab, den `Finanzen.tourAbgerechnet()` tatsächlich bucht.
+   */
   function tourSumme(sendungen) {
     const f = tour.fahrzeug;
     const plan = tourPlan(sendungen);
     const erloes = sendungen.reduce((s, e) => s + e.entgelt, 0);
     if (!plan || !plan.machbar) {
-      return { erloes, km: 0, leerKm: 0, sprit: 0, db: erloes, plan };
+      return { erloes, km: 0, leerKm: 0, sprit: 0, verschleiss: 0,
+               db: erloes, fixkosten: null, reingewinn: null, tage: null, plan };
     }
-    const sprit = f ? spritkostenFuer(f, plan.km) : 0;
+    const e = Kalkulation.tour({
+      fahrzeug: f,
+      erloes,
+      km: plan.km,
+      tonnen: sendungen.reduce((sum, x) => sum + (x.tonnen || 0), 0),
+      stunden: plan.bindungStunden || Auftraege.dauerStunden(plan.km)
+    });
     return { erloes, km: plan.km - plan.leerKm, leerKm: plan.leerKm,
-             sprit, db: erloes - sprit, plan };
+             sprit: e.sprit, verschleiss: e.verschleiss, db: e.deckungsbeitrag,
+             fixkosten: e.fixkosten, reingewinn: e.reingewinn, tage: e.tage,
+             plan };
   }
 
   /** Kurzbezeichnung der gewählten Ladung für den Frachtbrief. */
@@ -1582,7 +1754,10 @@ const TourenplanungApp = (function () {
     if (stunden < 24) return `${stunden} Std`;
     const tage = Math.floor(stunden / 24);
     const rest = stunden % 24;
-    return rest === 0 ? `${tage} Tage` : `${tage} Tage ${rest} Std`;
+    // "1 Tage 16 Std" stand bis 0.15.40 in jeder Durchsicht einer
+    // eintägigen Tour.
+    const wort = tage === 1 ? "Tag" : "Tage";
+    return rest === 0 ? `${tage} ${wort}` : `${tage} ${wort} ${rest} Std`;
   }
 
   /** Menge, die dieses Fahrzeug von diesem Gut mitnehmen kann. */
@@ -2023,8 +2198,6 @@ const TourenplanungApp = (function () {
     if (!route) return null;
 
     const entgelt = Math.round(Ladung.frachtpreis(gut, menge, route.km) * SPOT_FAKTOR);
-    const sprit = fahrzeug ? spritkostenFuer(fahrzeug, route.km) : 0;
-    const db = entgelt - sprit;
 
     const aufbau = fahrzeug && fahrzeug.aufbautyp
       ? String(fahrzeug.aufbautyp).toLowerCase() : "standard";
@@ -2032,6 +2205,13 @@ const TourenplanungApp = (function () {
       + Kostensaetze.standzeit("laden", aufbau)
       + Kostensaetze.standzeit("abladen", aufbau);
     const tage = Math.max(0.1, stunden / 24);
+
+    // Seit 0.15.40 über Kalkulation, damit hier nicht wieder ein
+    // Deckungsbeitrag steht, der den Verschleiß vergisst.
+    const e = Kalkulation.tour({
+      fahrzeug, erloes: entgelt, km: route.km, tonnen: menge, stunden });
+    const sprit = e.sprit;
+    const db = e.deckungsbeitrag;
 
     return {
       z, route, entgelt, sprit, db,
@@ -2165,10 +2345,11 @@ const TourenplanungApp = (function () {
       const a = tour.auftrag;
       const m = Auftraege.terminMachbar(a, f.standort);
       const gesamtKm = anfahrtKm + a.km;
-      const sprit = spritkostenFuer(f, gesamtKm);
+      const e = Kalkulation.tour({
+        fahrzeug: f, erloes: a.entgelt, km: gesamtKm, tonnen: a.tonnen });
       return {
         tonnen: a.tonnen, km: a.km, anfahrtKm, entgelt: a.entgelt,
-        sprit, db: a.entgelt - sprit, machbarkeit: m,
+        sprit: e.sprit, db: e.deckungsbeitrag, machbarkeit: m,
         puenktlich: Boolean(m && m.puenktlich)
       };
     }
@@ -2178,9 +2359,10 @@ const TourenplanungApp = (function () {
     const route = tour.ziel ? Route.berechne(s.name, tour.ziel.name) : null;
     const km = route ? route.km : 0;
     const entgelt = Math.round(Ladung.frachtpreis(g, tonnen, km) * SPOT_FAKTOR);
-    const sprit = spritkostenFuer(f, anfahrtKm + km);
+    const e = Kalkulation.tour({
+      fahrzeug: f, erloes: entgelt, km: anfahrtKm + km, tonnen });
     return {
-      tonnen, km, anfahrtKm, entgelt, sprit, db: entgelt - sprit,
+      tonnen, km, anfahrtKm, entgelt, sprit: e.sprit, db: e.deckungsbeitrag,
       machbarkeit: null, puenktlich: true
     };
   }
@@ -2364,7 +2546,10 @@ const TourenplanungApp = (function () {
     }
 
     // Bindungsdauer: fahren, ruhen und an den Rampen stehen.
-    const stunden = plan.dauerStunden || Auftraege.dauerStunden(plan.km);
+    // "Bindet den Wagen" heißt, was es sagt: die Zeit, in der er für
+    // nichts anderes zu haben ist. Ob die Ware erst morgen bereitsteht,
+    // meldet die Warnung an der Sendung.
+    const stunden = plan.bindungStunden || Auftraege.dauerStunden(plan.km);
     const tage = Math.max(1, Math.round(stunden / 24));
     const dbTag = Math.round(summe.db / Math.max(0.1, stunden / 24));
     const letzteStadt = plan.stopps[plan.stopps.length - 1].stadt;
@@ -2396,12 +2581,35 @@ const TourenplanungApp = (function () {
           <dt>Bindet den Wagen</dt>
           <dd>${dauerText(Math.round(stunden))}${
             plan.standStunden ? ` · davon ${plan.standStunden.toFixed(1)} Std an Rampen` : ""}</dd>
-          <dt>Entgelt</dt><dd>${summe.erloes.toLocaleString("de-DE")} DM</dd>
-          <dt>Spritkosten</dt><dd>rund ${summe.sprit.toLocaleString("de-DE")} DM</dd>
+          <dt>Entgelt
+            <button class="win98-button bevel-out tour-preis-knopf"
+                    id="tour-btn-preis-klappen"
+                    title="Woraus sich das Entgelt zusammensetzt">${
+              preisAufgeklappt ? "▲" : "▼"} Woraus?</button>
+          </dt>
+          <dd>${summe.erloes.toLocaleString("de-DE")} DM</dd>
+          ${preisAufgeklappt ? `
+            <dt class="tour-preis-spalte"></dt>
+            <dd class="tour-preis-spalte">
+              ${alle.map((sn) => preisRechnung(sn)).join("")}
+            </dd>` : ""}
+          <dt>Sprit</dt><dd>− ${summe.sprit.toLocaleString("de-DE")} DM</dd>
+          <dt>Reifen und Verschleiß</dt>
+          <dd>− ${summe.verschleiss.toLocaleString("de-DE")} DM</dd>
           <dt>Deckungsbeitrag</dt>
           <dd class="${summe.db > 0 ? "tour-positiv" : "tour-negativ"}">
             ${summe.db.toLocaleString("de-DE")} DM</dd>
-          <dt>Je Tag</dt>
+          ${summe.reingewinn === null ? "" : `
+            <dt>Fixkosten anteilig</dt>
+            <dd>− ${summe.fixkosten.toLocaleString("de-DE")} DM
+              <span class="tour-nebensatz">${
+                summe.tage.toFixed(1).replace(".", ",")} Tage à ${
+                Math.round(Kalkulation.fixkostenJeTag(f)).toLocaleString("de-DE")} DM</span></dd>
+            <dt class="tour-strichoben">Reingewinn</dt>
+            <dd class="tour-strichoben ${
+              summe.reingewinn > 0 ? "tour-positiv" : "tour-negativ"}">
+              <strong>${summe.reingewinn.toLocaleString("de-DE")} DM</strong></dd>`}
+          <dt>Deckungsbeitrag je Tag</dt>
           <dd class="${dbTag > 0 ? "tour-positiv" : "tour-negativ"}">
             ${dbTag.toLocaleString("de-DE")} DM</dd>
         </dl>
@@ -3666,6 +3874,14 @@ const TourenplanungApp = (function () {
 
     // Sendungsliste auf- und zuklappen. Nur die Liste neu zeichnen,
     // die Karte bleibt, wie sie ist.
+    // Preisaufschlüsselung auf- und zuklappen.
+    const preisKlappen = dispo.querySelector("#tour-btn-preis-klappen");
+    if (preisKlappen) preisKlappen.addEventListener("click", (e) => {
+      e.stopPropagation();
+      preisAufgeklappt = !preisAufgeklappt;
+      dispositionAktualisieren({ nurListe: true });
+    });
+
     const klappen = dispo.querySelector("#tour-btn-etappen-klappen");
     if (klappen) klappen.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -3690,6 +3906,35 @@ const TourenplanungApp = (function () {
         dispositionAktualisieren();
       });
     }
+
+    const abbruchWeg = dispo.querySelector("#tour-btn-abbruch-weg");
+    if (abbruchWeg) {
+      abbruchWeg.addEventListener("click", () => {
+        letzteAbbruchmeldung = null;
+        dispositionAktualisieren();
+      });
+    }
+
+    // Tour abbrechen. Mit Rückfrage: Was an Bord ist, platzt, und das
+    // ist nicht rückgängig zu machen.
+    dispo.querySelectorAll("[data-tour-abbrechen]").forEach((knopf) => {
+      knopf.addEventListener("click", () => {
+        const id = knopf.getAttribute("data-tour-abbrechen");
+        const t = Fahrt.alle().find((x) => x.fahrzeug && String(x.fahrzeug.id) === id);
+        if (!t) return;
+        const anBord = Fahrt.ladung(t).length;
+        const halt = Fahrt.naechsterStopp(t).stadt;
+        const frage = `Tour wirklich abbrechen?\n\n`
+          + `${t.fahrzeug.kennzeichen} fährt noch bis ${halt} und bleibt dort stehen.\n`
+          + (anBord > 0
+              ? `${anBord} Sendung${anBord > 1 ? "en" : ""} an Bord platz${
+                  anBord > 1 ? "en" : "t"} - das belastet die Kundenbeziehung.`
+              : `Es ist nichts geladen; noch nicht abgeholte Sendungen gehen `
+                + `zurück an die Börse.`);
+        if (!window.confirm(frage)) return;
+        Fahrt.abbrechen(t);
+      });
+    });
 
     const meldungWeg = dispo.querySelector("#tour-btn-meldung-weg");
     if (meldungWeg) {
@@ -3885,7 +4130,8 @@ const TourenplanungApp = (function () {
       vonName: stopps[0].stadt,
       nachName: stopps[stopps.length - 1].stadt,
       beiStopp: stoppErreicht,
-      beiAnkunft: tourAbschliessen
+      beiAnkunft: tourAbschliessen,
+      beiAbbruch: tourAbgebrochen
     });
 
     aktiveRoute = null;
@@ -4016,16 +4262,44 @@ const TourenplanungApp = (function () {
     Auftraege.zustellen(auftrag);
     Finanzen.tourAbgerechnet({ auftrag, fahrzeug: f, verbrauchL, km: gesamtKm });
 
-    const spritkosten = Math.round(verbrauchL * dieselpreis());
-    const deckungsbeitrag = auftrag.entgelt - spritkosten;
+    // Abgerechnet wird mit dem GEMESSENEN Verbrauch, nicht mit dem
+    // Basisverbrauch: Nach der Fahrt weiß man ihn genau, samt
+    // Beladung und Steigungen. Die gebundene Zeit wird wie bei der
+    // Planung angesetzt, damit der Reingewinn hier und dort dieselbe
+    // Grundlage hat.
+    // Wie lange der Wagen wirklich gebunden war: vom Losschicken bis
+    // jetzt. Eine Neuberechnung aus den Kilometern wäre zu kurz - sie
+    // ließe das Warten auf das Ladefenster aus, und das bindet den
+    // Wagen genauso wie das Fahren. Nur wenn die Startzeit fehlt
+    // (alte Spielstände), wird geschätzt.
+    const aufbau = String(g.aufbau || "standard").toLowerCase();
+    // Bei einer Tour mit mehreren Sendungen trägt jede nur ihren Teil
+    // der Zeit - sonst zahlte jede von drei Sendungen die Fixkosten
+    // der ganzen Tour, und die Tour wäre dreimal so teuer wie sie ist.
+    // Geteilt wird nach Kilometern, genau wie beim Sprit darüber.
+    const tourKm = t.etappen.reduce(
+      (sum, e) => sum + ((e && e.route) ? e.route.km : 0), 0);
+    const zeitAnteil = tourKm > 0 ? Math.min(1, gesamtKm / tourKm) : 1;
+    const bindungStunden = (t.startZeit
+      ? Math.max(0.1, (Spielzeit.heute() - new Date(t.startZeit)) / 3600000)
+      : Auftraege.dauerStunden(gesamtKm)
+          + Kostensaetze.standzeit("laden", aufbau)
+          + Kostensaetze.standzeit("abladen", aufbau)) * zeitAnteil;
+    const ergebnis = Kalkulation.tour({
+      fahrzeug: f, erloes: auftrag.entgelt, km: gesamtKm,
+      stunden: bindungStunden, verbrauchL
+    });
+    const spritkosten = ergebnis.sprit;
+    const deckungsbeitrag = ergebnis.deckungsbeitrag;
 
     Speicher.melden(
       "ankunft",
       `${f.kennzeichen}: ${auftrag.vonName} → ${auftrag.nachName}, ` +
       `${auftrag.tonnen.toFixed(1)} t ${g.name}, ` +
-      `${deckungsbeitrag.toLocaleString("de-DE")} DM Deckungsbeitrag` +
+      `${ergebnis.reingewinn.toLocaleString("de-DE")} DM Reingewinn` +
       (auftrag.puenktlich ? "" : " (verspätet)"),
-      { auftrag: auftrag.nummer, fahrzeugId: f.id, deckungsbeitrag }
+      { auftrag: auftrag.nummer, fahrzeugId: f.id, deckungsbeitrag,
+        reingewinn: ergebnis.reingewinn }
     );
 
     Historie.hinzufuegen(f, {
@@ -4036,7 +4310,7 @@ const TourenplanungApp = (function () {
       km: gesamtKm,
       tage,
       erloes: auftrag.entgelt,
-      kosten: spritkosten,
+      kosten: ergebnis.fahrtkosten,
       daten: {
         auftrag: auftrag.nummer,
         kunde: auftrag.kundeName,
@@ -4044,13 +4318,21 @@ const TourenplanungApp = (function () {
         tonnen: auftrag.tonnen,
         puenktlich: auftrag.puenktlich,
         verbrauchL: Math.round(verbrauchL),
-        deckungsbeitrag
+        spritkosten,
+        verschleiss: ergebnis.verschleiss,
+        fixkosten: ergebnis.fixkosten,
+        deckungsbeitrag,
+        reingewinn: ergebnis.reingewinn
       }
     });
 
     letzteAnkunft = {
       auftrag, gut: g, anfahrtKm: Math.round(leerKm), hauptlaufKm: Math.round(km), gesamtKm,
       erloes: auftrag.entgelt, spritkosten, deckungsbeitrag,
+      verschleiss: ergebnis.verschleiss,
+      fixkosten: ergebnis.fixkosten,
+      reingewinn: ergebnis.reingewinn,
+      tage: ergebnis.tage,
       verbrauchL: Math.round(verbrauchL),
       puenktlich: auftrag.puenktlich,
       schaden: null
@@ -4096,6 +4378,78 @@ const TourenplanungApp = (function () {
     if (FuhrparkApp.aktualisieren) FuhrparkApp.aktualisieren();
     Speicher.jetztSichern();
   }
+
+  /**
+   * Eine Tour wurde abgebrochen: aufräumen und die Folgen tragen.
+   *
+   * Drei verschiedene Schicksale, und sie unterscheiden sich:
+   *
+   *   - Was AN BORD ist, ist angenommen und wird nicht geliefert. Der
+   *     Verlader steht da. Das platzt und belastet die Beziehung.
+   *   - Was NOCH NICHT geladen wurde, kann ein anderer fahren. Es geht
+   *     zurück an die Börse, ohne Schaden für niemanden.
+   *   - Die Leerfahrt zum nächsten Halt kostet Sprit und Verschleiß.
+   *     Sie wird gebucht wie jede andere.
+   */
+  function tourAbgebrochen(t, { stadt, restKm }) {
+    const f = t.fahrzeug;
+    const anBord = new Set(Fahrt.ladung(t));
+
+    const geplatzt = [];
+    const zurueck = [];
+    t.stopps.forEach((st) => {
+      (st.laden || []).forEach((e) => {
+        const a = e.auftragNummer && Auftraege.nachNummer(e.auftragNummer);
+        if (!a) return;
+        if (anBord.has(a.nummer)) {
+          if (!geplatzt.includes(a)) geplatzt.push(a);
+        } else if (a.status === Auftraege.STATUS.disponiert
+                || a.status === Auftraege.STATUS.unterwegs) {
+          if (!zurueck.includes(a)) zurueck.push(a);
+        }
+      });
+    });
+
+    geplatzt.forEach((a) => Auftraege.platzenLassen(a));
+    zurueck.forEach((a) => Auftraege.freigeben(a));
+
+    if (restKm > 0) {
+      const verbrauch = Verschleiss.wendeTourAn(f, {
+        km: restKm,
+        tage: Math.max(1, Math.round(restKm / (Fahrt.SCHNITT_STANDARD * Fahrt.LENKZEIT_STUNDEN))),
+        gelaende: "huegelland", strassenqualitaet: "landstrasse",
+        jahreszeit: jahreszeitJetzt(), beladungProzent: 0,
+        fahrverhaltenFaktor: 1.0
+      });
+      Finanzen.leerfahrtAbgerechnet({
+        fahrzeug: f, verbrauchL: verbrauch.verbrauchL, km: restKm,
+        von: t.vonName, nach: stadt
+      });
+    }
+
+    f.standort = stadt;
+    f.status = "verfügbar";
+
+    const text = `${f.kennzeichen}: Tour abgebrochen in ${stadt}`
+      + (geplatzt.length ? ` · ${geplatzt.length} Sendung${
+          geplatzt.length > 1 ? "en" : ""} geplatzt` : "")
+      + (zurueck.length ? ` · ${zurueck.length} zurück an die Börse` : "");
+    Speicher.melden("abbruch", text, { fahrzeugId: f.id });
+    Historie.hinzufuegen(f, {
+      art: "tour",
+      text: `Abgebrochen in ${stadt}`
+        + (geplatzt.length ? `, ${geplatzt.map((a) => a.nummer).join(", ")} geplatzt` : ""),
+      km: Math.round(restKm),
+      tage: 0
+    });
+
+    letzteAbbruchmeldung = { stadt, geplatzt, zurueck, kennzeichen: f.kennzeichen };
+    dispositionAktualisieren();
+    if (FuhrparkApp.aktualisieren) FuhrparkApp.aktualisieren();
+    Speicher.jetztSichern();
+  }
+
+  let letzteAbbruchmeldung = null;
 
   let letzteAnkunft = null;
 
@@ -4614,10 +4968,34 @@ const TourenplanungApp = (function () {
    * hier, weil nur die Tourenplanung weiß, was bei einer Ankunft zu
    * tun ist - die Spielstandverwaltung ruft es auf.
    */
+  /**
+   * Ein neues Spiel beginnt: alte Meldungen wegräumen.
+   *
+   * Ohne das stand die Ankunftsmeldung des vorigen Spielstands im
+   * neuen - gefunden beim Test des Tourabbruchs, der die falsche
+   * Meldung las (0.15.41).
+   */
+  function neuBegonnen() {
+    letzteAnkunft = null;
+    letzteAbbruchmeldung = null;
+    nachholmeldung = null;
+    aktiveRoute = null;
+    hervorgehobenesGut = null;
+    detailGut = null;
+    umsetzZiel = null;
+    gewaehlteStadt = null;
+    tourZuruecksetzen();
+    if (fensterElement && document.body.contains(fensterElement)) {
+      markenZeichnen();
+      dispositionAktualisieren();
+    }
+  }
+
   function spielstandLaden(nr) {
     const ergebnis = Speicher.laden(
       nr === undefined ? Speicher.aktiver() : nr,
-      { beiStopp: stoppErreicht, beiAnkunft: tourAbschliessen }
+      { beiStopp: stoppErreicht, beiAnkunft: tourAbschliessen,
+        beiAbbruch: tourAbgebrochen }
     );
     if (ergebnis && ergebnis.fehler) return ergebnis;
 
@@ -4745,7 +5123,9 @@ const TourenplanungApp = (function () {
      * hängt sie an jede geladene Fahrt, damit an den Stopps auch nach
      * einem Neuladen ab- und aufgeladen wird.
      */
-    tourRueckrufe: () => ({ beiStopp: stoppErreicht, beiAnkunft: tourAbschliessen }),
+    neuBegonnen,
+    tourRueckrufe: () => ({ beiStopp: stoppErreicht, beiAnkunft: tourAbschliessen,
+                            beiAbbruch: tourAbgebrochen }),
     /**
      * Nur für den Test: die Handreihenfolge lesen und setzen. Eine
      * unfahrbare Reihenfolge lässt sich über die Oberfläche nicht

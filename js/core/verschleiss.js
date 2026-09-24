@@ -109,6 +109,29 @@ const Verschleiss = (function () {
     );
   }
 
+  /**
+   * Derselbe Verbrauch, nur ohne das Fahrzeug anzufassen - für die
+   * Vorschau in der Planung.
+   *
+   * Bis 0.15.39 schätzte die Disposition den Sprit mit dem blanken
+   * Basisverbrauch, während die gefahrene Tour mit Beladung und
+   * Gelände rechnete. Bei vollem Wagen im Hügelland waren das 39 %
+   * Unterschied: Die Durchsicht versprach 21 DM Sprit und die
+   * Abrechnung buchte 29 DM. Eine Schätzung darf danebenliegen, aber
+   * nicht systematisch in eine Richtung.
+   *
+   * @param {object} fahrzeug
+   * @param {object} tour  { km, beladungProzent, gelaende?, fahrverhaltenFaktor? }
+   */
+  function verbrauchSchaetzen(fahrzeug, tour) {
+    return berechneVerbrauch(fahrzeug, {
+      km: tour.km || 0,
+      beladungProzent: tour.beladungProzent || 0,
+      gelaende: tour.gelaende || "huegelland",
+      fahrverhaltenFaktor: tour.fahrverhaltenFaktor || 1.0
+    });
+  }
+
   function gesamtzustand(fahrzeug) {
     // Schwächstes Teil bestimmt den Gesamtzustand (ein Bremsschaden
     // legt das Fahrzeug still, egal wie gut der Motor ist).
@@ -184,6 +207,7 @@ const Verschleiss = (function () {
     TEILE,
     LEBENSDAUER_KM,
     wendeTourAn,
+    verbrauchSchaetzen,
     gesamtzustand,
     teilReparieren,
     erwarteterZustand,

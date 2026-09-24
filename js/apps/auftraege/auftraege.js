@@ -85,18 +85,22 @@ const AuftraegeApp = (function () {
 
     const aufbau = String(bestes.aufbautyp || "standard").toLowerCase();
     const gesamtKm = anfahrt.km + auftrag.km;
-    const sprit = Math.round(
-      (gesamtKm / 100) * bestes.verbrauchBasisL100km * Kostensaetze.dieselpreis()
-    );
     const stunden = Auftraege.dauerStunden(gesamtKm)
       + Kostensaetze.standzeit("laden", aufbau)
       + Kostensaetze.standzeit("abladen", aufbau);
-    const db = auftrag.entgelt - sprit;
+
+    // Seit 0.15.40 über Kalkulation. Vorher stand hier eine eigene
+    // Kopie von "Entgelt minus Sprit" - ohne den Verschleiß, den das
+    // Abrechnen bucht. Die Liste sortierte also nach einer Zahl, die
+    // es nachher nicht gab.
+    const e = Kalkulation.tour({
+      fahrzeug: bestes, erloes: auftrag.entgelt, km: gesamtKm,
+      tonnen: auftrag.tonnen, stunden });
 
     return {
       auftrag, gut: g, fahrzeug: bestes, anfahrtKm: anfahrt.km,
-      sprit, db, stunden,
-      jeTag: Math.round(db / Math.max(0.1, stunden / 24)),
+      sprit: e.sprit, db: e.deckungsbeitrag, stunden,
+      jeTag: e.jeTag,
       grund: ""
     };
   }
