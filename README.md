@@ -7,6 +7,14 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
+**Zwei Dokumente gelten für jede Entscheidung in diesem Projekt:**
+`docs/kosten-1994.md` für die Zahlen der Spielwelt und
+`docs/spieldesign.md` für die Frage, ob eine geplante Funktion
+überhaupt eine Entscheidung erzeugt. Das zweite endet mit 56
+Prüffragen und einem Abschnitt, der sie auf den aktuellen Stand von
+SpediPro anwendet - einschließlich der Stellen, an denen wir gerade
+dagegen verstoßen.
+
 ## Geplant: Lizenzen, Genehmigungen und Berechtigungen
 
 *Entwurf, noch nichts davon gebaut. Zahlen sind bis zur Recherche
@@ -243,7 +251,453 @@ Geld, das für den zweiten Wagen gerade nicht reicht. Die Bausteine
 sind da - Frist, Kontostand, Kreditlinie -, sie werden nur nicht
 inszeniert. Das ist das nächste Thema nach diesem.
 
-## Aktueller Stand (v0.15.41)
+## Geplant: Weniger Zahlen, mehr Ansage
+
+*Entwurf aus dem Gespräch vom 24.09.2026, noch nichts davon gebaut.
+Hängt am Kapitel darüber: Die Ansagen sollen später aus dem Telefon
+kommen.*
+
+### Der Befund
+
+In der Durchsicht stehen zehn Zeilen, aufgeklappt vierzehn. Dazu je
+Tag, je Tonne, Restkapazität, Fristen. Das ist über 0.15.39 bis
+0.15.41 gewachsen, jede Ergänzung für sich begründet - zusammen sind
+sie ein Steuerberaterfenster.
+
+Der Fehler dahinter: Die Zusammenfassung beantwortet **zwei
+verschiedene Fragen zugleich**. "Soll ich das fahren?" braucht eine
+Zahl und ein Urteil. "Warum ist das so?" braucht die ganze Rechnung -
+aber nur, wenn jemand sie sucht. Gebaut wurde die zweite; die erste
+wurde nie ausgesprochen.
+
+### Die Ansage
+
+Ganz oben steht, was Sache ist, in fünf Stufen:
+
+```
+  Da bleibt richtig was übrig.
+  Verdient sich.
+  Geht so.
+  Lohnt kaum.
+  Da legst du drauf.
+```
+
+Dazu die Farbe, die es schon gibt: grün, grau, rot.
+
+Entscheidend ist nicht nur das Wort, sondern die **Wortart**.
+"Mittelmäßig" ist eine Note - man fragt sofort: gemessen woran?
+"Geht so" ist ein Satz, den der Spieler selbst sagen würde, und er
+braucht keinen Vergleich. Wer auf Anhieb verstehen soll, ob es gut
+war, darf nicht über die Worte nachdenken müssen.
+
+**Die Ansage kommt von dem, der fährt.** Anfangs vom Spieler selbst -
+er sitzt ja noch im Wagen -, später vom Fahrer, und mit dem
+Telefonkapitel dann buchstäblich als Anruf. Damit ist "Geht so" nicht
+die Anzeige eines Systems, sondern jemand, der die Schultern zuckt.
+Das hat eine Folge, die vorher zu klären ist: Sobald Sätze von
+Personen kommen, müssen sie zur Person passen. Der wortkarge Fahrer
+sagt etwas anderes als der, der gern redet - und dieselbe Tour klingt
+dann bei zweien verschieden.
+
+### Die Rechnung dahinter, in derselben Sprache
+
+Aufgeklappt, nicht im Weg:
+
+```
+  Eingenommen                    357 DM
+  Sprit                        − 52 DM
+  Reifen und Verschleiß        − 22 DM
+  Miete, Steuer, Versicherung  − 29 DM
+  ────────────────────────────────────
+  Bleibt übrig                  254 DM
+```
+
+**Der Deckungsbeitrag fällt weg.** Er ist eine Zwischensumme für
+Betriebswirte; der Spieler braucht ihn nicht. "Fixkosten anteilig"
+wird zu dem, was es ist - Miete, Steuer, Versicherung. Aus
+"Reingewinn" wird "bleibt übrig", weil das dasselbe heißt und niemand
+darüber nachdenken muss.
+
+Das ist dieselbe Übersetzung, die die Buchhaltung in 0.15.37 schon
+bekommen hat ("Sprit" statt "Kraftstoffe", "Wertverlust" statt
+"Abschreibungen"). Die Disposition ist dabei stehengeblieben.
+
+**Was an Fachsprache bleibt**, weil es zur Welt gehört und den Spieler
+zum Spediteur macht: Frachtbrief, Ladefenster, Standzeit, Rampe,
+Disposition. Deckungsbeitrag macht ihn zum Buchhalter - das ist der
+Unterschied.
+
+### Die Listen
+
+In Zielliste und Auftragsübersicht steht heute "367 DM je Tag" - eine
+Zahl, mit der man erst etwas anfangen kann, wenn man die anderen
+danebenhält. Ein Balken mit einem Wort sagt dasselbe schneller, und
+den Balken gibt es schon. Die genaue Zahl bleibt im Tooltip.
+
+### Noch offen
+
+- **Relativ oder absolut?** Ein relatives Urteil misst an dem, was
+  dieser Wagen sonst verdient, und wandert mit, wenn die Flotte
+  wächst. Ein absolutes braucht feste Schwellen, die erfunden wären.
+  Neigung: relativ.
+- **Merkt sich der aufgeklappte Zustand, wer da spielt?** Wer einmal
+  aufklappt, will es vermutlich immer sehen. Dann wäre es kein
+  Verstecken, sondern eine Voreinstellung für die, die erst spielen
+  und später rechnen wollen.
+- Verzahnung mit der **Freischaltungstreppe**: Der Zahlendruck ist am
+  Anfang am größten, wenn man einen Wagen hat und nichts zu
+  vergleichen. Dort müssten von den zehn Zeilen drei stehen.
+
+## Geplant: Konkurrenz, das Telefon und die dunkle Seite
+
+*Entwurf aus dem Gespräch vom 24.09.2026, noch nichts davon gebaut.
+Setzt das Freischaltungskapitel darüber fort: Das regelt, wie der
+Betrieb wächst, dieses hier, gegen wen.*
+
+### Der Befund
+
+Ein Ruf- oder Prestigewert ohne Gegenüber ist nur eine zweite Anzeige
+für dasselbe Geld. Wer sagen will "ich bin besser", braucht jemanden,
+der schlechter ist. Die Konkurrenz **gibt es im Spiel schon** - sie ist
+nur unsichtbar: `VERFALL_TAGE = 2` in `auftraege.js` trägt den
+Kommentar "wie lange ein Auftrag am Markt bleibt, bevor ihn jemand
+anders nimmt". Jeder verfallene Auftrag ist ein Konkurrent, der
+schneller war. Im Protokoll steht nur "A-1048 verfallen".
+
+### Die Regel, die sich dabei geändert hat
+
+Bis hierher galt: jede Zahl belegt oder ausdrücklich als unbelegt
+gekennzeichnet. Das bleibt - aber nur dort, wo es hingehört.
+
+> **Belegt bleibt, was der Spieler nachrechnet.
+> Frei ist, was er erlebt.**
+
+Dieselpreis, Abschreibung, Frachtsätze, Lenkzeiten, Steuern: weiter
+recherchiert, weil das Spiel ein Rechenspiel ist und ein falscher Satz
+sich als falsch anfühlt. Figuren, Anrufe, Ereignisse, Schmuggelgut und
+Tonfall: erfunden, zugespitzt, auf Spielbarkeit hin gebaut. Ein
+Schmuggelauftrag muss sich nicht auf eine Verbrauchsteuertabelle
+berufen - er muss sich lohnen und weh tun können.
+
+Damit entfällt die Recherchelast, die für dieses Kapitel sonst
+angefallen wäre: Kabotage-Kontingente, BAG-Bußgelder in DM,
+Verbrauchsteuerdifferenzen nach 1993. Gebraucht wird keine Tabelle,
+sondern eine Kontrolle, die sich gefährlich anfühlt.
+
+### Die Konkurrenten sind Personen - und dasselbe System wie alle anderen
+
+Konkurrent, Kunde und Fahrer unterscheiden sich in der Mechanik kaum:
+eine Firma oder ein Mensch, ein Gesicht, eine Beziehung, die sich über
+Zeit verändert. Der Namensgenerator dafür steht schon in `kunden.js`.
+Wer das einmal baut, bedient alle drei.
+
+**Fünf bis acht mit Gesicht**, der Rest namenlos. Acht Gesichter kann
+man sich merken, dreißig nicht. Jeder mit einem Charakter, der sein
+Verhalten erklärt:
+
+- der **Platzhirsch** mit dreißig Zügen, der nach der Tarifaufhebung
+  nicht mehr mitkommt
+- der **Billigheimer**, der jeden Preis unterbietet und dessen Fahrer
+  übermüdet sind
+- der **Spezialist**, der nur Gefahrgut fährt und dich nicht als
+  Gegner sieht
+- der **Aufsteiger**, der dasselbe macht wie du, nur einen Monat
+  voraus
+
+### Das Telefon
+
+1994 spricht man nicht über ein Dialogfenster, sondern über Telefon
+und Fax. Ein Programm "Telefon" auf dem Schreibtisch, mit
+Anrufbeantworter und Wählscheibe; ein Faxgerät, das Papier ausspuckt.
+Das ist keine Dekoration, es ändert die Dramaturgie:
+
+- Ein Anruf **kommt herein**, während man disponiert, und unterbricht.
+  Man kann rangehen oder klingeln lassen.
+- Der Anrufbeantworter sammelt das Verpasste. Wer dreimal vergeblich
+  anruft, ruft beim Nächsten an.
+- Ein Fax ist verbindlich und liegt herum. Ein Telefonat gibt es nur
+  mündlich - und genau das macht es für die dunkle Seite brauchbar.
+
+**Man sieht sein Gegenüber.** Links ein Porträt im Rahmen, daneben
+Name, Firma und eine Zeile, wie man zueinander steht; darunter die
+Antworten. Das Bild **bewegt sich ein wenig** - blinzeln, den Kopf
+neigen, die Miene wechseln, je nach dem, was gesagt wurde. Zwei, drei
+Bildzustände je Figur genügen. Der Unterschied zwischen einem
+Standbild und einem Gesicht, das reagiert, ist der zwischen Text und
+Charakter; die Wirtschaftssimulationen der Zeit haben genau davon
+gelebt.
+
+Zwei Dinge, die daran hängen:
+
+- Die Porträts brauchen **eine gemeinsame Bildregel** - gleicher
+  Ausschnitt, gleiche Blickrichtung, gleiche Lichtquelle, gleiche
+  Palette, Kleidung von 1994. Sonst sieht die Belegschaft aus wie aus
+  fünf verschiedenen Spielen. `werkzeug/sprite-aufbereiten.py` kann
+  Raster und Palette schon, ist aber auf Fahrzeuge vor Weiß
+  zugeschnitten; Gesichter brauchen einen eigenen Durchlauf, und die
+  Umfärberegel gilt für sie nicht.
+- **Die Figur kommt vor dem Bild.** Wer ist das, was will er, wie
+  redet er - und erst danach, wie er aussieht. Sonst bekommt man
+  hübsche Fremde.
+
+### Die graue Seite
+
+Was jeder machte und kaum jemand so nannte:
+
+- **Preisabsprachen.** Nach dem Wegfall des Tarifs riefen sich die
+  Alteingesessenen an. Wer sich hält, verdient besser; wer ausschert,
+  gewinnt den Auftrag und verliert die Beziehung. Spielerisch das
+  reichhaltigste Element, weil es eine echte Gefangenendilemma-Struktur
+  hat - und es fällt genau in den historischen Augenblick des
+  Spielstarts.
+- **Überladung.** Ein paar Tonnen mehr, billiger je Tonne, höheres
+  Risiko bei der Kontrolle, mehr Verschleiß. Im vorhandenen Modell
+  sauber messbar.
+- **Lenkzeiten.** Der Fahrtenschreiber von 1994 ist eine Wachsscheibe.
+  Der Fahrer fährt durch, die Tour wird pünktlich - der Preis steht bei
+  der nächsten Kontrolle und in der Gesundheit des Fahrers.
+- **Gefälligkeiten.** Aushilfsfahrzeug leihen, einen Auftrag abgeben,
+  wenn man selbst nicht kann. Die helle Seite derselben Beziehung.
+
+### Die dunkle Seite
+
+Drei Schmuggelgüter, bewusst so gewählt, dass sie sich spielerisch
+unterscheiden und nicht drei Namen für dasselbe sind:
+
+| | Eigenschaft | wofür es steht |
+|---|---|---|
+| **Zigaretten** | viel Volumen, guter Aufschlag, leicht zu finden | das Brot |
+| **Alkohol** | schwer und laut, sprengt den Transporter, Bruchrisiko | braucht einen richtigen Wagen |
+| **Medikamente** | eine Kiste, kaum Gewicht, höchster Wert je m³ | die Stufe, bei der man kurz überlegt |
+
+Dazu passt eine Eigenschaft, die das Spiel schon hat: Die Preisstaffel
+belohnt kleine Sendungen je Tonne am stärksten. Eine Kiste in einem
+sonst legal beladenen Wagen ist mechanisch bereits das Lukrativste,
+was es gibt.
+
+Weiter im Dunkeln: Abfall nach Osten (`abfall` und `schrott` stehen
+schon im Warenkatalog), nicht deklariertes Gefahrgut, und ein
+Auflieger, von dem man weiß, wo er steht.
+
+**Nicht gebaut wird:** Menschenhandel, Waffen, Drogen. Nicht aus
+Prüderie, sondern weil es den Ton kippt. Das Spiel handelt von einem
+Mann mit einem Transporter, der zu wenig verdient; die Versuchungen
+sollen in dieser Welt bleiben und alltäglich wirken. Eine Palette
+unverzollter Zigaretten ist die richtige Größenordnung.
+
+**Wie man davon erfährt: durch einen Anruf.** Kein Menüpunkt, keine
+Freischaltung. Irgendwann, wenn es finanziell eng ist, meldet sich
+jemand mit einem Angebot, das zu gut klingt. Dann ist es eine
+Entscheidung und keine Funktion.
+
+### Das Gegengewicht
+
+Ohne Gegenkraft ist die dunkle Seite nur ein besserer Preis, und dann
+nimmt sie jeder. Es braucht drei:
+
+- **Das BAG** kontrolliert am Straßenrand und im Betrieb. Eine
+  Kontrolle ist ein Ereignis mit Ausgang, kein Würfelwurf im
+  Hintergrund - man sieht den Wagen stehen und wartet.
+- **Die Versicherung** zahlt nicht, wenn die Ladung nicht die war, die
+  im Frachtbrief stand.
+- **Die Kunden.** Ein Vertragskunde, der davon Wind bekommt, kündigt;
+  seriöse Verlader wollen keinen Ärger.
+
+Entscheidend: Das Risiko **steigt, je öfter man es tut**. Einmal ist
+ein Fehltritt, zehnmal ist ein Muster, und Muster fallen auf.
+
+### Ruf ist zwei Zahlen, nicht eine
+
+Das **Ansehen bei den Verladern** entscheidet, wer anruft - als
+Kundenstufen von "Frachtbörse" bis "Vertragskunde" bereits gebaut. Der
+**Ruf in der Branche** entscheidet, wer hilft und wer schneidet: ob der
+Platzhirsch zur Absprache einlädt, ob jemand einen Auftrag abgibt, wenn
+es klemmt, ob jemand ein Fahrzeug leiht.
+
+Die beiden laufen nicht parallel, und darin liegt das Spiel. Wer nur
+sauber fährt, bleibt allein und langsam. Wer nur mauschelt, hat Freunde
+in der Branche und keine anständigen Kunden mehr. Interessant ist die
+Mitte.
+
+Und damit beantwortet sich die Ausgangsfrage ohne fremde Bilanzen:
+"Ich bin besser" heißt nicht "ich habe mehr Geld", sondern *von den
+vierzehn Verladern in meiner Region rufen mich neun direkt an; bei
+Kruse sind es noch drei.* Jeder Kunde, der nicht dich anruft, ruft
+einen anderen an - mehr Konkurrenzmodell braucht es nicht.
+
+### Reihenfolge
+
+1. Konkurrenten mit Namen und Gesicht, dazu das Telefon. Trägt für
+   sich und macht das Spiel sofort lebendiger.
+2. Die Absprachen - die reichste Mechanik, und sie braucht nichts
+   Neues außer dem Telefon.
+3. Das Dunkle, zuletzt, wenn das Gegengewicht steht.
+
+**Ausdrücklich nicht geplant:** eine Rangliste mit simulierten Firmen
+und Bilanzen, wie Transworld (Starbyte, 1990) sie hatte. Sie wäre ein
+zweites Wirtschaftsmodell neben unserem, ihre Zahlen wären frei
+erfunden, und sie verengt das Ziel auf eine Punktzahl. Ein Spediteur
+von 1994 kannte die Bücher seiner Konkurrenten ohnehin nicht - er
+merkte, dass er Aufträge verlor.
+
+## Aktueller Stand (v0.15.42)
+
+**Umgebaut nach `docs/spieldesign.md` - und dabei einen Fehler
+gefunden, der das halbe Spiel lahmlegte.**
+
+### Der Wagen stand still, und niemand hatte es gemerkt
+
+Die Regeln 5 und 6 fragen, ob der Spieler überhaupt eine Wahl hat.
+Geprüft wurde das nicht mit einer Meinung, sondern mit einer
+Monatsprobe: vier Spielweisen (immer der kürzeste Lauf, der beste je
+Tag, das höchste Entgelt, der längste Lauf), gleiche Startlage, 30
+Spieltage, und am Ende zählt der Kontostand.
+
+Das Ergebnis war vernichtend: **Der Transporter fuhr in dreißig Tagen
+eine einzige Tour** und stand 710 von 720 Stunden herum.
+
+Der Grund lag in `auffrischen()`. Die Mindestzahl von Aufträgen "vor
+der eigenen Tür" wurde über **alle** eigenen Orte zusammen gezählt.
+Das Depot allein erfüllte sie - also bekam ein Wagen, der nach einer
+Tour in Leipzig stand, dort **null** Aufträge. Er konnte nur noch leer
+nach Hause fahren oder warten. Die Mindestzahl gilt jetzt **je Ort**
+(sechs, davon mindestens zwei, die der kleinste Wagen der Flotte auch
+laden kann).
+
+| | vorher | jetzt |
+|---|---|---|
+| Touren in 30 Spieltagen | 1 bis 17 | **48 bis 68** |
+| Leerlauf | 278-710 Std | **0-376 Std** |
+| Angebot am Standort | 0,0-0,2 | **2,2** |
+
+Das ist der teuerste Einzelfund dieses Projekts bisher, und er wurde
+nicht durch Spielen entdeckt, sondern durch eine Prüffrage aus der
+Literatur.
+
+### Die 4,4-fache Dominanz des Kurzlaufs gab es nie
+
+Im README zu 0.15.40 stand, der Vorsprung des Kurzlaufs sei von 2,8-
+auf 4,4-fach gewachsen. Das war eine **Rate je Tag**, und Raten sind
+nur etwas wert, wenn man sie einlösen kann. Über einen ganzen Monat
+gemessen gewinnt mal der kürzeste, mal der längste, mal das höchste
+Entgelt - je nachdem, was die Börse auswirft. Keine Spielweise
+gewinnt durchgehend.
+
+Damit besteht das Spiel Regel 5 ("gibt es eine Option, die unter allen
+Umständen die beste ist?"), und die geplante Gegenmaßnahme entfällt.
+**Einschränkung dazu:** Die Monatsprobe streut stark, weil jede
+Wiederholung eine neue Welt würfelt. Sie taugt, um eine Dominanz
+auszuschließen, nicht um zwei Spielweisen auf zehn Prozent genau zu
+vergleichen.
+
+### Oben steht jetzt ein Satz, keine Tabelle
+
+Die Durchsicht hatte zehn Zeilen, aufgeklappt vierzehn - Regel 16
+erlaubt fünf Leitgrößen, in der Einführungsphase drei. Jetzt stehen
+dort **zwei Zahlen**: was übrig bleibt, und wie lange der Wagen dafür
+gebunden ist. Darüber der Satz, um den es geht:
+
+```
+  Geht so.
+  204 DM bleiben übrig · bindet den Wagen 1 Tag 2 Std
+
+  [▼ Rechnung]
+```
+
+**Der Deckungsbeitrag ist ganz entfallen.** Nicht, weil er Fachsprache
+wäre - Regel 53 erlaubt Fachsprache ausdrücklich am Gegenstand -,
+sondern weil er eine Zwischensumme ist, die keine Entscheidung ändert.
+Entfernt man sie, entscheidet der Spieler genauso. Das ist Felders
+Test auf Tracking Complexity ohne Tiefe.
+
+Aufgeklappt steht die Rechnung in Alltagssprache, und die Herkunft des
+Entgelts sitzt als eingerückte Unterzeilen darin statt hinter einem
+zweiten Knopf - das wäre die dritte Ebene gewesen, und zwei sind das
+Maß (Regel 31):
+
+```
+  Eingenommen                     460 DM
+    A-1049 · 1,1 t Stückgut
+    Strecke 623 km à 0,59 DM        365 DM
+    Be- und Entladen                151 DM
+    Börsenabschlag ×0,89          −  56 DM
+  Sprit                          − 116 DM
+  Reifen und Verschleiß          −  50 DM
+  Miete, Steuer, Versicherung    −  90 DM
+  ─────────────────────────────────────────
+  Bleibt übrig                     204 DM
+```
+
+### Eine Skala für das ganze Spiel
+
+Regel 21 verlangt, dass jede Bewertung dieselben Stufen, Farben und
+Wörter benutzt. Die fünf Sätze stehen deshalb an genau einer Stelle,
+in `js/core/kalkulation.js`:
+
+> Da legst du drauf. · Lohnt kaum. · Geht so. · Verdient sich. · Da
+> bleibt richtig was übrig.
+
+Es sind **Sätze, keine Noten**. "Mittelmäßig" ist eine Note - man
+fragt sofort: gemessen woran? "Geht so" braucht keinen Vergleich.
+
+Der Maßstab ist der **Tagessatz des Wagens**: Was kostet dieses
+Fahrzeug an einem Kalendertag, ohne einen Meter zu fahren? Eine Tour,
+die weniger einbringt, verdient ihr Standgeld nicht. Der Maßstab ist
+relativ - er wandert mit, wenn ein größerer Wagen dazukommt - und er
+ist nicht erfunden, sondern gerechnet. Die Schwellen (0, 1, 3, 6-fach)
+sind an der gemessenen Verteilung gesetzt: Median 6,3-fach, 13 % unter
+dem Tagessatz, Höchstwert 11,7.
+
+Die Zielliste zeigt seitdem das Urteil in Worten und den Balken; die
+genaue Zahl steht im Tooltip. Regel 18: exakte Zahl dort, wo
+verrechnet wird, Wort dort, wo nur verglichen wird. Und Regel 22:
+Farbe trägt nie allein - neben jeder Farbe steht das Wort, und der
+farbige Balken links wiederholt die Stufe als Form.
+
+### Der erste Spieltag beginnt nicht mit Warten
+
+Regel 30 verlangt, dass der Spieler in der ersten Stunde einen ganzen
+Kreislauf erlebt: annehmen, fahren, bezahlt werden. Gemessen fiel das
+durch - in rund jedem fünften Spiel war keiner der ladbaren Aufträge
+sofort abholbereit (drei Aufträge mit je 40 % Bereitschaft ergeben
+0,6³ = 22 % Fehlanzeige). Der erste Auftrag an jedem Ort steht jetzt
+immer sofort bereit.
+
+### Was weiter verstößt, und warum es so bleibt
+
+**Manche Städte haben für einen 1,4-Tonner nichts.** Beim wahllosen
+Umsetzen in irgendeine der 165 Städte findet der Transporter in fünf
+bis zehn von dreißig Fällen keine Fracht - Rohöl, Schüttgut, Container
+kann er nicht laden. Das ist kein Fehler, sondern ein dünnes Netz mit
+einem Spezialfahrzeug, und die Disposition bietet das Leer-Umsetzen
+an. In Städte, in die ihn eine Tour wirklich bringt, trifft es höchstens
+einen von fünfzehn Ankunftsorten.
+
+**Regel 23 war ein Irrtum von mir.** Im Dokument stand, der Kontostand
+in der Taskleiste ändere sich lautlos. Geprüft: Dort steht gar kein
+Kontostand, nur Datum und Uhr. Offen bleibt der Monatsabschluss, der
+Miete, Steuer und Versicherung bucht und es nur ins Protokoll meldet.
+
+**Regel 34** (kontinuierliche statt diskreter Entscheidungen) und
+**Regel 35** (erkennen, wann der Ausgang feststeht) sind weiter
+unerfüllt. Beide werden erst wichtig, wenn die Flotte wächst.
+
+### Geprüft
+
+Neuer Test `browsertest-designregeln.js`: acht Regeln maschinell
+geprüft (gibt es eine Wahl, streuen die Angebote im Urteil, höchstens
+fünf Zahlen oben, eine Skala mit fünf Stufen und fünf Farben, Farbe
+nie allein, höchstens zwei Ebenen, keine Buchhaltersprache auf
+Schaltflächen, kein Bankrott in der Einführung, sofort abholbereite
+Fracht am ersten Tag). Dazu `browsertest-reingewinn.js` umgebaut auf
+die neue Struktur.
+
+Fünf bestehende Tests prüften auf das alte Vokabular
+("Deckungsbeitrag", "Bindet den Wagen", "je Tag") und sind auf das
+neue umgestellt. Die Suite läuft mit 24 Browsertests zweimal
+vollständig durch.
+
+## Vorheriger Stand (v0.15.41)
 
 **Zwei Dinge im Dispositionsmodul, die zusammengehören: Der Wagen
 wartet jetzt auf die Ladung, und eine laufende Tour lässt sich
@@ -2406,6 +2860,9 @@ spedipro/
   docs/
     historischer-rahmen-1994.md   Zeitliche Gegebenheiten (zu verifizieren)
     kosten-1994.md                Kostendaten mit Quellen, offene Punkte markiert
+    spieldesign.md                Was belegt gutes Spieldesign ausmacht, mit
+                                  Prüffragen und der Anwendung auf dieses
+                                  Projekt - vor Designentscheidungen lesen
   js/
     core/
       clock.js          Taskbar-Uhr

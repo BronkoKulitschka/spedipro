@@ -1018,6 +1018,97 @@
   margin-top: 2px;
 }
 
+/* ---------- Die eine Bewertungsskala (0.15.42) ----------
+   Regel 21 aus docs/spieldesign.md: dieselben fünf Stufen, dieselben
+   Farben, dieselben Wörter im ganzen Spiel. Die Wörter stehen in
+   js/core/kalkulation.js, die Farben hier.
+
+   Regel 22: Farbe trägt nie allein. Deshalb steht neben jeder Farbe
+   immer das Wort - wer Rot und Grün nicht unterscheidet, liest den
+   Satz. */
+.urteil-sehrgut  { color: #1a5c1a; }
+.urteil-gut      { color: #1a5c1a; }
+.urteil-mittel   { color: #3a3a3a; }
+.urteil-mager    { color: #8a5a14; }
+.urteil-schlecht { color: #8a1414; }
+
+/* Die Ansage ganz oben in der Durchsicht: ein Satz, eine Zahl. Mehr
+   steht auf dieser Ebene nicht - alles Weitere hinter "Rechnung". */
+.tour-urteil {
+  border: 1px solid var(--win-grey-dark, #808080);
+  background: #fff;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+}
+
+.tour-urteil-wort {
+  font-size: 1.15em;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+/* Der farbige Balken links wiederholt die Stufe als Form, nicht nur
+   als Farbe. */
+.tour-urteil.urteil-sehrgut  { border-left: 5px solid #1a5c1a; }
+.tour-urteil.urteil-gut      { border-left: 5px solid #4a8a2a; }
+.tour-urteil.urteil-mittel   { border-left: 5px solid #808080; }
+.tour-urteil.urteil-mager    { border-left: 5px solid #c08a14; }
+.tour-urteil.urteil-schlecht { border-left: 5px solid #8a1414; }
+
+.tour-urteil-zahl {
+  color: #333;
+  margin-top: 2px;
+}
+
+.tour-rechnung-knopf {
+  font-size: 11px;
+  padding: 1px 8px;
+  margin-bottom: 4px;
+}
+
+.tour-rechnung {
+  border: 1px solid var(--win-grey-dark, #808080);
+  background: #fff;
+  padding: 4px 6px;
+}
+
+.tour-rechnung-kopf {
+  color: #555;
+  border-bottom: 1px solid var(--win-grey-dark, #808080);
+  padding-bottom: 2px;
+  margin-bottom: 3px;
+}
+
+.tour-rechnung-summe {
+  border-top: 1px solid #808080;
+  margin-top: 3px;
+  padding-top: 3px;
+}
+
+/* Die Herkunft des Entgelts sitzt als eingerückte Unterzeilen in der
+   Rechnung, nicht hinter einem zweiten Knopf: Das wäre die dritte
+   Ebene, und zwei sind das Maß (Regel 31). */
+.tour-preis-unterzeilen {
+  border: none;
+  margin: 0 0 3px 12px;
+  padding: 0;
+  color: #555;
+}
+
+.tour-preis-unterzeilen .tour-preis-kopf {
+  border: none;
+  font-weight: normal;
+  font-style: italic;
+  margin: 0;
+  padding: 0;
+}
+
+.tour-preis-unterzeilen .tour-preis-zeile:last-child {
+  border: none;
+  margin: 0;
+  padding: 1px 0;
+}
+
 /* ---------- Woraus sich das Entgelt zusammensetzt (0.15.40) ---------- */
 
 /* Der Knopf sitzt IN der Beschriftungsspalte, nicht daneben: Die

@@ -1577,6 +1577,86 @@ const TourenplanungApp = (function () {
   }
 
   /**
+   * Die Ansage: was von dieser Tour zu halten ist, in einem Satz.
+   *
+   * Steht ganz oben und allein, weil sie die Frage beantwortet, die
+   * der Spieler stellt ("soll ich das fahren?"). Bis 0.15.41 standen
+   * hier zehn Zeilen, die eine andere Frage beantworteten ("warum ist
+   * das so?"). Siehe docs/spieldesign.md, Regel 16 und 17.
+   *
+   * Die Zahl daneben ist die einzige, die es auf diese Ebene schafft:
+   * was übrig bleibt, und wie lange der Wagen dafür gebunden ist.
+   */
+  function urteilszeile(summe, f, stunden) {
+    if (summe.reingewinn === null || !summe.urteil) {
+      return `<div class="tour-urteil urteil-mittel">
+        <div class="tour-urteil-wort">Noch nicht zu beurteilen.</div>
+      </div>`;
+    }
+    return `
+      <div class="tour-urteil ${summe.urteil.klasse}">
+        <div class="tour-urteil-wort">${summe.urteil.wort}</div>
+        <div class="tour-urteil-zahl">
+          <strong>${summe.reingewinn.toLocaleString("de-DE")} DM</strong>
+          bleiben übrig · bindet den Wagen ${dauerText(Math.round(stunden))}
+        </div>
+      </div>`;
+  }
+
+  /**
+   * Die Rechnung dahinter - aufgeklappt, nicht im Weg.
+   *
+   * In Alltagssprache: "Eingenommen" statt Entgelt, "bleibt übrig"
+   * statt Reingewinn, "Miete, Steuer, Versicherung" statt
+   * Fixkostenanteil. Der Deckungsbeitrag ist ganz entfallen - eine
+   * Zwischensumme, die keine Entscheidung ändert (Regel 17).
+   *
+   * Die Herkunft des Entgelts steht als eingerückte Unterzeilen
+   * darin, nicht hinter einem zweiten Knopf: Ein Aufklapper im
+   * Aufklapper wäre die dritte Ebene, und zwei sind das Maß
+   * (Regel 31).
+   */
+  function tourRechnung(summe, f, stunden, plan, alle) {
+    const dm = (x) => Math.round(x).toLocaleString("de-DE");
+    return `
+      <div class="tour-rechnung">
+        <div class="tour-rechnung-kopf">
+          ${f.marke} ${f.modell} · ${summe.km.toLocaleString("de-DE")} km${
+            summe.leerKm > 0 ? ` (davon ${dm(summe.leerKm)} km leer)` : ""}${
+            plan.standStunden ? ` · ${plan.standStunden.toFixed(1)} Std an Rampen` : ""}
+        </div>
+
+        <div class="tour-preis-zeile">
+          <span class="tour-preis-name">Eingenommen</span>
+          <span class="tour-preis-wert">${dm(summe.erloes)} DM</span>
+        </div>
+        ${alle.map((sn) => preisRechnung(sn, true)).join("")}
+
+        <div class="tour-preis-zeile">
+          <span class="tour-preis-name">Sprit</span>
+          <span class="tour-preis-wert">− ${dm(summe.sprit)} DM</span>
+        </div>
+        <div class="tour-preis-zeile">
+          <span class="tour-preis-name">Reifen und Verschleiß</span>
+          <span class="tour-preis-wert">− ${dm(summe.verschleiss)} DM</span>
+        </div>
+        <div class="tour-preis-zeile">
+          <span class="tour-preis-name">Miete, Steuer, Versicherung
+            <span class="tour-nebensatz">${
+              summe.tage.toFixed(1).replace(".", ",")} Tage à ${
+              dm(Kalkulation.fixkostenJeTag(f))} DM</span></span>
+          <span class="tour-preis-wert">− ${dm(summe.fixkosten)} DM</span>
+        </div>
+        <div class="tour-preis-zeile tour-rechnung-summe">
+          <span class="tour-preis-name"><strong>Bleibt übrig</strong></span>
+          <span class="tour-preis-wert ${
+            summe.reingewinn > 0 ? "tour-positiv" : "tour-negativ"}">
+            <strong>${dm(summe.reingewinn)} DM</strong></span>
+        </div>
+      </div>`;
+  }
+
+  /**
    * Woraus ein Entgelt entstanden ist - als kleine Rechnung.
    *
    * Der Preis war bis 0.15.40 eine Zahl ohne Herkunft. Dabei steckt
@@ -1589,7 +1669,7 @@ const TourenplanungApp = (function () {
    * einen gibt: Der Börsenabschlag ist gewürfelt und ließe sich sonst
    * nicht mehr rekonstruieren. Bei Spotladung ist er fest.
    */
-  function preisRechnung(sendung) {
+  function preisRechnung(sendung, ohneSumme) {
     const gut = sendung.art === "auftrag"
       ? Auftraege.gut(sendung.auftrag) : sendung.gut;
     if (!gut) return "";
@@ -1650,13 +1730,13 @@ const TourenplanungApp = (function () {
     }
 
     return `
-      <div class="tour-preis-block">
+      <div class="tour-preis-block${ohneSumme ? " tour-preis-unterzeilen" : ""}">
         <div class="tour-preis-kopf">
           ${sendung.art === "auftrag" ? sendung.auftrag.nummer + " · " : "Spotladung · "}
           ${tonnen.toFixed(1).replace(".", ",")} t ${gut.name}
         </div>
         ${zeilen.join("")}
-        ${zeile("<strong>Entgelt</strong>",
+        ${ohneSumme ? "" : zeile("<strong>Entgelt</strong>",
           `<strong>${dm(sendung.entgelt)} DM</strong>`)}
       </div>`;
   }
@@ -1674,7 +1754,8 @@ const TourenplanungApp = (function () {
     const erloes = sendungen.reduce((s, e) => s + e.entgelt, 0);
     if (!plan || !plan.machbar) {
       return { erloes, km: 0, leerKm: 0, sprit: 0, verschleiss: 0,
-               db: erloes, fixkosten: null, reingewinn: null, tage: null, plan };
+               db: erloes, fixkosten: null, reingewinn: null, tage: null,
+               reinJeTag: null, urteil: null, plan };
     }
     const e = Kalkulation.tour({
       fahrzeug: f,
@@ -1686,7 +1767,7 @@ const TourenplanungApp = (function () {
     return { erloes, km: plan.km - plan.leerKm, leerKm: plan.leerKm,
              sprit: e.sprit, verschleiss: e.verschleiss, db: e.deckungsbeitrag,
              fixkosten: e.fixkosten, reingewinn: e.reingewinn, tage: e.tage,
-             plan };
+             reinJeTag: e.reinJeTag, urteil: e.urteil, plan };
   }
 
   /** Kurzbezeichnung der gewählten Ladung für den Frachtbrief. */
@@ -2216,7 +2297,12 @@ const TourenplanungApp = (function () {
     return {
       z, route, entgelt, sprit, db,
       stunden, tage,
-      dbTag: Math.round(db / tage),
+      // Sortiert und geurteilt wird nach dem, was übrig bleibt - nicht
+      // nach dem Deckungsbeitrag. Der sagt nur, ob sich die Fahrt
+      // gegenüber Stehenbleiben lohnt, und das ist nicht die Frage.
+      dbTag: e.reinJeTag !== null ? e.reinJeTag : Math.round(db / tage),
+      reingewinn: e.reingewinn,
+      urteil: e.urteil,
       rueckfracht: rueckfrachtAngebot(z)
     };
   }
@@ -2250,9 +2336,11 @@ const TourenplanungApp = (function () {
   function zielZeile(e, besterDbTag, ausgangsstadt) {
     const gewaehlt = tour.ziel && tour.ziel.name === e.z.name;
     const anteil = e.dbTag / besterDbTag;
-    const klasse = e.db <= 0 ? "tour-frist-spaet"
-      : anteil > 0.66 ? "tour-frist-viel"
-      : anteil > 0.33 ? "tour-frist-mittel" : "tour-frist-knapp";
+    // Der Balken misst gegen das beste Ziel der Liste, das Urteil
+    // gegen den Tagessatz des Wagens. Beides zusammen: Wo stehe ich
+    // in dieser Liste, und ist das überhaupt etwas wert?
+    const klasse = e.urteil ? e.urteil.klasse
+      : e.db <= 0 ? "urteil-schlecht" : "urteil-mittel";
 
     return `
       <li class="tour-auswahl ${gewaehlt ? "gewaehlt" : ""}"
@@ -2261,7 +2349,7 @@ const TourenplanungApp = (function () {
           data-vorschau-von="${ausgangsstadt.name}"
           data-vorschau-ziel="${e.z.name}">
         ${guetebalken(anteil, klasse,
-            `${e.dbTag.toLocaleString("de-DE")} DM Deckungsbeitrag je Tag`)}
+            `${e.dbTag.toLocaleString("de-DE")} DM bleiben je Tag übrig`)}
         ${ZEILENPFEIL}
         <span class="tour-auswahl-name">
           ${e.z.name}
@@ -2272,11 +2360,12 @@ const TourenplanungApp = (function () {
           bindet ${dauerText(Math.round(e.stunden))} ·
           ${e.entgelt.toLocaleString("de-DE")} DM
         </span>
-        <span class="tour-auswahl-zusatz">
-          Deckungsbeitrag
-          <strong class="${e.db > 0 ? "tour-positiv" : "tour-negativ"}">
-            ${e.db.toLocaleString("de-DE")} DM</strong>
-          · <strong class="tour-jetag">${e.dbTag.toLocaleString("de-DE")} DM je Tag</strong>
+        <span class="tour-auswahl-zusatz"
+              title="${e.reingewinn === null ? "" :
+                e.reingewinn.toLocaleString("de-DE")} DM bleiben übrig, ${
+                e.dbTag.toLocaleString("de-DE")} DM je Tag">
+          <strong class="${e.urteil ? e.urteil.klasse : ""}">${
+            e.urteil ? e.urteil.wort : ""}</strong>
         </span>
         <span class="tour-auswahl-zusatz">
           Rückfracht:
@@ -2551,7 +2640,6 @@ const TourenplanungApp = (function () {
     // meldet die Warnung an der Sendung.
     const stunden = plan.bindungStunden || Auftraege.dauerStunden(plan.km);
     const tage = Math.max(1, Math.round(stunden / 24));
-    const dbTag = Math.round(summe.db / Math.max(0.1, stunden / 24));
     const letzteStadt = plan.stopps[plan.stopps.length - 1].stadt;
     const mehrere = alle.length > 1;
 
@@ -2571,48 +2659,11 @@ const TourenplanungApp = (function () {
       ${stoppfolgeAnsicht(plan, alle)}
 
       <div class="tour-zusammenfassung">
-        <dl class="fuhrpark-infoliste">
-          <dt>Fahrzeug</dt><dd>${f.marke} ${f.modell} (${f.kennzeichen})</dd>
-          <dt>Strecke</dt>
-          <dd>${summe.km.toLocaleString("de-DE")} km beladen${
-            summe.leerKm > 0
-              ? ` · ${Math.round(summe.leerKm).toLocaleString("de-DE")} km leer`
-              : ""}</dd>
-          <dt>Bindet den Wagen</dt>
-          <dd>${dauerText(Math.round(stunden))}${
-            plan.standStunden ? ` · davon ${plan.standStunden.toFixed(1)} Std an Rampen` : ""}</dd>
-          <dt>Entgelt
-            <button class="win98-button bevel-out tour-preis-knopf"
-                    id="tour-btn-preis-klappen"
-                    title="Woraus sich das Entgelt zusammensetzt">${
-              preisAufgeklappt ? "▲" : "▼"} Woraus?</button>
-          </dt>
-          <dd>${summe.erloes.toLocaleString("de-DE")} DM</dd>
-          ${preisAufgeklappt ? `
-            <dt class="tour-preis-spalte"></dt>
-            <dd class="tour-preis-spalte">
-              ${alle.map((sn) => preisRechnung(sn)).join("")}
-            </dd>` : ""}
-          <dt>Sprit</dt><dd>− ${summe.sprit.toLocaleString("de-DE")} DM</dd>
-          <dt>Reifen und Verschleiß</dt>
-          <dd>− ${summe.verschleiss.toLocaleString("de-DE")} DM</dd>
-          <dt>Deckungsbeitrag</dt>
-          <dd class="${summe.db > 0 ? "tour-positiv" : "tour-negativ"}">
-            ${summe.db.toLocaleString("de-DE")} DM</dd>
-          ${summe.reingewinn === null ? "" : `
-            <dt>Fixkosten anteilig</dt>
-            <dd>− ${summe.fixkosten.toLocaleString("de-DE")} DM
-              <span class="tour-nebensatz">${
-                summe.tage.toFixed(1).replace(".", ",")} Tage à ${
-                Math.round(Kalkulation.fixkostenJeTag(f)).toLocaleString("de-DE")} DM</span></dd>
-            <dt class="tour-strichoben">Reingewinn</dt>
-            <dd class="tour-strichoben ${
-              summe.reingewinn > 0 ? "tour-positiv" : "tour-negativ"}">
-              <strong>${summe.reingewinn.toLocaleString("de-DE")} DM</strong></dd>`}
-          <dt>Deckungsbeitrag je Tag</dt>
-          <dd class="${dbTag > 0 ? "tour-positiv" : "tour-negativ"}">
-            ${dbTag.toLocaleString("de-DE")} DM</dd>
-        </dl>
+        ${urteilszeile(summe, f, stunden)}
+        <button class="win98-button bevel-out tour-rechnung-knopf"
+                id="tour-btn-preis-klappen">${
+          preisAufgeklappt ? "▲ Rechnung zu" : "▼ Rechnung"}</button>
+        ${preisAufgeklappt ? tourRechnung(summe, f, stunden, plan, alle) : ""}
         ${plan.je.some((x) => x.warnungLaden || x.warnungZiel) ? `
           <div class="tour-schadenhinweis">
             Vorausgebuchte Fracht ist verbindlich. Wird ein Ladefenster

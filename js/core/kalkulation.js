@@ -171,12 +171,67 @@ const Kalkulation = (function () {
       // Listen sortieren danach, und die Frage dort lautet "womit ist
       // der Wagen am besten ausgelastet?" - nicht "was bleibt nach
       // Kosten, die auch ohne ihn laufen?".
-      jeTag: tage ? Math.round(deckungsbeitrag / Math.max(0.1, tage)) : null
+      jeTag: tage ? Math.round(deckungsbeitrag / Math.max(0.1, tage)) : null,
+      // Was am Ende des Tages übrig bleibt - der Wert, über den
+      // geurteilt wird. Nicht der Deckungsbeitrag: Der sagt nur, ob
+      // sich die Fahrt gegenüber Stehenbleiben lohnt, und das ist
+      // nicht die Frage, die der Spieler stellt.
+      reinJeTag: tage && reingewinn !== null
+        ? Math.round(reingewinn / Math.max(0.05, tage)) : null,
+      urteil: tage && reingewinn !== null
+        ? urteil(reingewinn / Math.max(0.05, tage), fahrzeug, fahrzeuge) : null
     };
+  }
+
+  // ---------- Die eine Bewertungsskala des Spiels ----------
+  //
+  // Regel 21 aus docs/spieldesign.md: Jede Bewertung im Spiel benutzt
+  // dieselben Stufen, dieselben Farben und dieselben Wörter. Wer hier
+  // eine sechste Stufe einführt oder ein Wort ändert, ändert es
+  // überall.
+  //
+  // Die Wörter sind Sätze, keine Noten. "Mittelmäßig" ist eine Note -
+  // man fragt sofort: gemessen woran? "Geht so" ist ein Satz, den der
+  // Spieler selbst sagen würde, und er braucht keinen Vergleich.
+  //
+  // Der Maßstab ist der TAGESSATZ DES WAGENS: Was kostet dieses
+  // Fahrzeug an einem Kalendertag, ohne einen Meter zu fahren? Eine
+  // Tour, die weniger einbringt, verdient ihr Standgeld nicht. Der
+  // Maßstab ist damit relativ - er wandert mit, wenn ein größerer
+  // Wagen dazukommt - und er ist nicht erfunden, sondern gerechnet.
+  //
+  // Die Schwellen sind an der gemessenen Verteilung gesetzt (72
+  // Aufträge, 25 Spielstände, Wartezeit eingerechnet): Median 3,4 -
+  // fach, 13 % unter dem Tagessatz, Höchstwert 11-fach.
+  const STUFEN = [
+    { ab: -Infinity, wort: "Da legst du drauf.",           klasse: "urteil-schlecht" },
+    { ab: 0,         wort: "Lohnt kaum.",                  klasse: "urteil-mager" },
+    { ab: 1,         wort: "Geht so.",                     klasse: "urteil-mittel" },
+    { ab: 3,         wort: "Verdient sich.",               klasse: "urteil-gut" },
+    { ab: 6,         wort: "Da bleibt richtig was übrig.", klasse: "urteil-sehrgut" }
+  ];
+
+  /**
+   * Das Urteil über ein Ergebnis je Tag.
+   *
+   * @param {number} jeTag      Reingewinn je Kalendertag, DM
+   * @param {object} fahrzeug   für den Maßstab
+   * @param {Array}  [fahrzeuge]
+   * @returns {{stufe, wort, klasse, vielfaches}}
+   */
+  function urteil(jeTag, fahrzeug, fahrzeuge) {
+    const satz = fixkostenJeTag(fahrzeug, fahrzeuge);
+    const vielfaches = satz > 0 ? jeTag / satz : 0;
+    let index = 0;
+    STUFEN.forEach((s, i) => { if (vielfaches >= s.ab) index = i; });
+    return { stufe: index, wort: STUFEN[index].wort,
+             klasse: STUFEN[index].klasse, vielfaches };
   }
 
   return {
     TAGE_JE_MONAT,
+    STUFEN,
+    urteil,
     abschreibungJeMonat,
     fixkostenJeMonat,
     fixkostenJeTag,

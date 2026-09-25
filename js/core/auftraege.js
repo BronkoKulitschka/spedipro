@@ -43,7 +43,19 @@ const Auftraege = (function () {
   // der Spieler steht (Depot oder Standplatz eines Wagens), und so
   // groß ist darüber hinaus der Ortsanteil beim Nachfüllen. Beides
   // gemessen eingestellt - siehe README zu 0.15.39.
-  const ORTS_MINDEST = 8;
+  // So viele offene Auftraege liegen mindestens an JEDEM Ort, an dem
+  // der Spieler steht (Depot und Standplatz jedes Wagens). Sechs statt
+  // acht, weil es seit 0.15.42 je Ort gilt und nicht mehr in der
+  // Summe: Bei wachsender Flotte staende sonst die halbe Boerse vor
+  // der eigenen Tuer.
+  const ORTS_MINDEST = 6;
+
+  // Und so viele davon muss der KLEINSTE Wagen der Flotte auch laden
+  // können. Ohne diese zweite Bedingung kann die Stadt voll und der
+  // Spieler trotzdem handlungsunfähig sein.
+  const ORTS_LADBAR = 2;
+
+  // Und so gross ist darueber hinaus der Ortsanteil beim Nachfuellen.
   const ORTSANTEIL = 0.4;
 
   let naechsteNummer = 1000;
@@ -104,6 +116,24 @@ const Auftraege = (function () {
       ? angebot.filter((g) => Ladung.kannLaden(vorgabe.fuer, g))
       : angebot;
     if (wahl.length === 0) return null;
+
+    // Ist die Sendung auf ein Fahrzeug zugeschnitten, wird nicht EINE
+    // Ware gewürfelt, sondern der Reihe nach probiert.
+    //
+    // Der Unterschied: Eine Ware, die in Reichweite niemand braucht,
+    // lässt erzeugen() ins Leere laufen. Bei einem einzigen Wurf
+    // scheiterte der Versuch dann, obwohl eine andere Ware derselben
+    // Stadt gegangen wäre - gemessen als Stadt ohne ladbare Fracht in
+    // 1 von 15 Ankunftsorten und in bis zu einem Drittel der Städte
+    // beim wahllosen Umsetzen.
+    if (!vorgabe.gut && vorgabe.fuer && wahl.length > 1) {
+      const reihe = wahl.slice().sort(() => Math.random() - 0.5);
+      for (const kandidat of reihe) {
+        const versuch = erzeugen({ ...vorgabe, gut: kandidat });
+        if (versuch) return versuch;
+      }
+      return null;
+    }
 
     const gut = vorgabe.gut || zufaelligAus(wahl);
 
@@ -226,7 +256,7 @@ const Auftraege = (function () {
     //
     // Eine Börse, auf der nichts sofort verfügbar ist, ist ohnehin
     // unrealistisch: Ein Teil der Ware steht schon an der Rampe.
-    if (Math.random() >= 0.4) {
+    if (!vorgabe.sofortBereit && Math.random() >= 0.4) {
       ladeBeginn.setHours(ladeBeginn.getHours() + 1 + Math.round(Math.random() * 35));
     }
     const ladeEnde = new Date(ladeBeginn.getTime());
@@ -317,26 +347,51 @@ const Auftraege = (function () {
     const eigene = eigeneOrte();
     let versuche = 0;
 
-    // Erstens: Vor der eigenen Tür liegt IMMER etwas, unabhängig
-    // davon, wie voll die Börse sonst ist.
-    if (eigene.length > 0) {
-      const namen = new Set(eigene.map((s) => s.name));
-      let vorOrt = offene().filter((a) => namen.has(a.vonName)).length;
-      const klein = kleinsterWagen();
-      while (vorOrt < ORTS_MINDEST && versuche < ORTS_MINDEST * 6) {
-        versuche++;
-        // Jede zweite dieser Sendungen ist auf den kleinsten Wagen der
-        // Flotte zugeschnitten. Das ist kein Entgegenkommen, sondern
-        // die Umkehrung dessen, was vorher galt: Ein Verlader, der den
-        // Spediteur vor Ort kennt, weiß auch, was bei ihm auf dem Hof
-        // steht, und fragt ihn nach passender Ware. Die andere Hälfte
-        // bleibt ungeschnitten - sonst verschwände die Versuchung,
-        // für den großen Auftrag den größeren Wagen anzuschaffen.
-        const vorgabe = { von: zufaelligAus(eigene) };
-        if (klein && vorOrt % 2 === 0) vorgabe.fuer = klein;
-        if (erzeugen(vorgabe)) vorOrt++;
+    // Erstens: Vor JEDER eigenen Tür liegt etwas - je Ort gezählt, nicht
+    // über alle zusammen.
+    //
+    // Bis 0.15.41 wurde die Mindestzahl über die Summe aller eigenen
+    // Orte gebildet. Das Depot allein erfüllte sie, und ein Wagen, der
+    // nach einer Tour in Leipzig stand, bekam dort NULL Aufträge.
+    // Gemessen über dreißig Spieltage: Der Transporter stand zwischen
+    // 278 und 710 von 720 Stunden still, weil am Ankunftsort nichts
+    // lag. Das ist der Unterschied zwischen einem Spiel, in dem man
+    // wählt, und einem, in dem man wartet.
+    const klein = kleinsterWagen();
+    eigene.forEach((ort) => {
+      const ausOrt = () => offene().filter((a) => a.vonName === ort.name);
+      const ladbar = () => !klein || typeof Ladung === "undefined"
+        ? ausOrt()
+        : ausOrt().filter((a) => Ladung.passtDazu(klein, [], gut(a), a.tonnen).passt);
+
+      let ortsversuche = 0;
+      while ((ausOrt().length < ORTS_MINDEST || ladbar().length < ORTS_LADBAR)
+             && ortsversuche < ORTS_MINDEST * 8) {
+        ortsversuche++;
+
+        // Fehlt es an LADBARER Fracht, wird gezielt für den kleinsten
+        // Wagen erzeugt; fehlt es nur an Menge, ungeschnitten.
+        //
+        // Der Unterschied ist nicht akademisch. Bis 0.15.42 zählte die
+        // Schleife alle Aufträge der Stadt, auch solche, die der
+        // Wagen gar nicht laden kann. Scheiterten die zugeschnittenen
+        // (weil die Ware nirgends gebraucht wird), standen am Ende
+        // sechs unbrauchbare da, und der Spieler hatte nichts zu
+        // wählen - gemessen in 3 von 15 Ankunftsorten.
+        const vorgabe = { von: ort };
+        if (klein && ladbar().length < ORTS_LADBAR) vorgabe.fuer = klein;
+
+        // Der allererste Auftrag an einem Ort steht SOFORT bereit.
+        // Ohne das begann rund jedes fünfte Spiel damit, dass der
+        // Wagen wartet: Drei ladbare Aufträge mit je 40 % sofortiger
+        // Bereitschaft ergeben 0,6³ = 22 % Fehlanzeige. Regel 30 aus
+        // docs/spieldesign.md verlangt, dass der Spieler in der ersten
+        // Stunde einen ganzen Kreislauf erlebt.
+        if (ausOrt().length === 0) vorgabe.sofortBereit = true;
+
+        erzeugen(vorgabe);
       }
-    }
+    });
 
     // Zweitens: Der Rest füllt auf, mit einem Übergewicht auf die
     // eigenen Orte - der Spediteur ist in seiner Stadt bekannt.
