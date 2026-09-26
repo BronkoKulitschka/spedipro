@@ -6,9 +6,9 @@
 .stand-layout {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.5455rem;
   height: 100%;
-  padding: 8px;
+  padding: 0.7273rem;
   overflow-y: auto;
   box-sizing: border-box;
 }
@@ -16,21 +16,21 @@
 .stand-hinweis,
 .stand-fusszeile {
   margin: 0;
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
   line-height: 1.35;
 }
 
 .stand-fusszeile {
   margin-top: auto;
-  padding-top: 6px;
-  border-top: 1px solid var(--win-grey-dark);
+  padding-top: 0.5455rem;
+  border-top: 1px solid var(--bevel-dunkel);
 }
 
 .stand-meldung {
-  padding: 4px 7px;
-  font-size: 12px;
-  border: 1px solid var(--win-grey-darker);
+  padding: 0.3636rem 0.6364rem;
+  font-size: var(--fs-klein);
+  border: 1px solid var(--bevel-tief);
   background: var(--win-grey-light);
 }
 
@@ -40,20 +40,20 @@
 .stand-liste {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .stand-platz {
-  padding: 6px 8px;
+  padding: 0.5455rem 0.7273rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 /* Der aktive Platz ist der, auf den laufend gesichert wird - das muss
    man auf einen Blick sehen, sonst speichert man ins Leere. */
 .stand-platz.aktiv {
   border: 2px solid var(--win-blue-title);
-  padding: 5px 7px;
+  padding: 0.4545rem 0.6364rem;
 }
 
 .stand-platz.stand-veraltet {
@@ -64,33 +64,33 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
+  gap: 0.5455rem;
+  margin-bottom: 0.3636rem;
 }
 
 .stand-nummer {
-  font-size: 14px;
+  font-size: var(--fs-basis);
   font-weight: bold;
 }
 
 .stand-depot {
-  font-size: 13px;
+  font-size: var(--fs-basis);
   color: var(--win-grey-darker);
 }
 
 .stand-marke-aktiv,
 .stand-marke-alt {
-  font-size: 10px;
+  font-size: var(--fs-klein);
   padding: 1px 5px;
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
 .stand-marke-aktiv { background: var(--win-blue-title); color: var(--win-white); }
 .stand-marke-alt   { background: #d9a520; color: #10100c; }
 
 .stand-leertext {
-  padding: 8px 0;
-  font-size: 13px;
+  padding: 0.7273rem 0;
+  font-size: var(--fs-basis);
   color: var(--win-grey-darker);
   text-align: center;
 }
@@ -98,18 +98,18 @@
 .stand-daten {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 1px 8px;
-  margin: 0 0 5px 0;
-  font-size: 12px;
+  gap: 1px 0.7273rem;
+  margin: 0 0 0.4545rem 0;
+  font-size: var(--fs-klein);
 }
 
 .stand-daten dt { color: var(--win-grey-darker); }
 .stand-daten dd { margin: 0; }
 
 .stand-warnung {
-  margin-bottom: 5px;
-  padding: 4px 6px;
-  font-size: 11px;
+  margin-bottom: 0.4545rem;
+  padding: 0.3636rem 0.5455rem;
+  font-size: var(--fs-klein);
   line-height: 1.35;
   background: #f4e2e2;
   border: 1px solid #b03030;
@@ -118,27 +118,27 @@
 .stand-knoepfe {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 0.3636rem;
 }
 
 .stand-knoepfe .win98-button {
-  font-size: 12px;
-  padding: 3px 8px;
+  font-size: var(--fs-klein);
+  padding: 0.2727rem 0.7273rem;
 }
 
 /* ---------- Während deiner Abwesenheit ---------- */
 
 .protokoll-kopf {
-  padding: 4px 7px;
-  font-size: 13px;
+  padding: 0.3636rem 0.6364rem;
+  font-size: var(--fs-basis);
   font-weight: bold;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .protokoll-leer {
-  padding: 12px 0;
-  font-size: 13px;
+  padding: 1.0909rem 0;
+  font-size: var(--fs-basis);
   color: var(--win-grey-darker);
   text-align: center;
 }
@@ -151,12 +151,12 @@
 
 .protokoll-eintrag {
   display: grid;
-  grid-template-columns: 18px auto 1fr;
-  gap: 5px;
+  grid-template-columns: 1.6364rem auto 1fr;
+  gap: 0.4545rem;
   align-items: baseline;
-  padding: 3px 2px;
-  font-size: 12px;
-  border-bottom: 1px dotted var(--win-grey-dark);
+  padding: 0.2727rem 2px;
+  font-size: var(--fs-klein);
+  border-bottom: 1px dotted var(--bevel-dunkel);
 }
 
 .protokoll-eintrag:last-child { border-bottom: none; }
@@ -164,7 +164,7 @@
 .protokoll-symbol { text-align: center; }
 
 .protokoll-zeit {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
   white-space: nowrap;
 }
@@ -178,7 +178,7 @@
 @media (max-width: 480px) {
   /* Zeitstempel unter den Text, sonst bleibt für den Text nichts übrig */
   .protokoll-eintrag {
-    grid-template-columns: 18px 1fr;
+    grid-template-columns: 1.6364rem 1fr;
   }
   .protokoll-zeit { grid-column: 2; }
   .protokoll-text { grid-column: 2; }

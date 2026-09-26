@@ -26,6 +26,85 @@
      sind die Originalschriften von Windows 98 und bleiben auch klein
      scharf lesbar. */
   --font-win: Tahoma, "MS Sans Serif", Verdana, "Segoe UI", sans-serif;
+
+  /* ------------------------------------------------------------------
+     Die eine Größe, aus der alles abgeleitet wird.
+     docs/optik-und-bedienung.md, Regel 66 und A23.
+
+     --skala 1 bedeutet: 1rem = 18px. Das ist die Mindestschriftgröße
+     aus XAG 101 für 1080p. Die alte Oberfläche war auf 11px aufgebaut;
+     alle Längen sind deshalb in Elfteln angegeben (1rem = 11 alte
+     Pixel). Dadurch wächst alles um denselben Faktor 18/11 = 1,636 -
+     dieselbe 98er-Formensprache bei etwa 150 dpi statt 96.
+
+     Die Stufen setzt Anzeige.skalaSetzen(). 0.61 ist die
+     originalgetreue Stufe; sie liegt ausdrücklich UNTER jeder
+     dokumentierten Mindestgröße und ist deshalb als solche
+     beschriftet - Regel 53: eine Vergrößerungsoption rechtfertigt
+     keine winzige Voreinstellung, also ist sie nicht die
+     Voreinstellung.
+     ------------------------------------------------------------------ */
+  --skala: 1;
+
+  --fs-klein: 1rem;      /* 18px - war 10/11/12px */
+  --fs-basis: 1.18rem;   /* 21px - war 13/14px */
+  --fs-kopf: 1.45rem;    /* 26px - war 15/16/17px */
+  --fs-gross: 2rem;      /* 36px - war 22px */
+
+  /* Mindestkantenlänge einer Trefferfläche. Regel 25/A6: 44px am
+     Finger, 24px als Konformitätsuntergrenze am Zeiger. Die SICHTBARE
+     Größe bleibt davon unberührt - Regel 27/69. */
+  --ziel-min: 1.34rem;   /* etwa 24px bei --skala 1 */
+  --ziel-abstand: 0px;
+
+  /* Die vier Kantenfarben des 3D-Rands liegen eigenständig, damit der
+     Kontrastmodus sie anheben kann, ohne die Schriftfarben zu
+     berühren. Voreinstellung: die Originalwerte. */
+  --bevel-hell: #dfdfdf;
+  --bevel-hoch: #ffffff;
+  --bevel-dunkel: #808080;
+  --bevel-tief: #404040;
+}
+
+html {
+  font-size: calc(18px * var(--skala));
+}
+
+/* Zeigegerät ohne Präzision: Trefferflächen auf 44px, Abstände dazu.
+   Regel 25, 28, 29. Erkannt wird das Gerät; umschalten kann der
+   Spieler über Anzeige.eingabeSetzen(). */
+@media (pointer: coarse) {
+  :root {
+    --ziel-min: 2.45rem;    /* etwa 44px bei --skala 1 */
+    --ziel-abstand: 0.36rem;
+  }
+}
+
+body.eingabe-finger {
+  --ziel-min: 2.45rem;
+  --ziel-abstand: 0.36rem;
+}
+
+body.eingabe-maus {
+  --ziel-min: 1.34rem;
+  --ziel-abstand: 0px;
+}
+
+/* ------------------------------------------------------------------
+   Hoher Kontrast als umschaltbarer Modus, nicht als Standardlook.
+   Regel 56: Die helle Bevel-Kante liegt bei 1,37:1 und das innere
+   Weiß bei 1,82:1 gegen #c0c0c0 - beides unter den 3:1 aus
+   WCAG 1.4.11. Geheilt wird das über zwei Farbmarken, nicht über eine
+   andere Formensprache: Die Kanten bleiben 1px breit und an derselben
+   Stelle, sie werden nur dunkler. Die Game Accessibility Guidelines
+   sehen genau das auf Stufe intermediate vor ("Provide an option to
+   adjust contrast").
+   ------------------------------------------------------------------ */
+body.kontrast-hoch {
+  --bevel-hell: #6d6d6d;    /* 3,06:1 gegen #c0c0c0 statt 1,37:1 */
+  --bevel-hoch: #5a5a5a;    /* 3,96:1 gegen #c0c0c0 statt 1,82:1 */
+  --bevel-dunkel: #3d3d3d;  /* 6,25:1 gegen #c0c0c0 statt 2,17:1 */
+  --bevel-tief: #000000;
 }
 
 * {
@@ -40,7 +119,7 @@ img {
 body {
   margin: 0;
   font-family: var(--font-win);
-  font-size: 13px;
+  font-size: var(--fs-basis);
   -webkit-font-smoothing: antialiased;
   color: var(--win-text);
   overflow: hidden;
@@ -49,45 +128,45 @@ body {
 
 /* Erhabener Rand (z.B. Buttons, Fenster, Taskbar) */
 .bevel-out {
-  border-top: 1px solid var(--win-grey-light);
-  border-left: 1px solid var(--win-grey-light);
-  border-right: 1px solid var(--win-grey-darker);
-  border-bottom: 1px solid var(--win-grey-darker);
+  border-top: 1px solid var(--bevel-hell);
+  border-left: 1px solid var(--bevel-hell);
+  border-right: 1px solid var(--bevel-tief);
+  border-bottom: 1px solid var(--bevel-tief);
   box-shadow:
-    inset 1px 1px 0 var(--win-white),
-    inset -1px -1px 0 var(--win-grey-dark);
+    inset 1px 1px 0 var(--bevel-hoch),
+    inset -1px -1px 0 var(--bevel-dunkel);
   background: var(--win-grey);
 }
 
 /* Vertiefter Rand (z.B. gedrückte Buttons, Eingabefelder) */
 .bevel-in {
-  border-top: 1px solid var(--win-grey-darker);
-  border-left: 1px solid var(--win-grey-darker);
-  border-right: 1px solid var(--win-grey-light);
-  border-bottom: 1px solid var(--win-grey-light);
+  border-top: 1px solid var(--bevel-tief);
+  border-left: 1px solid var(--bevel-tief);
+  border-right: 1px solid var(--bevel-hell);
+  border-bottom: 1px solid var(--bevel-hell);
   box-shadow:
-    inset 1px 1px 0 var(--win-grey-dark),
-    inset -1px -1px 0 var(--win-white);
+    inset 1px 1px 0 var(--bevel-dunkel),
+    inset -1px -1px 0 var(--bevel-hoch);
   background: var(--win-grey);
 }
 
 .win98-button {
   font-family: var(--font-win);
-  font-size: 13px;
-  padding: 5px 11px;
+  font-size: var(--fs-basis);
+  padding: 0.4545rem 1rem;
   cursor: pointer;
 }
 
 .win98-button:active {
   /* aus bevel-out wird beim Klick bevel-in */
   border-top: 1px solid var(--win-grey-darker);
-  border-left: 1px solid var(--win-grey-darker);
-  border-right: 1px solid var(--win-grey-light);
-  border-bottom: 1px solid var(--win-grey-light);
+  border-left: 1px solid var(--bevel-tief);
+  border-right: 1px solid var(--bevel-hell);
+  border-bottom: 1px solid var(--bevel-hell);
   box-shadow:
-    inset 1px 1px 0 var(--win-grey-dark),
-    inset -1px -1px 0 var(--win-white);
-  padding: 6px 10px 4px 12px; /* leichter Versatz für "gedrückt"-Gefühl */
+    inset 1px 1px 0 var(--bevel-dunkel),
+    inset -1px -1px 0 var(--bevel-hoch);
+  padding: 0.5455rem 0.9091rem 0.3636rem 1.0909rem; /* leichter Versatz für "gedrückt"-Gefühl */
 }
 
 /* Deaktivierte Schaltflächen: grauer Text mit hellem Versatz, wie in
@@ -99,14 +178,14 @@ body {
 }
 
 .win98-button:disabled:active {
-  border-top: 1px solid var(--win-grey-light);
-  border-left: 1px solid var(--win-grey-light);
-  border-right: 1px solid var(--win-grey-darker);
-  border-bottom: 1px solid var(--win-grey-darker);
+  border-top: 1px solid var(--bevel-hell);
+  border-left: 1px solid var(--bevel-hell);
+  border-right: 1px solid var(--bevel-tief);
+  border-bottom: 1px solid var(--bevel-tief);
   box-shadow:
-    inset 1px 1px 0 var(--win-white),
-    inset -1px -1px 0 var(--win-grey-dark);
-  padding: 4px 10px;
+    inset 1px 1px 0 var(--bevel-hoch),
+    inset -1px -1px 0 var(--bevel-dunkel);
+  padding: 0.3636rem 0.9091rem;
 }
 
 .win98-window {
@@ -114,6 +193,11 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+  /* Senkrechter Stapel statt fester Rechnung: Die Titelleistenhöhe
+     hängt jetzt an der Schriftgröße und ist nicht mehr vorhersagbar.
+     Regel 66 - eine feste 38px-Rechnung würde bei 200 % brechen. */
+  display: flex;
+  flex-direction: column;
 }
 
 .win98-window.minimiert {
@@ -124,11 +208,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 6px;
+  padding: 0.6364rem 0.5455rem;
   background: linear-gradient(90deg, var(--win-blue-title), var(--win-blue-title-light));
   color: var(--win-white);
   font-weight: bold;
-  font-size: 14px;
+  font-size: var(--fs-basis);
+  flex-shrink: 0;
 }
 
 .win98-titlebar-controls {
@@ -137,9 +222,9 @@ body {
 }
 
 .win98-titlebar-controls button {
-  width: 28px;
-  height: 24px;
-  font-size: 13px;
+  width: 2.5455rem;
+  height: 2.1818rem;
+  font-size: var(--fs-basis);
   line-height: 1;
   padding: 0;
 }
@@ -151,12 +236,128 @@ body {
 }
 
 .win98-window-content {
-  padding: 8px;
-  height: calc(100% - 38px);
+  padding: 0.7273rem;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
   background: var(--win-grey);
 }
 
 .hidden {
   display: none !important;
+}
+
+/* ==========================================================
+   Trefferflächen
+   docs/optik-und-bedienung.md, Regel 25, 27, 28, 69, A6, A7.
+
+   Der Kunstgriff, den Google wörtlich beschreibt ("touch targets
+   extend beyond the visual bounds of an element"): Die sichtbare
+   Größe bleibt, die Fläche wächst. Ein 22px hoher Reiterknopf sieht
+   weiter 22px hoch aus (dort steckt die 98er-Optik) und ist 44px
+   hoch anfassbar.
+
+   Umgesetzt über ein Pseudoelement, das über den Knopf hinausragt.
+   Warum nicht über Padding: Padding verändert das Bild. Warum nicht
+   über eine Mindesthöhe: die würde den Bevel-Rahmen mitziehen und
+   aus dem 98er-Knopf einen modernen machen.
+   ========================================================== */
+.win98-button,
+.win98-titlebar-controls button,
+.auf-reiterknopf,
+.anz-reiter,
+button,
+select,
+input[type="text"],
+input[type="number"],
+input[type="range"],
+.taskbar-fenster-button,
+[data-ziel] {
+  position: relative;
+}
+
+.win98-button::after,
+.win98-titlebar-controls button::after,
+select::after,
+.taskbar-fenster-button::after,
+.auf-reiterknopf::after,
+.anz-reiter::after,
+[data-ziel]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--ziel-min);
+  transform: translateY(-50%);
+  min-width: var(--ziel-min);
+  /* Nur die Fläche vergrößern, nichts einfangen, was daneben liegt:
+     Das Pseudoelement liegt unter dem Inhalt und hört auf Zeiger. */
+  z-index: 0;
+  pointer-events: auto;
+}
+
+/* Eingabefelder können kein Pseudoelement tragen (leere Elemente).
+   Dort wächst die Fläche über das Padding - sichtbar, aber ein
+   Eingabefeld darf auch aussehen wie eines, in das man tippt. */
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+  min-height: var(--ziel-min);
+}
+
+/* Regel 28/A7: Wo Knöpfe im Original aneinanderkleben, reicht das
+   Pseudoelement nicht - die Flächen würden sich überlappen. Am Finger
+   wächst der Abstand deshalb wirklich. */
+.win98-titlebar-controls {
+  gap: calc(2px + var(--ziel-abstand));
+}
+
+/* Regel 29: Ecken sind am Zeiger die besten Plätze und am Finger die
+   schlechtesten ("touchscreen devices don't benefit from edge
+   placement"). Die Fensterknöpfe rücken deshalb am Finger aus der
+   Ecke heraus. */
+@media (pointer: coarse) {
+  .win98-titlebar-controls {
+    margin-right: 0.36rem;
+  }
+}
+
+/* ==========================================================
+   Tabellen und Listen
+   docs/optik-und-bedienung.md, Regel 43, 44, 45, A20, A21.
+   ========================================================== */
+
+/* Zeilenhöhe als umschaltbare Dichte. Die Stufen stehen in
+   Anzeige.DICHTE_STUFEN; hier steht nur die Voreinstellung, damit die
+   Oberfläche auch dann stimmt, wenn das Skript noch nicht gelaufen
+   ist. Die originalgetreue Stufe (18px) ist ausdrücklich die, die
+   nicht fingertauglich ist. */
+:root {
+  --zeile-hoehe: 2.67rem;   /* etwa 48px bei --skala 1 */
+}
+
+/* Ziffern, die untereinander stehen. Ohne das springen die Spalten,
+   weil die 1 schmaler ist als die 8 - Regel 43. */
+.fin-zahl,
+.auf-geld,
+td,
+.zahl,
+input[type="number"] {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* Zahlen rechts, Text links. In einer Tabelle ist die Spalte die
+   Leseeinheit, nicht die Zelle. */
+table td,
+table th {
+  text-align: left;
+}
+
+table td.fin-zahl,
+table th.fin-zahl,
+table td.zahl,
+table th.zahl {
+  text-align: right;
 }

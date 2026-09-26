@@ -18,6 +18,15 @@
     versionEl.title = `SpediPro 95, Fassung ${VERSION}`;
   }
 
+  // Zweite Stelle für dieselbe Nummer: Auf schmalen Geräten fällt sie
+  // aus der Taskleiste heraus (dort ist kein Platz mehr, seit die
+  // Schrift die Mindestgröße einhält). Im Startmenü ist Platz, und
+  // beim Melden eines Fehlers braucht man sie.
+  const menuVersionEl = document.getElementById("start-menu-version");
+  if (menuVersionEl && typeof VERSION !== "undefined") {
+    menuVersionEl.textContent = `SpediPro 95 · Fassung ${VERSION}`;
+  }
+
   function anzeigeAktualisieren(jetzt) {
     if (!jetzt) return;
     if (datumEl) datumEl.textContent = Spielzeit.formatiere(jetzt);

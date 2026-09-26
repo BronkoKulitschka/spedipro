@@ -4,25 +4,25 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .fuhrpark-kopfzeile {
   flex-shrink: 0;
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 0.9091rem;
   flex-wrap: wrap;
 }
 
 .fuhrpark-fahrzeugname {
-  font-size: 17px;
+  font-size: var(--fs-kopf);
   font-weight: bold;
 }
 
 .fuhrpark-kennzeichen {
   font-family: monospace;
-  font-size: 16px;
+  font-size: var(--fs-kopf);
   font-weight: bold;
 }
 
@@ -30,12 +30,12 @@
   flex-shrink: 0;
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 2px 10px;
-  margin: 4px 0 0 0;
-  padding: 6px 8px;
-  font-size: 12px;
+  gap: 2px 0.9091rem;
+  margin: 0.3636rem 0 0 0;
+  padding: 0.5455rem 0.7273rem;
+  font-size: var(--fs-klein);
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .fuhrpark-infoliste dt {
@@ -52,7 +52,7 @@
      schmiegen: Auslastung und Historie sind in eigene Fenster
      ausgelagert, der frei gewordene Raum gehört dem Fahrzeugbild. */
   flex: 1 1 auto;
-  min-height: 200px;
+  min-height: 18.1818rem;
   min-width: 0;
   display: flex;
   align-items: flex-start;
@@ -66,13 +66,13 @@
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .fuhrpark-zurueck {
-  height: 32px;
-  padding: 0 14px;
-  font-size: 13px;
+  height: 2.9091rem;
+  padding: 0 1.2727rem;
+  font-size: var(--fs-basis);
 }
 
 /* ---------- Übersichtsseite ---------- */
@@ -81,11 +81,11 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .fuhrpark-uebersicht-zaehler {
-  font-size: 12px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
@@ -98,24 +98,24 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .fuhrpark-uebersicht-eintrag {
-  padding: 6px 8px;
+  padding: 0.5455rem 0.7273rem;
   background: var(--win-grey-light);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.7273rem;
 }
 
 .fuhrpark-uebersicht-mini {
   flex-shrink: 0;
-  width: 52px;
-  height: 52px;
+  width: 4.7273rem;
+  height: 4.7273rem;
   background: var(--win-white);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .fuhrpark-uebersicht-text {
@@ -128,9 +128,9 @@
 }
 
 .fuhrpark-uebersicht-leer {
-  padding: 16px 8px;
+  padding: 1.4545rem 0.7273rem;
   text-align: center;
-  font-size: 12px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
@@ -138,18 +138,18 @@
 
 .fuhrpark-datumszeile {
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
-  padding: 2px 0 4px 0;
-  border-bottom: 1px solid var(--win-grey-dark);
+  padding: 2px 0 0.3636rem 0;
+  border-bottom: 1px solid var(--bevel-dunkel);
 }
 
 .fuhrpark-frist-marke {
   display: inline-block;
-  font-size: 10px;
-  padding: 1px 5px;
-  margin-bottom: 4px;
-  border: 1px solid var(--win-grey-darker);
+  font-size: var(--fs-klein);
+  padding: 1px 0.4545rem;
+  margin-bottom: 0.3636rem;
+  border: 1px solid var(--bevel-tief);
 }
 
 .fuhrpark-frist-marke.frist-bald {
@@ -165,16 +165,16 @@
 
 .fuhrpark-fristen {
   flex-shrink: 0;
-  margin-top: 4px;
-  padding: 6px 8px;
+  margin-top: 0.3636rem;
+  padding: 0.5455rem 0.7273rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .fuhrpark-fristen-titel {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   font-weight: bold;
-  margin-bottom: 4px;
+  margin-bottom: 0.3636rem;
 }
 
 .fuhrpark-fristen-liste {
@@ -186,16 +186,16 @@
 .fuhrpark-frist {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
+  gap: 0.5455rem;
+  font-size: var(--fs-klein);
   padding: 1px 0;
 }
 
 .fuhrpark-frist-ampel {
   flex-shrink: 0;
-  width: 8px;
-  height: 8px;
-  border: 1px solid var(--win-grey-darker);
+  width: 0.7273rem;
+  height: 0.7273rem;
+  border: 1px solid var(--bevel-tief);
 }
 
 .frist-ok .fuhrpark-frist-ampel { background: #2e8b2e; }
@@ -203,7 +203,7 @@
 .frist-ueberfaellig .fuhrpark-frist-ampel { background: #b22222; }
 
 .fuhrpark-frist-label {
-  width: 110px;
+  width: 10rem;
   flex-shrink: 0;
 }
 
@@ -221,22 +221,22 @@
 .fuhrpark-auslastung,
 .fuhrpark-historie {
   flex-shrink: 0;
-  margin-top: 4px;
-  padding: 6px 8px;
+  margin-top: 0.3636rem;
+  padding: 0.5455rem 0.7273rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .fuhrpark-auslastung-zeitraum {
   font-weight: normal;
   color: var(--win-grey-darker);
-  font-size: 10px;
+  font-size: var(--fs-klein);
 }
 
 .fuhrpark-auslastung-details {
-  font-size: 10px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
-  margin-top: 3px;
+  margin-top: 0.2727rem;
 }
 
 .fuhrpark-gesamtbalken-fuellung.auslastung-unterauslastung { background: #4a7ec0; }
@@ -260,12 +260,12 @@
 
 .fuhrpark-ausfall {
   position: absolute;
-  left: 4px;
-  right: 4px;
-  top: 4px;
+  left: 0.3636rem;
+  right: 0.3636rem;
+  top: 0.3636rem;
   z-index: 4;
-  padding: 5px 7px;
-  border: 2px solid var(--win-grey-darker);
+  padding: 0.4545rem 0.6364rem;
+  border: 2px solid var(--bevel-tief);
   box-shadow: 2px 2px 0 rgba(0,0,0,0.35);
 }
 
@@ -281,26 +281,26 @@
 
 .fuhrpark-ausfall-titel {
   font-weight: bold;
-  font-size: 12px;
+  font-size: var(--fs-klein);
 }
 
 .fuhrpark-ausfall-stillstand .fuhrpark-ausfall-titel { color: #8a1414; }
 .fuhrpark-ausfall-warnung .fuhrpark-ausfall-titel { color: #6b4e00; }
 
 .fuhrpark-ausfall-text {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   margin-top: 2px;
 }
 
 .fuhrpark-ausfall-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 6px;
+  gap: 0.3636rem;
+  margin-top: 0.5455rem;
 }
 
 .fuhrpark-ausfall-buttons .win98-button {
-  font-size: 11px;
+  font-size: var(--fs-klein);
 }
 
 .fuhrpark-frist-marke.marke-stillstand {
@@ -321,13 +321,13 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .fuhrpark-fristzeile {
-  padding: 6px 8px;
+  padding: 0.5455rem 0.7273rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   border-left-width: 4px;
 }
 
@@ -338,23 +338,23 @@
 .fuhrpark-fristzeile-kopf {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .fuhrpark-fristzeile-name {
   font-weight: bold;
-  font-size: 14px;
+  font-size: var(--fs-basis);
 }
 
 .fuhrpark-fristzeile-kurz {
   font-family: monospace;
-  font-size: 12px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 .fuhrpark-fristzeile-text {
-  font-size: 12px;
-  margin: 3px 0 1px 0;
+  font-size: var(--fs-klein);
+  margin: 0.2727rem 0 1px 0;
 }
 
 .fuhrpark-fristzeile.frist-ueberfaellig .fuhrpark-fristzeile-text {
@@ -363,9 +363,9 @@
 }
 
 .fuhrpark-fristzeile-meta {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
-  margin-bottom: 6px;
+  margin-bottom: 0.5455rem;
 }
 
 /* ---------- Historie ---------- */
@@ -374,12 +374,12 @@
 .fuhrpark-historie-neuester {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  font-size: 11px;
-  padding: 3px 4px;
+  gap: 0.5455rem;
+  font-size: var(--fs-klein);
+  padding: 0.2727rem 0.3636rem;
   cursor: pointer;
   background: var(--win-white);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .fuhrpark-historie-neuester:active {
@@ -398,7 +398,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .fuhrpark-historie-vollliste {
@@ -409,33 +409,33 @@
   margin: 0;
   padding: 0;
   background: var(--win-white);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
 .fuhrpark-historie-eintrag {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  font-size: 11px;
-  padding: 3px 5px;
-  border-bottom: 1px dotted var(--win-grey-dark);
+  gap: 0.5455rem;
+  font-size: var(--fs-klein);
+  padding: 0.2727rem 0.4545rem;
+  border-bottom: 1px dotted var(--bevel-dunkel);
 }
 
 .fuhrpark-historie-symbol {
   flex-shrink: 0;
-  width: 14px;
+  width: 1.2727rem;
 }
 
 .fuhrpark-historie-datum {
   flex-shrink: 0;
-  width: 68px;
+  width: 6.1818rem;
   font-family: monospace;
   color: var(--win-grey-darker);
 }
 
 .fuhrpark-historie-kmstand {
   flex-shrink: 0;
-  width: 76px;
+  width: 6.9091rem;
   text-align: right;
   font-family: monospace;
   color: var(--win-grey-darker);
@@ -451,7 +451,7 @@
    Tooltip zeigt die ganze Rechnung (0.15.40). */
 .fuhrpark-historie-geld {
   flex-shrink: 0;
-  width: 92px;
+  width: 8.3636rem;
   text-align: right;
   font-family: monospace;
 }
@@ -462,46 +462,54 @@
 .geld-negativ { color: #8a1414; font-weight: bold; }
 
 .fuhrpark-historie-leer {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
-  padding: 4px 0;
+  padding: 0.3636rem 0;
 }
 
 .fuhrpark-uebersicht-kopf {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 8px;
+  gap: 0.7273rem;
+  flex-wrap: wrap;
 }
 
 .fuhrpark-uebersicht-name {
   font-weight: bold;
-  font-size: 14px;
+  font-size: var(--fs-basis);
 }
 
 /* Kleine Beschriftungen etwas größer, damit sie lesbar bleiben */
-.fuhrpark-callout { font-size: 11px; }
+.fuhrpark-callout { font-size: var(--fs-klein); }
 .fuhrpark-uebersicht-meta,
 .fuhrpark-frist,
 .fuhrpark-historie-eintrag,
-.fuhrpark-auslastung-details { font-size: 12px; }
+.fuhrpark-auslastung-details { font-size: var(--fs-klein); }
 
 .fuhrpark-uebersicht-kennzeichen {
   font-family: monospace;
   font-weight: bold;
-  font-size: 13px;
+  font-size: var(--fs-basis);
+  /* Das Kennzeichen steht in einer Kopfzeile mit dem Modellnamen.
+     Bei großer Schrift passen beide nicht mehr nebeneinander - dann
+     rutscht das Kennzeichen darunter. Reicht auch das nicht, bricht
+     es um. Ein umgebrochenes Kennzeichen ist hässlich, ein
+     abgeschnittenes ist ein Verstoß. */
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .fuhrpark-uebersicht-meta {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
-  margin: 2px 0 5px 0;
+  margin: 2px 0 0.4545rem 0;
 }
 
 .fuhrpark-uebersicht-zustand {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .fuhrpark-visual {
@@ -510,7 +518,7 @@
   max-width: 100%;
   max-height: 100%;
   background: var(--win-white);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
   touch-action: pan-y;
 }
 
@@ -524,9 +532,9 @@
 .fuhrpark-visual-bild.bild-fehler {
   background: repeating-linear-gradient(45deg, #d8d8d8, #d8d8d8 10px, #b8b8b8 10px, #b8b8b8 20px);
   color: #a01818;
-  font-size: 11px;
+  font-size: var(--fs-klein);
   text-align: center;
-  padding: 10px;
+  padding: 0.9091rem;
 }
 
 .fuhrpark-visual-linien {
@@ -550,10 +558,10 @@
    darunter erkennbar bleibt. */
 .fuhrpark-anker-blink {
   position: absolute;
-  width: 16px;
-  height: 16px;
-  margin: -8px 0 0 -8px;
-  border: 2px solid var(--win-white);
+  width: 1.4545rem;
+  height: 1.4545rem;
+  margin: -0.7273rem 0 0 -0.7273rem;
+  border: 2px solid var(--bevel-hoch);
   border-radius: 50%;
   box-shadow: 0 0 0 2px #000;
   pointer-events: none;
@@ -581,11 +589,11 @@
   flex-direction: column;
   align-items: center;
   line-height: 1.1;
-  padding: 2px 5px;
+  padding: 2px 0.4545rem;
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
   box-shadow: 1px 1px 0 rgba(0,0,0,0.4);
-  font-size: 10px;
+  font-size: var(--fs-klein);
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
@@ -599,7 +607,7 @@
 .fuhrpark-callout.callout-gewaehlt {
   background: var(--win-blue-title);
   border-color: #000;
-  box-shadow: 0 0 0 2px var(--win-white), 2px 2px 0 rgba(0,0,0,0.4);
+  box-shadow: 0 0 0 2px var(--bevel-hoch), 2px 2px 0 rgba(0,0,0,0.4);
 }
 
 .fuhrpark-callout.callout-gewaehlt .fuhrpark-callout-label {
@@ -616,7 +624,7 @@
 }
 
 .fuhrpark-callout-wert {
-  font-size: 10px;
+  font-size: var(--fs-klein);
 }
 
 .fuhrpark-callout-wert.zustand-gut { color: #1a5c1a; }
@@ -627,20 +635,20 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 2px 4px;
+  gap: 0.5455rem;
+  padding: 2px 0.3636rem;
 }
 
 .fuhrpark-gesamtbalken-label {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   flex-shrink: 0;
 }
 
 .fuhrpark-gesamtbalken-hintergrund {
   flex: 1;
-  height: 14px;
+  height: 1.2727rem;
   background: var(--win-white);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
 .fuhrpark-gesamtbalken-fuellung {
@@ -660,8 +668,8 @@
 }
 
 .fuhrpark-gesamtbalken-wert {
-  font-size: 11px;
-  width: 32px;
+  font-size: var(--fs-klein);
+  width: 2.9091rem;
   text-align: right;
   flex-shrink: 0;
 }
@@ -672,15 +680,25 @@
      landet damit unten statt zwischen Bild und Balken. */
   margin-top: auto;
   display: flex;
-  gap: 4px;
+  gap: 0.3636rem;
   align-items: center;
-  padding-top: 6px;
-  border-top: 1px dashed var(--win-grey-dark);
+  /* Seit die Oberfläche skaliert, passen zwei breite Schaltflächen
+     nicht mehr nebeneinander auf ein Telefon. Umbrechen statt
+     waagerecht scrollen - A2: keine verlorene Funktion bei
+     größerer Schrift. */
+  flex-wrap: wrap;
+}
+
+.fuhrpark-debug-leiste .win98-button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding-top: 0.5455rem;
+  border-top: 1px dashed var(--bevel-dunkel);
 }
 
 .fuhrpark-debug-leiste::before {
   content: "DEBUG";
-  font-size: 9px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-dark);
   margin-right: 2px;
 }
@@ -701,8 +719,8 @@
    wenn man nachsehen will, wie es dem Fahrzeug auf Tour geht. */
 .fuhrpark-tourhinweis {
   flex-shrink: 0;
-  margin: 5px 0 0 0;
-  padding: 5px 7px;
+  margin: 0.4545rem 0 0 0;
+  padding: 0.4545rem 0.6364rem;
   background: #e2ecf5;
   border: 2px solid #2f7fd0;
 }
@@ -710,22 +728,22 @@
 .fuhrpark-tourhinweis-kopf {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 0.5455rem;
+  font-size: var(--fs-klein);
   font-weight: bold;
 }
 
 .fuhrpark-tourhinweis-kopf > button {
   margin-left: auto;
-  font-size: 11px;
-  padding: 2px 7px;
+  font-size: var(--fs-klein);
+  padding: 2px 0.6364rem;
 }
 
 .fuhrpark-tourhinweis-balken {
-  height: 8px;
-  margin: 4px 0 2px 0;
+  height: 0.7273rem;
+  margin: 0.3636rem 0 2px 0;
   background: var(--win-white);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
 .fuhrpark-tourhinweis-fuellung {
@@ -734,7 +752,7 @@
 }
 
 .fuhrpark-tourhinweis-info {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
@@ -744,16 +762,16 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .tourkarte-rahmen {
   position: relative;
   flex: 1;
-  min-height: 160px;
+  min-height: 14.5455rem;
   overflow: hidden;
   background: #2a5ca8;
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
 .tourkarte-bild {
@@ -774,6 +792,6 @@
 
 .tourkarte-info {
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }

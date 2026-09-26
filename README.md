@@ -7,13 +7,27 @@ Jahren, alle Werte und Statistiken orientieren sich an echten Daten.
 Tourenplanung abgeschlossen ist - bis dahin wird nur die dritte Stelle
 hochgezählt (0.15.3, 0.15.4, ...).
 
-**Zwei Dokumente gelten für jede Entscheidung in diesem Projekt:**
-`docs/kosten-1994.md` für die Zahlen der Spielwelt und
+**Drei Dokumente gelten für jede Entscheidung in diesem Projekt:**
+`docs/kosten-1994.md` für die Zahlen der Spielwelt,
 `docs/spieldesign.md` für die Frage, ob eine geplante Funktion
-überhaupt eine Entscheidung erzeugt. Das zweite endet mit 56
-Prüffragen und einem Abschnitt, der sie auf den aktuellen Stand von
-SpediPro anwendet - einschließlich der Stellen, an denen wir gerade
-dagegen verstoßen.
+überhaupt eine Entscheidung erzeugt, und
+`docs/optik-und-bedienung.md` für die Frage, ob man sie sehen und
+anfassen kann. Das zweite endet mit 56 Prüffragen, das dritte mit 74
+Prüfregeln und einer Annahmeliste von 32 Testfällen - jeweils samt
+einem Abschnitt, der sie auf den aktuellen Stand von SpediPro anwendet,
+einschließlich der Stellen, an denen wir gerade dagegen verstoßen.
+
+Der kürzeste Befund aus dem dritten: **Der 98er-Look ist nicht das
+Problem, die 98er-Maße sind es.** Der Textkontrast lag schon immer bei
+11,54:1 (gefordert: 4,5:1), aber 100 % der Textstellen lagen unter der
+Mindestgröße von 18 px und 57 % der Bedienelemente unter 44 px
+Trefferfläche. Die Auflösung heißt nicht „weniger 98", sondern
+**98 bei 150 dpi**: Proportionen treu, absolute Größen angehoben,
+Skalierung als Einstellung - und sichtbare Größe getrennt von der
+Trefferfläche. Seit dem Umbau vom 26.09.2026 ist das gebaut und
+gemessen: keine Textstelle unter 18 px, keine Trefferfläche unter
+44 px, 200 % Vergrößerung ohne abgeschnittenen Text, Einstellungen
+unter Start → Einstellungen → Anzeige.
 
 ## Geplant: Lizenzen, Genehmigungen und Berechtigungen
 
@@ -540,7 +554,104 @@ erfunden, und sie verengt das Ziel auf eine Punktzahl. Ein Spediteur
 von 1994 kannte die Bücher seiner Konkurrenten ohnehin nicht - er
 merkte, dass er Aufträge verlor.
 
-## Aktueller Stand (v0.15.42)
+## Aktueller Stand (v0.15.43)
+
+**Umgebaut nach `docs/optik-und-bedienung.md`: die 98er-Optik
+skaliert, statt zu schrumpfen.**
+
+### Der Befund
+
+Die Recherche hatte vier Stellen benannt, an denen der Nachbau gegen
+dokumentierte Untergrenzen verstößt. Gemessen war es schlimmer als
+vermutet:
+
+- **100 % der Textstellen** lagen unter der Mindestgröße von 18 px,
+  die häufigste Schriftgröße war 11 px, die kleinste 10 px.
+- **57 % der Bedienelemente** waren kleiner als 44 px Trefferfläche,
+  24 % sogar kleiner als 24 px.
+- **190 von 190 Schriftgrößen** standen in festen Pixelwerten. Es gab
+  keine einzige Stelle, an der man hätte drehen können - die Forderung
+  nach 200 % Vergrößerung war damit nicht verletzt, sondern gar nicht
+  erst erfüllbar.
+
+Nicht verstoßen hat ausgerechnet das, was man vermuten würde: Der
+Textkontrast liegt bei 11,54:1 gegen geforderte 4,5:1, die Titelleiste
+bei 16,01:1, Listen bei 21:1. Der Look war nie das Problem. Die Maße
+waren es.
+
+### Was jetzt anders ist
+
+**Eine Größe, aus der alles folgt.** `html { font-size: calc(18px *
+var(--skala)) }`, und jede Länge steht in `rem`. Umgerechnet wurde mit
+1/11, weil die alte Oberfläche auf 11 px aufgebaut war: **1rem sind 11
+alte Pixel.** Alles wächst um denselben Faktor 1,636, die Proportionen
+bleiben exakt die des Originals. Das ist kein Kompromiss am Look,
+sondern Windows 98 bei 150 dpi statt bei 96 - das Original hatte selbst
+eine Einstellung "Große Schriftarten".
+
+`werkzeug/css-auf-skala.py` hat 603 Deklarationen umgerechnet und
+protokolliert, was es bewusst ausgelassen hat: alles unter 3 px (der
+1-px-Bevel **ist** der Look), Ränder und Schatten, alles was
+Pixelgrafik bemisst, und die Bedingungen von Media Queries.
+
+**Aus zehn Schriftgrößen wurden vier.** 18 / 21 / 26 / 36 px, in den
+alten Verhältnissen (11 : 13 : 16 : 22). Die zehn gewachsenen Größen
+waren Wildwuchs; Windows 98 kannte praktisch zwei.
+
+**Die Trefferfläche ist nicht mehr die sichtbare Fläche.** 35
+Schaltflächen sehen weiterhin kleiner aus als 44 px und sind trotzdem
+44 px groß - über ein Pseudoelement, das über den Knopf hinausragt. Wo
+Knöpfe im Original aneinanderkleben (Titelleiste), reicht das nicht:
+dort wächst der Abstand am Finger wirklich. Geprüft wurde das mit
+echten Zeigerklicks statt mit erzeugten Ereignissen, weil nur das
+zeigt, ob sich vergrößerte Flächen gegenseitig verdecken.
+
+**Neues Programm: Eigenschaften von Anzeige** (Start → Einstellungen →
+Anzeige). Sechs Größenstufen von "so klein wie Windows 98 wirklich war"
+bis doppelt, vier Zeilendichten, Kontrastschalter, Eingabeart. Die
+Werte liegen in einem eigenen Speicherschlüssel und **überleben das
+Löschen des Spielstands** - wer seine Oberfläche mühsam eingestellt
+hat, soll sie nicht mit dem Spielstand verlieren.
+
+**Hoher Kontrast als Modus, nicht als neuer Standard.** Vier eigene
+Kantenfarben liegen getrennt von den Textfarben. Im Standard trägt die
+dunkle Kante den Zustand mit 5,70:1; im Kontrastmodus liegen alle vier
+Kanten über 3:1 (5,97 / 11,54 / 3,79 / 5,97). Der Standardlook bleibt
+unverändert 98.
+
+### Was es gekostet hat
+
+Eine Stelle, und die soll nicht verschwiegen werden: Der aufgeklappte
+Frachtbrief und die volle Auswahlliste passen auf einem 400x880-Gerät
+nicht mehr beide in voller Größe untereinander. Vorher hatte die Liste
+dort elf Zeilen, jetzt vier. Ohne den neuen Deckel auf dem Frachtbrief
+wären es null gewesen - das war der eigentliche Fund. `browsertest-platz.js`
+misst diese Schwelle seither in **Zeilen statt in Pixeln**, weil
+"200 px" seit der Skalierung keine Aussage mehr ist.
+
+Dichte gegen Lesbarkeit, und die Lesbarkeit hat gewonnen. Das
+Gegenmittel steht im Anzeigefenster.
+
+### Geprüft
+
+`browsertest-optik.js` prüft zwölf Regeln maschinell, alle bestehen:
+keine Textstelle unter 18 px (0 von 318), keine Trefferfläche unter
+44 px (0 von 70), keine schneidenden 24-px-Kreise, bei 200 % kein
+waagerechtes Rollen und kein abgeschnittener Text, **keine einzige
+Textfarbe** unter 4,5:1 bzw. 3:1, null Animationen bei
+`prefers-reduced-motion`, Einstellungen überleben den Spielstand.
+Dazu `browsertest-echtklick.js` mit echten Zeigerklicks. Die 25
+bestehenden Browsertests laufen unverändert durch.
+
+### Die größte offene Lücke
+
+**Die Tastatur.** Maus und Finger sind geprüft, die Tastatur nicht: Es
+gibt keine Fokusreihenfolge, keine sichtbaren Fokusrahmen, keine
+Tastenkürzel. Regel 64 verlangt, dass jede Region der Oberfläche mit
+derselben Eingabeart erreichbar ist - für die Tastatur ist sie das
+nicht. Das sollte der nächste Schritt an der Oberfläche sein.
+
+## Vorheriger Stand (v0.15.42)
 
 **Umgebaut nach `docs/spieldesign.md` - und dabei einen Fehler
 gefunden, der das halbe Spiel lahmlegte.**
@@ -2852,19 +2963,28 @@ spedipro/
       tourenplanung.css
       spielstaende.css
       finanzen.css
+      auftraege.css
+      anzeige.css      Eigenschaften von Anzeige (Registerkarten)
   werkzeug/            Skripte zur Datenerzeugung (laufen nicht im Spiel)
     LIESMICH.md        Herkunft und Ablauf
     netz2.py           Straßengraph aus Natural Earth
     routen.py          Städte anbinden, Wege suchen
     strassen_zeichnen.py  Netz in die Karte malen
+    css-auf-skala.py      Rechnet die Stylesheets von festen Pixeln auf
+                          die eine Skalierungsgröße um
   docs/
     historischer-rahmen-1994.md   Zeitliche Gegebenheiten (zu verifizieren)
     kosten-1994.md                Kostendaten mit Quellen, offene Punkte markiert
     spieldesign.md                Was belegt gutes Spieldesign ausmacht, mit
                                   Prüffragen und der Anwendung auf dieses
                                   Projekt - vor Designentscheidungen lesen
+    optik-und-bedienung.md        Optik und Bedienbarkeit: 74 Prüfregeln,
+                                  32 Testfälle und der gemessene Stand des
+                                  Nachbaus - vor Oberflächenarbeit lesen
   js/
     core/
+      anzeige.js        Größe, Kontrast, Zeilendichte, Eingabeart -
+                        liegt getrennt vom Spielstand
       clock.js          Taskbar-Uhr
       startmenu.js       Startmenü-Verhalten
       windowmanager.js   Fenster öffnen/minimieren/schließen (Vollbild, Singleton, Taskleiste)
@@ -2895,6 +3015,9 @@ spedipro/
         spielstaende.js  Spielstandverwaltung und Abwesenheitsprotokoll
       finanzen/
         finanzen.js      Finanzprogramm (Übersicht, Journal, BWA, Sätze)
+      anzeige/
+        anzeige.js       Eigenschaften von Anzeige: Größe, Kontrast,
+                         Zeilendichte, Eingabeart
     data/
       fahrzeugtypen.js   Katalog fiktiver, an reale 90er-LKW angelehnter Fahrzeugtypen
       staedte.js         165 europäische Städte mit echten Koordinaten

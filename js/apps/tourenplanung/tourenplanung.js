@@ -267,8 +267,18 @@ const TourenplanungApp = (function () {
 
   const TEILUNG_SCHLUESSEL = "spedipro.kartenanteil";
   const TEILER_RASTEN = [0.72, 0.5, 0.3];   // Karte groß · halbe-halbe · Liste groß
-  const KARTE_MIN_PX = 150;
-  const DISPO_MIN_PX = 150;
+  // Untergrenzen in Zeilen, nicht in Pixeln. Feste Pixelgrenzen waren
+  // eine Aussage über eine Schriftgröße, die es nicht mehr gibt:
+  // docs/optik-und-bedienung.md, Regel 66 - die Oberfläche hat genau
+  // eine Größe, und alles leitet sich daraus ab. 8,3rem entspricht
+  // den alten 150 px bei 18 px Grundschrift.
+  const KARTE_MIN_REM = 8.3;
+  const DISPO_MIN_REM = 8.3;
+
+  function remInPx(rem) {
+    const wurzel = parseFloat(getComputedStyle(document.documentElement).fontSize) || 18;
+    return rem * wurzel;
+  }
 
   let kartenAnteil = 0.5;
 
@@ -290,17 +300,19 @@ const TourenplanungApp = (function () {
 
   /**
    * Setzt den Anteil und hält dabei beide Seiten benutzbar: Die Karte
-   * darf nie unter KARTE_MIN_PX rutschen, die Disposition nie unter
-   * DISPO_MIN_PX - sonst zieht man sich selbst in eine Sackgasse.
+   * darf nie unter KARTE_MIN_REM rutschen, die Disposition nie unter
+   * DISPO_MIN_REM - sonst zieht man sich selbst in eine Sackgasse.
    */
   function teilungSetzen(anteil, speichern) {
     const layout = fensterElement && fensterElement.querySelector(".tour-layout");
     if (!layout) return;
 
     const hoehe = layout.clientHeight;
+    const karteMin = remInPx(KARTE_MIN_REM);
+    const dispoMin = remInPx(DISPO_MIN_REM);
     let a = anteil;
-    if (hoehe > KARTE_MIN_PX + DISPO_MIN_PX) {
-      a = Math.max(KARTE_MIN_PX / hoehe, Math.min(1 - DISPO_MIN_PX / hoehe, a));
+    if (hoehe > karteMin + dispoMin) {
+      a = Math.max(karteMin / hoehe, Math.min(1 - dispoMin / hoehe, a));
     }
     kartenAnteil = a;
     layout.style.setProperty("--tour-kartenanteil", (a * 100).toFixed(2) + "%");

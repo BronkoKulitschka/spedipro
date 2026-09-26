@@ -1,0 +1,160 @@
+/* ==========================================================
+   anzeige.css
+   "Eigenschaften von Anzeige" - Registerkarten wie im Original.
+
+   Die Maße stehen in rem, weil dieses Fenster selbst mitskaliert,
+   wenn man darin die Größe verstellt. Wer den Regler auf "Doppelt"
+   stellt, soll das sofort an dem Fenster sehen, in dem er steht.
+   ========================================================== */
+
+.anz-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  height: 100%;
+}
+
+/* Registerkarten: die aktive sitzt einen Hauch höher und hat keine
+   Trennlinie zum Blatt - so löste Windows 98 das. */
+.anz-reiterleiste {
+  display: flex;
+  gap: 2px;
+  padding-left: 0.36rem;
+  flex-shrink: 0;
+}
+
+.anz-reiter {
+  font-family: inherit;
+  font-size: var(--fs-klein);
+  padding: 0.36rem 0.8rem;
+  min-height: var(--ziel-min);
+  background: var(--win-grey);
+  border-top: 1px solid var(--bevel-hoch);
+  border-left: 1px solid var(--bevel-hoch);
+  border-right: 1px solid var(--bevel-tief);
+  border-bottom: none;
+  cursor: pointer;
+  position: relative;
+  top: 2px;
+}
+
+.anz-reiter-aktiv {
+  top: 0;
+  padding-bottom: 0.55rem;
+  font-weight: bold;
+}
+
+.anz-blatt {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.73rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.73rem;
+}
+
+.anz-gruppe {
+  border: none;
+  margin: 0;
+  padding: 0.73rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.36rem;
+}
+
+.anz-gruppe legend {
+  font-size: var(--fs-klein);
+  font-weight: bold;
+  padding: 0 0.36rem;
+}
+
+.anz-erklaerung {
+  margin: 0 0 0.36rem 0;
+  font-size: var(--fs-klein);
+  line-height: 1.5;
+  max-width: 44rem;   /* Regel 54: höchstens 80 Zeichen je Zeile */
+}
+
+/* Eine Wahlzeile. Die Trefferfläche umfasst die ganze Zeile, nicht
+   nur den Knopf - Regel 25 und 27. */
+.anz-wahl {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  min-height: var(--ziel-min);
+  padding: 0.28rem 0.36rem;
+  margin-bottom: var(--ziel-abstand);
+  cursor: pointer;
+}
+
+.anz-wahl:hover {
+  background: var(--win-grey-light);
+}
+
+.anz-wahl-aktiv {
+  /* Zweiter Träger neben der Farbe: der fette Titel. Regel 57. */
+  outline: 1px dotted var(--win-text);
+}
+
+.anz-wahl input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0.2rem 0 0 0;
+  flex-shrink: 0;
+}
+
+.anz-wahl-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.anz-wahl-titel {
+  font-size: var(--fs-klein);
+}
+
+.anz-wahl-aktiv .anz-wahl-titel {
+  font-weight: bold;
+}
+
+.anz-wahl-hinweis {
+  font-size: var(--fs-klein);
+  color: var(--win-grey-darker);
+}
+
+.anz-probe {
+  display: flex;
+  align-items: center;
+  gap: 0.73rem;
+  flex-wrap: wrap;
+  margin-top: 0.55rem;
+}
+
+.anz-probe-feld {
+  display: inline-block;
+  padding: 0.36rem 0.73rem;
+  background: var(--win-white);
+  font-size: var(--fs-klein);
+}
+
+.anz-probe-hinweis {
+  font-size: var(--fs-klein);
+  color: var(--win-grey-darker);
+}
+
+.anz-fusszeile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.73rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.anz-fuss-hinweis {
+  font-size: var(--fs-klein);
+  color: var(--win-grey-darker);
+  flex: 1;
+  min-width: 14rem;
+}

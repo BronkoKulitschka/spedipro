@@ -18,6 +18,8 @@
   function closeStartMenu() {
     startMenu.classList.add("hidden");
     programmeSubmenu.classList.remove("submenu-offen");
+    const eins = document.getElementById("einstellungen-submenu");
+    if (eins) eins.classList.remove("submenu-offen");
   }
 
   function programmeMenuBefuellen() {
@@ -63,6 +65,27 @@
     spielstaendeItem.addEventListener("click", (event) => {
       event.stopPropagation();
       SpielstaendeApp.open();
+      closeStartMenu();
+    });
+  }
+
+  // Einstellungen -> Anzeige. Das Fenster gehört zum nachgebauten
+  // Betriebssystem, nicht zur Spedition - deshalb hier und nicht
+  // unter "Programme". In Windows 98 lag es genauso.
+  const einstellungenItem = document.getElementById("einstellungen-item");
+  const einstellungenSubmenu = document.getElementById("einstellungen-submenu");
+  if (einstellungenItem && einstellungenSubmenu) {
+    einstellungenItem.addEventListener("click", (event) => {
+      event.stopPropagation();
+      einstellungenSubmenu.classList.toggle("submenu-offen");
+      programmeSubmenu.classList.remove("submenu-offen");
+    });
+  }
+  const anzeigeItem = document.getElementById("anzeige-item");
+  if (anzeigeItem) {
+    anzeigeItem.addEventListener("click", (event) => {
+      event.stopPropagation();
+      AnzeigeApp.open();
       closeStartMenu();
     });
   }

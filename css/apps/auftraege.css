@@ -14,24 +14,32 @@
 
 .auf-leiste {
   flex: none;
-  padding: 4px;
+  padding: 0.3636rem;
   background: var(--win-grey-light);
-  border-bottom: 1px solid var(--win-grey-dark);
+  border-bottom: 1px solid var(--bevel-dunkel);
 }
 
 .auf-reiter {
   display: flex;
   gap: 2px;
-  margin-bottom: 4px;
+  margin-bottom: 0.3636rem;
+  /* Bei großer Schrift passen drei Reiter nicht mehr nebeneinander.
+     Umbrechen statt abschneiden - A2. */
+  flex-wrap: wrap;
+  row-gap: 0.2727rem;
+  /* Die Reiter tragen am Finger eine Trefferfläche, die über ihren
+     Rand hinausragt (Regel 27/69). Darunter steht die Suchzeile -
+     ohne diesen Abstand griffen sich beide Flächen ins Gehege. */
+  margin-bottom: calc(0.3636rem + var(--ziel-abstand));
 }
 
 .auf-reiterknopf {
   font-family: inherit;
-  font-size: 12px;
-  padding: 3px 9px;
+  font-size: var(--fs-klein);
+  padding: 0.2727rem 0.8182rem;
   color: inherit;
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   border-top-color: var(--win-white, #ffffff);
   border-left-color: var(--win-white, #ffffff);
   cursor: pointer;
@@ -40,58 +48,73 @@
 .auf-reiterknopf.aktiv {
   font-weight: bold;
   background: var(--win-grey-light);
-  border-color: var(--win-grey-darker);
+  border-color: var(--bevel-tief);
 }
 
 .auf-suchzeile {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 3px 6px;
-  font-size: 11px;
+  gap: 0.2727rem 0.5455rem;
+  font-size: var(--fs-klein);
 }
 
 .auf-feld {
   font-family: inherit;
-  font-size: 12px;
-  padding: 2px 3px;
+  font-size: var(--fs-klein);
+  /* Ein Auswahlfeld darf nie breiter werden als die Zeile, in der es
+     steht - sonst schiebt sein längster Eintrag das ganze Fenster
+     waagerecht. Regel 52. */
+  max-width: 100%;
+  padding: 2px 0.2727rem;
   background: var(--win-white, #ffffff);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
-#auf-suche { flex: 1 1 140px; min-width: 100px; }
+#auf-suche { flex: 1 1 140px; min-width: 9.0909rem; }
 
 .auf-zaehler {
-  margin-top: 3px;
-  font-size: 10px;
+  margin-top: 0.2727rem;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 /* ---------- Liste ---------- */
 
 .auf-liste {
+  /* Bezugsrahmen für die Zeilenumschaltung weiter unten: Die Zeile
+     richtet sich nach der Breite DIESER Liste, nicht nach der des
+     Geräts. Bei doppelter Schrift ist ein Telefon eben schmal,
+     egal wie viele Pixel es hat. */
+  container-type: inline-size;
+  container-name: auftragsliste;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   list-style: none;
   margin: 0;
-  padding: 3px;
+  padding: 0.2727rem;
 }
 
 .auf-leer {
-  padding: 20px 8px;
+  padding: 1.8182rem 0.7273rem;
   text-align: center;
-  font-size: 12px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 .auf-zeile {
+  min-height: var(--zeile-hoehe);
+
   position: relative;
   isolation: isolate;
-  margin-bottom: 3px;
-  padding: 4px 78px 4px 5px;
+  margin-bottom: 0.2727rem;
+  padding: 0.3636rem 7.0909rem 0.3636rem 0.4545rem;
+  /* Die 7,09rem rechts sind der Platz für "Übernehmen". Er ist in rem
+     angegeben, wächst also mit - deshalb muss die Zeile umschalten
+     können, sobald er zu teuer wird. */
   background: var(--win-white, #ffffff);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   cursor: pointer;
   overflow: hidden;
 }
@@ -126,43 +149,49 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 6px;
+  gap: 0.5455rem;
+  /* Ort und Preis stehen nebeneinander, solange sie nebeneinander
+     passen. Bei großer Schrift rutscht der Preis in die nächste
+     Zeile - lieber zwei Zeilen als ein abgeschnittener Ortsname. */
+  flex-wrap: wrap;
 }
 
 .auf-weg {
-  font-size: 13px;
+  font-size: var(--fs-basis);
   font-weight: bold;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Kein nowrap mehr: Der Ortsname ist die wichtigste Angabe der
+     Zeile und darf nicht als Erster verschwinden. "Frankfurt am
+     Main → Nürnberg" bricht lieber um. Regel 52. */
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
-.auf-geld { font-size: 13px; font-weight: bold; white-space: nowrap; }
+.auf-geld { font-size: var(--fs-basis); font-weight: bold; white-space: nowrap; }
 
 .auf-daten {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   line-height: 1.35;
   color: var(--win-grey-darker);
 }
 
 .auf-zeile:not(.ohne-wagen) .auf-daten { color: #303030; }
 
-.auf-nummer { font-family: "Courier New", monospace; font-size: 10px; }
+.auf-nummer { font-family: "Courier New", monospace; font-size: var(--fs-klein); }
 
 .auf-kunde {
-  padding: 0 3px;
+  padding: 0 0.2727rem;
   background: #10305a;
   color: #ffffff;
 }
 
 .auf-boerse {
-  padding: 0 3px;
+  padding: 0 0.2727rem;
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .auf-jetag {
-  padding: 0 3px;
+  padding: 0 0.2727rem;
   font-weight: bold;
   background: #10305a;
   color: #ffffff;
@@ -172,12 +201,31 @@
 
 .auf-uebernehmen {
   position: absolute;
-  right: 4px;
+  right: 0.3636rem;
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
-  font-size: 11px;
-  padding: 4px 6px;
+  font-size: var(--fs-klein);
+  padding: 0.3636rem 0.5455rem;
 }
 
 .auf-zeile.ohne-wagen .auf-uebernehmen { display: none; }
+
+/* Schmale Liste (großer Text, kleines Gerät oder beides): Die
+   Schaltfläche steht nicht mehr neben dem Text, sondern darunter.
+   Damit verschwindet der reservierte Rand, und der Ortsname bleibt
+   vollständig lesbar. docs/optik-und-bedienung.md, Regel 52 und A2:
+   200 Prozent ohne abgeschnittenen Text und ohne verlorene Funktion. */
+@container auftragsliste (max-width: 26rem) {
+  .auf-zeile {
+    padding-right: 0.4545rem;
+  }
+
+  .auf-uebernehmen {
+    position: static;
+    transform: none;
+    display: block;
+    width: 100%;
+    margin-top: 0.4545rem;
+  }
+}

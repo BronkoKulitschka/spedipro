@@ -41,20 +41,20 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 64px;
+  width: 5.8182rem;
   cursor: pointer;
-  padding: 4px;
+  padding: 0.3636rem;
 }
 
 .desktop-icon-bild {
-  width: 48px;
-  height: 48px;
+  width: 4.3636rem;
+  height: 4.3636rem;
 }
 
 .desktop-icon-label {
-  margin-top: 4px;
+  margin-top: 0.3636rem;
   color: var(--win-white);
-  font-size: 11px;
+  font-size: var(--fs-klein);
   text-align: center;
   text-shadow: 1px 1px 1px black;
 }
@@ -62,7 +62,7 @@ html, body {
 .desktop-icon:focus,
 .desktop-icon.selected .desktop-icon-label {
   background: var(--win-blue-title);
-  outline: 1px dotted var(--win-white);
+  outline: 1px dotted var(--bevel-hoch);
 }
 
 #window-layer {
@@ -85,22 +85,22 @@ html, body {
   left: 0;
   bottom: 0;
   width: 100%;
-  height: 30px;
+  height: 2.7273rem;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 2px 3px;
+  gap: 0.5455rem;
+  padding: 2px 0.2727rem;
   background: var(--win-grey);
-  border-top: 1px solid var(--win-grey-light);
+  border-top: 1px solid var(--bevel-hell);
   z-index: 1000;
 }
 
 #start-button {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.3636rem;
   font-weight: bold;
-  height: 24px;
+  height: 2.1818rem;
 }
 
 .start-flag {
@@ -116,14 +116,14 @@ html, body {
   min-width: 0;
   overflow: hidden;
   display: flex;
-  gap: 4px;
-  height: 24px;
+  gap: 0.3636rem;
+  height: 2.1818rem;
 }
 
 .taskbar-fenster-button {
-  height: 22px;
-  max-width: 160px;
-  font-size: 11px;
+  height: 2rem;
+  max-width: 14.5455rem;
+  font-size: var(--fs-klein);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -135,34 +135,36 @@ html, body {
 }
 
 #tray {
-  height: 24px;
+  height: 2.1818rem;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 8px;
+  gap: 0.7273rem;
+  padding: 0 0.7273rem;
 }
 
 /* Versionsnummer ganz links im Infobereich - klein und unaufdringlich,
    aber jederzeit ablesbar (hilfreich beim Melden von Fehlern). */
 #tray-version {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
   white-space: nowrap;
 }
 
-/* Auf schmalen Geräten bleibt die Version sichtbar, nur kleiner: Ohne
-   sie lässt sich am Telefon nicht erkennen, welche Fassung der Browser
-   gerade geladen hat - genau das braucht man beim Melden von Fehlern
-   und nach einem Update. */
-@media (max-width: 520px) {
-  #tray { gap: 5px; padding: 0 5px; }
-  #tray-version { font-size: 10px; }
+/* Früher wurde die Version auf schmalen Geräten einfach kleiner
+   gesetzt. Das geht nicht mehr: docs/optik-und-bedienung.md, Regel 51 -
+   unter die Mindestgröße darf nichts, auch keine Nebensache. Also
+   verschwindet sie aus der Taskleiste und steht stattdessen unten im
+   Startmenü, wo Platz ist. Die Information bleibt erreichbar, die
+   Taskleiste bekommt Luft. */
+@media (max-width: 560px) {
+  #tray { gap: 0.4545rem; padding: 0 0.4545rem; }
+  #tray-version { display: none; }
 }
 
 /* Spieldatum neben der Uhr. Auf schmalen Geräten würde beides zusammen
    zu viel Platz kosten - dort entfällt das Datum, die Uhrzeit bleibt. */
 #clock-date {
-  font-size: 12px;
+  font-size: var(--fs-klein);
   white-space: nowrap;
 }
 
@@ -171,20 +173,22 @@ html, body {
    einzige Stelle, an der man sieht, welchen Tag man schreibt - und
    1994 ist nicht irgendein Jahr, sondern der halbe Spielinhalt.
    Platz dafür kommt aus kleinerer Schrift, nicht aus Weglassen. */
+/* Datum und Uhr bleiben in voller Größe stehen. Der Platz dafür kommt
+   aus der weggefallenen Versionsnummer und aus der Fensterschaltfläche,
+   die schrumpfen darf - nicht aus kleinerer Schrift. */
 @media (max-width: 420px) {
-  #clock-date { font-size: 10px; }
-  #clock { font-size: 11px; }
+  .taskbar-fenster-button { max-width: 6rem; }
 }
 
 #tray, #taskbar-windows {
-  border-top: 1px solid var(--win-grey-darker);
-  border-left: 1px solid var(--win-grey-darker);
-  border-right: 1px solid var(--win-grey-light);
-  border-bottom: 1px solid var(--win-grey-light);
+  border-top: 1px solid var(--bevel-tief);
+  border-left: 1px solid var(--bevel-tief);
+  border-right: 1px solid var(--bevel-hell);
+  border-bottom: 1px solid var(--bevel-hell);
 }
 
 #clock {
-  font-size: 12px;
+  font-size: var(--fs-klein);
   white-space: nowrap;
 }
 
@@ -200,8 +204,8 @@ html, body {
 #start-menu {
   position: fixed;
   left: 2px;
-  bottom: 32px;
-  width: 200px;
+  bottom: 2.9091rem;
+  width: 18.1818rem;
   display: flex;
   z-index: 1001;
 }
@@ -212,8 +216,8 @@ html, body {
   background: var(--win-blue-title);
   color: var(--win-white);
   font-weight: bold;
-  font-size: 14px;
-  padding: 8px 4px;
+  font-size: var(--fs-basis);
+  padding: 0.7273rem 0.3636rem;
   letter-spacing: 1px;
 }
 
@@ -221,13 +225,13 @@ html, body {
   flex: 1;
   list-style: none;
   margin: 0;
-  padding: 4px;
+  padding: 0.3636rem;
   background: var(--win-grey);
 }
 
 .start-menu-items li {
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: 0.5455rem 0.9091rem;
+  font-size: var(--fs-klein);
   cursor: pointer;
 }
 
@@ -241,12 +245,26 @@ html, body {
   cursor: default;
 }
 
+/* Die Fassungsnummer am Fuß des Startmenüs. Kein Menüpunkt, sondern
+   eine Angabe - deshalb ohne Zeigerwechsel und ohne Hover. */
+.start-menu-items li.start-menu-version {
+  padding: 0.36rem 0.9091rem 0.55rem;
+  font-size: var(--fs-klein);
+  color: var(--win-grey-darker);
+  cursor: default;
+}
+
+.start-menu-items li.start-menu-version:hover {
+  background: none;
+  color: var(--win-grey-darker);
+}
+
 .start-menu-items li.separator {
   height: 1px;
   padding: 0;
-  margin: 4px 2px;
-  border-top: 1px solid var(--win-grey-darker);
-  border-bottom: 1px solid var(--win-grey-light);
+  margin: 0.3636rem 2px;
+  border-top: 1px solid var(--bevel-tief);
+  border-bottom: 1px solid var(--bevel-hell);
   cursor: default;
 }
 
@@ -258,16 +276,16 @@ html, body {
   display: none;
   position: absolute;
   left: 100%;
-  top: -4px;
-  min-width: 160px;
+  top: -0.3636rem;
+  min-width: 14.5455rem;
   list-style: none;
   margin: 0;
-  padding: 4px;
+  padding: 0.3636rem;
   background: var(--win-grey);
-  border-top: 1px solid var(--win-grey-light);
-  border-left: 1px solid var(--win-grey-light);
-  border-right: 1px solid var(--win-grey-darker);
-  border-bottom: 1px solid var(--win-grey-darker);
+  border-top: 1px solid var(--bevel-hell);
+  border-left: 1px solid var(--bevel-hell);
+  border-right: 1px solid var(--bevel-tief);
+  border-bottom: 1px solid var(--bevel-tief);
 }
 
 .submenu.submenu-offen {
@@ -275,8 +293,8 @@ html, body {
 }
 
 .submenu li {
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: 0.5455rem 0.9091rem;
+  font-size: var(--fs-klein);
   cursor: pointer;
 }
 

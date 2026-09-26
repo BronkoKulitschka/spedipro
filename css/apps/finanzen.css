@@ -16,15 +16,15 @@
   gap: 2px;
   list-style: none;
   margin: 0;
-  padding: 5px 6px 0 6px;
+  padding: 0.4545rem 0.5455rem 0 0.5455rem;
   flex-shrink: 0;
 }
 
 .fin-reiter-eintrag {
-  padding: 3px 8px;
-  font-size: 12px;
+  padding: 0.2727rem 0.7273rem;
+  font-size: var(--fs-klein);
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   border-bottom: none;
   color: var(--win-grey-darker);
   cursor: pointer;
@@ -40,15 +40,15 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 7px;
-  border-top: 1px solid var(--win-grey-dark);
+  padding: 0.6364rem;
+  border-top: 1px solid var(--bevel-dunkel);
 }
 
 /* ---------- Kontostand ---------- */
 
 .fin-kontostand {
-  padding: 7px 9px;
-  margin-bottom: 7px;
+  padding: 0.6364rem 0.8182rem;
+  margin-bottom: 0.6364rem;
   background: #dcf0dc;
   border: 2px solid #2f8f3f;
 }
@@ -59,25 +59,25 @@
 }
 
 .fin-kontostand-titel {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 .fin-kontostand-wert {
-  font-size: 22px;
+  font-size: var(--fs-gross);
   font-weight: bold;
   line-height: 1.2;
 }
 
 .fin-kontostand-zusatz {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 .fin-warnung {
-  padding: 5px 7px;
-  margin-bottom: 7px;
-  font-size: 12px;
+  padding: 0.4545rem 0.6364rem;
+  margin-bottom: 0.6364rem;
+  font-size: var(--fs-klein);
   line-height: 1.35;
   background: #f4e2e2;
   border: 1px solid #b03030;
@@ -86,29 +86,29 @@
 /* ---------- Blöcke und Kennzahlen ---------- */
 
 .fin-block {
-  margin-bottom: 7px;
-  padding: 5px 7px;
+  margin-bottom: 0.6364rem;
+  padding: 0.4545rem 0.6364rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .fin-block-titel {
-  font-size: 12px;
+  font-size: var(--fs-klein);
   font-weight: bold;
-  margin-bottom: 3px;
+  margin-bottom: 0.2727rem;
   padding-bottom: 2px;
-  border-bottom: 1px dotted var(--win-grey-dark);
+  border-bottom: 1px dotted var(--bevel-dunkel);
 }
 
 .fin-kennzahlen {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 1px 10px;
+  gap: 1px 0.9091rem;
   margin: 0;
-  font-size: 13px;
+  font-size: var(--fs-basis);
 }
 
-.fin-kennzahlen-eng { font-size: 12px; }
+.fin-kennzahlen-eng { font-size: var(--fs-klein); }
 
 .fin-kennzahlen dt { color: var(--win-grey-darker); }
 .fin-kennzahlen dd { margin: 0; text-align: right; }
@@ -118,33 +118,33 @@
 
 .fin-leer,
 .fin-hinweis {
-  font-size: 12px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
   line-height: 1.4;
 }
 
 .fin-leer {
-  padding: 12px 0;
+  padding: 1.0909rem 0;
   text-align: center;
 }
 
-.fin-hinweis { margin: 0 0 6px 0; }
+.fin-hinweis { margin: 0 0 0.5455rem 0; }
 
 /* ---------- Journal ---------- */
 
 .fin-filterleiste {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 6px;
+  gap: 0.3636rem;
+  margin-bottom: 0.5455rem;
 }
 
 .fin-auswahl {
   font-family: inherit;
-  font-size: 12px;
-  padding: 2px 4px;
+  font-size: var(--fs-klein);
+  padding: 2px 0.3636rem;
   background: var(--win-white);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
 .fin-journal {
@@ -157,12 +157,12 @@
    dehnt sich - sonst tanzen die Spalten von Zeile zu Zeile. */
 .fin-buchung {
   display: grid;
-  grid-template-columns: 30px 38px 34px 1fr auto;
-  gap: 4px;
+  grid-template-columns: 2.7273rem 3.4545rem 3.0909rem 1fr auto;
+  gap: 0.3636rem;
   align-items: baseline;
-  padding: 3px 2px;
-  font-size: 11px;
-  border-bottom: 1px dotted var(--win-grey-dark);
+  padding: 0.2727rem 2px;
+  font-size: var(--fs-klein);
+  border-bottom: 1px dotted var(--bevel-dunkel);
 }
 
 .fin-buchung:last-child { border-bottom: none; }
@@ -187,7 +187,7 @@
 @media (max-width: 480px) {
   /* Auf dem Telefon Text unter die Kopfzeile, sonst bleibt nichts übrig */
   .fin-buchung {
-    grid-template-columns: 30px 38px 34px 1fr;
+    grid-template-columns: 2.7273rem 3.4545rem 3.0909rem 1fr;
   }
   .fin-text { grid-column: 2 / -1; }
   .fin-betrag { grid-column: 4; grid-row: 1; }
@@ -198,12 +198,14 @@
 .fin-tabelle {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: var(--fs-klein);
 }
 
 .fin-tabelle td {
-  padding: 2px 4px;
-  border-bottom: 1px dotted var(--win-grey-dark);
+  height: var(--zeile-hoehe);
+
+  padding: 2px 0.3636rem;
+  border-bottom: 1px dotted var(--bevel-dunkel);
 }
 
 .fin-zahl {
@@ -212,9 +214,9 @@
 }
 
 .fin-zeile-gruppe td {
-  padding-top: 7px;
+  padding-top: 0.6364rem;
   font-weight: bold;
-  border-bottom: 1px solid var(--win-grey-darker);
+  border-bottom: 1px solid var(--bevel-tief);
 }
 
 .fin-zeile-summe td {
@@ -223,10 +225,10 @@
 }
 
 .fin-zeile-ergebnis td {
-  padding-top: 5px;
-  font-size: 13px;
+  padding-top: 0.4545rem;
+  font-size: var(--fs-basis);
   font-weight: bold;
-  border-top: 2px solid var(--win-grey-darker);
+  border-top: 2px solid var(--bevel-tief);
   border-bottom: none;
 }
 
@@ -244,10 +246,10 @@
 
 .fin-fahrzeug,
 .fin-kredit {
-  margin-bottom: 6px;
-  padding: 5px 7px;
+  margin-bottom: 0.5455rem;
+  padding: 0.4545rem 0.6364rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .fin-fahrzeug-kopf,
@@ -255,14 +257,14 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 3px;
+  gap: 0.5455rem;
+  margin-bottom: 0.2727rem;
 }
 
 .fin-flottenpunkt {
   flex: 0 0 auto;
-  width: 9px;
-  height: 9px;
+  width: 0.8182rem;
+  height: 0.8182rem;
   border: 1px solid;
   border-radius: 50%;
   box-shadow: 0 0 0 1px rgba(255,255,255,0.85);
@@ -271,12 +273,12 @@
 .fin-fahrzeug-kennzeichen,
 .fin-kredit-nr {
   font-weight: bold;
-  font-size: 13px;
+  font-size: var(--fs-basis);
 }
 
 .fin-fahrzeug-typ,
 .fin-kredit-zweck {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
@@ -288,33 +290,33 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .fin-formular label {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 .fin-formular input,
 .fin-formular select {
   font-family: inherit;
-  font-size: 12px;
-  padding: 2px 4px;
-  width: 110px;
+  font-size: var(--fs-klein);
+  padding: 2px 0.3636rem;
+  width: 10rem;
   background: var(--win-white);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
 /* ---------- Kostensätze ---------- */
 
 .fin-satz {
-  margin-bottom: 4px;
-  padding: 4px 7px;
-  border: 1px solid var(--win-grey-dark);
+  margin-bottom: 0.3636rem;
+  padding: 0.3636rem 0.6364rem;
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .fin-satz.belegt      { background: #dcf0dc; border-color: #2f8f3f; }
@@ -324,29 +326,29 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
-.fin-satz-name { font-size: 13px; font-weight: bold; }
+.fin-satz-name { font-size: var(--fs-basis); font-weight: bold; }
 
 .fin-satz-wert {
   margin-left: auto;
-  font-size: 13px;
+  font-size: var(--fs-basis);
   white-space: nowrap;
 }
 
 .fin-satz-quelle {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   line-height: 1.35;
   color: var(--win-grey-darker);
 }
 
 .fin-satz-marke {
   display: inline-block;
-  margin-right: 4px;
-  padding: 0 4px;
-  font-size: 10px;
-  border: 1px solid var(--win-grey-darker);
+  margin-right: 0.3636rem;
+  padding: 0 0.3636rem;
+  font-size: var(--fs-klein);
+  border: 1px solid var(--bevel-tief);
 }
 
 .fin-satz.belegt .fin-satz-marke     { background: #2f8f3f; color: var(--win-white); }
@@ -363,8 +365,8 @@
 }
 
 .fin-vorgang {
-  padding: 4px 3px;
-  border-bottom: 1px dotted var(--win-grey-dark);
+  padding: 0.3636rem 0.2727rem;
+  border-bottom: 1px dotted var(--bevel-dunkel);
 }
 
 .fin-vorgang:last-child { border-bottom: none; }
@@ -372,8 +374,8 @@
 .fin-vorgang-kopf {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  font-size: 12px;
+  gap: 0.5455rem;
+  font-size: var(--fs-klein);
 }
 
 .fin-vorgang-kopf .fin-text {
@@ -387,8 +389,8 @@
 
 .fin-posten {
   display: block;
-  margin-left: 34px;
-  font-size: 10px;
+  margin-left: 3.0909rem;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
@@ -397,13 +399,13 @@
 .fin-vorgang.fin-art-verkauf { background: var(--win-grey-light); }
 
 .fin-zeile-vergleich td {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 .fin-fussnote {
-  margin: 8px 3px 0 3px;
-  font-size: 10px;
+  margin: 0.7273rem 0.2727rem 0 0.2727rem;
+  font-size: var(--fs-klein);
   line-height: 1.4;
   color: var(--win-grey-darker);
 }

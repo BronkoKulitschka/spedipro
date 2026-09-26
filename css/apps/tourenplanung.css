@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 /* ---------- Kartenbereich ----------
@@ -25,7 +25,7 @@
   height: var(--tour-kartenanteil, 50%);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.3636rem;
 }
 
 /* ---------- Fensterteiler ----------
@@ -37,7 +37,7 @@
 .tour-teiler {
   position: relative;
   flex: none;
-  height: 10px;
+  height: 0.9091rem;
   margin: -2px 0;
   display: flex;
   align-items: center;
@@ -52,16 +52,16 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: -6px;
-  bottom: -6px;
+  top: -0.5455rem;
+  bottom: -0.5455rem;
 }
 
 /* Griffrillen wie an einer Werkzeugleiste: zwei Rillen, damit die
    Leiste als anfassbar zu erkennen ist. Einfarbig ging sie im Grau
    des Fensters unter. */
 .tour-teiler-griff {
-  width: 48px;
-  height: 6px;
+  width: 4.3636rem;
+  height: 0.5455rem;
   background:
     linear-gradient(var(--win-grey-darker) 1px, var(--win-white, #ffffff) 1px 2px,
                     transparent 2px 4px,
@@ -69,11 +69,11 @@
 }
 
 .tour-teiler:hover .tour-teiler-griff,
-.tour-teiler:focus-visible .tour-teiler-griff { width: 76px; }
+.tour-teiler:focus-visible .tour-teiler-griff { width: 6.9091rem; }
 
 .tour-teiler.zieht { background: var(--win-blue-title); }
 .tour-teiler.zieht .tour-teiler-griff {
-  width: 76px;
+  width: 6.9091rem;
   background: var(--win-white, #ffffff);
 }
 
@@ -187,7 +187,7 @@
      macht die Schrift unscharf. Stattdessen sitzt der Name unten
      rechts neben der Marke, exakt auf ganzen Pixeln. */
   padding: 1px 4px;
-  font-size: 11px;
+  font-size: var(--fs-klein);
   line-height: 1.25;
   white-space: nowrap;
   color: #14140f;
@@ -200,10 +200,10 @@
 .tour-karte-tooltip {
   position: absolute;
   z-index: 5;
-  padding: 2px 6px;
+  padding: 2px 0.5455rem;
   background: #ffffe1; /* klassisches Win98-Gelb für Kurzinfos */
   border: 1px solid #000;
-  font-size: 11px;
+  font-size: var(--fs-klein);
   pointer-events: none;
   white-space: nowrap;
 }
@@ -219,16 +219,16 @@
 /* Höhe NICHT festsetzen: Die Beschriftungen sind unterschiedlich lang,
    eine feste Höhe zusammen mit fester Breite schneidet den Text ab. */
 .tour-karte-leiste .win98-button {
-  min-width: 30px;
-  padding: 4px 9px;
-  font-size: 12px;
+  min-width: 2.7273rem;
+  padding: 0.3636rem 0.8182rem;
+  font-size: var(--fs-klein);
   line-height: 1.2;
   white-space: nowrap;
 }
 
 .tour-karte-hinweis {
   margin-left: auto;
-  font-size: 11px;
+  font-size: var(--fs-klein);
   white-space: nowrap;
   color: var(--win-grey-darker);
 }
@@ -243,7 +243,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 6px 8px;
+  padding: 0.5455rem 0.7273rem;
   /* Eigener Stapelkontext über der Karte. Die Kartenbühne trägt
      will-change: transform und liegt damit auf einer eigenen
      Compositing-Ebene; ohne diese Zeile zeichnete der Browser sie über
@@ -252,57 +252,57 @@
   z-index: 1;
   isolation: isolate;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .tour-dispo-leer {
-  font-size: 12px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
   text-align: center;
-  padding: 20px 8px;
+  padding: 1.8182rem 0.7273rem;
 }
 
 .tour-dispo-kopf {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 0.7273rem;
   flex-wrap: wrap;
 }
 
 .tour-dispo-stadt {
-  font-size: 17px;
+  font-size: var(--fs-kopf);
   font-weight: bold;
 }
 
 .tour-dispo-land {
   font-family: monospace;
-  font-size: 13px;
+  font-size: var(--fs-basis);
   color: var(--win-grey-darker);
 }
 
 .tour-dispo-knoten {
-  font-size: 10px;
-  padding: 1px 5px;
+  font-size: var(--fs-klein);
+  padding: 1px 0.4545rem;
   background: #e6b428;
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
 .tour-dispo-info {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
   margin-top: 2px;
 }
 
 .tour-dispo-platzhalter {
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px dashed var(--win-grey-dark);
-  font-size: 11px;
+  margin-top: 0.7273rem;
+  padding-top: 0.5455rem;
+  border-top: 1px dashed var(--bevel-dunkel);
+  font-size: var(--fs-klein);
 }
 
 .tour-dispo-titel {
   font-weight: bold;
-  font-size: 11px;
+  font-size: var(--fs-klein);
   margin-bottom: 2px;
 }
 
@@ -324,54 +324,54 @@
 }
 
 .tour-dispo-depot {
-  font-size: 11px;
-  padding: 1px 5px;
+  font-size: var(--fs-klein);
+  padding: 1px 0.4545rem;
   background: #2f7fd0;
   color: var(--win-white);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
 .tour-depotwahl {
-  font-size: 13px;
+  font-size: var(--fs-basis);
 }
 
 .tour-depotwahl-titel {
-  font-size: 16px;
+  font-size: var(--fs-kopf);
   font-weight: bold;
-  margin-bottom: 4px;
+  margin-bottom: 0.3636rem;
 }
 
 .tour-depotwahl p {
-  margin: 0 0 6px 0;
+  margin: 0 0 0.5455rem 0;
 }
 
 .tour-depotwahl-hinweis {
   color: var(--win-grey-darker);
-  font-size: 12px;
+  font-size: var(--fs-klein);
 }
 
 .tour-depotwahl-vorschau {
-  font-size: 12px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
-  margin: 6px 0;
-  padding-top: 6px;
-  border-top: 1px dashed var(--win-grey-dark);
+  margin: 0.5455rem 0;
+  padding-top: 0.5455rem;
+  border-top: 1px dashed var(--bevel-dunkel);
 }
 
 .tour-dispo-aktionen {
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px dashed var(--win-grey-dark);
+  margin-top: 0.7273rem;
+  padding-top: 0.5455rem;
+  border-top: 1px dashed var(--bevel-dunkel);
 }
 
 /* ---------- Warenlisten ---------- */
 
 .tour-warenblock {
   display: flex;
-  gap: 10px;
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px dashed var(--win-grey-dark);
+  gap: 0.9091rem;
+  margin-top: 0.7273rem;
+  padding-top: 0.5455rem;
+  border-top: 1px dashed var(--bevel-dunkel);
 }
 
 .tour-warenspalte {
@@ -381,8 +381,8 @@
 
 .tour-warentitel {
   font-weight: bold;
-  font-size: 12px;
-  margin-bottom: 3px;
+  font-size: var(--fs-klein);
+  margin-bottom: 0.2727rem;
 }
 
 .tour-warenliste {
@@ -394,8 +394,8 @@
 .tour-ware {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
+  gap: 0.4545rem;
+  font-size: var(--fs-klein);
   padding: 1px 0;
 }
 
@@ -409,12 +409,12 @@
    Fahrzeug die Ladung überhaupt fahren kann. */
 .tour-ware-aufbau {
   flex-shrink: 0;
-  width: 22px;
+  width: 2rem;
   text-align: center;
-  font-size: 10px;
+  font-size: var(--fs-klein);
   font-weight: bold;
   padding: 1px 0;
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
   background: var(--win-grey);
 }
 
@@ -428,10 +428,10 @@
 
 .tour-ware-merkmal {
   flex-shrink: 0;
-  font-size: 10px;
-  padding: 0 4px;
+  font-size: var(--fs-klein);
+  padding: 0 0.3636rem;
   background: #d8e4f0;
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .tour-merkmal-gefahr {
@@ -439,7 +439,7 @@
 }
 
 .tour-ware-leer {
-  font-size: 12px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
@@ -451,8 +451,8 @@
 /* Fahrzeuge, die an einer Stadt stehen - Punkte oben rechts an der Marke */
 .tour-standortpunkte {
   position: absolute;
-  right: -6px;
-  top: -9px;
+  right: -0.5455rem;
+  top: -0.8182rem;
   display: flex;
   gap: 1px;
   align-items: center;
@@ -460,15 +460,15 @@
 }
 
 .tour-standortpunkt {
-  width: 7px;
-  height: 7px;
+  width: 0.6364rem;
+  height: 0.6364rem;
   border: 1px solid;
   border-radius: 50%;
   box-shadow: 0 0 0 1px rgba(255,255,255,0.85);
 }
 
 .tour-standortmehr {
-  font-size: 8px;
+  font-size: var(--fs-klein);
   line-height: 1;
   font-weight: bold;
   color: #10100c;
@@ -523,13 +523,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .tour-schrittleiste {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
+  gap: 0.2727rem;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -539,21 +539,21 @@
 .tour-schritt {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  padding: 2px 7px;
+  gap: 0.3636rem;
+  font-size: var(--fs-klein);
+  padding: 2px 0.6364rem;
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   color: var(--win-grey-darker);
 }
 
 .tour-schritt-nr {
   display: inline-block;
-  min-width: 14px;
+  min-width: 1.2727rem;
   text-align: center;
   font-weight: bold;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .tour-schritt.aktiv {
@@ -578,8 +578,8 @@
 }
 
 .tour-anleitung {
-  margin: 0 0 6px 0;
-  font-size: 12px;
+  margin: 0 0 0.5455rem 0;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
@@ -594,10 +594,10 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 4px 26px 4px 7px;   /* rechts Platz für den Weiter-Pfeil */
+  padding: 0.3636rem 2.3636rem 0.3636rem 0.6364rem;   /* rechts Platz für den Weiter-Pfeil */
   margin-bottom: 3px;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   cursor: pointer;
   overflow: hidden;
 }
@@ -646,13 +646,13 @@
    wählt und schaltet weiter, der Haken zeigt nur, dass sie das tut. */
 .tour-weiterpfeil {
   position: absolute;
-  right: 4px;
+  right: 0.3636rem;
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
-  width: 14px;
+  width: 1.2727rem;
   text-align: center;
-  font-size: 13px;
+  font-size: var(--fs-basis);
   line-height: 1;
   color: var(--win-grey-darker);
   pointer-events: none;
@@ -678,56 +678,56 @@
 .tour-auswahl-name {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.4545rem;
   font-weight: bold;
-  font-size: 13px;
+  font-size: var(--fs-basis);
 }
 
 .tour-auswahl-zusatz {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 .tour-ungeeignet {
-  margin-top: 6px;
-  padding-top: 5px;
-  border-top: 1px dashed var(--win-grey-dark);
-  font-size: 11px;
+  margin-top: 0.5455rem;
+  padding-top: 0.4545rem;
+  border-top: 1px dashed var(--bevel-dunkel);
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 .tour-zusammenfassung {
-  padding: 6px 8px;
+  padding: 0.5455rem 0.7273rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .tour-zusammenfassung-titel {
-  font-size: 15px;
+  font-size: var(--fs-kopf);
   font-weight: bold;
-  margin-bottom: 4px;
+  margin-bottom: 0.3636rem;
 }
 
 /* ---------- Warenfenster ---------- */
 
-.gut-fenster { font-size: 13px; }
+.gut-fenster { font-size: var(--fs-basis); }
 
 .gut-kopf {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 0.5455rem;
+  margin-bottom: 0.5455rem;
 }
 
 .gut-name {
-  font-size: 17px;
+  font-size: var(--fs-kopf);
   font-weight: bold;
 }
 
 .gut-staedte {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
-  margin-bottom: 8px;
+  margin-bottom: 0.7273rem;
   line-height: 1.4;
 }
 
@@ -797,9 +797,9 @@
 /* Fahrend: Dreieck. Breiter als hoch, damit die Spitze spitz wirkt
    und die Richtung auch bei weiter Ansicht ablesbar bleibt. */
 .tour-fahrzeugpunkt.rollt {
-  width: 18px;
-  height: 12px;
-  margin: -6px 0 0 -9px;
+  width: 1.6364rem;
+  height: 1.0909rem;
+  margin: -0.5455rem 0 0 -0.8182rem;
   border: 0;
   clip-path: polygon(100% 50%, 0 0, 0 100%);
 }
@@ -807,9 +807,9 @@
 /* Stehend: Quadrat. Keine Spitze, weil es in diesem Augenblick keine
    Fahrtrichtung gibt - eine Spitze würde eine behaupten. */
 .tour-fahrzeugpunkt.haelt {
-  width: 11px;
-  height: 11px;
-  margin: -6px 0 0 -6px;
+  width: 1rem;
+  height: 1rem;
+  margin: -0.5455rem 0 0 -0.5455rem;
   border: 2px solid;
 }
 
@@ -829,9 +829,9 @@
 
 .tour-abbruchleiste {
   flex-shrink: 0;
-  margin-top: 4px;
-  padding-top: 5px;
-  border-top: 1px solid var(--win-grey-dark);
+  margin-top: 0.3636rem;
+  padding-top: 0.4545rem;
+  border-top: 1px solid var(--bevel-dunkel);
 }
 
 .tour-mit-schaden {
@@ -840,8 +840,8 @@
 }
 
 .tour-schadenhinweis {
-  margin-top: 6px;
-  font-size: 12px;
+  margin-top: 0.5455rem;
+  font-size: var(--fs-klein);
   font-weight: bold;
   color: #8a1414;
 }
@@ -859,10 +859,10 @@
 
 .tour-laufende,
 .tour-ankunft {
-  margin-bottom: 6px;
-  padding: 5px 7px;
+  margin-bottom: 0.5455rem;
+  padding: 0.4545rem 0.6364rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .tour-laufende-liste {
@@ -872,8 +872,8 @@
 }
 
 .tour-laufend {
-  padding: 3px 0;
-  border-bottom: 1px dotted var(--win-grey-dark);
+  padding: 0.2727rem 0;
+  border-bottom: 1px dotted var(--bevel-dunkel);
 }
 
 .tour-laufend:last-child { border-bottom: none; }
@@ -881,8 +881,8 @@
 .tour-laufend-kopf {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 0.5455rem;
+  font-size: var(--fs-klein);
 }
 
 .tour-laufend-kennzeichen {
@@ -900,15 +900,15 @@
 
 .tour-ankunft-weg {
   flex-shrink: 0;
-  padding: 1px 6px;
-  font-size: 11px;
+  padding: 1px 0.5455rem;
+  font-size: var(--fs-klein);
 }
 
 .tour-laufend-balken {
-  height: 8px;
-  margin: 3px 0 2px 0;
+  height: 0.7273rem;
+  margin: 0.2727rem 0 2px 0;
   background: var(--win-white);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
 .tour-laufend-fuellung {
@@ -921,14 +921,14 @@
 }
 
 .tour-laufend-info {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 .tour-ankunft .tour-warentitel {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .tour-ankunft .tour-warentitel > button { margin-left: auto; }
@@ -940,14 +940,14 @@
 .tour-filterleiste {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
-  margin-bottom: 5px;
+  gap: 0.2727rem;
+  margin-bottom: 0.4545rem;
   flex-shrink: 0;
 }
 
 .tour-filterleiste .win98-button {
-  padding: 3px 8px;
-  font-size: 11px;
+  padding: 0.2727rem 0.7273rem;
+  font-size: var(--fs-klein);
 }
 
 .tour-filterleiste .win98-button.aktiv {
@@ -957,7 +957,7 @@
 
 .tour-auftrag-nummer {
   font-family: monospace;
-  font-size: 11px;
+  font-size: var(--fs-klein);
   font-weight: normal;
   color: var(--win-grey-darker);
 }
@@ -967,10 +967,10 @@
 .tour-kundenmarke,
 .tour-boersenmarke {
   display: inline-block;
-  font-size: 10px;
-  padding: 0 4px;
-  margin-right: 4px;
-  border: 1px solid var(--win-grey-darker);
+  font-size: var(--fs-klein);
+  padding: 0 0.3636rem;
+  margin-right: 0.3636rem;
+  border: 1px solid var(--bevel-tief);
 }
 
 .tour-kundenmarke { background: #d6e8d6; color: #1a5c1a; }
@@ -978,9 +978,9 @@
 
 .tour-warnung {
   display: inline-block;
-  font-size: 10px;
-  padding: 0 4px;
-  margin-left: 4px;
+  font-size: var(--fs-klein);
+  padding: 0 0.3636rem;
+  margin-left: 0.3636rem;
   background: #f3c9c9;
   color: #8a1414;
   border: 1px solid #8a1414;
@@ -988,20 +988,20 @@
 
 .tour-puenktlich {
   display: inline-block;
-  font-size: 10px;
-  padding: 0 4px;
-  margin-left: 4px;
+  font-size: var(--fs-klein);
+  padding: 0 0.3636rem;
+  margin-left: 0.3636rem;
   background: #d6e8d6;
   color: #1a5c1a;
   border: 1px solid #2e8b2e;
 }
 
 .tour-auftragskopf {
-  padding: 4px 7px;
-  margin-bottom: 5px;
+  padding: 0.3636rem 0.6364rem;
+  margin-bottom: 0.4545rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
-  font-size: 12px;
+  border: 1px solid var(--bevel-dunkel);
+  font-size: var(--fs-klein);
 }
 
 .tour-positiv { color: #1a5c1a; font-weight: bold; }
@@ -1014,7 +1014,7 @@
    läuft - ohne ihn stünden fünf gleich aussehende Zeilen da. */
 .tour-strichoben {
   border-top: 1px solid #808080;
-  padding-top: 3px;
+  padding-top: 0.2727rem;
   margin-top: 2px;
 }
 
@@ -1037,8 +1037,8 @@
 .tour-urteil {
   border: 1px solid var(--win-grey-dark, #808080);
   background: #fff;
-  padding: 6px 8px;
-  margin-bottom: 4px;
+  padding: 0.5455rem 0.7273rem;
+  margin-bottom: 0.3636rem;
 }
 
 .tour-urteil-wort {
@@ -1061,28 +1061,28 @@
 }
 
 .tour-rechnung-knopf {
-  font-size: 11px;
-  padding: 1px 8px;
-  margin-bottom: 4px;
+  font-size: var(--fs-klein);
+  padding: 1px 0.7273rem;
+  margin-bottom: 0.3636rem;
 }
 
 .tour-rechnung {
   border: 1px solid var(--win-grey-dark, #808080);
   background: #fff;
-  padding: 4px 6px;
+  padding: 0.3636rem 0.5455rem;
 }
 
 .tour-rechnung-kopf {
   color: #555;
   border-bottom: 1px solid var(--win-grey-dark, #808080);
   padding-bottom: 2px;
-  margin-bottom: 3px;
+  margin-bottom: 0.2727rem;
 }
 
 .tour-rechnung-summe {
   border-top: 1px solid #808080;
-  margin-top: 3px;
-  padding-top: 3px;
+  margin-top: 0.2727rem;
+  padding-top: 0.2727rem;
 }
 
 /* Die Herkunft des Entgelts sitzt als eingerückte Unterzeilen in der
@@ -1090,7 +1090,7 @@
    Ebene, und zwei sind das Maß (Regel 31). */
 .tour-preis-unterzeilen {
   border: none;
-  margin: 0 0 3px 12px;
+  margin: 0 0 0.2727rem 1.0909rem;
   padding: 0;
   color: #555;
 }
@@ -1115,10 +1115,10 @@
    Zusammenfassung ist eine Definitionsliste, und ein eigener Block
    dazwischen risse die Rechnung auseinander. */
 .tour-preis-knopf {
-  font-size: 10px;
-  padding: 0 4px;
-  margin-left: 6px;
-  line-height: 14px;
+  font-size: var(--fs-klein);
+  padding: 0 0.3636rem;
+  margin-left: 0.5455rem;
+  line-height: 1.2727rem;
 }
 
 /* Die Aufschlüsselung läuft über beide Spalten der Liste. */
@@ -1130,8 +1130,8 @@
 .tour-preis-block {
   border: 1px solid var(--win-grey-dark, #808080);
   background: #fff;
-  padding: 4px 6px;
-  margin: 4px 0;
+  padding: 0.3636rem 0.5455rem;
+  margin: 0.3636rem 0;
   /* Die Zusammenfassung setzt ihre Werte fett; hier wäre das die
      ganze Rechnung, und dann hebt sich die Summe nicht mehr ab. */
   font-weight: normal;
@@ -1141,13 +1141,13 @@
   font-weight: bold;
   border-bottom: 1px solid var(--win-grey-dark, #808080);
   padding-bottom: 2px;
-  margin-bottom: 3px;
+  margin-bottom: 0.2727rem;
 }
 
 .tour-preis-zeile {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
+  gap: 0.7273rem;
   align-items: baseline;
   padding: 1px 0;
 }
@@ -1165,7 +1165,7 @@
 .tour-preis-zeile:last-child {
   border-top: 1px solid #808080;
   margin-top: 2px;
-  padding-top: 3px;
+  padding-top: 0.2727rem;
 }
 
 /* Womit der Fixkostenanteil zustande kommt - klein daneben, damit die
@@ -1180,10 +1180,10 @@
 
 .tour-status {
   display: inline-block;
-  font-size: 10px;
-  padding: 0 4px;
-  margin-right: 4px;
-  border: 1px solid var(--win-grey-darker);
+  font-size: var(--fs-klein);
+  padding: 0 0.3636rem;
+  margin-right: 0.3636rem;
+  border: 1px solid var(--bevel-tief);
 }
 
 .tour-status-anfahrt { background: #e0e0e8; }
@@ -1199,16 +1199,16 @@
 .tour-laufend-aktion {
   display: flex;
   justify-content: flex-end;
-  margin-top: 3px;
+  margin-top: 0.2727rem;
 }
 .tour-abbruch {
-  font-size: 10px;
-  padding: 1px 6px;
+  font-size: var(--fs-klein);
+  padding: 1px 0.5455rem;
 }
 .tour-wartehinweis {
   color: #6b4a00;
   font-size: 0.9em;
-  margin-left: 4px;
+  margin-left: 0.3636rem;
 }
 
 
@@ -1246,22 +1246,22 @@
 .tour-detailkopf {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.7273rem;
   flex-shrink: 0;
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--win-grey-dark);
+  padding-bottom: 0.4545rem;
+  border-bottom: 1px solid var(--bevel-dunkel);
 }
 
 .tour-detailinhalt {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding-top: 6px;
+  padding-top: 0.5455rem;
 }
 
 .tour-nachholung {
-  margin-bottom: 6px;
-  padding: 5px 7px;
+  margin-bottom: 0.5455rem;
+  padding: 0.4545rem 0.6364rem;
   background: #e2ecf5;
   border: 1px solid #2f7fd0;
 }
@@ -1269,7 +1269,7 @@
 .tour-nachholung .tour-warentitel {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.5455rem;
 }
 
 .tour-nachholung .tour-warentitel > button { margin-left: auto; }
@@ -1277,16 +1277,16 @@
 /* ---------- Ausgehende Frachten je Stadt ---------- */
 
 .tour-ausgehend {
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px dashed var(--win-grey-dark);
+  margin-top: 0.7273rem;
+  padding-top: 0.5455rem;
+  border-top: 1px dashed var(--bevel-dunkel);
 }
 
 .tour-frachtliste {
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 150px;
+  max-height: 13.6364rem;
   overflow-y: auto;
 }
 
@@ -1295,10 +1295,10 @@
   overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  padding: 2px 3px;
-  border-bottom: 1px dotted var(--win-grey-dark);
+  gap: 0.5455rem;
+  font-size: var(--fs-klein);
+  padding: 2px 0.2727rem;
+  border-bottom: 1px dotted var(--bevel-dunkel);
 }
 
 .tour-fracht > span:not(.tour-fristbalken) {
@@ -1338,22 +1338,34 @@
    Gedeckelt wird stattdessen genau das eine Stück, das wächst: die
    Sendungsliste. Alles andere im Brief hat feste Höhe. */
 .tour-frachtbrief {
-  flex: none;
-  margin-bottom: 6px;
-  padding: 4px 6px 6px 6px;
+  /* Der Brief nimmt, was er braucht - aber nicht alles. Unter ihm
+     steht die Auswahlliste, und die ist der Weg zur nächsten
+     Sendung. Bei aufgeklappter Sendungsliste und großer Schrift
+     blieb davon nichts übrig (gemessen: 0 Zeilen). Seither ein
+     Deckel, der der Liste darunter mindestens acht Zeilen lässt.
+     docs/optik-und-bedienung.md, Regel 52 und A2: 200 Prozent ohne
+     verlorene Funktion. */
+  flex: 0 1 auto;
+  max-height: calc(100% - 5rem);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-bottom: 0.5455rem;
+  padding: 0.3636rem 0.5455rem 0.5455rem 0.5455rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .tour-frachtbrief-kopf {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
+  margin-bottom: 0.3636rem;
 }
 
 .tour-frachtbrief-titel {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   font-weight: bold;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -1361,25 +1373,26 @@
 }
 
 .tour-frachtbrief-kopf .win98-button {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   line-height: 1;
-  padding: 2px 6px;
+  padding: 2px 0.5455rem;
 }
 
 .tour-frachtbrief-felder {
+  flex: none;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 3px;
+  gap: 0.2727rem;
 }
 
 /* Feste Höhe: Die Felder dürfen beim Füllen nicht wachsen, sonst
    springt die Liste darunter unter dem Finger weg. */
 .tour-bf-feld {
   min-width: 0;
-  height: 38px;
-  padding: 2px 4px;
+  height: 3.4545rem;
+  padding: 2px 0.3636rem;
   background: var(--win-white, #ffffff);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   overflow: hidden;
 }
 
@@ -1393,7 +1406,7 @@
 
 .tour-bf-marke {
   display: block;
-  font-size: 9px;
+  font-size: var(--fs-klein);
   line-height: 1.1;
   text-transform: uppercase;
   color: var(--win-grey-darker);
@@ -1401,7 +1414,7 @@
 
 .tour-bf-wert {
   display: block;
-  font-size: 11px;
+  font-size: var(--fs-klein);
   line-height: 1.2;
   font-weight: bold;
   white-space: nowrap;
@@ -1411,7 +1424,7 @@
 
 .tour-bf-zusatz {
   display: block;
-  font-size: 9px;
+  font-size: var(--fs-klein);
   line-height: 1.1;
   color: var(--win-grey-darker);
   white-space: nowrap;
@@ -1425,18 +1438,20 @@
 .tour-legende {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px 10px;
-  padding: 2px 4px 3px 4px;
-  font-size: 10px;
+  /* Zeilenabstand mit der Schrift, nicht in festen 2 px: Sobald die
+     Legende umbricht, klebten die beiden Zeilen sonst aneinander. */
+  gap: 0.36rem 1.1rem;
+  padding: 0.2rem 0.3636rem 0.2727rem 0.3636rem;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
-.tour-legende span { display: inline-flex; align-items: center; gap: 3px; }
+.tour-legende span { display: inline-flex; align-items: center; gap: 0.2727rem; }
 
 .tour-legende-punkt {
-  width: 8px;
-  height: 8px;
-  border: 1px solid var(--win-grey-darker);
+  width: 0.7273rem;
+  height: 0.7273rem;
+  border: 1px solid var(--bevel-tief);
   background: var(--win-grey-light);
 }
 
@@ -1467,7 +1482,7 @@
 }
 
 .tour-abnehmer {
-  padding: 0 3px;
+  padding: 0 0.2727rem;
   background: rgba(178, 60, 224, 0.85);
   color: #ffffff;
 }
@@ -1489,10 +1504,10 @@
 
 .tour-reiter {
   font-family: inherit;
-  font-size: 12px;
-  padding: 3px 10px 4px 10px;
+  font-size: var(--fs-klein);
+  padding: 0.2727rem 0.9091rem 0.3636rem 0.9091rem;
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   border-bottom: none;
   border-top-color: var(--win-white, #ffffff);
   border-left-color: var(--win-white, #ffffff);
@@ -1501,7 +1516,7 @@
 }
 
 .tour-reiter.aktiv {
-  padding: 5px 12px 5px 12px;
+  padding: 0.4545rem 1.0909rem 0.4545rem 1.0909rem;
   margin-top: -2px;
   background: var(--win-grey-light);
   font-weight: bold;
@@ -1513,9 +1528,9 @@
 }
 
 .tour-reiter-zahl {
-  margin-left: 4px;
-  padding: 0 3px;
-  font-size: 10px;
+  margin-left: 0.3636rem;
+  padding: 0 0.2727rem;
+  font-size: var(--fs-klein);
   font-weight: normal;
   background: var(--win-grey-darker);
   color: var(--win-white, #ffffff);
@@ -1526,20 +1541,20 @@
 .tour-reiterblatt {
   flex: 1;
   min-height: 0;
-  padding: 5px 4px 4px 4px;
+  padding: 0.4545rem 0.3636rem 0.3636rem 0.3636rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .tour-reiter-hinweis {
-  margin-bottom: 4px;
-  font-size: 10px;
+  margin-bottom: 0.3636rem;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 /* Deckungsbeitrag je Tag - die Kennzahl, nach der sortiert wird. */
 .tour-jetag {
-  padding: 0 3px;
+  padding: 0 0.2727rem;
   background: #10305a;
   color: #ffffff;
 }
@@ -1548,7 +1563,7 @@
 .tour-rueck-gut { color: #1c6b2c; font-weight: bold; }
 .tour-rueck-mittel { color: var(--win-grey-darker); }
 .tour-rueck-duenn {
-  padding: 0 3px;
+  padding: 0 0.2727rem;
   background: #d9a520;
   color: #10100c;
 }
@@ -1557,12 +1572,12 @@
    Zwei Balken, weil zwei Grenzen gelten: Gewicht und Laderaum laufen
    unterschiedlich schnell voll. */
 .tour-ladungsstand {
-  margin-bottom: 5px;
+  margin-bottom: 0.4545rem;
 }
 
 .tour-ladungsbalken-reihe {
   display: flex;
-  gap: 5px;
+  gap: 0.4545rem;
 }
 
 /* ---------- Mengenregler ----------
@@ -1573,17 +1588,17 @@
 .tour-mengenregler {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-bottom: 4px;
-  font-size: 11px;
+  gap: 0.4545rem;
+  margin-bottom: 0.3636rem;
+  font-size: var(--fs-klein);
 }
 
 .tour-menge-marke { flex: none; color: var(--win-grey-darker); }
 
 .tour-menge-schieber {
   flex: 1;
-  min-width: 70px;
-  height: 18px;
+  min-width: 6.3636rem;
+  height: 1.6364rem;
   margin: 0;
   -webkit-appearance: none;
   appearance: none;
@@ -1592,44 +1607,44 @@
 
 /* Die Rinne: versenkt, wie jeder Schieberegler dieser Zeit. */
 .tour-menge-schieber::-webkit-slider-runnable-track {
-  height: 6px;
+  height: 0.5455rem;
   background: var(--win-white, #ffffff);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
   border-right-color: var(--win-white, #ffffff);
   border-bottom-color: var(--win-white, #ffffff);
 }
 .tour-menge-schieber::-moz-range-track {
-  height: 6px;
+  height: 0.5455rem;
   background: var(--win-white, #ffffff);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
 /* Der Griff: erhaben, eckig, und breit genug für einen Finger. */
 .tour-menge-schieber::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 12px;
-  height: 18px;
-  margin-top: -7px;
+  width: 1.0909rem;
+  height: 1.6364rem;
+  margin-top: -0.6364rem;
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
   border-top-color: var(--win-white, #ffffff);
   border-left-color: var(--win-white, #ffffff);
 }
 .tour-menge-schieber::-moz-range-thumb {
-  width: 12px;
-  height: 18px;
+  width: 1.0909rem;
+  height: 1.6364rem;
   border-radius: 0;
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
   border-top-color: var(--win-white, #ffffff);
   border-left-color: var(--win-white, #ffffff);
 }
 
 .tour-menge-wert {
   flex: none;
-  min-width: 42px;
-  padding: 0 3px;
+  min-width: 3.8182rem;
+  padding: 0 0.2727rem;
   text-align: right;
   font-weight: bold;
   background: #10305a;
@@ -1641,19 +1656,19 @@
 /* ---------- Wo soll geladen werden? ----------
    Die Antwort auf den einen "+ Sendung"-Knopf. */
 .tour-ladeortwahl {
-  margin: 5px 0;
-  padding: 4px;
+  margin: 0.4545rem 0;
+  padding: 0.3636rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .tour-ladeort-kopf {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
-  margin-bottom: 4px;
-  font-size: 12px;
+  gap: 0.5455rem;
+  margin-bottom: 0.3636rem;
+  font-size: var(--fs-klein);
   font-weight: bold;
 }
 
@@ -1679,18 +1694,18 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 2px 5px;
-  margin-bottom: 3px;
-  font-size: 11px;
+  gap: 2px 0.4545rem;
+  margin-bottom: 0.2727rem;
+  font-size: var(--fs-klein);
 }
 
 .tour-restplatz-marke { color: var(--win-grey-darker); }
 
 .tour-restwert {
-  padding: 0 3px;
+  padding: 0 0.2727rem;
   font-weight: bold;
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 /* Die Grenze, die zuerst greift. Ohne sie wundert man sich, warum bei
@@ -1708,7 +1723,7 @@
 }
 
 .tour-restspaeter {
-  padding: 0 3px;
+  padding: 0 0.2727rem;
   color: #1c6b2c;
   background: #e2f0e2;
   border: 1px solid #9cc49c;
@@ -1721,7 +1736,7 @@
 
 /* In der Frachtliste: was nach dieser Sendung noch frei bliebe. */
 .tour-restmarke {
-  padding: 0 3px;
+  padding: 0 0.2727rem;
   color: #1c6b2c;
   background: #e2f0e2;
 }
@@ -1729,9 +1744,9 @@
 .tour-ladungsbalken {
   position: relative;
   flex: 1;
-  height: 14px;
+  height: 1.2727rem;
   background: var(--win-white, #ffffff);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   overflow: hidden;
 }
 
@@ -1747,39 +1762,39 @@
   position: relative;
   display: block;
   text-align: center;
-  font-size: 10px;
-  line-height: 14px;
+  font-size: var(--fs-klein);
+  line-height: 1.2727rem;
 }
 
 /* ---------- Stoppfolge ----------
    Die Tour so, wie sie gefahren wird: Halt für Halt. */
 .tour-stoppfolge {
   list-style: none;
-  margin: 0 0 6px 0;
+  margin: 0 0 0.5455rem 0;
   padding: 0;
 }
 
-.tour-stopp { font-size: 11px; }
+.tour-stopp { font-size: var(--fs-klein); }
 
 .tour-stopp-fahrt {
-  margin: 0 0 2px 8px;
-  padding-left: 8px;
-  border-left: 2px dotted var(--win-grey-darker);
-  font-size: 10px;
+  margin: 0 0 2px 0.7273rem;
+  padding-left: 0.7273rem;
+  border-left: 2px dotted var(--bevel-tief);
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 .tour-stopp-kopf {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 3px;
+  gap: 0.4545rem;
+  padding: 2px 0.2727rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 .tour-stopp-nr {
-  min-width: 15px;
+  min-width: 1.3636rem;
   text-align: center;
   font-weight: bold;
   color: var(--win-white, #ffffff);
@@ -1789,13 +1804,13 @@
 .tour-stopp-stadt { font-weight: bold; flex: 1; }
 
 .tour-stopp-last {
-  font-size: 10px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 .tour-stopp-zeile {
-  padding: 1px 3px 1px 24px;
-  font-size: 10px;
+  padding: 1px 0.2727rem 1px 2.1818rem;
+  font-size: var(--fs-klein);
 }
 
 .tour-stopp-zeile.ab { color: #1c6b2c; }
@@ -1808,9 +1823,9 @@
    Ladeverzeichnis: eine Zeile je Etappe, in der Reihenfolge der Fahrt. */
 .tour-etappenliste {
   list-style: none;
-  margin: 0 0 5px 0;
+  margin: 0 0 0.4545rem 0;
   padding: 0;
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   background: var(--win-white, #ffffff);
 }
 
@@ -1824,26 +1839,33 @@
    fester Deckel mit eigenem Rollbalken statt einer Begrenzung auf
    eine Zahl von Zeilen. */
 .tour-etappenliste.aufgeklappt {
-  max-height: 96px;
+  max-height: 8.7273rem;
   overflow-y: auto;
+  /* Innerhalb des gedeckelten Briefs ist dies das einzige Stück, das
+     nachgeben darf. Die Feldzeile darüber bleibt dadurch immer
+     erreichbar - sie ist der einzige Rückweg in einen früheren
+     Schritt. */
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* ---------- Umschalter über der Sendungsliste ----------
    Eingeklappt ist er die Zusammenfassung, aufgeklappt die
    Überschrift. In beiden Fällen dieselbe Zeile an derselben Stelle. */
 .tour-etappen-schalter {
+  flex: none;
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 0.5455rem;
   width: 100%;
-  margin: 0 0 3px 0;
-  padding: 3px 5px;
+  margin: 0 0 0.2727rem 0;
+  padding: 0.2727rem 0.4545rem;
   font-family: inherit;
-  font-size: 11px;
+  font-size: var(--fs-klein);
   text-align: left;
   color: inherit;
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   border-top-color: var(--win-white, #ffffff);
   border-left-color: var(--win-white, #ffffff);
   cursor: pointer;
@@ -1853,8 +1875,8 @@
 
 .tour-etappen-pfeil {
   flex: none;
-  width: 10px;
-  font-size: 9px;
+  width: 0.9091rem;
+  font-size: var(--fs-klein);
 }
 
 .tour-etappen-summe {
@@ -1867,7 +1889,7 @@
 
 .tour-etappen-hinweise {
   flex: none;
-  padding: 0 3px;
+  padding: 0 0.2727rem;
   color: var(--win-white, #ffffff);
   background: #8a1414;
 }
@@ -1875,11 +1897,11 @@
 .tour-etappe {
   position: relative;
   display: grid;
-  grid-template-columns: 18px 1fr auto;
-  gap: 2px 5px;
-  padding: 3px 22px 3px 4px;
-  font-size: 11px;
-  border-bottom: 1px dotted var(--win-grey-dark);
+  grid-template-columns: 1.6364rem 1fr auto;
+  gap: 2px 0.4545rem;
+  padding: 0.2727rem 2rem 0.2727rem 0.3636rem;
+  font-size: var(--fs-klein);
+  border-bottom: 1px dotted var(--bevel-dunkel);
 }
 
 .tour-etappe:last-child { border-bottom: none; }
@@ -1913,40 +1935,40 @@
 .tour-etappe-zusatz,
 .tour-etappe-leer {
   grid-column: 2 / span 2;
-  font-size: 10px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
 .tour-etappe .tour-warnung {
   grid-column: 2 / span 2;
-  font-size: 10px;
+  font-size: var(--fs-klein);
 }
 
 .tour-etappe-weg-damit {
   position: absolute;
-  right: 3px;
-  top: 3px;
-  width: 15px;
-  height: 15px;
+  right: 0.2727rem;
+  top: 0.2727rem;
+  width: 1.3636rem;
+  height: 1.3636rem;
   padding: 0;
-  font-size: 10px;
+  font-size: var(--fs-klein);
   line-height: 1;
   cursor: pointer;
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
-.tour-etappenliste-gross .tour-etappe { font-size: 12px; padding-right: 4px; }
+.tour-etappenliste-gross .tour-etappe { font-size: var(--fs-klein); padding-right: 0.3636rem; }
 .tour-etappenliste-gross .tour-etappe-weg-damit { display: none; }
 
 /* Im Kopf des Frachtbriefs stehen jetzt bis zu zwei Knöpfe. */
-.tour-frachtbrief-kopf { gap: 4px; }
+.tour-frachtbrief-kopf { gap: 0.3636rem; }
 .tour-frachtbrief-titel { flex: 1; }
 
 .tour-etappe-marke {
-  margin-left: 4px;
-  padding: 0 3px;
-  font-size: 9px;
+  margin-left: 0.3636rem;
+  padding: 0 0.2727rem;
+  font-size: var(--fs-klein);
   background: var(--win-grey-darker);
   color: var(--win-white, #ffffff);
 }
@@ -1966,7 +1988,7 @@
 /* Die Startleiste trägt jetzt zwei Knöpfe: anhängen oder losschicken. */
 .tour-startleiste {
   display: flex;
-  gap: 6px;
+  gap: 0.5455rem;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
@@ -1978,31 +2000,31 @@
   flex: none;
   display: flex;
   align-items: baseline;
-  gap: 5px;
-  margin-bottom: 5px;
-  padding-bottom: 3px;
-  border-bottom: 1px solid var(--win-grey-dark);
+  gap: 0.4545rem;
+  margin-bottom: 0.4545rem;
+  padding-bottom: 0.2727rem;
+  border-bottom: 1px solid var(--bevel-dunkel);
 }
 
 .tour-schrittkopf-nr {
   flex: none;
-  min-width: 15px;
+  min-width: 1.3636rem;
   text-align: center;
-  font-size: 10px;
+  font-size: var(--fs-klein);
   font-weight: bold;
   color: var(--win-white, #ffffff);
   background: var(--win-blue, #000080);
-  padding: 1px 3px;
+  padding: 1px 0.2727rem;
 }
 
 .tour-schrittkopf-text {
-  font-size: 12px;
+  font-size: var(--fs-klein);
   font-weight: bold;
 }
 
 .tour-schrittkopf-hinweis {
   margin-left: auto;
-  font-size: 10px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
   white-space: nowrap;
 }
@@ -2011,16 +2033,16 @@
    Der einzige echte Knopf im ganzen Ablauf - entsprechend groß. */
 .tour-startleiste {
   flex: none;
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px solid var(--win-grey-dark);
+  margin-top: 0.7273rem;
+  padding-top: 0.5455rem;
+  border-top: 1px solid var(--bevel-dunkel);
   text-align: center;
 }
 
 .tour-startknopf {
-  font-size: 14px;
+  font-size: var(--fs-basis);
   font-weight: bold;
-  padding: 8px 22px;
+  padding: 0.7273rem 2rem;
 }
 
 /* Die Flottenliste in der Tourenplanung ist entfallen - die Fahrzeuge
@@ -2028,8 +2050,8 @@
    auch in der Fahrzeugliste des Ablaufs die Lackierung. */
 .tour-flottenpunkt {
   flex: 0 0 auto;
-  width: 9px;
-  height: 9px;
+  width: 0.8182rem;
+  height: 0.8182rem;
   border: 1px solid;
   border-radius: 50%;
   box-shadow: 0 0 0 1px rgba(255,255,255,0.85);
@@ -2044,25 +2066,25 @@
 /* ---------- Stadtseite der Tourenplanung ---------- */
 
 .tour-stadtkopf {
-  margin-bottom: 6px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--win-grey-dark);
+  margin-bottom: 0.5455rem;
+  padding-bottom: 0.4545rem;
+  border-bottom: 1px solid var(--bevel-dunkel);
 }
 
 .tour-stadtseite-name {
   margin: 0 0 2px 0;
-  font-size: 17px;
+  font-size: var(--fs-kopf);
   font-weight: bold;
   line-height: 1.15;
 }
 
 .tour-stadtzeile {
-  font-size: 12px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 5px;
+  gap: 0.4545rem;
 }
 
 /* Steht hier ein Fahrzeug? Die Antwort muss auf einen Blick lesbar
@@ -2071,16 +2093,16 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-  padding: 4px 7px;
-  border: 1px solid var(--win-grey-dark);
+  gap: 0.5455rem;
+  margin-bottom: 0.5455rem;
+  padding: 0.3636rem 0.6364rem;
+  border: 1px solid var(--bevel-dunkel);
 }
 
-.tour-vorort-titel { font-weight: bold; font-size: 13px; }
+.tour-vorort-titel { font-weight: bold; font-size: var(--fs-basis); }
 
 .tour-vorort-kennzeichen {
-  font-size: 11px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
 }
 
@@ -2090,30 +2112,30 @@
 .tour-vorort-ja .tour-standortpunkte { position: static; }
 
 .tour-anfordern {
-  margin-bottom: 6px;
-  padding: 5px 7px;
+  margin-bottom: 0.5455rem;
+  padding: 0.4545rem 0.6364rem;
   background: var(--win-grey-light);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
 }
 
 /* Zwischenüberschrift innerhalb der Ausgangsliste. Bewusst kein
    eigener Rahmen: Die Liste soll in einem Zug durchscrollen. */
 .tour-ausgang-teil {
-  margin: 7px 0 3px 0;
+  margin: 0.6364rem 0 0.2727rem 0;
   padding-bottom: 2px;
-  font-size: 12px;
+  font-size: var(--fs-klein);
   font-weight: bold;
-  border-bottom: 1px dotted var(--win-grey-dark);
+  border-bottom: 1px dotted var(--bevel-dunkel);
 }
 
-.tour-ausgang-teil:first-of-type { margin-top: 3px; }
+.tour-ausgang-teil:first-of-type { margin-top: 0.2727rem; }
 
 .tour-spotmarke {
-  font-size: 10px;
-  padding: 0 4px;
+  font-size: var(--fs-klein);
+  padding: 0 0.3636rem;
   background: #5f6f8f;
   color: var(--win-white);
-  border: 1px solid var(--win-grey-darker);
+  border: 1px solid var(--bevel-tief);
 }
 
 /* Bei festen Aufträgen gibt der Auftraggeber das Ziel vor - der
@@ -2126,8 +2148,8 @@
 /* Fünf Schritte passen auf dem Telefon nicht nebeneinander - enger
    setzen, damit höchstens zwei Zeilen entstehen. */
 @media (max-width: 480px) {
-  .tour-schritt { font-size: 10px; padding: 2px 4px; gap: 3px; }
-  .tour-schritt-nr { min-width: 12px; }
+  .tour-schritt { font-size: var(--fs-klein); padding: 2px 0.3636rem; gap: 0.2727rem; }
+  .tour-schritt-nr { min-width: 1.0909rem; }
 }
 
 /* Im Frachtschritt stehen zwei Listen untereinander. Jede für sich
@@ -2149,23 +2171,23 @@
 
 .tour-halt-pfeil {
   font-family: inherit;
-  font-size: 9px;
+  font-size: var(--fs-klein);
   line-height: 1;
-  width: 20px;
-  height: 18px;
+  width: 1.8182rem;
+  height: 1.6364rem;
   padding: 0;
   color: inherit;
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   border-top-color: var(--win-white, #ffffff);
   border-left-color: var(--win-white, #ffffff);
   cursor: pointer;
 }
 
 .tour-halt-pfeil:active {
-  border-color: var(--win-grey-dark);
-  border-top-color: var(--win-grey-darker);
-  border-left-color: var(--win-grey-darker);
+  border-color: var(--bevel-dunkel);
+  border-top-color: var(--bevel-tief);
+  border-left-color: var(--bevel-tief);
 }
 
 .tour-halt-pfeil[disabled] {
@@ -2176,9 +2198,9 @@
 /* Der Hebel sitzt neben der Warnung, die ihn nötig macht. */
 .tour-halt-frueher {
   font-family: inherit;
-  font-size: 10px;
-  margin-left: 4px;
-  padding: 0 4px;
+  font-size: var(--fs-klein);
+  margin-left: 0.3636rem;
+  padding: 0 0.3636rem;
   color: var(--win-white, #ffffff);
   background: #8a1414;
   border: 1px solid #5c0c0c;
@@ -2188,22 +2210,22 @@
 .tour-handfolge {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 5px 0;
-  padding: 3px 5px;
-  font-size: 11px;
+  gap: 0.5455rem;
+  margin: 0.4545rem 0;
+  padding: 0.2727rem 0.4545rem;
+  font-size: var(--fs-klein);
   background: #e2eaf4;
   border: 1px solid #8fa8c4;
 }
 
-.tour-handfolge .win98-button { margin-left: auto; font-size: 11px; }
+.tour-handfolge .win98-button { margin-left: auto; font-size: var(--fs-klein); }
 
 /* Eine nicht fahrbare Reihenfolge wird gezeigt, nicht versteckt -
    sonst kann man sie nicht reparieren. */
 .tour-unfahrbar {
-  margin: 5px 0;
-  padding: 5px 6px;
-  font-size: 12px;
+  margin: 0.4545rem 0;
+  padding: 0.4545rem 0.5455rem;
+  font-size: var(--fs-klein);
   font-weight: bold;
   color: #8a1414;
   background: #f7e3e3;
@@ -2215,13 +2237,13 @@
    ist damit eine Stelle in der Tour und kein Fachwort mehr. */
 .tour-stopp-dazu {
   display: block;
-  margin: 2px 0 0 24px;
-  padding: 2px 6px;
+  margin: 2px 0 0 2.1818rem;
+  padding: 2px 0.5455rem;
   font-family: inherit;
-  font-size: 10px;
+  font-size: var(--fs-klein);
   color: var(--win-grey-darker);
   background: var(--win-grey);
-  border: 1px dashed var(--win-grey-dark);
+  border: 1px dashed var(--bevel-dunkel);
   cursor: pointer;
 }
 
@@ -2230,12 +2252,12 @@
 .tour-stopp-weg {
   float: right;
   font-family: inherit;
-  font-size: 10px;
+  font-size: var(--fs-klein);
   line-height: 1;
-  padding: 2px 4px;
+  padding: 2px 0.3636rem;
   color: inherit;
   background: var(--win-grey);
-  border: 1px solid var(--win-grey-dark);
+  border: 1px solid var(--bevel-dunkel);
   cursor: pointer;
 }
 
